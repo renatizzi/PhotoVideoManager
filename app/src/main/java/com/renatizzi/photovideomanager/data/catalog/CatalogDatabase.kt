@@ -1,0 +1,34 @@
+package com.renatizzi.photovideomanager.data.catalog
+
+import android.content.Context
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
+
+@Database(
+    entities = [
+        ArchiveEntity::class,
+        StorageLocationEntity::class,
+        MediaItemEntity::class,
+        MediaCopyEntity::class,
+        MediaFingerprintEntity::class,
+    ],
+    version = 1,
+    exportSchema = false,
+)
+abstract class CatalogDatabase : RoomDatabase() {
+    abstract fun archiveDao(): ArchiveDao
+    abstract fun storageLocationDao(): StorageLocationDao
+    abstract fun mediaItemDao(): MediaItemDao
+    abstract fun mediaCopyDao(): MediaCopyDao
+    abstract fun mediaFingerprintDao(): MediaFingerprintDao
+
+    companion object {
+        fun create(context: Context): CatalogDatabase =
+            Room.databaseBuilder(
+                context.applicationContext,
+                CatalogDatabase::class.java,
+                "pvm_catalog.db",
+            ).build()
+    }
+}

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Photo&amp;VideoManager</string>
+    <string name="home">Home</string>
+    <string name="settings">Impostazioni</string>
+    <string name="help">Guida</string>
+    <string name="organizza">Organizza</string>
+    <string name="componi">Componi</string>
+    <string name="pubblica">Pubblica</string>
+    <string name="gestisci">Gestisci</string>
+    <string name="configura">Configura</string>
+    <string name="archivio">Archivio</string>
+    <string name="famiglia">Famiglia</string>
+    <string name="preferenze">Preferenze</string>
+    <string name="user_placeholder">Utente locale</string>
+    <string name="coming_soon">Funzione in preparazione — specifica consolidata, implementazione nelle macro-attività successive.</string>
+    <string name="catalog_status">Catalogo locale: %1$d elementi</string>
+    <string name="storage_local">Storage locale: disponibile</string>
+</resources>
