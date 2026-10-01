@@ -27,9 +27,9 @@ Baseline: Nota Integrata v5.1. Decisioni tecniche di implementazione (non consol
 3. Poi vertical slice operativo: **M05 → M06 → M07** (censimento / acquisizione / dedup)
 4. Shell UI completa (M18) e feature successive senza invertire dipendenze
 
-## Checkpoint CP1 (in corso / completato in codice)
+## Checkpoint CP2
 
-- Schema Catalogo v2: `displayName`/`adapterKind` su StorageLocation + `scan_sessions`
-- `SourceRegistry`: bootstrap personale, registrazione cartelle SAF, refresh disponibilità
-- Adapter `SafTreeStorageAdapter` + factory
-- UI CONFIGURA → Archivio: elenco sorgenti, Aggiungi cartella, Rimuovi
+- Fix Top Bar sotto status bar
+- Censimento cartella SAF → Catalogo (idempotente, senza modificare i file)
+- Pulsante **Censisci cartella** in CONFIGURA → Archivio
+- Contatore Catalogo aggiornato in Home/Archivio

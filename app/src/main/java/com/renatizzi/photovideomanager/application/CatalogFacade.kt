@@ -1,13 +1,15 @@
 package com.renatizzi.photovideomanager.application
 
 import com.renatizzi.photovideomanager.domain.model.Availability
+import com.renatizzi.photovideomanager.domain.model.CensusResult
 import com.renatizzi.photovideomanager.domain.model.SourceSummary
 
 /**
- * Facade sottile verso UI: delega a SourceRegistry per bootstrap e sorgenti.
+ * Facade sottile verso UI: sorgenti + censimento.
  */
 class CatalogFacade(
     private val sourceRegistry: SourceRegistry,
+    private val censusService: CensusService,
 ) {
     suspend fun bootstrapPersonalArchiveIfNeeded() {
         sourceRegistry.bootstrapPersonalArchiveIfNeeded()
@@ -28,6 +30,9 @@ class CatalogFacade(
         sourceRegistry.registerSafFolder(treeUri, displayName)
 
     suspend fun removeSource(locationId: String) = sourceRegistry.removeSource(locationId)
+
+    suspend fun censusSource(locationId: String): CensusResult =
+        censusService.censusSource(locationId)
 
     companion object {
         const val PERSONAL_ARCHIVE_ID = "archive.personal.local"

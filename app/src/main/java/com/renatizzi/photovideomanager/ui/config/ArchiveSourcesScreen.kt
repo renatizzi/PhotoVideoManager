@@ -20,7 +20,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -36,6 +35,7 @@ fun ArchiveSourcesScreen(
     state: ArchiveSourcesUiState,
     onAddFolder: (Uri, String) -> Unit,
     onRemove: (String) -> Unit,
+    onCensus: (String) -> Unit,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -69,11 +69,13 @@ fun ArchiveSourcesScreen(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
         )
+        Text(
+            text = stringResource(R.string.catalog_status, state.catalogCount),
+            style = MaterialTheme.typography.bodyMedium,
+        )
 
         Button(
-            onClick = {
-                openTree.launch(null)
-            },
+            onClick = { openTree.launch(null) },
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(stringResource(R.string.add_folder))
@@ -82,17 +84,23 @@ fun ArchiveSourcesScreen(
         OutlinedButton(
             onClick = onRefresh,
             modifier = Modifier.fillMaxWidth(),
-            enabled = !state.loading,
+            enabled = !state.loading && state.censusInProgressLocationId == null,
         ) {
             Text(stringResource(R.string.refresh_sources))
         }
 
-        if (state.loading) {
+        if (state.loading || state.censusInProgressLocationId != null) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
             ) {
                 CircularProgressIndicator()
+            }
+            if (state.censusInProgressLocationId != null) {
+                Text(
+                    text = stringResource(R.string.census_in_progress),
+                    style = MaterialTheme.typography.bodySmall,
+                )
             }
         }
 
@@ -111,6 +119,11 @@ fun ArchiveSourcesScreen(
         state.sources.forEach { source ->
             SourceRow(
                 source = source,
+                censusBusy = state.censusInProgressLocationId == source.locationId,
+                censusEnabled = state.censusInProgressLocationId == null &&
+                    source.availability == Availability.AVAILABLE &&
+                    !source.isBuiltInPersonal,
+                onCensus = { onCensus(source.locationId) },
                 onRemove = { onRemove(source.locationId) },
             )
             HorizontalDivider()
@@ -128,6 +141,9 @@ fun ArchiveSourcesScreen(
 @Composable
 private fun SourceRow(
     source: SourceSummary,
+    censusBusy: Boolean,
+    censusEnabled: Boolean,
+    onCensus: () -> Unit,
     onRemove: () -> Unit,
 ) {
     Column(
@@ -153,7 +169,20 @@ private fun SourceRow(
             },
         )
         if (!source.isBuiltInPersonal) {
-            OutlinedButton(onClick = onRemove) {
+            Button(
+                onClick = onCensus,
+                enabled = censusEnabled,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    if (censusBusy) {
+                        stringResource(R.string.census_in_progress)
+                    } else {
+                        stringResource(R.string.census_folder)
+                    },
+                )
+            }
+            OutlinedButton(onClick = onRemove, enabled = !censusBusy) {
                 Text(stringResource(R.string.remove_source))
             }
         } else {

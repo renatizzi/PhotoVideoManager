@@ -64,12 +64,13 @@ data class MediaItemEntity(
             onDelete = ForeignKey.CASCADE,
         ),
     ],
-    indices = [Index("mediaItemId"), Index("storageLocationId"), Index("state")],
+    indices = [Index("mediaItemId"), Index("storageLocationId"), Index("state"), Index(value = ["storageLocationId", "opaqueLocator"], unique = true)],
 )
 data class MediaCopyEntity(
     @PrimaryKey val id: String,
     val mediaItemId: String,
     val storageLocationId: String,
+    val opaqueLocator: String,
     val byteSize: Long?,
     val mimeType: String?,
     val state: String,

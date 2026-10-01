@@ -15,6 +15,8 @@ import kotlinx.coroutines.launch
 data class ArchiveSourcesUiState(
     val sources: List<SourceSummary> = emptyList(),
     val loading: Boolean = true,
+    val censusInProgressLocationId: String? = null,
+    val catalogCount: Long = 0,
     val message: String? = null,
 )
 
@@ -31,18 +33,22 @@ class ArchiveSourcesViewModel(
     fun refresh() {
         viewModelScope.launch {
             _state.update { it.copy(loading = true, message = null) }
-            runCatching { catalogFacade.listSources(refresh = true) }
-                .onSuccess { sources ->
-                    _state.update { it.copy(sources = sources, loading = false) }
+            runCatching {
+                val sources = catalogFacade.listSources(refresh = true)
+                val count = catalogFacade.mediaItemCount()
+                sources to count
+            }.onSuccess { (sources, count) ->
+                _state.update {
+                    it.copy(sources = sources, catalogCount = count, loading = false)
                 }
-                .onFailure { error ->
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            message = error.message ?: "Errore nel caricamento delle sorgenti",
-                        )
-                    }
+            }.onFailure { error ->
+                _state.update {
+                    it.copy(
+                        loading = false,
+                        message = error.message ?: "Errore nel caricamento delle sorgenti",
+                    )
                 }
+            }
         }
     }
 
@@ -76,13 +82,51 @@ class ArchiveSourcesViewModel(
             runCatching { catalogFacade.removeSource(locationId) }
                 .onSuccess {
                     val sources = catalogFacade.listSources(refresh = true)
+                    val count = catalogFacade.mediaItemCount()
                     _state.update {
-                        it.copy(sources = sources, message = "Sorgente rimossa")
+                        it.copy(
+                            sources = sources,
+                            catalogCount = count,
+                            message = "Sorgente rimossa",
+                        )
                     }
                 }
                 .onFailure { error ->
                     _state.update {
                         it.copy(message = error.message ?: "Impossibile rimuovere la sorgente")
+                    }
+                }
+        }
+    }
+
+    fun censusSource(locationId: String) {
+        viewModelScope.launch {
+            _state.update {
+                it.copy(censusInProgressLocationId = locationId, message = null)
+            }
+            runCatching { catalogFacade.censusSource(locationId) }
+                .onSuccess { result ->
+                    val count = catalogFacade.mediaItemCount()
+                    val msg = if (result.message != null) {
+                        result.message
+                    } else {
+                        "Censimento terminato: trovati ${result.mediaFound}, " +
+                            "nuovi ${result.mediaAdded}, già noti ${result.mediaSkippedExisting}"
+                    }
+                    _state.update {
+                        it.copy(
+                            censusInProgressLocationId = null,
+                            catalogCount = count,
+                            message = msg,
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            censusInProgressLocationId = null,
+                            message = error.message ?: "Censimento non riuscito",
+                        )
                     }
                 }
         }

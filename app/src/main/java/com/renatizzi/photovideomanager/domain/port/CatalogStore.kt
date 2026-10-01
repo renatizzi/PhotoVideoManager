@@ -19,6 +19,7 @@ interface CatalogStore {
     suspend fun deleteArchive(id: String)
     suspend fun upsertMediaItem(item: MediaItem)
     suspend fun upsertMediaCopy(copy: MediaCopy)
+    suspend fun findMediaCopyByLocator(storageLocationId: String, opaqueLocator: String): MediaCopy?
     suspend fun upsertFingerprint(fingerprint: MediaFingerprint)
     suspend fun listMediaItems(limit: Int = 100): List<MediaItem>
     suspend fun upsertScanSession(session: ScanSession)

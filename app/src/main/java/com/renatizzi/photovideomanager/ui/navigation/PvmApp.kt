@@ -91,6 +91,7 @@ fun PvmApp(
                 modifier = Modifier.padding(padding),
             ) {
                 composable(PvmDestination.Home.route) {
+                    LaunchedEffect(Unit) { homeViewModel.refresh() }
                     val storageStatus = when (homeState.localAvailability) {
                         Availability.AVAILABLE -> stringResource(R.string.storage_local)
                         Availability.UNAVAILABLE -> stringResource(R.string.storage_local_unavailable)
@@ -126,6 +127,7 @@ fun PvmApp(
                         state = archiveState,
                         onAddFolder = archiveVm::addSafFolder,
                         onRemove = archiveVm::removeSource,
+                        onCensus = archiveVm::censusSource,
                         onRefresh = archiveVm::refresh,
                     )
                 }

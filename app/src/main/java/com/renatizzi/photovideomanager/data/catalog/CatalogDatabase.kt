@@ -14,7 +14,7 @@ import androidx.room.RoomDatabase
         MediaFingerprintEntity::class,
         ScanSessionEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class CatalogDatabase : RoomDatabase() {

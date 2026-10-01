@@ -5,6 +5,7 @@ import com.renatizzi.photovideomanager.domain.model.ArchiveRef
 import com.renatizzi.photovideomanager.domain.model.Availability
 import com.renatizzi.photovideomanager.domain.model.DomainScope
 import com.renatizzi.photovideomanager.domain.model.MediaCopy
+import com.renatizzi.photovideomanager.domain.model.MediaCopyState
 import com.renatizzi.photovideomanager.domain.model.MediaFingerprint
 import com.renatizzi.photovideomanager.domain.model.MediaItem
 import com.renatizzi.photovideomanager.domain.model.MediaKind
@@ -80,6 +81,7 @@ class RoomCatalogStore(
                 id = copy.id,
                 mediaItemId = copy.mediaItemId,
                 storageLocationId = copy.storageLocationId,
+                opaqueLocator = copy.opaqueLocator,
                 byteSize = copy.byteSize,
                 mimeType = copy.mimeType,
                 state = copy.state.name,
@@ -87,6 +89,11 @@ class RoomCatalogStore(
             ),
         )
     }
+
+    override suspend fun findMediaCopyByLocator(
+        storageLocationId: String,
+        opaqueLocator: String,
+    ): MediaCopy? = db.mediaCopyDao().findByLocator(storageLocationId, opaqueLocator)?.toDomain()
 
     override suspend fun upsertFingerprint(fingerprint: MediaFingerprint) {
         db.mediaFingerprintDao().upsert(
@@ -155,5 +162,16 @@ class RoomCatalogStore(
         adapterKind = StorageAdapterKind.valueOf(adapterKind),
         opaqueLocator = opaqueLocator,
         availability = Availability.valueOf(availability),
+    )
+
+    private fun MediaCopyEntity.toDomain() = MediaCopy(
+        id = id,
+        mediaItemId = mediaItemId,
+        storageLocationId = storageLocationId,
+        opaqueLocator = opaqueLocator,
+        byteSize = byteSize,
+        mimeType = mimeType,
+        state = MediaCopyState.valueOf(state),
+        createdAtEpochMs = createdAtEpochMs,
     )
 }

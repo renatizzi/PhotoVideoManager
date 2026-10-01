@@ -48,6 +48,11 @@ interface MediaItemDao {
 interface MediaCopyDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: MediaCopyEntity)
+
+    @Query(
+        "SELECT * FROM media_copies WHERE storageLocationId = :storageLocationId AND opaqueLocator = :opaqueLocator LIMIT 1",
+    )
+    suspend fun findByLocator(storageLocationId: String, opaqueLocator: String): MediaCopyEntity?
 }
 
 @Dao
