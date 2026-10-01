@@ -42,6 +42,9 @@ interface MediaItemDao {
 
     @Query("SELECT * FROM media_items ORDER BY updatedAtEpochMs DESC LIMIT :limit")
     suspend fun list(limit: Int): List<MediaItemEntity>
+
+    @Query("SELECT * FROM media_items WHERE id = :id LIMIT 1")
+    suspend fun get(id: String): MediaItemEntity?
 }
 
 @Dao
@@ -53,6 +56,12 @@ interface MediaCopyDao {
         "SELECT * FROM media_copies WHERE storageLocationId = :storageLocationId AND opaqueLocator = :opaqueLocator LIMIT 1",
     )
     suspend fun findByLocator(storageLocationId: String, opaqueLocator: String): MediaCopyEntity?
+
+    @Query("SELECT * FROM media_copies WHERE mediaItemId = :mediaItemId")
+    suspend fun listByMediaItem(mediaItemId: String): List<MediaCopyEntity>
+
+    @Query("SELECT * FROM media_copies WHERE id = :id LIMIT 1")
+    suspend fun get(id: String): MediaCopyEntity?
 }
 
 @Dao
@@ -68,4 +77,14 @@ interface ScanSessionDao {
 
     @Query("SELECT * FROM scan_sessions WHERE id = :id LIMIT 1")
     suspend fun get(id: String): ScanSessionEntity?
+}
+
+
+@Dao
+interface ImportSessionDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(entity: ImportSessionEntity)
+
+    @Query("SELECT * FROM import_sessions WHERE id = :id LIMIT 1")
+    suspend fun get(id: String): ImportSessionEntity?
 }

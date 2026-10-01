@@ -1,6 +1,7 @@
 package com.renatizzi.photovideomanager.di
 
 import android.content.Context
+import com.renatizzi.photovideomanager.application.AcquisitionService
 import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.application.CensusService
 import com.renatizzi.photovideomanager.application.SourceRegistry
@@ -47,10 +48,17 @@ class AppContainer(context: Context) {
         permissionGate = permissionGate,
     )
 
+    val acquisitionService: AcquisitionService = AcquisitionService(
+        catalogStore = catalogStore,
+        adapterFactory = adapterFactory,
+        permissionGate = permissionGate,
+    )
+
     val themePreferences: ThemePreferences = ThemePreferences(appContext)
 
     val catalogFacade: CatalogFacade = CatalogFacade(
         sourceRegistry = sourceRegistry,
         censusService = censusService,
+        acquisitionService = acquisitionService,
     )
 }

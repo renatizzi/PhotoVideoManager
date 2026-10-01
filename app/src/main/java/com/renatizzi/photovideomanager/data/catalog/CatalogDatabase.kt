@@ -13,8 +13,9 @@ import androidx.room.RoomDatabase
         MediaCopyEntity::class,
         MediaFingerprintEntity::class,
         ScanSessionEntity::class,
+        ImportSessionEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = false,
 )
 abstract class CatalogDatabase : RoomDatabase() {
@@ -24,6 +25,7 @@ abstract class CatalogDatabase : RoomDatabase() {
     abstract fun mediaCopyDao(): MediaCopyDao
     abstract fun mediaFingerprintDao(): MediaFingerprintDao
     abstract fun scanSessionDao(): ScanSessionDao
+    abstract fun importSessionDao(): ImportSessionDao
 
     companion object {
         fun create(context: Context): CatalogDatabase =

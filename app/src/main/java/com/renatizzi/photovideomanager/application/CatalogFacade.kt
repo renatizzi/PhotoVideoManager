@@ -1,15 +1,18 @@
 package com.renatizzi.photovideomanager.application
 
+import com.renatizzi.photovideomanager.domain.model.AcquireCandidate
+import com.renatizzi.photovideomanager.domain.model.AcquireResult
 import com.renatizzi.photovideomanager.domain.model.Availability
 import com.renatizzi.photovideomanager.domain.model.CensusResult
 import com.renatizzi.photovideomanager.domain.model.SourceSummary
 
 /**
- * Facade sottile verso UI: sorgenti + censimento.
+ * Facade sottile verso UI: sorgenti, censimento, acquisizione.
  */
 class CatalogFacade(
     private val sourceRegistry: SourceRegistry,
     private val censusService: CensusService,
+    private val acquisitionService: AcquisitionService,
 ) {
     suspend fun bootstrapPersonalArchiveIfNeeded() {
         sourceRegistry.bootstrapPersonalArchiveIfNeeded()
@@ -33,6 +36,12 @@ class CatalogFacade(
 
     suspend fun censusSource(locationId: String): CensusResult =
         censusService.censusSource(locationId)
+
+    suspend fun listAcquireCandidates(limit: Int = 200): List<AcquireCandidate> =
+        acquisitionService.listCandidates(limit)
+
+    suspend fun acquireToPersonalArchive(mediaItemIds: Collection<String>): AcquireResult =
+        acquisitionService.acquireToPersonalArchive(mediaItemIds)
 
     companion object {
         const val PERSONAL_ARCHIVE_ID = "archive.personal.local"

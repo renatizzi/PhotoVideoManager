@@ -77,6 +77,32 @@ class LocalFilesystemStorageAdapter(
             )
         }
 
+
+    override suspend fun writeCopy(
+        parentOpaqueLocator: String,
+        fileName: String,
+        source: InputStream,
+    ): String = withContext(Dispatchers.IO) {
+        requireCapability(StorageCapability.WRITE)
+        val parent = resolve(parentOpaqueLocator)
+        if (!parent.exists()) parent.mkdirs()
+        require(parent.isDirectory) { "Parent non è una directory" }
+        val safeName = fileName.replace(Regex("[\\/]+"), "_")
+        var target = File(parent, safeName)
+        var idx = 1
+        while (target.exists()) {
+            val dot = safeName.lastIndexOf('.')
+            val base = if (dot > 0) safeName.substring(0, dot) else safeName
+            val ext = if (dot > 0) safeName.substring(dot) else ""
+            target = File(parent, "${base}_$idx$ext")
+            idx++
+        }
+        source.use { input ->
+            target.outputStream().use { output -> input.copyTo(output) }
+        }
+        relativize(target)
+    }
+
     private fun requireCapability(capability: StorageCapability) {
         if (capability !in caps) {
             throw MissingCapabilityException(capability, adapterId)

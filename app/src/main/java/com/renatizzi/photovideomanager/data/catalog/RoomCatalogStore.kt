@@ -4,6 +4,8 @@ import com.renatizzi.photovideomanager.domain.model.ArchiveKind
 import com.renatizzi.photovideomanager.domain.model.ArchiveRef
 import com.renatizzi.photovideomanager.domain.model.Availability
 import com.renatizzi.photovideomanager.domain.model.DomainScope
+import com.renatizzi.photovideomanager.domain.model.ImportSession
+import com.renatizzi.photovideomanager.domain.model.ImportSessionState
 import com.renatizzi.photovideomanager.domain.model.MediaCopy
 import com.renatizzi.photovideomanager.domain.model.MediaCopyState
 import com.renatizzi.photovideomanager.domain.model.MediaFingerprint
@@ -144,6 +146,57 @@ class RoomCatalogStore(
                 startedAtEpochMs = entity.startedAtEpochMs,
                 updatedAtEpochMs = entity.updatedAtEpochMs,
                 itemsSeen = entity.itemsSeen,
+                lastError = entity.lastError,
+            )
+        }
+
+
+    override suspend fun getMediaItem(id: String): MediaItem? =
+        db.mediaItemDao().get(id)?.let { entity ->
+            MediaItem(
+                id = entity.id,
+                kind = MediaKind.valueOf(entity.kind),
+                domainScope = DomainScope.valueOf(entity.domainScope),
+                capturedAtEpochMs = entity.capturedAtEpochMs,
+                displayTitle = entity.displayTitle,
+                createdAtEpochMs = entity.createdAtEpochMs,
+                updatedAtEpochMs = entity.updatedAtEpochMs,
+            )
+        }
+
+    override suspend fun getMediaCopy(id: String): MediaCopy? =
+        db.mediaCopyDao().get(id)?.toDomain()
+
+    override suspend fun listMediaCopiesForItem(mediaItemId: String): List<MediaCopy> =
+        db.mediaCopyDao().listByMediaItem(mediaItemId).map { it.toDomain() }
+
+    override suspend fun upsertImportSession(session: ImportSession) {
+        db.importSessionDao().upsert(
+            ImportSessionEntity(
+                id = session.id,
+                destinationLocationId = session.destinationLocationId,
+                state = session.state.name,
+                startedAtEpochMs = session.startedAtEpochMs,
+                updatedAtEpochMs = session.updatedAtEpochMs,
+                itemsTotal = session.itemsTotal,
+                itemsDone = session.itemsDone,
+                itemsFailed = session.itemsFailed,
+                lastError = session.lastError,
+            ),
+        )
+    }
+
+    override suspend fun getImportSession(id: String): ImportSession? =
+        db.importSessionDao().get(id)?.let { entity ->
+            ImportSession(
+                id = entity.id,
+                destinationLocationId = entity.destinationLocationId,
+                state = ImportSessionState.valueOf(entity.state),
+                startedAtEpochMs = entity.startedAtEpochMs,
+                updatedAtEpochMs = entity.updatedAtEpochMs,
+                itemsTotal = entity.itemsTotal,
+                itemsDone = entity.itemsDone,
+                itemsFailed = entity.itemsFailed,
                 lastError = entity.lastError,
             )
         }

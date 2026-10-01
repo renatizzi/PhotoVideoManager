@@ -122,3 +122,28 @@ data class ScanSessionEntity(
     val itemsSeen: Int,
     val lastError: String?,
 )
+
+
+@Entity(
+    tableName = "import_sessions",
+    foreignKeys = [
+        ForeignKey(
+            entity = StorageLocationEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["destinationLocationId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+    indices = [Index("destinationLocationId"), Index("state")],
+)
+data class ImportSessionEntity(
+    @PrimaryKey val id: String,
+    val destinationLocationId: String,
+    val state: String,
+    val startedAtEpochMs: Long,
+    val updatedAtEpochMs: Long,
+    val itemsTotal: Int,
+    val itemsDone: Int,
+    val itemsFailed: Int,
+    val lastError: String?,
+)

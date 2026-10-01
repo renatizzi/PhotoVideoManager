@@ -25,6 +25,8 @@ import androidx.navigation.navArgument
 import com.renatizzi.photovideomanager.R
 import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.domain.model.Availability
+import com.renatizzi.photovideomanager.ui.acquire.AcquireScreen
+import com.renatizzi.photovideomanager.ui.acquire.AcquireViewModel
 import com.renatizzi.photovideomanager.ui.config.ArchiveSourcesScreen
 import com.renatizzi.photovideomanager.ui.config.ArchiveSourcesViewModel
 import com.renatizzi.photovideomanager.ui.config.ConfigScreen
@@ -103,7 +105,10 @@ fun PvmApp(
                         catalogCount = homeState.catalogCount,
                         storageStatus = storageStatus,
                         onFeatureClick = { featureId ->
-                            navController.navigate(PvmDestination.FeatureStub.create(featureId))
+                            when (featureId) {
+                                "acquisisci" -> navController.navigate(PvmDestination.Acquire.route)
+                                else -> navController.navigate(PvmDestination.FeatureStub.create(featureId))
+                            }
                         },
                     )
                 }
@@ -131,6 +136,26 @@ fun PvmApp(
                         onRemove = archiveVm::removeSource,
                         onCensus = archiveVm::censusSource,
                         onRefresh = archiveVm::refresh,
+                    )
+                }
+                composable(PvmDestination.Acquire.route) {
+                    val acquireVm: AcquireViewModel = viewModel(
+                        factory = AcquireViewModel.factory(catalogFacade),
+                    )
+                    val acquireState by acquireVm.state.collectAsStateWithLifecycle()
+                    LaunchedEffect(acquireState.message) {
+                        acquireState.message?.let {
+                            snackbarHostState.showSnackbar(it)
+                            acquireVm.consumeMessage()
+                        }
+                    }
+                    AcquireScreen(
+                        state = acquireState,
+                        onToggle = acquireVm::toggleSelection,
+                        onSelectPending = acquireVm::selectPendingOnly,
+                        onClearSelection = acquireVm::clearSelection,
+                        onAcquire = acquireVm::acquireSelected,
+                        onRefresh = acquireVm::refresh,
                     )
                 }
                 composable(

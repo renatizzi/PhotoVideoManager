@@ -12,6 +12,7 @@ import com.renatizzi.photovideomanager.domain.port.StorageMetadata
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.InputStream
+import java.io.OutputStream
 
 /**
  * Adapter SAF Document Tree.
@@ -81,6 +82,26 @@ class SafTreeStorageAdapter(
                 lastModifiedEpochMs = file.lastModified().takeIf { it > 0 },
             )
         }
+
+
+    override suspend fun writeCopy(
+        parentOpaqueLocator: String,
+        fileName: String,
+        source: InputStream,
+    ): String = withContext(Dispatchers.IO) {
+        requireCapability(StorageCapability.WRITE)
+        val parent = resolve(parentOpaqueLocator)
+            ?: DocumentFile.fromTreeUri(context, treeUri)
+            ?: error("Parent SAF non disponibile")
+        require(parent.isDirectory) { "Parent SAF non è una directory" }
+        val safeName = fileName.replace(Regex("[\\/]+"), "_")
+        val created = parent.createFile("application/octet-stream", safeName)
+            ?: error("Impossibile creare file SAF")
+        context.contentResolver.openOutputStream(created.uri)?.use { output: OutputStream ->
+            source.use { input -> input.copyTo(output) }
+        } ?: error("Impossibile aprire output SAF")
+        created.uri.toString()
+    }
 
     private fun requireCapability(capability: StorageCapability) {
         if (capability !in caps) {

@@ -4,10 +4,6 @@ import com.renatizzi.photovideomanager.domain.model.Availability
 import com.renatizzi.photovideomanager.domain.model.StorageCapability
 import java.io.InputStream
 
-/**
- * Accesso fisico a archivi/sorgenti. Il Domain non vede path/tecnologia.
- * Capability non uniformi: l'assenza degrada in modo esplicito.
- */
 interface StorageAdapter {
     val adapterId: String
     fun capabilities(): Set<StorageCapability>
@@ -15,6 +11,15 @@ interface StorageAdapter {
     suspend fun listChildren(opaqueLocator: String): List<StorageEntry>
     suspend fun openRead(opaqueLocator: String): InputStream
     suspend fun readMetadata(opaqueLocator: String): StorageMetadata?
+    /**
+     * Scrive una copia da stream in [parentOpaqueLocator] con nome [fileName].
+     * Ritorna il nuovo opaqueLocator. Richiede capability WRITE.
+     */
+    suspend fun writeCopy(
+        parentOpaqueLocator: String,
+        fileName: String,
+        source: InputStream,
+    ): String
 }
 
 data class StorageEntry(

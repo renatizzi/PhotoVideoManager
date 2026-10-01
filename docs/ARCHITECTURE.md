@@ -33,3 +33,10 @@ Baseline: Nota Integrata v5.1. Decisioni tecniche di implementazione (non consol
 - Token tema parity BoxManager + branding PVM blue
 - `PvmScaffold` + Top Bar card + Bottom Bar 2 tab + tema persistito
 - Checklist: `docs/SHELL_PARITY.md`
+
+## Checkpoint CP3 (M06 acquisizione — fetta v1)
+
+- `AcquisitionService`: staging → verify SHA-256 → commit copia nello spazio app personale
+- Catalogo: `ImportSession` + fingerprint L2; sorgente non modificata
+- UI Home → Acquisisci: elenco candidati da Catalogo, selezione, avvio acquisizione
+- Destinazione Archivio Condiviso: tranche successiva
