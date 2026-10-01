@@ -12,8 +12,9 @@ import androidx.room.RoomDatabase
         MediaItemEntity::class,
         MediaCopyEntity::class,
         MediaFingerprintEntity::class,
+        ScanSessionEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 abstract class CatalogDatabase : RoomDatabase() {
@@ -22,6 +23,7 @@ abstract class CatalogDatabase : RoomDatabase() {
     abstract fun mediaItemDao(): MediaItemDao
     abstract fun mediaCopyDao(): MediaCopyDao
     abstract fun mediaFingerprintDao(): MediaFingerprintDao
+    abstract fun scanSessionDao(): ScanSessionDao
 
     companion object {
         fun create(context: Context): CatalogDatabase =
@@ -29,6 +31,9 @@ abstract class CatalogDatabase : RoomDatabase() {
                 context.applicationContext,
                 CatalogDatabase::class.java,
                 "pvm_catalog.db",
-            ).build()
+            )
+                // Early development: schema still evolving; no production data to preserve yet.
+                .fallbackToDestructiveMigration()
+                .build()
     }
 }

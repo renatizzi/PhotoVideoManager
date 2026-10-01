@@ -5,10 +5,12 @@ import com.renatizzi.photovideomanager.domain.model.ArchiveRef
 import com.renatizzi.photovideomanager.domain.model.Availability
 import com.renatizzi.photovideomanager.domain.model.DomainScope
 import com.renatizzi.photovideomanager.domain.model.MediaCopy
-import com.renatizzi.photovideomanager.domain.model.MediaCopyState
 import com.renatizzi.photovideomanager.domain.model.MediaFingerprint
 import com.renatizzi.photovideomanager.domain.model.MediaItem
 import com.renatizzi.photovideomanager.domain.model.MediaKind
+import com.renatizzi.photovideomanager.domain.model.ScanSession
+import com.renatizzi.photovideomanager.domain.model.ScanSessionState
+import com.renatizzi.photovideomanager.domain.model.StorageAdapterKind
 import com.renatizzi.photovideomanager.domain.model.StorageLocation
 import com.renatizzi.photovideomanager.domain.port.CatalogStore
 
@@ -28,15 +30,34 @@ class RoomCatalogStore(
         )
     }
 
+    override suspend fun listArchives(): List<ArchiveRef> =
+        db.archiveDao().list().map { it.toDomain() }
+
     override suspend fun upsertStorageLocation(location: StorageLocation) {
         db.storageLocationDao().upsert(
             StorageLocationEntity(
                 id = location.id,
                 archiveId = location.archiveId,
+                displayName = location.displayName,
+                adapterKind = location.adapterKind.name,
                 opaqueLocator = location.opaqueLocator,
                 availability = location.availability.name,
             ),
         )
+    }
+
+    override suspend fun listStorageLocations(): List<StorageLocation> =
+        db.storageLocationDao().list().map { it.toDomain() }
+
+    override suspend fun getStorageLocation(id: String): StorageLocation? =
+        db.storageLocationDao().get(id)?.toDomain()
+
+    override suspend fun deleteStorageLocation(id: String) {
+        db.storageLocationDao().delete(id)
+    }
+
+    override suspend fun deleteArchive(id: String) {
+        db.archiveDao().delete(id)
     }
 
     override suspend fun upsertMediaItem(item: MediaItem) {
@@ -92,9 +113,47 @@ class RoomCatalogStore(
                 updatedAtEpochMs = entity.updatedAtEpochMs,
             )
         }
-}
 
-/** Helpers reserved for future mapping of ArchiveKind/Availability enums. */
-internal fun ArchiveKind.asStorageLabel(): String = name
-internal fun Availability.asStorageLabel(): String = name
-internal fun MediaCopyState.asStorageLabel(): String = name
+    override suspend fun upsertScanSession(session: ScanSession) {
+        db.scanSessionDao().upsert(
+            ScanSessionEntity(
+                id = session.id,
+                sourceLocationId = session.sourceLocationId,
+                state = session.state.name,
+                startedAtEpochMs = session.startedAtEpochMs,
+                updatedAtEpochMs = session.updatedAtEpochMs,
+                itemsSeen = session.itemsSeen,
+                lastError = session.lastError,
+            ),
+        )
+    }
+
+    override suspend fun getScanSession(id: String): ScanSession? =
+        db.scanSessionDao().get(id)?.let { entity ->
+            ScanSession(
+                id = entity.id,
+                sourceLocationId = entity.sourceLocationId,
+                state = ScanSessionState.valueOf(entity.state),
+                startedAtEpochMs = entity.startedAtEpochMs,
+                updatedAtEpochMs = entity.updatedAtEpochMs,
+                itemsSeen = entity.itemsSeen,
+                lastError = entity.lastError,
+            )
+        }
+
+    private fun ArchiveEntity.toDomain() = ArchiveRef(
+        id = id,
+        displayName = displayName,
+        kind = ArchiveKind.valueOf(kind),
+        isSharedArchive = isSharedArchive,
+    )
+
+    private fun StorageLocationEntity.toDomain() = StorageLocation(
+        id = id,
+        archiveId = archiveId,
+        displayName = displayName,
+        adapterKind = StorageAdapterKind.valueOf(adapterKind),
+        opaqueLocator = opaqueLocator,
+        availability = Availability.valueOf(availability),
+    )
+}

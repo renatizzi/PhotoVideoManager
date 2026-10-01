@@ -1,8 +1,10 @@
 package com.renatizzi.photovideomanager.ui.config
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -14,7 +16,10 @@ import androidx.compose.ui.unit.dp
 import com.renatizzi.photovideomanager.R
 
 @Composable
-fun ConfigScreen(modifier: Modifier = Modifier) {
+fun ConfigScreen(
+    onOpenArchive: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -26,15 +31,37 @@ fun ConfigScreen(modifier: Modifier = Modifier) {
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold,
         )
-        ConfigSection(stringResource(R.string.archivio), "Archivio Condiviso, storage, cartelle, sorgenti e accesso.")
-        ConfigSection(stringResource(R.string.famiglia), "Membri, autorizzazioni e condivisione.")
-        ConfigSection(stringResource(R.string.preferenze), "Comportamento, sicurezza e impostazioni generali.")
+        ConfigSection(
+            title = stringResource(R.string.archivio),
+            body = stringResource(R.string.archivio_section_hint),
+            onClick = onOpenArchive,
+        )
+        ConfigSection(
+            title = stringResource(R.string.famiglia),
+            body = stringResource(R.string.coming_soon),
+            onClick = null,
+        )
+        ConfigSection(
+            title = stringResource(R.string.preferenze),
+            body = stringResource(R.string.coming_soon),
+            onClick = null,
+        )
     }
 }
 
 @Composable
-private fun ConfigSection(title: String, body: String) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+private fun ConfigSection(
+    title: String,
+    body: String,
+    onClick: (() -> Unit)?,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
         Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
         Text(
             text = body,

@@ -23,11 +23,13 @@ data class ArchiveEntity(
             onDelete = ForeignKey.CASCADE,
         ),
     ],
-    indices = [Index("archiveId")],
+    indices = [Index("archiveId"), Index("adapterKind")],
 )
 data class StorageLocationEntity(
     @PrimaryKey val id: String,
     val archiveId: String,
+    val displayName: String,
+    val adapterKind: String,
     val opaqueLocator: String,
     val availability: String,
 )
@@ -96,4 +98,26 @@ data class MediaFingerprintEntity(
     val level: Int,
     val value: String,
     val computedAtEpochMs: Long,
+)
+
+@Entity(
+    tableName = "scan_sessions",
+    foreignKeys = [
+        ForeignKey(
+            entity = StorageLocationEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["sourceLocationId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+    indices = [Index("sourceLocationId"), Index("state")],
+)
+data class ScanSessionEntity(
+    @PrimaryKey val id: String,
+    val sourceLocationId: String,
+    val state: String,
+    val startedAtEpochMs: Long,
+    val updatedAtEpochMs: Long,
+    val itemsSeen: Int,
+    val lastError: String?,
 )

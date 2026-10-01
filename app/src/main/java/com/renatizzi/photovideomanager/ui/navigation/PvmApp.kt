@@ -23,6 +23,8 @@ import androidx.navigation.navArgument
 import com.renatizzi.photovideomanager.R
 import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.domain.model.Availability
+import com.renatizzi.photovideomanager.ui.config.ArchiveSourcesScreen
+import com.renatizzi.photovideomanager.ui.config.ArchiveSourcesViewModel
 import com.renatizzi.photovideomanager.ui.config.ConfigScreen
 import com.renatizzi.photovideomanager.ui.home.FeatureStubScreen
 import com.renatizzi.photovideomanager.ui.home.HomeScreen
@@ -40,13 +42,12 @@ fun PvmApp(
     var darkTheme by remember {
         mutableStateOf(darkThemeOverride ?: false)
     }
-    // Sync with system only on first composition if override null — simplified: user toggle owns state.
     val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
     val selectedTab = when {
-        currentRoute == PvmDestination.Config.route -> BottomTab.Settings
+        currentRoute?.startsWith("config") == true -> BottomTab.Settings
         else -> BottomTab.Home
     }
 
@@ -63,9 +64,7 @@ fun PvmApp(
                 PvmTopBar(
                     darkTheme = darkTheme,
                     onToggleTheme = { darkTheme = !darkTheme },
-                    onHelp = {
-                        // Guida: stub non bloccante in M02/M18 shell.
-                    },
+                    onHelp = { },
                 )
             },
             bottomBar = {
@@ -94,8 +93,8 @@ fun PvmApp(
                 composable(PvmDestination.Home.route) {
                     val storageStatus = when (homeState.localAvailability) {
                         Availability.AVAILABLE -> stringResource(R.string.storage_local)
-                        Availability.UNAVAILABLE -> "Storage locale: non disponibile"
-                        Availability.UNKNOWN -> "Storage locale: stato sconosciuto"
+                        Availability.UNAVAILABLE -> stringResource(R.string.storage_local_unavailable)
+                        Availability.UNKNOWN -> stringResource(R.string.storage_local_unknown)
                     }
                     HomeScreen(
                         catalogCount = homeState.catalogCount,
@@ -106,7 +105,29 @@ fun PvmApp(
                     )
                 }
                 composable(PvmDestination.Config.route) {
-                    ConfigScreen()
+                    ConfigScreen(
+                        onOpenArchive = {
+                            navController.navigate(PvmDestination.ArchiveSources.route)
+                        },
+                    )
+                }
+                composable(PvmDestination.ArchiveSources.route) {
+                    val archiveVm: ArchiveSourcesViewModel = viewModel(
+                        factory = ArchiveSourcesViewModel.factory(catalogFacade),
+                    )
+                    val archiveState by archiveVm.state.collectAsStateWithLifecycle()
+                    LaunchedEffect(archiveState.message) {
+                        archiveState.message?.let {
+                            snackbarHostState.showSnackbar(it)
+                            archiveVm.consumeMessage()
+                        }
+                    }
+                    ArchiveSourcesScreen(
+                        state = archiveState,
+                        onAddFolder = archiveVm::addSafFolder,
+                        onRemove = archiveVm::removeSource,
+                        onRefresh = archiveVm::refresh,
+                    )
                 }
                 composable(
                     route = PvmDestination.FeatureStub.route,

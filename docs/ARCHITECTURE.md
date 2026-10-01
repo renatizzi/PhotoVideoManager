@@ -27,10 +27,9 @@ Baseline: Nota Integrata v5.1. Decisioni tecniche di implementazione (non consol
 3. Poi vertical slice operativo: **M05 → M06 → M07** (censimento / acquisizione / dedup)
 4. Shell UI completa (M18) e feature successive senza invertire dipendenze
 
-## Vincoli rispettati
+## Checkpoint CP1 (in corso / completato in codice)
 
-- Local-first, nessun backend obbligatorio
-- Nessuna sync/code/retry automatica
-- Domain senza dipendenze Android storage
-- Bottom Bar solo Home + Impostazioni
-- Non basato su codice BoxManager (solo parity strutturale shell)
+- Schema Catalogo v2: `displayName`/`adapterKind` su StorageLocation + `scan_sessions`
+- `SourceRegistry`: bootstrap personale, registrazione cartelle SAF, refresh disponibilità
+- Adapter `SafTreeStorageAdapter` + factory
+- UI CONFIGURA → Archivio: elenco sorgenti, Aggiungi cartella, Rimuovi

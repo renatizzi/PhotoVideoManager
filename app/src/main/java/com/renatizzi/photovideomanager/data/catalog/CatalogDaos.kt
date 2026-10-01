@@ -9,12 +9,27 @@ import androidx.room.Query
 interface ArchiveDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: ArchiveEntity)
+
+    @Query("SELECT * FROM archives ORDER BY displayName")
+    suspend fun list(): List<ArchiveEntity>
+
+    @Query("DELETE FROM archives WHERE id = :id")
+    suspend fun delete(id: String)
 }
 
 @Dao
 interface StorageLocationDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: StorageLocationEntity)
+
+    @Query("SELECT * FROM storage_locations ORDER BY displayName")
+    suspend fun list(): List<StorageLocationEntity>
+
+    @Query("SELECT * FROM storage_locations WHERE id = :id LIMIT 1")
+    suspend fun get(id: String): StorageLocationEntity?
+
+    @Query("DELETE FROM storage_locations WHERE id = :id")
+    suspend fun delete(id: String)
 }
 
 @Dao
@@ -39,4 +54,13 @@ interface MediaCopyDao {
 interface MediaFingerprintDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: MediaFingerprintEntity)
+}
+
+@Dao
+interface ScanSessionDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(entity: ScanSessionEntity)
+
+    @Query("SELECT * FROM scan_sessions WHERE id = :id LIMIT 1")
+    suspend fun get(id: String): ScanSessionEntity?
 }

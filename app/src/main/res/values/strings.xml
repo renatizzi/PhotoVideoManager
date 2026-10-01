@@ -16,4 +16,23 @@
     <string name="coming_soon">Funzione in preparazione — specifica consolidata, implementazione nelle macro-attività successive.</string>
     <string name="catalog_status">Catalogo locale: %1$d elementi</string>
     <string name="storage_local">Storage locale: disponibile</string>
+    <string name="storage_local_unavailable">Storage locale: non disponibile</string>
+    <string name="storage_local_unknown">Storage locale: stato sconosciuto</string>
+    <string name="archivio_section_hint">Tocca per gestire cartelle e sorgenti.</string>
+    <string name="archivio_intro">Qui registri le cartelle del telefono o della scheda da cui l’app potrà leggere foto e video. L’Archivio Condiviso familiare arriverà più avanti.</string>
+    <string name="add_folder">Aggiungi cartella</string>
+    <string name="refresh_sources">Aggiorna stato</string>
+    <string name="registered_sources">Sorgenti registrate</string>
+    <string name="no_sources">Nessuna sorgente registrata.</string>
+    <string name="remove_source">Rimuovi</string>
+    <string name="builtin_source_note">Sorgente integrata dell’app (non rimovibile).</string>
+    <string name="shared_archive_placeholder">Archivio Condiviso: non ancora configurabile in questa versione.</string>
+    <string name="external_folder_default_name">Cartella esterna</string>
+    <string name="adapter_local">Tipo: spazio interno dell’app</string>
+    <string name="adapter_saf">Tipo: cartella del dispositivo</string>
+    <string name="adapter_mediastore">Tipo: galleria del sistema (in arrivo)</string>
+    <string name="adapter_smb">Tipo: rete / NAS (in arrivo)</string>
+    <string name="status_available">Stato: disponibile</string>
+    <string name="status_unavailable">Stato: non disponibile</string>
+    <string name="status_unknown">Stato: sconosciuto</string>
 </resources>
