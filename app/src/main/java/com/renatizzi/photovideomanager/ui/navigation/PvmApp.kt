@@ -1,9 +1,11 @@
 package com.renatizzi.photovideomanager.ui.navigation
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,27 +31,31 @@ import com.renatizzi.photovideomanager.ui.config.ConfigScreen
 import com.renatizzi.photovideomanager.ui.home.FeatureStubScreen
 import com.renatizzi.photovideomanager.ui.home.HomeScreen
 import com.renatizzi.photovideomanager.ui.home.HomeViewModel
-import com.renatizzi.photovideomanager.ui.shell.BottomTab
-import com.renatizzi.photovideomanager.ui.shell.PvmBottomBar
-import com.renatizzi.photovideomanager.ui.shell.PvmTopBar
+import com.renatizzi.photovideomanager.ui.shell.PvmScaffold
+import com.renatizzi.photovideomanager.ui.shell.ShellTab
 import com.renatizzi.photovideomanager.ui.theme.PvmTheme
+import com.renatizzi.photovideomanager.ui.theme.ThemePreferences
 
 @Composable
 fun PvmApp(
     catalogFacade: CatalogFacade,
+    themePreferences: ThemePreferences,
     darkThemeOverride: Boolean? = null,
 ) {
+    val systemDark = isSystemInDarkTheme()
     var darkTheme by remember {
-        mutableStateOf(darkThemeOverride ?: false)
+        mutableStateOf(darkThemeOverride ?: themePreferences.storedDarkMode() ?: systemDark)
     }
+    var helpOpen by remember { mutableStateOf(false) }
     val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
     val selectedTab = when {
-        currentRoute?.startsWith("config") == true -> BottomTab.Settings
-        else -> BottomTab.Home
+        currentRoute?.startsWith("config") == true -> ShellTab.SETTINGS
+        else -> ShellTab.HOME
     }
+    val userLabel = stringResource(R.string.user_placeholder)
 
     val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.factory(catalogFacade))
     val homeState by homeViewModel.state.collectAsStateWithLifecycle()
@@ -59,31 +65,27 @@ fun PvmApp(
     }
 
     PvmTheme(darkTheme = darkTheme) {
-        Scaffold(
-            topBar = {
-                PvmTopBar(
-                    darkTheme = darkTheme,
-                    onToggleTheme = { darkTheme = !darkTheme },
-                    onHelp = { },
-                )
+        PvmScaffold(
+            selectedTab = selectedTab,
+            darkTheme = darkTheme,
+            userLabel = userLabel,
+            snackbarHostState = snackbarHostState,
+            onSelectTab = { tab ->
+                when (tab) {
+                    ShellTab.HOME -> navController.navigate(PvmDestination.Home.route) {
+                        popUpTo(PvmDestination.Home.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                    ShellTab.SETTINGS -> navController.navigate(PvmDestination.Config.route) {
+                        launchSingleTop = true
+                    }
+                }
             },
-            bottomBar = {
-                PvmBottomBar(
-                    selected = selectedTab,
-                    onSelect = { tab ->
-                        when (tab) {
-                            BottomTab.Home -> navController.navigate(PvmDestination.Home.route) {
-                                popUpTo(PvmDestination.Home.route) { inclusive = true }
-                                launchSingleTop = true
-                            }
-                            BottomTab.Settings -> navController.navigate(PvmDestination.Config.route) {
-                                launchSingleTop = true
-                            }
-                        }
-                    },
-                )
+            onToggleTheme = {
+                darkTheme = !darkTheme
+                themePreferences.setDarkMode(darkTheme)
             },
-            snackbarHost = { SnackbarHost(snackbarHostState) },
+            onHelp = { helpOpen = true },
         ) { padding ->
             NavHost(
                 navController = navController,
@@ -138,6 +140,19 @@ fun PvmApp(
                     FeatureStubScreen(featureId = entry.arguments?.getString("featureId").orEmpty())
                 }
             }
+        }
+
+        if (helpOpen) {
+            AlertDialog(
+                onDismissRequest = { helpOpen = false },
+                title = { Text(stringResource(R.string.help)) },
+                text = { Text(stringResource(R.string.help_body)) },
+                confirmButton = {
+                    TextButton(onClick = { helpOpen = false }) {
+                        Text(stringResource(R.string.ok))
+                    }
+                },
+            )
         }
     }
 }

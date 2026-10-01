@@ -12,7 +12,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val app = application as PvmApplication
         setContent {
-            PvmApp(catalogFacade = app.container.catalogFacade)
+            PvmApp(
+                catalogFacade = app.container.catalogFacade,
+                themePreferences = app.container.themePreferences,
+            )
         }
     }
 }

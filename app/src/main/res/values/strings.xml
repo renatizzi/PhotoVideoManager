@@ -37,4 +37,6 @@
     <string name="status_unknown">Stato: sconosciuto</string>
     <string name="census_folder">Censisci cartella</string>
     <string name="census_in_progress">Censimento in corso…</string>
+    <string name="help_body">Photo&amp;VideoManager gestisce foto e video personali e familiari. Usa Home per le funzioni e Impostazioni per cartelle e opzioni. La guida completa arriverà nelle prossime versioni.</string>
+    <string name="ok">OK</string>
 </resources>

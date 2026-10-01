@@ -16,6 +16,7 @@ import com.renatizzi.photovideomanager.domain.port.CatalogStore
 import com.renatizzi.photovideomanager.domain.port.PermissionGate
 import com.renatizzi.photovideomanager.domain.port.StorageAdapter
 import com.renatizzi.photovideomanager.domain.port.SyncPort
+import com.renatizzi.photovideomanager.ui.theme.ThemePreferences
 import java.io.File
 
 class AppContainer(context: Context) {
@@ -45,6 +46,8 @@ class AppContainer(context: Context) {
         adapterFactory = adapterFactory,
         permissionGate = permissionGate,
     )
+
+    val themePreferences: ThemePreferences = ThemePreferences(appContext)
 
     val catalogFacade: CatalogFacade = CatalogFacade(
         sourceRegistry = sourceRegistry,

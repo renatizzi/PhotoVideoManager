@@ -5,33 +5,41 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 
-private val LightColors = lightColorScheme(
-    primary = Color(0xFF1B4F72),
-    onPrimary = Color.White,
-    secondary = Color(0xFF148F77),
-    background = Color(0xFFF4F7F9),
-    surface = Color.White,
-    onSurface = Color(0xFF1A2330),
-)
-
-private val DarkColors = darkColorScheme(
-    primary = Color(0xFF5DADE2),
-    onPrimary = Color(0xFF0B1C28),
-    secondary = Color(0xFF48C9B0),
-    background = Color(0xFF0F1720),
-    surface = Color(0xFF1A2330),
-    onSurface = Color(0xFFE8EEF4),
-)
+val LocalShellTokens = staticCompositionLocalOf { ShellPalettes.PvmBlueLight }
 
 @Composable
 fun PvmTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
-    MaterialTheme(
-        colorScheme = if (darkTheme) DarkColors else LightColors,
-        content = content,
-    )
+    val tokens = ShellPalettes.tokens(darkTheme)
+    val colorScheme = if (darkTheme) {
+        darkColorScheme(
+            primary = tokens.accent,
+            onPrimary = tokens.topBarTitle,
+            secondary = tokens.accentDark,
+            background = tokens.pageBackground,
+            surface = tokens.bottomBarBackground,
+            onSurface = tokens.onPage,
+        )
+    } else {
+        lightColorScheme(
+            primary = tokens.topBarBackground,
+            onPrimary = tokens.topBarTitle,
+            secondary = tokens.accent,
+            background = tokens.pageBackground,
+            surface = tokens.bottomBarBackground,
+            onSurface = tokens.onPage,
+        )
+    }
+
+    CompositionLocalProvider(LocalShellTokens provides tokens) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            content = content,
+        )
+    }
 }

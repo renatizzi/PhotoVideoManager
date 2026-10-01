@@ -6,14 +6,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
-import androidx.compose.material.icons.outlined.DarkMode
-import androidx.compose.material.icons.outlined.LightMode
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,23 +28,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.renatizzi.photovideomanager.BuildConfig
 import com.renatizzi.photovideomanager.R
+import com.renatizzi.photovideomanager.ui.theme.LocalShellTokens
 import kotlinx.coroutines.delay
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 /**
- * Top Bar globale — slot allineati alla shared shell BoxManager:
- * identità/versione, utente, data/ora, guida, light/dark.
+ * Top Bar globale — parity slot BoxManager:
+ * titolo, versione, utente+data/ora, guida, dark mode.
+ * Implementazione Compose (BM è XML).
  */
 @Composable
 fun PvmTopBar(
     darkTheme: Boolean,
+    userLabel: String,
     onToggleTheme: () -> Unit,
     onHelp: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val tokens = LocalShellTokens.current
     var now by remember { mutableStateOf(LocalDateTime.now()) }
     LaunchedEffect(Unit) {
         while (true) {
@@ -52,45 +59,63 @@ fun PvmTopBar(
     }
     val formatter = remember { DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm") }
 
-    Surface(
-        tonalElevation = 2.dp,
+    Card(
         modifier = modifier
             .fillMaxWidth()
-            .statusBarsPadding(),
+            .statusBarsPadding()
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        colors = CardDefaults.cardColors(containerColor = tokens.topBarBackground),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        text = stringResource(R.string.app_name),
+                        color = tokens.topBarTitle,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                    )
+                    Text(
+                        text = " v${BuildConfig.VERSION_NAME}",
+                        color = tokens.topBarSubtitle,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(start = 8.dp, bottom = 1.dp),
+                    )
+                }
                 Text(
-                    text = stringResource(R.string.app_name),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Text(
-                    text = "v${BuildConfig.VERSION_NAME} · ${stringResource(R.string.user_placeholder)}",
+                    text = "$userLabel - ${formatter.format(now)}",
+                    color = tokens.topBarSubtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    fontSize = 11.sp,
+                    modifier = Modifier.padding(top = 2.dp),
                 )
             }
-            Text(
-                text = formatter.format(now),
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(horizontal = 8.dp),
-            )
             IconButton(onClick = onHelp) {
-                Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = stringResource(R.string.help))
-            }
-            IconButton(onClick = onToggleTheme) {
                 Icon(
-                    imageVector = if (darkTheme) Icons.Outlined.LightMode else Icons.Outlined.DarkMode,
-                    contentDescription = "Tema",
+                    imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
+                    contentDescription = stringResource(R.string.help),
+                    tint = tokens.topBarTitle,
                 )
             }
+            Switch(
+                checked = darkTheme,
+                onCheckedChange = { onToggleTheme() },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = tokens.accent,
+                    checkedTrackColor = tokens.accentDark,
+                    uncheckedThumbColor = tokens.topBarTitle,
+                    uncheckedTrackColor = tokens.topBarSubtitle.copy(alpha = 0.35f),
+                ),
+            )
         }
     }
 }
