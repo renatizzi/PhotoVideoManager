@@ -47,3 +47,9 @@ Baseline: Nota Integrata v5.1. Decisioni tecniche di implementazione (non consol
 - **Configura** via icona Top Bar (non in bottom)
 - Home = dashboard KPI + accesso rapido; ogni macro-area = hub con lista spiegata
 - Checklist aggiornata: `docs/SHELL_PARITY.md`
+
+## Tema / palette
+
+- **Ora:** switch chiaro/scuro in Top Bar (parity minima BoxManager) + branding PVM blue
+- **Non ora:** selettore palette multiple (orange/green/…) di BoxManager ThemeManager — utile ma non bloccante; da valutare in Preferenze dopo le macrofunzioni prioritarie
+- Help inline: già avviato (testi hub/dashboard); Guida contestuale più ricca = backlog

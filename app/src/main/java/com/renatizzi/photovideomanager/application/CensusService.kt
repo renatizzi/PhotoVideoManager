@@ -163,6 +163,13 @@ class CensusService(
             )
             catalogStore.upsertScanSession(session)
 
+            val emptyHint = if (mediaFound == 0) {
+                "Nessuna foto/video trovata in questa cartella e nelle sottocartelle. " +
+                    "Controlla di aver scelto la cartella giusta (es. quella che contiene Camera)."
+            } else {
+                null
+            }
+
             return CensusResult(
                 sessionId = sessionId,
                 sourceLocationId = locationId,
@@ -171,7 +178,7 @@ class CensusService(
                 mediaAdded = mediaAdded,
                 mediaSkippedExisting = mediaSkipped,
                 state = ScanSessionState.COMPLETED,
-                message = null,
+                message = emptyHint,
             )
         } catch (t: Throwable) {
             session = session.copy(

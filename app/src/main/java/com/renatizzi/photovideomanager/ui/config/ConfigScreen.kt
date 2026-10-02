@@ -43,7 +43,7 @@ fun ConfigScreen(
         )
         ConfigSection(
             title = stringResource(R.string.preferenze),
-            body = stringResource(R.string.coming_soon),
+            body = stringResource(R.string.preferenze_section_hint),
             onClick = null,
         )
     }

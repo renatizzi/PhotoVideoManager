@@ -12,6 +12,7 @@
     <string name="archivio">Archivio</string>
     <string name="famiglia">Famiglia</string>
     <string name="preferenze">Preferenze</string>
+    <string name="preferenze_section_hint">Tema chiaro/scuro: usa lo switch in alto. Palette colori multiple stile BoxManager: non in questa versione (valutazione successiva).</string>
     <string name="user_placeholder">Utente locale</string>
     <string name="coming_soon">Funzione in preparazione — specifica consolidata, implementazione nelle macro-attività successive.</string>
     <string name="feature_coming_soon_badge">In arrivo</string>
@@ -81,7 +82,8 @@
     <string name="acquire_title">Acquisisci</string>
     <string name="acquire_intro">Qui vedi i media già censiti dalle cartelle. L’app li copia nello spazio personale interno (gli originali restano dove sono). Prima aggiungi una cartella e fai Censisci: ingranaggio → Archivio.</string>
     <string name="acquire_candidates">Elementi disponibili</string>
-    <string name="acquire_empty">Nessun elemento nel Catalogo. Tocca l’ingranaggio in alto → Archivio, aggiungi una cartella e tocca Censisci cartella.</string>
+    <string name="acquire_empty">Nessun elemento nel Catalogo. Tocca l’ingranaggio in alto → Archivio, aggiungi una cartella e tocca Censisci cartella. Se l’avevi già fatto, ripeti Censisci dopo questo aggiornamento.</string>
+    <string name="acquire_empty_but_catalog">Attenzione: il Catalogo ha %1$d elementi ma nessuno risulta acquisibile. Ripeti Censisci sulla cartella sorgente.</string>
     <string name="acquire_select_pending">Seleziona da copiare</string>
     <string name="acquire_clear_selection">Deseleziona</string>
     <string name="acquire_selected">Acquisisci selezionati (%1$d)</string>

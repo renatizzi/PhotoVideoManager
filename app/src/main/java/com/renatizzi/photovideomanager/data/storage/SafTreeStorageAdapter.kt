@@ -2,6 +2,7 @@ package com.renatizzi.photovideomanager.data.storage
 
 import android.content.Context
 import android.net.Uri
+import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
 import com.renatizzi.photovideomanager.domain.model.Availability
 import com.renatizzi.photovideomanager.domain.model.StorageCapability
@@ -16,7 +17,11 @@ import java.io.OutputStream
 
 /**
  * Adapter SAF Document Tree.
- * Capability parziali: move/rename non atomici; non assumere WRITE uniforme.
+ *
+ * Listing figli: sempre via [DocumentsContract.buildChildDocumentsUriUsingTree].
+ * Non usare [DocumentFile.fromSingleUri] + [DocumentFile.listFiles] sulle sottocartelle:
+ * produce SingleDocumentFile che lancia UnsupportedOperationException (media in
+ * DCIM/Camera non venivano censiti).
  */
 class SafTreeStorageAdapter(
     private val context: Context,
@@ -34,7 +39,6 @@ class SafTreeStorageAdapter(
         StorageCapability.METADATA,
         StorageCapability.FINGERPRINT_STREAM,
         StorageCapability.AVAILABILITY,
-        // RENAME/MOVE/RANDOM_READ: parziali su SAF — non esposte come garantite.
     )
 
     override fun capabilities(): Set<StorageCapability> = caps
@@ -51,22 +55,46 @@ class SafTreeStorageAdapter(
     override suspend fun listChildren(opaqueLocator: String): List<StorageEntry> =
         withContext(Dispatchers.IO) {
             requireCapability(StorageCapability.LIST)
-            val dir = resolve(opaqueLocator) ?: return@withContext emptyList()
-            if (!dir.isDirectory) return@withContext emptyList()
-            dir.listFiles().mapNotNull { file ->
-                val uri = file.uri.toString()
-                StorageEntry(
-                    opaqueLocator = uri,
-                    displayName = file.name ?: uri.substringAfterLast('/'),
-                    isDirectory = file.isDirectory,
-                )
+            val parentDocId = documentIdOf(opaqueLocator) ?: return@withContext emptyList()
+            val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, parentDocId)
+            val result = mutableListOf<StorageEntry>()
+            runCatching {
+                context.contentResolver.query(
+                    childrenUri,
+                    arrayOf(
+                        DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                        DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                        DocumentsContract.Document.COLUMN_MIME_TYPE,
+                    ),
+                    null,
+                    null,
+                    null,
+                )?.use { cursor ->
+                    val idIdx = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
+                    val nameIdx = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
+                    val mimeIdx = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_MIME_TYPE)
+                    while (cursor.moveToNext()) {
+                        val docId = cursor.getString(idIdx) ?: continue
+                        val name = cursor.getString(nameIdx) ?: docId
+                        val mime = cursor.getString(mimeIdx)
+                        val childUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, docId)
+                        result.add(
+                            StorageEntry(
+                                opaqueLocator = childUri.toString(),
+                                displayName = name,
+                                isDirectory = mime == DocumentsContract.Document.MIME_TYPE_DIR,
+                            ),
+                        )
+                    }
+                }
             }
+            result
         }
 
     override suspend fun openRead(opaqueLocator: String): InputStream =
         withContext(Dispatchers.IO) {
             requireCapability(StorageCapability.READ)
-            val uri = Uri.parse(opaqueLocator.ifBlank { treeUri.toString() })
+            val uri = documentUriOf(opaqueLocator)
             context.contentResolver.openInputStream(uri)
                 ?: error("Impossibile aprire in lettura: $opaqueLocator")
         }
@@ -74,15 +102,33 @@ class SafTreeStorageAdapter(
     override suspend fun readMetadata(opaqueLocator: String): StorageMetadata? =
         withContext(Dispatchers.IO) {
             requireCapability(StorageCapability.METADATA)
-            val file = resolve(opaqueLocator) ?: return@withContext null
-            if (!file.exists()) return@withContext null
-            StorageMetadata(
-                byteSize = file.length().takeIf { it >= 0 },
-                mimeType = file.type,
-                lastModifiedEpochMs = file.lastModified().takeIf { it > 0 },
-            )
+            val uri = documentUriOf(opaqueLocator)
+            context.contentResolver.query(
+                uri,
+                arrayOf(
+                    DocumentsContract.Document.COLUMN_SIZE,
+                    DocumentsContract.Document.COLUMN_MIME_TYPE,
+                    DocumentsContract.Document.COLUMN_LAST_MODIFIED,
+                ),
+                null,
+                null,
+                null,
+            )?.use { cursor ->
+                if (!cursor.moveToFirst()) return@withContext null
+                val sizeIdx = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_SIZE)
+                val mimeIdx = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_MIME_TYPE)
+                val modIdx = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_LAST_MODIFIED)
+                StorageMetadata(
+                    byteSize = if (sizeIdx >= 0 && !cursor.isNull(sizeIdx)) cursor.getLong(sizeIdx) else null,
+                    mimeType = if (mimeIdx >= 0) cursor.getString(mimeIdx) else null,
+                    lastModifiedEpochMs = if (modIdx >= 0 && !cursor.isNull(modIdx)) {
+                        cursor.getLong(modIdx)
+                    } else {
+                        null
+                    },
+                )
+            }
         }
-
 
     override suspend fun writeCopy(
         parentOpaqueLocator: String,
@@ -90,17 +136,33 @@ class SafTreeStorageAdapter(
         source: InputStream,
     ): String = withContext(Dispatchers.IO) {
         requireCapability(StorageCapability.WRITE)
-        val parent = resolve(parentOpaqueLocator)
-            ?: DocumentFile.fromTreeUri(context, treeUri)
-            ?: error("Parent SAF non disponibile")
-        require(parent.isDirectory) { "Parent SAF non è una directory" }
+        val parentDocId = documentIdOf(parentOpaqueLocator)
+            ?: DocumentsContract.getTreeDocumentId(treeUri)
+        val parentUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, parentDocId)
+        val parent = DocumentFile.fromTreeUri(context, treeUri)?.let { root ->
+            // Prefer creating under resolved parent via DocumentsContract when possible.
+            DocumentFile.fromSingleUri(context, parentUri) ?: root
+        } ?: error("Parent SAF non disponibile")
+
+        // createFile on SingleDocumentFile may fail for nested dirs — use DocumentsContract.createDocument
         val safeName = fileName.replace(Regex("[\\/]+"), "_")
-        val created = parent.createFile("application/octet-stream", safeName)
-            ?: error("Impossibile creare file SAF")
-        context.contentResolver.openOutputStream(created.uri)?.use { output: OutputStream ->
+        val createdUri = DocumentsContract.createDocument(
+            context.contentResolver,
+            parentUri,
+            "application/octet-stream",
+            safeName,
+        ) ?: run {
+            // Fallback root create if parent create fails
+            val root = DocumentFile.fromTreeUri(context, treeUri)
+                ?: error("Root SAF non disponibile")
+            val created = root.createFile("application/octet-stream", safeName)
+                ?: error("Impossibile creare file SAF")
+            created.uri
+        }
+        context.contentResolver.openOutputStream(createdUri)?.use { output: OutputStream ->
             source.use { input -> input.copyTo(output) }
         } ?: error("Impossibile aprire output SAF")
-        created.uri.toString()
+        createdUri.toString()
     }
 
     private fun requireCapability(capability: StorageCapability) {
@@ -109,10 +171,26 @@ class SafTreeStorageAdapter(
         }
     }
 
-    private fun resolve(opaqueLocator: String): DocumentFile? {
+    private fun documentIdOf(opaqueLocator: String): String? {
         if (opaqueLocator.isBlank() || opaqueLocator == treeUri.toString()) {
-            return DocumentFile.fromTreeUri(context, treeUri)
+            return runCatching { DocumentsContract.getTreeDocumentId(treeUri) }.getOrNull()
         }
-        return DocumentFile.fromSingleUri(context, Uri.parse(opaqueLocator))
+        val uri = Uri.parse(opaqueLocator)
+        return runCatching { DocumentsContract.getDocumentId(uri) }.getOrNull()
+            ?: runCatching { DocumentsContract.getTreeDocumentId(uri) }.getOrNull()
+    }
+
+    private fun documentUriOf(opaqueLocator: String): Uri {
+        if (opaqueLocator.isBlank() || opaqueLocator == treeUri.toString()) {
+            val treeId = DocumentsContract.getTreeDocumentId(treeUri)
+            return DocumentsContract.buildDocumentUriUsingTree(treeUri, treeId)
+        }
+        val raw = Uri.parse(opaqueLocator)
+        val docId = documentIdOf(opaqueLocator)
+        return if (docId != null) {
+            DocumentsContract.buildDocumentUriUsingTree(treeUri, docId)
+        } else {
+            raw
+        }
     }
 }

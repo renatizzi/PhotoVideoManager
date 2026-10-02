@@ -125,6 +125,13 @@ fun AcquireScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
             )
+            if (state.catalogCount > 0) {
+                Text(
+                    text = stringResource(R.string.acquire_empty_but_catalog, state.catalogCount),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
         }
 
         state.candidates.forEach { candidate ->
