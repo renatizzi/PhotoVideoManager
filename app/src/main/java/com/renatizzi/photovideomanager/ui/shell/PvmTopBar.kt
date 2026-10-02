@@ -41,7 +41,7 @@ import java.time.format.DateTimeFormatter
 
 /**
  * Top Bar globale — parity slot BoxManager:
- * titolo a sinistra (una riga), versione+utente sotto, azioni a destra.
+ * titolo + versione sulla stessa riga, utente/data sotto, azioni a destra.
  */
 @Composable
 fun PvmTopBar(
@@ -61,7 +61,6 @@ fun PvmTopBar(
         }
     }
     val formatter = remember { DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm") }
-    val subtitle = "v${BuildConfig.VERSION_NAME} · $userLabel - ${formatter.format(now)}"
 
     Card(
         modifier = modifier
@@ -83,17 +82,30 @@ fun PvmTopBar(
                     .weight(1f)
                     .padding(end = 8.dp),
             ) {
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        text = stringResource(R.string.app_name),
+                        color = tokens.topBarTitle,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    Text(
+                        text = " v${BuildConfig.VERSION_NAME}",
+                        color = tokens.topBarSubtitle,
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Clip,
+                        modifier = Modifier.padding(start = 6.dp, bottom = 1.dp),
+                    )
+                }
                 Text(
-                    text = stringResource(R.string.app_name),
-                    color = tokens.topBarTitle,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = subtitle,
+                    text = "$userLabel - ${formatter.format(now)}",
                     color = tokens.topBarSubtitle,
                     style = MaterialTheme.typography.bodySmall,
                     fontSize = 11.sp,

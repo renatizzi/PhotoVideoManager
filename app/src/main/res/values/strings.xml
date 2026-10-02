@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Photo&amp;VideoManager</string>
+    <string name="app_name">MediaManager</string>
     <string name="home">Home</string>
     <string name="settings">Impostazioni</string>
     <string name="help">Guida</string>
@@ -77,7 +77,7 @@
     <string name="status_unknown">Stato: sconosciuto</string>
     <string name="census_folder">Censisci cartella</string>
     <string name="census_in_progress">Censimento in corso…</string>
-    <string name="help_body">Photo&amp;VideoManager gestisce foto e video personali e familiari.\n\nIn basso trovi Home e le quattro aree (Organizza, Componi, Pubblica, Gestisci).\nIn alto l’ingranaggio apre Configura (cartelle e opzioni); la Guida dà aiuto generale.</string>
+    <string name="help_body">MediaManager gestisce foto e video personali e familiari.\n\nIn basso trovi Home e le quattro aree (Organizza, Componi, Pubblica, Gestisci).\nIn alto l’ingranaggio apre Configura (cartelle e opzioni); la Guida dà aiuto generale.</string>
     <string name="ok">OK</string>
     <string name="acquire_title">Acquisisci</string>
     <string name="acquire_intro">Qui vedi i media già censiti dalle cartelle. L’app li copia nello spazio personale interno (gli originali restano dove sono). Prima aggiungi una cartella e fai Censisci: ingranaggio → Archivio.</string>

@@ -3,7 +3,7 @@ chcp 65001 >nul
 setlocal EnableExtensions
 
 REM ============================================
-REM  Photo&VideoManager — aggiorna codice da Git
+REM  MediaManager — aggiorna codice da Git
 REM  Doppio clic su questo file
 REM ============================================
 

@@ -1,6 +1,9 @@
-# Photo&VideoManager
+# MediaManager (Photo&VideoManager)
 
 Applicazione Android local-first per la gestione dell’archivio personale e familiare di foto e video.
+
+Nome commerciale: **MediaManager** (coerente con la linea *…Manager*, es. BoxManager).  
+Identificativi tecnici invariati: `applicationId` / package `com.renatizzi.photovideomanager`.
 
 ## Stack
 
