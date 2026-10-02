@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -28,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.renatizzi.photovideomanager.BuildConfig
@@ -39,7 +41,7 @@ import java.time.format.DateTimeFormatter
 
 /**
  * Top Bar globale — parity slot BoxManager:
- * titolo, versione, utente+data/ora, Configura, Guida, dark mode.
+ * titolo a sinistra (una riga), versione+utente sotto, azioni a destra.
  */
 @Composable
 fun PvmTopBar(
@@ -59,6 +61,7 @@ fun PvmTopBar(
         }
     }
     val formatter = remember { DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm") }
+    val subtitle = "v${BuildConfig.VERSION_NAME} · $userLabel - ${formatter.format(now)}"
 
     Card(
         modifier = modifier
@@ -72,58 +75,69 @@ fun PvmTopBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 10.dp),
+                .padding(start = 14.dp, end = 6.dp, top = 10.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.Bottom) {
-                    Text(
-                        text = stringResource(R.string.app_name),
-                        color = tokens.topBarTitle,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                    )
-                    Text(
-                        text = " v${BuildConfig.VERSION_NAME}",
-                        color = tokens.topBarSubtitle,
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(start = 8.dp, bottom = 1.dp),
-                    )
-                }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp),
+            ) {
                 Text(
-                    text = "$userLabel - ${formatter.format(now)}",
+                    text = stringResource(R.string.app_name),
+                    color = tokens.topBarTitle,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = subtitle,
                     color = tokens.topBarSubtitle,
                     style = MaterialTheme.typography.bodySmall,
                     fontSize = 11.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(top = 2.dp),
                 )
             }
-            IconButton(onClick = onOpenConfig) {
-                Icon(
-                    imageVector = Icons.Outlined.Settings,
-                    contentDescription = stringResource(R.string.configura),
-                    tint = tokens.topBarTitle,
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(0.dp),
+            ) {
+                IconButton(
+                    onClick = onOpenConfig,
+                    modifier = Modifier.size(40.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Settings,
+                        contentDescription = stringResource(R.string.configura),
+                        tint = tokens.topBarTitle,
+                    )
+                }
+                IconButton(
+                    onClick = onHelp,
+                    modifier = Modifier.size(40.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
+                        contentDescription = stringResource(R.string.help),
+                        tint = tokens.topBarTitle,
+                    )
+                }
+                Switch(
+                    checked = darkTheme,
+                    onCheckedChange = { onToggleTheme() },
+                    modifier = Modifier.padding(end = 4.dp),
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = tokens.accent,
+                        checkedTrackColor = tokens.accentDark,
+                        uncheckedThumbColor = tokens.topBarTitle,
+                        uncheckedTrackColor = tokens.topBarSubtitle.copy(alpha = 0.35f),
+                    ),
                 )
             }
-            IconButton(onClick = onHelp) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
-                    contentDescription = stringResource(R.string.help),
-                    tint = tokens.topBarTitle,
-                )
-            }
-            Switch(
-                checked = darkTheme,
-                onCheckedChange = { onToggleTheme() },
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = tokens.accent,
-                    checkedTrackColor = tokens.accentDark,
-                    uncheckedThumbColor = tokens.topBarTitle,
-                    uncheckedTrackColor = tokens.topBarSubtitle.copy(alpha = 0.35f),
-                ),
-            )
         }
     }
 }
