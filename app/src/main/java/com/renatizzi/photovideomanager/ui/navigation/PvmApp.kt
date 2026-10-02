@@ -74,10 +74,20 @@ fun PvmApp(
             ShellTab.PUBBLICA -> PvmDestination.Pubblica.route
             ShellTab.GESTISCI -> PvmDestination.Gestisci.route
         }
+        val current = navController.currentDestination?.route
+        // Già sulla radice del tab: niente da fare.
+        if (current == route) return
+
+        // Sempre sulla radice del tab (hub/dashboard), senza ripristinare
+        // schermate annidate (es. Acquisisci / Pulisci) — altrimenti Home/Organizza
+        // sembrano "non funzionare" dopo essere entrati in una sotto-funzione.
         navController.navigate(route) {
-            popUpTo(PvmDestination.Home.route) { saveState = true }
+            popUpTo(PvmDestination.Home.route) {
+                inclusive = tab == ShellTab.HOME
+                saveState = false
+            }
             launchSingleTop = true
-            restoreState = true
+            restoreState = false
         }
     }
 
@@ -229,14 +239,3 @@ fun PvmApp(
     }
 }
 
-private fun tabForRoute(route: String?): ShellTab? = when {
-    route == null -> ShellTab.HOME
-    route == PvmDestination.Home.route -> ShellTab.HOME
-    route.startsWith("organizza") -> ShellTab.ORGANIZZA
-    route.startsWith("componi") -> ShellTab.COMPONI
-    route.startsWith("pubblica") -> ShellTab.PUBBLICA
-    route.startsWith("gestisci") -> ShellTab.GESTISCI
-    route.startsWith("config") -> null
-    route.startsWith("feature/") -> null
-    else -> ShellTab.HOME
-}
