@@ -40,6 +40,7 @@ class AppContainer(context: Context) {
         catalogStore = catalogStore,
         adapterFactory = adapterFactory,
         permissionGate = permissionGate,
+        personalRoot = personalRoot,
     )
 
     val censusService: CensusService = CensusService(

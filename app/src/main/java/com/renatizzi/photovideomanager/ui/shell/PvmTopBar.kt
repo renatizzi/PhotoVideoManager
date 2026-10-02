@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -38,13 +39,13 @@ import java.time.format.DateTimeFormatter
 
 /**
  * Top Bar globale — parity slot BoxManager:
- * titolo, versione, utente+data/ora, guida, dark mode.
- * Implementazione Compose (BM è XML).
+ * titolo, versione, utente+data/ora, Configura, Guida, dark mode.
  */
 @Composable
 fun PvmTopBar(
     darkTheme: Boolean,
     userLabel: String,
+    onOpenConfig: () -> Unit,
     onToggleTheme: () -> Unit,
     onHelp: () -> Unit,
     modifier: Modifier = Modifier,
@@ -71,7 +72,7 @@ fun PvmTopBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(horizontal = 8.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -97,6 +98,13 @@ fun PvmTopBar(
                     style = MaterialTheme.typography.bodySmall,
                     fontSize = 11.sp,
                     modifier = Modifier.padding(top = 2.dp),
+                )
+            }
+            IconButton(onClick = onOpenConfig) {
+                Icon(
+                    imageVector = Icons.Outlined.Settings,
+                    contentDescription = stringResource(R.string.configura),
+                    tint = tokens.topBarTitle,
                 )
             }
             IconButton(onClick = onHelp) {

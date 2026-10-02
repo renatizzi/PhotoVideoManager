@@ -40,6 +40,12 @@ interface MediaItemDao {
     @Query("SELECT COUNT(*) FROM media_items")
     suspend fun count(): Long
 
+    @Query("SELECT COUNT(*) FROM media_items WHERE kind = :kind")
+    suspend fun countByKind(kind: String): Long
+
+    @Query("SELECT MAX(updatedAtEpochMs) FROM media_items")
+    suspend fun latestUpdatedAt(): Long?
+
     @Query("SELECT * FROM media_items ORDER BY updatedAtEpochMs DESC LIMIT :limit")
     suspend fun list(limit: Int): List<MediaItemEntity>
 

@@ -1,12 +1,15 @@
 package com.renatizzi.photovideomanager.ui.shell
 
 /**
- * Contratto shared-shell (parity BoxManager, vincoli Nota PVM).
- * I slot Top Bar restano fissi; la Bottom Bar PVM ha solo HOME/SETTINGS.
+ * Contratto shared-shell (parity BoxManager).
+ * Bottom Bar: Home + 4 macro-aree. Configura via Top Bar.
  */
 enum class ShellTab {
     HOME,
-    SETTINGS,
+    ORGANIZZA,
+    COMPONI,
+    PUBBLICA,
+    GESTISCI,
 }
 
 data class ShellTopBarModel(

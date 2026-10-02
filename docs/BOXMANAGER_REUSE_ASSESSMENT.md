@@ -23,7 +23,7 @@ Non riusare: domain BoxManager, backend/obblighi rete, bottom nav a 5 tab, codic
 | Area BoxManager | Riuso proposto | Modalità | Priorità | Note |
 |---|---|---|---|---|
 | Top Bar slots (titolo, versione, utente, data/ora, guida, dark) | Sì | Contratto + Compose | **P0** | Layout XML `layout_global_topbar` = specifica slot; PVM già parziale |
-| Bottom Bar globale | Sì (solo Home + Impostazioni) | Contratto + Compose | **P0** | BM ha 5 tab; Nota PVM vieta scorciatoie macrofunzioni in bottom |
+| Bottom Bar globale | Sì (5 tab macro PVM) | Contratto + Compose | **P0** | BM ha 5 tab dominio diverso; PVM: Home+4 aree; Configura in Top Bar |
 | `ThemeManager` (night + palette + colori shell) | Sì | Porting logico → token Compose | **P0** | Evita drift tema tra app |
 | `LocaleManager` / i18n | Sì | Porting + strings | **P1** | Dopo shell stabile |
 | `BaseActivity` app-shell / edge-to-edge | Parziale | Pattern → `PvmScaffold` | **P0** | Non la classe Activity |
@@ -40,7 +40,7 @@ Non riusare: domain BoxManager, backend/obblighi rete, bottom nav a 5 tab, codic
 Definire in PVM (documento + codice minimo):
 
 - `ShellSlots` Top Bar (titolo prodotto, versione, utente, clock, help, theme toggle)
-- `ShellTabs` Bottom (HOME, SETTINGS only)
+- `ShellTabs` Bottom (HOME + ORGANIZZA + COMPONI + PUBBLICA + GESTISCI; Configura in Top Bar)
 - `ShellThemeTokens` (bg/title/subtitle/accent/bottom active-inactive, light/dark)
 - `UiStateKit` nomi stati: loading / empty / error / unavailable / confirm-destructive
 - Checklist parity vs BoxManager (cosa deve “sembrare uguale”)
@@ -70,6 +70,6 @@ Così le schermate successive nascono già sulla cornice giusta.
 ## Cosa non fare
 
 - Non creare un monorepo forzato BoxManager+PVM in questa fase  
-- Non copiare `BottomNavManager` a 5 tab  
+- Non copiare le destinazioni dominio di `BottomNavManager` BoxManager (i 5 tab PVM sono le macro-aree media, non le tab BM)  
 - Non importare backend/family sync di BoxManager nel local-first PVM  
 - Non dichiarare “shared library” pubblicata finché i contratti non sono stabili

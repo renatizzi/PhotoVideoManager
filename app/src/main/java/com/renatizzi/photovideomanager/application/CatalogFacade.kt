@@ -4,10 +4,12 @@ import com.renatizzi.photovideomanager.domain.model.AcquireCandidate
 import com.renatizzi.photovideomanager.domain.model.AcquireResult
 import com.renatizzi.photovideomanager.domain.model.Availability
 import com.renatizzi.photovideomanager.domain.model.CensusResult
+import com.renatizzi.photovideomanager.domain.model.DashboardSnapshot
+import com.renatizzi.photovideomanager.domain.model.MediaKind
 import com.renatizzi.photovideomanager.domain.model.SourceSummary
 
 /**
- * Facade sottile verso UI: sorgenti, censimento, acquisizione.
+ * Facade sottile verso UI: sorgenti, censimento, acquisizione, dashboard.
  */
 class CatalogFacade(
     private val sourceRegistry: SourceRegistry,
@@ -19,6 +21,20 @@ class CatalogFacade(
     }
 
     suspend fun mediaItemCount(): Long = sourceRegistry.mediaItemCount()
+
+    suspend fun dashboardSnapshot(): DashboardSnapshot {
+        bootstrapPersonalArchiveIfNeeded()
+        val availability = localStorageAvailability()
+        return DashboardSnapshot(
+            photoCount = sourceRegistry.countByKind(MediaKind.PHOTO),
+            videoCount = sourceRegistry.countByKind(MediaKind.VIDEO),
+            duplicatePhotoCount = null,
+            duplicateVideoCount = null,
+            personalUsedBytes = sourceRegistry.personalArchiveUsedBytes(),
+            lastUpdatedEpochMs = sourceRegistry.latestMediaUpdatedAtEpochMs(),
+            localAvailability = availability,
+        )
+    }
 
     suspend fun localStorageAvailability(): Availability {
         val personal = sourceRegistry.listSources(refreshAvailability = true)

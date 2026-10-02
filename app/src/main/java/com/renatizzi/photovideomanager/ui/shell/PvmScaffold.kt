@@ -14,11 +14,12 @@ import com.renatizzi.photovideomanager.ui.theme.LocalShellTokens
  */
 @Composable
 fun PvmScaffold(
-    selectedTab: ShellTab,
+    selectedTab: ShellTab?,
     darkTheme: Boolean,
     userLabel: String,
     snackbarHostState: SnackbarHostState,
     onSelectTab: (ShellTab) -> Unit,
+    onOpenConfig: () -> Unit,
     onToggleTheme: () -> Unit,
     onHelp: () -> Unit,
     content: @Composable (PaddingValues) -> Unit,
@@ -31,6 +32,7 @@ fun PvmScaffold(
             PvmTopBar(
                 darkTheme = darkTheme,
                 userLabel = userLabel,
+                onOpenConfig = onOpenConfig,
                 onToggleTheme = onToggleTheme,
                 onHelp = onHelp,
             )

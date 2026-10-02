@@ -22,6 +22,12 @@ class RoomCatalogStore(
 ) : CatalogStore {
     override suspend fun countMediaItems(): Long = db.mediaItemDao().count()
 
+    override suspend fun countMediaItemsByKind(kind: MediaKind): Long =
+        db.mediaItemDao().countByKind(kind.name)
+
+    override suspend fun latestMediaUpdatedAtEpochMs(): Long? =
+        db.mediaItemDao().latestUpdatedAt()
+
     override suspend fun upsertArchive(archive: ArchiveRef) {
         db.archiveDao().upsert(
             ArchiveEntity(

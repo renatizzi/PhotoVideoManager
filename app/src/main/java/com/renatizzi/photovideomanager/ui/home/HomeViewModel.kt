@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.domain.model.Availability
+import com.renatizzi.photovideomanager.domain.model.DashboardSnapshot
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,8 +13,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class HomeUiState(
-    val catalogCount: Long = 0,
-    val localAvailability: Availability = Availability.UNKNOWN,
+    val snapshot: DashboardSnapshot? = null,
     val ready: Boolean = false,
     val errorMessage: String? = null,
 )
@@ -31,19 +31,24 @@ class HomeViewModel(
     fun refresh() {
         viewModelScope.launch {
             runCatching {
-                catalogFacade.bootstrapPersonalArchiveIfNeeded()
-                val count = catalogFacade.mediaItemCount()
-                val availability = catalogFacade.localStorageAvailability()
+                catalogFacade.dashboardSnapshot()
+            }.onSuccess { snapshot ->
                 _state.update {
-                    HomeUiState(
-                        catalogCount = count,
-                        localAvailability = availability,
-                        ready = true,
-                    )
+                    HomeUiState(snapshot = snapshot, ready = true)
                 }
             }.onFailure { error ->
                 _state.update {
-                    it.copy(ready = true, errorMessage = error.message ?: "Errore sconosciuto")
+                    it.copy(
+                        ready = true,
+                        snapshot = it.snapshot ?: DashboardSnapshot(
+                            photoCount = 0,
+                            videoCount = 0,
+                            personalUsedBytes = 0,
+                            lastUpdatedEpochMs = null,
+                            localAvailability = Availability.UNKNOWN,
+                        ),
+                        errorMessage = error.message ?: "Errore sconosciuto",
+                    )
                 }
             }
         }

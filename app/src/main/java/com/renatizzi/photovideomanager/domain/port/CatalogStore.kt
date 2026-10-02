@@ -5,11 +5,14 @@ import com.renatizzi.photovideomanager.domain.model.ImportSession
 import com.renatizzi.photovideomanager.domain.model.MediaCopy
 import com.renatizzi.photovideomanager.domain.model.MediaFingerprint
 import com.renatizzi.photovideomanager.domain.model.MediaItem
+import com.renatizzi.photovideomanager.domain.model.MediaKind
 import com.renatizzi.photovideomanager.domain.model.ScanSession
 import com.renatizzi.photovideomanager.domain.model.StorageLocation
 
 interface CatalogStore {
     suspend fun countMediaItems(): Long
+    suspend fun countMediaItemsByKind(kind: MediaKind): Long
+    suspend fun latestMediaUpdatedAtEpochMs(): Long?
     suspend fun upsertArchive(archive: ArchiveRef)
     suspend fun listArchives(): List<ArchiveRef>
     suspend fun upsertStorageLocation(location: StorageLocation)

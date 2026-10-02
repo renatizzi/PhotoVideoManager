@@ -8,6 +8,7 @@ import com.renatizzi.photovideomanager.domain.model.ArchiveKind
 import com.renatizzi.photovideomanager.domain.model.ArchiveRef
 import com.renatizzi.photovideomanager.domain.model.Availability
 import com.renatizzi.photovideomanager.domain.model.DomainScope
+import com.renatizzi.photovideomanager.domain.model.MediaKind
 import com.renatizzi.photovideomanager.domain.model.SourceSummary
 import com.renatizzi.photovideomanager.domain.model.StorageAdapterKind
 import com.renatizzi.photovideomanager.domain.model.StorageLocation
@@ -23,6 +24,7 @@ class SourceRegistry(
     private val catalogStore: CatalogStore,
     private val adapterFactory: StorageAdapterFactory,
     private val permissionGate: PermissionGate,
+    private val personalRoot: java.io.File,
 ) {
     suspend fun bootstrapPersonalArchiveIfNeeded() {
         require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
@@ -150,6 +152,15 @@ class SourceRegistry(
     }
 
     suspend fun mediaItemCount(): Long = catalogStore.countMediaItems()
+
+    suspend fun countByKind(kind: MediaKind): Long = catalogStore.countMediaItemsByKind(kind)
+
+    suspend fun latestMediaUpdatedAtEpochMs(): Long? = catalogStore.latestMediaUpdatedAtEpochMs()
+
+    suspend fun personalArchiveUsedBytes(): Long = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        if (!personalRoot.exists()) return@withContext 0L
+        personalRoot.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+    }
 
     companion object {
         const val PERSONAL_ARCHIVE_ID = CatalogFacade.PERSONAL_ARCHIVE_ID

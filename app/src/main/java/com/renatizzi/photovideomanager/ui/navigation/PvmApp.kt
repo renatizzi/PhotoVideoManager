@@ -24,7 +24,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.renatizzi.photovideomanager.R
 import com.renatizzi.photovideomanager.application.CatalogFacade
-import com.renatizzi.photovideomanager.domain.model.Availability
 import com.renatizzi.photovideomanager.ui.acquire.AcquireScreen
 import com.renatizzi.photovideomanager.ui.acquire.AcquireViewModel
 import com.renatizzi.photovideomanager.ui.config.ArchiveSourcesScreen
@@ -33,6 +32,8 @@ import com.renatizzi.photovideomanager.ui.config.ConfigScreen
 import com.renatizzi.photovideomanager.ui.home.FeatureStubScreen
 import com.renatizzi.photovideomanager.ui.home.HomeScreen
 import com.renatizzi.photovideomanager.ui.home.HomeViewModel
+import com.renatizzi.photovideomanager.ui.home.MacroHubScreen
+import com.renatizzi.photovideomanager.ui.home.MacroNavigation
 import com.renatizzi.photovideomanager.ui.shell.PvmScaffold
 import com.renatizzi.photovideomanager.ui.shell.ShellTab
 import com.renatizzi.photovideomanager.ui.theme.PvmTheme
@@ -53,10 +54,7 @@ fun PvmApp(
     val snackbarHostState = remember { SnackbarHostState() }
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
-    val selectedTab = when {
-        currentRoute?.startsWith("config") == true -> ShellTab.SETTINGS
-        else -> ShellTab.HOME
-    }
+    val selectedTab = tabForRoute(currentRoute)
     val userLabel = stringResource(R.string.user_placeholder)
 
     val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.factory(catalogFacade))
@@ -66,21 +64,38 @@ fun PvmApp(
         homeState.errorMessage?.let { snackbarHostState.showSnackbar(it) }
     }
 
+    fun navigateTab(tab: ShellTab) {
+        val route = when (tab) {
+            ShellTab.HOME -> PvmDestination.Home.route
+            ShellTab.ORGANIZZA -> PvmDestination.Organizza.route
+            ShellTab.COMPONI -> PvmDestination.Componi.route
+            ShellTab.PUBBLICA -> PvmDestination.Pubblica.route
+            ShellTab.GESTISCI -> PvmDestination.Gestisci.route
+        }
+        navController.navigate(route) {
+            popUpTo(PvmDestination.Home.route) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
+    fun openFeature(featureId: String) {
+        when (featureId) {
+            "acquisisci" -> navController.navigate(PvmDestination.Acquire.route)
+            else -> navController.navigate(PvmDestination.FeatureStub.create(featureId))
+        }
+    }
+
     PvmTheme(darkTheme = darkTheme) {
         PvmScaffold(
             selectedTab = selectedTab,
             darkTheme = darkTheme,
             userLabel = userLabel,
             snackbarHostState = snackbarHostState,
-            onSelectTab = { tab ->
-                when (tab) {
-                    ShellTab.HOME -> navController.navigate(PvmDestination.Home.route) {
-                        popUpTo(PvmDestination.Home.route) { inclusive = true }
-                        launchSingleTop = true
-                    }
-                    ShellTab.SETTINGS -> navController.navigate(PvmDestination.Config.route) {
-                        launchSingleTop = true
-                    }
+            onSelectTab = ::navigateTab,
+            onOpenConfig = {
+                navController.navigate(PvmDestination.Config.route) {
+                    launchSingleTop = true
                 }
             },
             onToggleTheme = {
@@ -96,20 +111,33 @@ fun PvmApp(
             ) {
                 composable(PvmDestination.Home.route) {
                     LaunchedEffect(Unit) { homeViewModel.refresh() }
-                    val storageStatus = when (homeState.localAvailability) {
-                        Availability.AVAILABLE -> stringResource(R.string.storage_local)
-                        Availability.UNAVAILABLE -> stringResource(R.string.storage_local_unavailable)
-                        Availability.UNKNOWN -> stringResource(R.string.storage_local_unknown)
-                    }
                     HomeScreen(
-                        catalogCount = homeState.catalogCount,
-                        storageStatus = storageStatus,
-                        onFeatureClick = { featureId ->
-                            when (featureId) {
-                                "acquisisci" -> navController.navigate(PvmDestination.Acquire.route)
-                                else -> navController.navigate(PvmDestination.FeatureStub.create(featureId))
-                            }
-                        },
+                        snapshot = homeState.snapshot,
+                        onOpenTab = ::navigateTab,
+                    )
+                }
+                composable(PvmDestination.Organizza.route) {
+                    MacroHubScreen(
+                        area = MacroNavigation.areaFor(ShellTab.ORGANIZZA)!!,
+                        onFeatureClick = { openFeature(it.id) },
+                    )
+                }
+                composable(PvmDestination.Componi.route) {
+                    MacroHubScreen(
+                        area = MacroNavigation.areaFor(ShellTab.COMPONI)!!,
+                        onFeatureClick = { openFeature(it.id) },
+                    )
+                }
+                composable(PvmDestination.Pubblica.route) {
+                    MacroHubScreen(
+                        area = MacroNavigation.areaFor(ShellTab.PUBBLICA)!!,
+                        onFeatureClick = { openFeature(it.id) },
+                    )
+                }
+                composable(PvmDestination.Gestisci.route) {
+                    MacroHubScreen(
+                        area = MacroNavigation.areaFor(ShellTab.GESTISCI)!!,
+                        onFeatureClick = { openFeature(it.id) },
                     )
                 }
                 composable(PvmDestination.Config.route) {
@@ -180,4 +208,16 @@ fun PvmApp(
             )
         }
     }
+}
+
+private fun tabForRoute(route: String?): ShellTab? = when {
+    route == null -> ShellTab.HOME
+    route == PvmDestination.Home.route -> ShellTab.HOME
+    route.startsWith("organizza") -> ShellTab.ORGANIZZA
+    route.startsWith("componi") -> ShellTab.COMPONI
+    route.startsWith("pubblica") -> ShellTab.PUBBLICA
+    route.startsWith("gestisci") -> ShellTab.GESTISCI
+    route.startsWith("config") -> null
+    route.startsWith("feature/") -> null
+    else -> ShellTab.HOME
 }

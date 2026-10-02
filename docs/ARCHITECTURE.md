@@ -40,3 +40,10 @@ Baseline: Nota Integrata v5.1. Decisioni tecniche di implementazione (non consol
 - Catalogo: `ImportSession` + fingerprint L2; sorgente non modificata
 - UI Home → Acquisisci: elenco candidati da Catalogo, selezione, avvio acquisizione
 - Destinazione Archivio Condiviso: tranche successiva
+
+## Navigazione dashboard (2026-10)
+
+- Bottom Bar a **5 tab**: Home · Organizza · Componi · Pubblica · Gestisci (scelta UX, parity struttura BoxManager)
+- **Configura** via icona Top Bar (non in bottom)
+- Home = dashboard KPI + accesso rapido; ogni macro-area = hub con lista spiegata
+- Checklist aggiornata: `docs/SHELL_PARITY.md`
