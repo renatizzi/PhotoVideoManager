@@ -53,3 +53,11 @@ Baseline: Nota Integrata v5.1. Decisioni tecniche di implementazione (non consol
 - **Ora:** switch chiaro/scuro in Top Bar (parity minima BoxManager) + branding PVM blue
 - **Non ora:** selettore palette multiple (orange/green/…) di BoxManager ThemeManager — utile ma non bloccante; da valutare in Preferenze dopo le macrofunzioni prioritarie
 - Help inline: già avviato (testi hub/dashboard); Guida contestuale più ricca = backlog
+
+## Checkpoint CP4 (M07 Pulisci — fetta v1)
+
+- `DedupService` + `ExactDedupGrouping`: duplicati esatti SHA-256 su MediaItem distinti
+- Calcolo hash mancanti in lettura (senza modificare sorgenti)
+- UI Gestisci → Pulisci: Analizza + revisione gruppi; **nessuna eliminazione** ancora
+- KPI Home: conteggio “duplicati” (elementi in più per gruppo)
+- Elimina/Sposta/Cestino: tranche successiva

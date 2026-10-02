@@ -116,18 +116,23 @@ class RoomCatalogStore(
         )
     }
 
+    override suspend fun listFingerprintsByAlgorithm(
+        algorithm: String,
+        level: Int,
+    ): List<MediaFingerprint> =
+        db.mediaFingerprintDao().listByAlgorithm(algorithm, level).map { it.toDomain() }
+
+    override suspend fun listFingerprintsForCopy(mediaCopyId: String): List<MediaFingerprint> =
+        db.mediaFingerprintDao().listByMediaCopy(mediaCopyId).map { it.toDomain() }
+
+    override suspend fun listAllMediaCopies(): List<MediaCopy> =
+        db.mediaCopyDao().listAll().map { it.toDomain() }
+
     override suspend fun listMediaItems(limit: Int): List<MediaItem> =
-        db.mediaItemDao().list(limit).map { entity ->
-            MediaItem(
-                id = entity.id,
-                kind = MediaKind.valueOf(entity.kind),
-                domainScope = DomainScope.valueOf(entity.domainScope),
-                capturedAtEpochMs = entity.capturedAtEpochMs,
-                displayTitle = entity.displayTitle,
-                createdAtEpochMs = entity.createdAtEpochMs,
-                updatedAtEpochMs = entity.updatedAtEpochMs,
-            )
-        }
+        db.mediaItemDao().list(limit).map { it.toMediaItem() }
+
+    override suspend fun listAllMediaItems(): List<MediaItem> =
+        db.mediaItemDao().listAll().map { it.toMediaItem() }
 
     override suspend fun upsertScanSession(session: ScanSession) {
         db.scanSessionDao().upsert(
@@ -232,5 +237,24 @@ class RoomCatalogStore(
         mimeType = mimeType,
         state = MediaCopyState.valueOf(state),
         createdAtEpochMs = createdAtEpochMs,
+    )
+
+    private fun MediaItemEntity.toMediaItem() = MediaItem(
+        id = id,
+        kind = MediaKind.valueOf(kind),
+        domainScope = DomainScope.valueOf(domainScope),
+        capturedAtEpochMs = capturedAtEpochMs,
+        displayTitle = displayTitle,
+        createdAtEpochMs = createdAtEpochMs,
+        updatedAtEpochMs = updatedAtEpochMs,
+    )
+
+    private fun MediaFingerprintEntity.toDomain() = MediaFingerprint(
+        id = id,
+        mediaCopyId = mediaCopyId,
+        algorithm = algorithm,
+        level = level,
+        value = value,
+        computedAtEpochMs = computedAtEpochMs,
     )
 }

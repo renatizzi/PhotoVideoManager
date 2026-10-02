@@ -93,4 +93,17 @@
     <string name="acquire_shared_note">Copia verso l’Archivio Condiviso familiare: arriverà in una versione successiva.</string>
     <string name="media_kind_photo">Tipo: foto</string>
     <string name="media_kind_video">Tipo: video</string>
+    <string name="clean_title">Pulisci</string>
+    <string name="clean_intro">Trova foto e video identici (stesso contenuto) presenti più volte nel Catalogo come elementi distinti. In questa versione puoi solo analizzare e rivedere: nessuna cancellazione automatica.</string>
+    <string name="clean_inline_help">Suggerimento: se hai la stessa foto in due cartelle diverse, dopo Censisci appariranno come due elementi. Toccando Analizza l’app confronta il contenuto (hash SHA-256) e li raggruppa.</string>
+    <string name="clean_analyze">Analizza duplicati esatti</string>
+    <string name="clean_analyzing">Analisi in corso…</string>
+    <string name="clean_stats">Gruppi: %1$d · copie esaminate: %2$d · nuovi hash: %3$d</string>
+    <string name="clean_groups_title">Gruppi trovati</string>
+    <string name="clean_empty">Nessun duplicato esatto tra elementi distinti. (Una foto e la sua copia nello spazio app non contano come duplicato da pulire.)</string>
+    <string name="clean_group_header">Gruppo %1$d — %2$d elementi (%3$d in più)</string>
+    <string name="clean_group_hash">Hash: %1$s…</string>
+    <string name="clean_member_location">Posizione: %1$s</string>
+    <string name="clean_suggested_keep">Consigliato da tenere</string>
+    <string name="clean_delete_note">Elimina / Sposta / Cestino: arriveranno dopo, con conferma esplicita. Per ora è solo revisione.</string>
 </resources>

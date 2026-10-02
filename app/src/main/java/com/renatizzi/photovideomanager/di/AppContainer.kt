@@ -4,6 +4,7 @@ import android.content.Context
 import com.renatizzi.photovideomanager.application.AcquisitionService
 import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.application.CensusService
+import com.renatizzi.photovideomanager.application.DedupService
 import com.renatizzi.photovideomanager.application.SourceRegistry
 import com.renatizzi.photovideomanager.data.catalog.CatalogDatabase
 import com.renatizzi.photovideomanager.data.catalog.RoomCatalogStore
@@ -55,11 +56,18 @@ class AppContainer(context: Context) {
         permissionGate = permissionGate,
     )
 
+    val dedupService: DedupService = DedupService(
+        catalogStore = catalogStore,
+        adapterFactory = adapterFactory,
+        permissionGate = permissionGate,
+    )
+
     val themePreferences: ThemePreferences = ThemePreferences(appContext)
 
     val catalogFacade: CatalogFacade = CatalogFacade(
         sourceRegistry = sourceRegistry,
         censusService = censusService,
         acquisitionService = acquisitionService,
+        dedupService = dedupService,
     )
 }

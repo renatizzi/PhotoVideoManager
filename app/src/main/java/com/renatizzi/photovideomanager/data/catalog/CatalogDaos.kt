@@ -51,6 +51,9 @@ interface MediaItemDao {
 
     @Query("SELECT * FROM media_items WHERE id = :id LIMIT 1")
     suspend fun get(id: String): MediaItemEntity?
+
+    @Query("SELECT * FROM media_items ORDER BY createdAtEpochMs ASC")
+    suspend fun listAll(): List<MediaItemEntity>
 }
 
 @Dao
@@ -68,12 +71,26 @@ interface MediaCopyDao {
 
     @Query("SELECT * FROM media_copies WHERE id = :id LIMIT 1")
     suspend fun get(id: String): MediaCopyEntity?
+
+    @Query("SELECT * FROM media_copies ORDER BY createdAtEpochMs DESC")
+    suspend fun listAll(): List<MediaCopyEntity>
 }
 
 @Dao
 interface MediaFingerprintDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: MediaFingerprintEntity)
+
+    @Query("SELECT * FROM media_fingerprints")
+    suspend fun listAll(): List<MediaFingerprintEntity>
+
+    @Query("SELECT * FROM media_fingerprints WHERE mediaCopyId = :mediaCopyId")
+    suspend fun listByMediaCopy(mediaCopyId: String): List<MediaFingerprintEntity>
+
+    @Query(
+        "SELECT * FROM media_fingerprints WHERE algorithm = :algorithm AND level = :level",
+    )
+    suspend fun listByAlgorithm(algorithm: String, level: Int): List<MediaFingerprintEntity>
 }
 
 @Dao

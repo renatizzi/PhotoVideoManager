@@ -112,6 +112,7 @@ object MacroNavigation {
                     id = "pulisci",
                     titleRes = R.string.feature_pulisci,
                     subtitleRes = R.string.feature_pulisci_desc,
+                    available = true,
                 ),
             ),
         ),

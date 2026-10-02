@@ -27,7 +27,11 @@ interface CatalogStore {
     suspend fun listMediaCopiesForItem(mediaItemId: String): List<MediaCopy>
     suspend fun findMediaCopyByLocator(storageLocationId: String, opaqueLocator: String): MediaCopy?
     suspend fun upsertFingerprint(fingerprint: MediaFingerprint)
+    suspend fun listFingerprintsByAlgorithm(algorithm: String, level: Int): List<MediaFingerprint>
+    suspend fun listFingerprintsForCopy(mediaCopyId: String): List<MediaFingerprint>
+    suspend fun listAllMediaCopies(): List<MediaCopy>
     suspend fun listMediaItems(limit: Int = 100): List<MediaItem>
+    suspend fun listAllMediaItems(): List<MediaItem>
     suspend fun upsertScanSession(session: ScanSession)
     suspend fun getScanSession(id: String): ScanSession?
     suspend fun upsertImportSession(session: ImportSession)

@@ -26,6 +26,8 @@ import com.renatizzi.photovideomanager.R
 import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.ui.acquire.AcquireScreen
 import com.renatizzi.photovideomanager.ui.acquire.AcquireViewModel
+import com.renatizzi.photovideomanager.ui.clean.CleanScreen
+import com.renatizzi.photovideomanager.ui.clean.CleanViewModel
 import com.renatizzi.photovideomanager.ui.config.ArchiveSourcesScreen
 import com.renatizzi.photovideomanager.ui.config.ArchiveSourcesViewModel
 import com.renatizzi.photovideomanager.ui.config.ConfigScreen
@@ -82,6 +84,7 @@ fun PvmApp(
     fun openFeature(featureId: String) {
         when (featureId) {
             "acquisisci" -> navController.navigate(PvmDestination.Acquire.route)
+            "pulisci" -> navController.navigate(PvmDestination.Clean.route)
             else -> navController.navigate(PvmDestination.FeatureStub.create(featureId))
         }
     }
@@ -184,6 +187,22 @@ fun PvmApp(
                         onClearSelection = acquireVm::clearSelection,
                         onAcquire = acquireVm::acquireSelected,
                         onRefresh = acquireVm::refresh,
+                    )
+                }
+                composable(PvmDestination.Clean.route) {
+                    val cleanVm: CleanViewModel = viewModel(
+                        factory = CleanViewModel.factory(catalogFacade),
+                    )
+                    val cleanState by cleanVm.state.collectAsStateWithLifecycle()
+                    LaunchedEffect(cleanState.message) {
+                        cleanState.message?.let {
+                            snackbarHostState.showSnackbar(it)
+                            cleanVm.consumeMessage()
+                        }
+                    }
+                    CleanScreen(
+                        state = cleanState,
+                        onAnalyze = cleanVm::analyze,
                     )
                 }
                 composable(

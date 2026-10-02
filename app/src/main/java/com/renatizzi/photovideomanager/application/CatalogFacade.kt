@@ -5,16 +5,18 @@ import com.renatizzi.photovideomanager.domain.model.AcquireResult
 import com.renatizzi.photovideomanager.domain.model.Availability
 import com.renatizzi.photovideomanager.domain.model.CensusResult
 import com.renatizzi.photovideomanager.domain.model.DashboardSnapshot
+import com.renatizzi.photovideomanager.domain.model.DedupAnalysisResult
 import com.renatizzi.photovideomanager.domain.model.MediaKind
 import com.renatizzi.photovideomanager.domain.model.SourceSummary
 
 /**
- * Facade sottile verso UI: sorgenti, censimento, acquisizione, dashboard.
+ * Facade sottile verso UI: sorgenti, censimento, acquisizione, dedup, dashboard.
  */
 class CatalogFacade(
     private val sourceRegistry: SourceRegistry,
     private val censusService: CensusService,
     private val acquisitionService: AcquisitionService,
+    private val dedupService: DedupService,
 ) {
     suspend fun bootstrapPersonalArchiveIfNeeded() {
         sourceRegistry.bootstrapPersonalArchiveIfNeeded()
@@ -25,11 +27,13 @@ class CatalogFacade(
     suspend fun dashboardSnapshot(): DashboardSnapshot {
         bootstrapPersonalArchiveIfNeeded()
         val availability = localStorageAvailability()
+        val (dupPhotos, dupVideos) = runCatching { dedupService.currentExactDuplicateExtras() }
+            .getOrDefault(0L to 0L)
         return DashboardSnapshot(
             photoCount = sourceRegistry.countByKind(MediaKind.PHOTO),
             videoCount = sourceRegistry.countByKind(MediaKind.VIDEO),
-            duplicatePhotoCount = null,
-            duplicateVideoCount = null,
+            duplicatePhotoCount = dupPhotos,
+            duplicateVideoCount = dupVideos,
             personalUsedBytes = sourceRegistry.personalArchiveUsedBytes(),
             lastUpdatedEpochMs = sourceRegistry.latestMediaUpdatedAtEpochMs(),
             localAvailability = availability,
@@ -58,6 +62,9 @@ class CatalogFacade(
 
     suspend fun acquireToPersonalArchive(mediaItemIds: Collection<String>): AcquireResult =
         acquisitionService.acquireToPersonalArchive(mediaItemIds)
+
+    suspend fun analyzeExactDuplicates(): DedupAnalysisResult =
+        dedupService.analyzeExactDuplicates()
 
     companion object {
         const val PERSONAL_ARCHIVE_ID = "archive.personal.local"
