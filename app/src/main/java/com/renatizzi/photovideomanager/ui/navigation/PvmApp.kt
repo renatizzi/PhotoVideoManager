@@ -24,14 +24,18 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.renatizzi.photovideomanager.R
 import com.renatizzi.photovideomanager.application.CatalogFacade
+import com.renatizzi.photovideomanager.ui.acquire.AcquireFlowScaffold
+import com.renatizzi.photovideomanager.ui.acquire.AcquireFlowStep
 import com.renatizzi.photovideomanager.ui.acquire.AcquireScreen
 import com.renatizzi.photovideomanager.ui.acquire.AcquireViewModel
 import com.renatizzi.photovideomanager.ui.archive.ArchiveScreen
 import com.renatizzi.photovideomanager.ui.archive.ArchiveViewModel
+import com.renatizzi.photovideomanager.ui.census.CensusSourcesScreen
+import com.renatizzi.photovideomanager.ui.census.CensusViewModel
+import com.renatizzi.photovideomanager.ui.census.SourceBrowseScreen
+import com.renatizzi.photovideomanager.ui.census.SourceBrowseViewModel
 import com.renatizzi.photovideomanager.ui.clean.CleanScreen
 import com.renatizzi.photovideomanager.ui.clean.CleanViewModel
-import com.renatizzi.photovideomanager.ui.config.ArchiveSourcesScreen
-import com.renatizzi.photovideomanager.ui.config.ArchiveSourcesViewModel
 import com.renatizzi.photovideomanager.ui.config.ConfigScreen
 import com.renatizzi.photovideomanager.ui.home.FeatureStubScreen
 import com.renatizzi.photovideomanager.ui.home.HomeScreen
@@ -58,6 +62,7 @@ fun PvmApp(
         mutableStateOf(darkThemeOverride ?: themePreferences.storedDarkMode() ?: systemDark)
     }
     var helpOpen by remember { mutableStateOf(false) }
+    var acquireStep by remember { mutableStateOf(AcquireFlowStep.CENSUS) }
     val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
     val backStack by navController.currentBackStackEntryAsState()
@@ -79,14 +84,11 @@ fun PvmApp(
             ShellTab.COMPONI -> PvmDestination.Componi.route
             ShellTab.PUBBLICA -> PvmDestination.Pubblica.route
             ShellTab.GESTISCI -> PvmDestination.Gestisci.route
+            ShellTab.CONFIGURA -> PvmDestination.Config.route
         }
         val current = navController.currentDestination?.route
-        // Già sulla radice del tab: niente da fare.
         if (current == route) return
 
-        // Sempre sulla radice del tab (hub/dashboard), senza ripristinare
-        // schermate annidate (es. Acquisisci / Pulisci) — altrimenti Home/Organizza
-        // sembrano "non funzionare" dopo essere entrati in una sotto-funzione.
         navController.navigate(route) {
             popUpTo(PvmDestination.Home.route) {
                 inclusive = tab == ShellTab.HOME
@@ -99,7 +101,10 @@ fun PvmApp(
 
     fun openFeature(featureId: String) {
         when (featureId) {
-            "acquisisci" -> navController.navigate(PvmDestination.Acquire.route)
+            "acquisisci" -> {
+                acquireStep = AcquireFlowStep.CENSUS
+                navController.navigate(PvmDestination.Acquire.route)
+            }
             "archivia" -> navController.navigate(PvmDestination.ArchiveBrowse.route)
             "ricerca" -> navController.navigate(PvmDestination.Search.route)
             "pulisci" -> navController.navigate(PvmDestination.Clean.route)
@@ -115,11 +120,6 @@ fun PvmApp(
             userLabel = userLabel,
             snackbarHostState = snackbarHostState,
             onSelectTab = ::navigateTab,
-            onOpenConfig = {
-                navController.navigate(PvmDestination.Config.route) {
-                    launchSingleTop = true
-                }
-            },
             onToggleTheme = {
                 darkTheme = !darkTheme
                 themePreferences.setDarkMode(darkTheme)
@@ -164,32 +164,19 @@ fun PvmApp(
                     )
                 }
                 composable(PvmDestination.Config.route) {
-                    ConfigScreen(
-                        onOpenArchive = {
-                            navController.navigate(PvmDestination.ArchiveSources.route)
-                        },
-                    )
-                }
-                composable(PvmDestination.ArchiveSources.route) {
-                    val archiveVm: ArchiveSourcesViewModel = viewModel(
-                        factory = ArchiveSourcesViewModel.factory(catalogFacade),
-                    )
-                    val archiveState by archiveVm.state.collectAsStateWithLifecycle()
-                    LaunchedEffect(archiveState.message) {
-                        archiveState.message?.let {
-                            snackbarHostState.showSnackbar(it)
-                            archiveVm.consumeMessage()
-                        }
-                    }
-                    ArchiveSourcesScreen(
-                        state = archiveState,
-                        onAddFolder = archiveVm::addSafFolder,
-                        onRemove = archiveVm::removeSource,
-                        onCensus = archiveVm::censusSource,
-                        onRefresh = archiveVm::refresh,
-                    )
+                    ConfigScreen()
                 }
                 composable(PvmDestination.Acquire.route) {
+                    val censusVm: CensusViewModel = viewModel(
+                        factory = CensusViewModel.factory(catalogFacade),
+                    )
+                    val censusState by censusVm.state.collectAsStateWithLifecycle()
+                    LaunchedEffect(censusState.message) {
+                        censusState.message?.let {
+                            snackbarHostState.showSnackbar(it)
+                            censusVm.consumeMessage()
+                        }
+                    }
                     val acquireVm: AcquireViewModel = viewModel(
                         factory = AcquireViewModel.factory(catalogFacade),
                     )
@@ -200,14 +187,61 @@ fun PvmApp(
                             acquireVm.consumeMessage()
                         }
                     }
-                    AcquireScreen(
-                        state = acquireState,
-                        onToggle = acquireVm::toggleSelection,
-                        onKindFilter = acquireVm::onKindFilter,
-                        onSelectPending = acquireVm::selectPendingOnly,
-                        onClearSelection = acquireVm::clearSelection,
-                        onAcquire = acquireVm::acquireSelected,
-                        onRefresh = acquireVm::refresh,
+                    LaunchedEffect(acquireStep) {
+                        if (acquireStep == AcquireFlowStep.COPY) acquireVm.refresh()
+                        if (acquireStep == AcquireFlowStep.CENSUS) censusVm.refresh()
+                    }
+                    AcquireFlowScaffold(
+                        step = acquireStep,
+                        onStep = { acquireStep = it },
+                    ) {
+                        when (acquireStep) {
+                            AcquireFlowStep.CENSUS -> CensusSourcesScreen(
+                                state = censusState,
+                                onAddSource = censusVm::addSafSource,
+                                onToggleSelection = censusVm::toggleSelection,
+                                onRefreshStatus = censusVm::refresh,
+                                onCensusSelected = censusVm::censusSelected,
+                                onCensusOne = censusVm::censusOne,
+                                onRemove = censusVm::removeSource,
+                                onBrowse = { locationId ->
+                                    navController.navigate(
+                                        PvmDestination.SourceBrowse.create(locationId),
+                                    )
+                                },
+                                onSortMode = censusVm::setSortMode,
+                            )
+                            AcquireFlowStep.COPY -> AcquireScreen(
+                                state = acquireState,
+                                onToggle = acquireVm::toggleSelection,
+                                onKindFilter = acquireVm::onKindFilter,
+                                onSelectPending = acquireVm::selectPendingOnly,
+                                onClearSelection = acquireVm::clearSelection,
+                                onAcquire = acquireVm::acquireSelected,
+                                onRefresh = acquireVm::refresh,
+                            )
+                        }
+                    }
+                }
+                composable(
+                    route = PvmDestination.SourceBrowse.route,
+                    arguments = listOf(navArgument("locationId") { type = NavType.StringType }),
+                ) { entry ->
+                    val locationId = entry.arguments?.getString("locationId").orEmpty()
+                    val browseVm: SourceBrowseViewModel = viewModel(
+                        factory = SourceBrowseViewModel.factory(catalogFacade, locationId),
+                    )
+                    val browseState by browseVm.state.collectAsStateWithLifecycle()
+                    LaunchedEffect(browseState.message) {
+                        browseState.message?.let {
+                            snackbarHostState.showSnackbar(it)
+                            browseVm.consumeMessage()
+                        }
+                    }
+                    SourceBrowseScreen(
+                        state = browseState,
+                        onSortMode = browseVm::setSortMode,
+                        onRefresh = browseVm::refresh,
                     )
                 }
                 composable(PvmDestination.Clean.route) {
@@ -308,4 +342,3 @@ fun PvmApp(
         }
     }
 }
-

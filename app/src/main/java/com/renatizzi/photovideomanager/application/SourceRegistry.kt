@@ -77,6 +77,8 @@ class SourceRegistry(
                 locationId = location.id,
                 archiveId = location.archiveId,
                 displayName = location.displayName,
+                deviceLabel = deviceLabelFor(location),
+                pathLabel = pathLabelFor(location),
                 adapterKind = location.adapterKind,
                 availability = availability,
                 isSharedArchive = archive?.isSharedArchive == true,
@@ -99,7 +101,7 @@ class SourceRegistry(
 
         val archiveId = "archive.external.${UUID.randomUUID()}"
         val locationId = "location.saf.${UUID.randomUUID()}"
-        val name = displayName.ifBlank { treeUri.lastPathSegment ?: "Cartella esterna" }
+        val name = displayName.ifBlank { treeUri.lastPathSegment ?: "Sorgente esterna" }
 
         catalogStore.upsertArchive(
             ArchiveRef(
@@ -126,6 +128,8 @@ class SourceRegistry(
             locationId = saved.id,
             archiveId = saved.archiveId,
             displayName = saved.displayName,
+            deviceLabel = deviceLabelFor(saved),
+            pathLabel = pathLabelFor(saved),
             adapterKind = saved.adapterKind,
             availability = saved.availability,
             isSharedArchive = false,
@@ -160,6 +164,36 @@ class SourceRegistry(
     suspend fun personalArchiveUsedBytes(): Long = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         if (!personalRoot.exists()) return@withContext 0L
         personalRoot.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+    }
+
+    private fun deviceLabelFor(location: StorageLocation): String = when (location.adapterKind) {
+        StorageAdapterKind.LOCAL_FS -> "Spazio app MediaManager"
+        StorageAdapterKind.SAF_TREE -> "Questo dispositivo"
+        StorageAdapterKind.MEDIA_STORE -> "Galleria di sistema"
+        StorageAdapterKind.SMB -> "Rete / NAS"
+    }
+
+    private fun pathLabelFor(location: StorageLocation): String {
+        if (location.adapterKind == StorageAdapterKind.LOCAL_FS) {
+            return personalRoot.absolutePath
+        }
+        if (location.opaqueLocator.isBlank()) return location.displayName
+        return runCatching {
+            val uri = Uri.parse(location.opaqueLocator)
+            val last = uri.lastPathSegment.orEmpty()
+            when {
+                last.contains(':') -> {
+                    val volume = last.substringBefore(':')
+                    val path = last.substringAfter(':', missingDelimiterValue = "")
+                        .replace("%2F", "/", ignoreCase = true)
+                        .replace("%2f", "/")
+                    if (path.isBlank()) volume.ifBlank { location.displayName }
+                    else "$volume/$path"
+                }
+                last.isNotBlank() -> last.replace("%2F", "/", ignoreCase = true)
+                else -> location.displayName
+            }
+        }.getOrDefault(location.displayName)
     }
 
     companion object {

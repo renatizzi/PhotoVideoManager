@@ -15,6 +15,8 @@ class StorageModelTest {
             locationId = "location.personal.local.root",
             archiveId = "archive.personal.local",
             displayName = "Spazio interno app",
+            deviceLabel = "Spazio app MediaManager",
+            pathLabel = "/data/files/personal_archive",
             adapterKind = StorageAdapterKind.LOCAL_FS,
             availability = Availability.AVAILABLE,
             isSharedArchive = false,

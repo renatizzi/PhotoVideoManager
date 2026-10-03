@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -40,14 +39,13 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 /**
- * Top Bar globale — parity slot BoxManager:
- * titolo + versione sulla stessa riga, utente/data sotto, azioni a destra.
+ * Top Bar globale — titolo + versione, utente/data, Guida e switch tema.
+ * Impostazioni sono in Bottom Bar (solo icona).
  */
 @Composable
 fun PvmTopBar(
     darkTheme: Boolean,
     userLabel: String,
-    onOpenConfig: () -> Unit,
     onToggleTheme: () -> Unit,
     onHelp: () -> Unit,
     modifier: Modifier = Modifier,
@@ -74,7 +72,7 @@ fun PvmTopBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 14.dp, end = 6.dp, top = 10.dp, bottom = 10.dp),
+                .padding(start = 14.dp, end = 10.dp, top = 10.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(
@@ -116,18 +114,8 @@ fun PvmTopBar(
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(0.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                IconButton(
-                    onClick = onOpenConfig,
-                    modifier = Modifier.size(40.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Settings,
-                        contentDescription = stringResource(R.string.configura),
-                        tint = tokens.topBarTitle,
-                    )
-                }
                 IconButton(
                     onClick = onHelp,
                     modifier = Modifier.size(40.dp),
@@ -141,7 +129,6 @@ fun PvmTopBar(
                 Switch(
                     checked = darkTheme,
                     onCheckedChange = { onToggleTheme() },
-                    modifier = Modifier.padding(end = 4.dp),
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = tokens.accent,
                         checkedTrackColor = tokens.accentDark,

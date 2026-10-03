@@ -9,7 +9,7 @@ fun tabForRoute(route: String?): ShellTab? = when {
     route.startsWith("componi") -> ShellTab.COMPONI
     route.startsWith("pubblica") -> ShellTab.PUBBLICA
     route.startsWith("gestisci") -> ShellTab.GESTISCI
-    route.startsWith("config") -> null
+    route.startsWith("config") -> ShellTab.CONFIGURA
     route.startsWith("feature/") -> null
     else -> ShellTab.HOME
 }

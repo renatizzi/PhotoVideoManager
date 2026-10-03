@@ -98,6 +98,9 @@ class CatalogFacade(
     suspend fun listPersonalArchive(): List<ArchiveEntry> =
         archiveService.listPersonalArchive()
 
+    suspend fun listMediaForLocation(locationId: String): List<ArchiveEntry> =
+        archiveService.listMediaForLocation(locationId)
+
     suspend fun searchCatalog(
         query: String,
         kindFilter: SearchKindFilter = SearchKindFilter.ALL,

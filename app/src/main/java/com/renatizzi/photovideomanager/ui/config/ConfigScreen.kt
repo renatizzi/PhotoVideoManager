@@ -1,6 +1,5 @@
 package com.renatizzi.photovideomanager.ui.config
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,7 +16,6 @@ import com.renatizzi.photovideomanager.R
 
 @Composable
 fun ConfigScreen(
-    onOpenArchive: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -31,20 +29,22 @@ fun ConfigScreen(
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold,
         )
-        ConfigSection(
-            title = stringResource(R.string.archivio),
-            body = stringResource(R.string.archivio_section_hint),
-            onClick = onOpenArchive,
-        )
-        ConfigSection(
-            title = stringResource(R.string.famiglia),
-            body = stringResource(R.string.coming_soon),
-            onClick = null,
+        Text(
+            text = stringResource(R.string.config_intro),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
         )
         ConfigSection(
             title = stringResource(R.string.preferenze),
             body = stringResource(R.string.preferenze_section_hint),
-            onClick = null,
+        )
+        ConfigSection(
+            title = stringResource(R.string.famiglia),
+            body = stringResource(R.string.coming_soon),
+        )
+        ConfigSection(
+            title = stringResource(R.string.shared_archive_placeholder_title),
+            body = stringResource(R.string.shared_archive_placeholder),
         )
     }
 }
@@ -53,12 +53,10 @@ fun ConfigScreen(
 private fun ConfigSection(
     title: String,
     body: String,
-    onClick: (() -> Unit)?,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {

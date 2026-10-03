@@ -2,7 +2,8 @@ package com.renatizzi.photovideomanager.ui.shell
 
 /**
  * Contratto shared-shell (parity BoxManager).
- * Bottom Bar: Home + 4 macro-aree. Configura via Top Bar.
+ * Bottom: Home + 4 macro-aree + Impostazioni (solo icona).
+ * Top: Guida + switch tema.
  */
 enum class ShellTab {
     HOME,
@@ -10,6 +11,7 @@ enum class ShellTab {
     COMPONI,
     PUBBLICA,
     GESTISCI,
+    CONFIGURA,
 }
 
 data class ShellTopBarModel(

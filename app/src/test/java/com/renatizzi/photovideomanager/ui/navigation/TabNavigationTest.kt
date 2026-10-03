@@ -3,7 +3,6 @@ package com.renatizzi.photovideomanager.ui.navigation
 import com.renatizzi.photovideomanager.ui.shell.ShellTab
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -24,12 +23,12 @@ class TabNavigationTest {
     fun tabForRoute_mapsNestedArchiveToOrganizza() {
         assertEquals(ShellTab.ORGANIZZA, tabForRoute("organizza/archive"))
         assertEquals(ShellTab.ORGANIZZA, tabForRoute("organizza/search"))
+        assertEquals(ShellTab.ORGANIZZA, tabForRoute("organizza/acquire/source/abc"))
     }
 
     @Test
-    fun tabForRoute_configHasNoBottomSelection() {
-        assertNull(tabForRoute("config"))
-        assertNull(tabForRoute("config/archive"))
+    fun tabForRoute_configSelectsConfigura() {
+        assertEquals(ShellTab.CONFIGURA, tabForRoute("config"))
     }
 
     @Test

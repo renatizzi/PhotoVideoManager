@@ -27,4 +27,16 @@ class ArchiveService(
             }
             .sortedByDescending { it.mediaCopy.createdAtEpochMs }
     }
+
+    suspend fun listMediaForLocation(locationId: String): List<ArchiveEntry> {
+        require(permissionGate.canView(DomainScope.PERSONAL))
+        val items = catalogStore.listAllMediaItems().associateBy { it.id }
+        return catalogStore.listAllMediaCopies()
+            .filter { it.state == MediaCopyState.ACTIVE && it.storageLocationId == locationId }
+            .mapNotNull { copy ->
+                val item = items[copy.mediaItemId] ?: return@mapNotNull null
+                ArchiveEntry(mediaItem = item, mediaCopy = copy)
+            }
+            .sortedByDescending { it.mediaCopy.createdAtEpochMs }
+    }
 }

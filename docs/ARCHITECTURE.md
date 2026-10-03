@@ -83,3 +83,10 @@ Baseline: Nota Integrata v5.1. Decisioni tecniche di implementazione (non consol
 
 - Acquisisci: filtro Tutti/Foto/Video (selezione allineata al filtro)
 - Home: scorciatoie funzioni pronte + KPI cliccabili (Ricerca/Archivia/Cestino)
+
+## Checkpoint CP9 (revisione IA — decisioni Renato)
+
+- Bottom Bar: + Impostazioni **solo icona**; Top Bar: Guida + switch (più spazio)
+- Censisci = passo 1 di **Acquisisci** (non più in Impostazioni)
+- Elenco sorgenti: dispositivo + percorso; selezione ✅/🟩/❌; 🔄 stato; vedi media sola lettura; ordinamento
+- Consultazione media sorgente in sola lettura prima della copia

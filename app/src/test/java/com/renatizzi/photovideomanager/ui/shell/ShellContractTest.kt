@@ -2,21 +2,20 @@ package com.renatizzi.photovideomanager.ui.shell
 
 import com.renatizzi.photovideomanager.ui.theme.ShellPalettes
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ShellContractTest {
     @Test
-    fun shellTabs_homePlusFourMacroAreas() {
-        assertEquals(5, ShellTab.entries.size)
+    fun shellTabs_homeFourMacroAreasAndSettings() {
+        assertEquals(6, ShellTab.entries.size)
         assertTrue(ShellTab.entries.contains(ShellTab.HOME))
         assertTrue(ShellTab.entries.contains(ShellTab.ORGANIZZA))
         assertTrue(ShellTab.entries.contains(ShellTab.COMPONI))
         assertTrue(ShellTab.entries.contains(ShellTab.PUBBLICA))
         assertTrue(ShellTab.entries.contains(ShellTab.GESTISCI))
-        assertFalse(ShellTab.entries.any { it.name == "SETTINGS" })
+        assertTrue(ShellTab.entries.contains(ShellTab.CONFIGURA))
     }
 
     @Test
