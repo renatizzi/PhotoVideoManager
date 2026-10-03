@@ -49,11 +49,15 @@ if errorlevel 1 (
   echo.
   echo ERRORE: compilazione fallita.
   echo.
-  echo Cosa fare:
-  echo  1^) Apri il progetto in Android Studio
-  echo  2^) File → Sync Project with Gradle Files
-  echo  3^) Oppure Build → Build Bundle^(s^) / APK^(s^) → Build APK^(s^)
-  echo  4^) Poi riprova questo file
+  echo Se vedi FileSystemException / mergeDebugResources / packageDebugResources:
+  echo   1^) Chiudi Android Studio
+  echo   2^) Doppio clic su pulisci-build.bat
+  echo   3^) Riapri Studio → Sync → Run
+  echo.
+  echo Altrimenti:
+  echo   1^) Apri il progetto in Android Studio
+  echo   2^) File → Sync Project with Gradle Files
+  echo   3^) Build → Build Bundle^(s^) / APK^(s^) → Build APK^(s^)
   goto :end
 )
 

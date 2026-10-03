@@ -41,7 +41,12 @@ Non incollare nel terminale le frasi delle istruzioni (es. «Torna in Home…»)
 Se `compila-apk.bat` dice ancora “Java non trovato”: in Android Studio usa  
 **Build → Build Bundle(s) / APK(s) → Build APK(s)** → link *locate* (stesso risultato, senza terminale).
 
-## Documentazione
+## Se Sync/Run fallisce su Windows (FileSystemException / mergeDebugResources)
 
-- `docs/ARCHITECTURE.md` — struttura M02
-- Baseline requisiti: Nota Integrata v5.1 (fuori repo)
+Spesso è la cartella `app\build` bloccata o sporca (antivirus, OneDrive, Studio ancora in compilazione).
+
+1. Chiudi Android Studio.
+2. Doppio clic su `pulisci-build.bat`.
+3. Riapri Studio → **File → Sync Project with Gradle Files** → **Run**.
+
+In alternativa da Studio: **Build → Clean Project**, poi **Rebuild Project**.
