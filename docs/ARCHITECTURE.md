@@ -75,5 +75,6 @@ Baseline: Nota Integrata v5.1. Decisioni tecniche di implementazione (non consol
 
 ## Checkpoint CP7 (icona + miniature)
 
-- Icona launcher ridisegnata con safe-zone adaptive (non tagliata dalle maschere OS)
+- Icona launcher con grafica + wordmark **Media**/**Manager** (come bozza inviata)
+- Safe-zone adaptive per non tagliare titolo e elementi
 - Miniature nelle liste: Acquisisci, Archivia, Ricerca, Pulisci, Cestino (Coil)
