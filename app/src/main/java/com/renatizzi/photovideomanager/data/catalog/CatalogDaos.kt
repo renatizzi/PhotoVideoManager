@@ -1,0 +1,125 @@
+package com.renatizzi.photovideomanager.data.catalog
+
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+
+@Dao
+interface ArchiveDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(entity: ArchiveEntity)
+
+    @Query("SELECT * FROM archives ORDER BY displayName")
+    suspend fun list(): List<ArchiveEntity>
+
+    @Query("DELETE FROM archives WHERE id = :id")
+    suspend fun delete(id: String)
+}
+
+@Dao
+interface StorageLocationDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(entity: StorageLocationEntity)
+
+    @Query("SELECT * FROM storage_locations ORDER BY displayName")
+    suspend fun list(): List<StorageLocationEntity>
+
+    @Query("SELECT * FROM storage_locations WHERE id = :id LIMIT 1")
+    suspend fun get(id: String): StorageLocationEntity?
+
+    @Query("DELETE FROM storage_locations WHERE id = :id")
+    suspend fun delete(id: String)
+}
+
+@Dao
+interface MediaItemDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(entity: MediaItemEntity)
+
+    @Query("SELECT COUNT(*) FROM media_items")
+    suspend fun count(): Long
+
+    @Query("SELECT COUNT(*) FROM media_items WHERE kind = :kind")
+    suspend fun countByKind(kind: String): Long
+
+    @Query("SELECT MAX(updatedAtEpochMs) FROM media_items")
+    suspend fun latestUpdatedAt(): Long?
+
+    @Query("SELECT * FROM media_items ORDER BY updatedAtEpochMs DESC LIMIT :limit")
+    suspend fun list(limit: Int): List<MediaItemEntity>
+
+    @Query("SELECT * FROM media_items WHERE id = :id LIMIT 1")
+    suspend fun get(id: String): MediaItemEntity?
+
+    @Query("SELECT * FROM media_items ORDER BY createdAtEpochMs ASC")
+    suspend fun listAll(): List<MediaItemEntity>
+
+    @Query("DELETE FROM media_items WHERE id = :id")
+    suspend fun delete(id: String)
+}
+
+@Dao
+interface MediaCopyDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(entity: MediaCopyEntity)
+
+    @Query(
+        "SELECT * FROM media_copies WHERE storageLocationId = :storageLocationId AND opaqueLocator = :opaqueLocator LIMIT 1",
+    )
+    suspend fun findByLocator(storageLocationId: String, opaqueLocator: String): MediaCopyEntity?
+
+    @Query("SELECT * FROM media_copies WHERE mediaItemId = :mediaItemId")
+    suspend fun listByMediaItem(mediaItemId: String): List<MediaCopyEntity>
+
+    @Query("SELECT * FROM media_copies WHERE id = :id LIMIT 1")
+    suspend fun get(id: String): MediaCopyEntity?
+
+    @Query("SELECT * FROM media_copies ORDER BY createdAtEpochMs DESC")
+    suspend fun listAll(): List<MediaCopyEntity>
+
+    @Query("SELECT * FROM media_copies WHERE state = :state ORDER BY createdAtEpochMs DESC")
+    suspend fun listByState(state: String): List<MediaCopyEntity>
+
+    @Query("DELETE FROM media_copies WHERE id = :id")
+    suspend fun delete(id: String)
+}
+
+@Dao
+interface MediaFingerprintDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(entity: MediaFingerprintEntity)
+
+    @Query("SELECT * FROM media_fingerprints")
+    suspend fun listAll(): List<MediaFingerprintEntity>
+
+    @Query("SELECT * FROM media_fingerprints WHERE mediaCopyId = :mediaCopyId")
+    suspend fun listByMediaCopy(mediaCopyId: String): List<MediaFingerprintEntity>
+
+    @Query(
+        "SELECT * FROM media_fingerprints WHERE algorithm = :algorithm AND level = :level",
+    )
+    suspend fun listByAlgorithm(algorithm: String, level: Int): List<MediaFingerprintEntity>
+
+    @Query("DELETE FROM media_fingerprints WHERE mediaCopyId = :mediaCopyId")
+    suspend fun deleteByMediaCopy(mediaCopyId: String)
+}
+
+@Dao
+interface ScanSessionDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(entity: ScanSessionEntity)
+
+    @Query("SELECT * FROM scan_sessions WHERE id = :id LIMIT 1")
+    suspend fun get(id: String): ScanSessionEntity?
+}
+
+
+@Dao
+interface ImportSessionDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(entity: ImportSessionEntity)
+
+    @Query("SELECT * FROM import_sessions WHERE id = :id LIMIT 1")
+    suspend fun get(id: String): ImportSessionEntity?
+}
