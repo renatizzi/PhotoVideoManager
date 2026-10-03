@@ -128,6 +128,21 @@ class RoomCatalogStore(
     override suspend fun listAllMediaCopies(): List<MediaCopy> =
         db.mediaCopyDao().listAll().map { it.toDomain() }
 
+    override suspend fun listMediaCopiesByState(state: MediaCopyState): List<MediaCopy> =
+        db.mediaCopyDao().listByState(state.name).map { it.toDomain() }
+
+    override suspend fun deleteMediaCopy(id: String) {
+        db.mediaCopyDao().delete(id)
+    }
+
+    override suspend fun deleteMediaItem(id: String) {
+        db.mediaItemDao().delete(id)
+    }
+
+    override suspend fun deleteFingerprintsForCopy(mediaCopyId: String) {
+        db.mediaFingerprintDao().deleteByMediaCopy(mediaCopyId)
+    }
+
     override suspend fun listMediaItems(limit: Int): List<MediaItem> =
         db.mediaItemDao().list(limit).map { it.toMediaItem() }
 

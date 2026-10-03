@@ -14,10 +14,12 @@ import kotlinx.coroutines.launch
 data class CleanUiState(
     val groups: List<DuplicateGroup> = emptyList(),
     val analyzing: Boolean = false,
+    val busy: Boolean = false,
     val copiesScanned: Int = 0,
     val hashesComputed: Int = 0,
     val hashesFailed: Int = 0,
     val hasAnalyzed: Boolean = false,
+    val pendingTrashGroup: DuplicateGroup? = null,
     val message: String? = null,
 )
 
@@ -60,6 +62,47 @@ class CleanViewModel(
                         )
                     }
                 }
+        }
+    }
+
+    fun requestTrashExtras(group: DuplicateGroup) {
+        _state.update { it.copy(pendingTrashGroup = group) }
+    }
+
+    fun dismissTrashConfirm() {
+        _state.update { it.copy(pendingTrashGroup = null) }
+    }
+
+    fun confirmTrashExtras() {
+        val group = _state.value.pendingTrashGroup ?: return
+        val keepId = group.members.firstOrNull { it.isSuggestedKeep }?.mediaItem?.id
+            ?: return
+        viewModelScope.launch {
+            _state.update { it.copy(busy = true, pendingTrashGroup = null, message = null) }
+            runCatching {
+                catalogFacade.trashDuplicateExtras(
+                    fingerprintValue = group.fingerprintValue,
+                    keepMediaItemId = keepId,
+                    memberCopyIds = group.members.map { it.mediaCopy.id },
+                )
+            }.onSuccess { result ->
+                val refreshed = catalogFacade.analyzeExactDuplicates()
+                _state.update {
+                    it.copy(
+                        busy = false,
+                        groups = refreshed.groups,
+                        copiesScanned = refreshed.copiesScanned,
+                        hashesComputed = refreshed.hashesComputed,
+                        hashesFailed = refreshed.hashesFailed,
+                        hasAnalyzed = true,
+                        message = result.message,
+                    )
+                }
+            }.onFailure { error ->
+                _state.update {
+                    it.copy(busy = false, message = error.message ?: "Operazione non riuscita")
+                }
+            }
         }
     }
 

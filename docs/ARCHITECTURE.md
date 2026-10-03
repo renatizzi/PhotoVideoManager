@@ -58,6 +58,12 @@ Baseline: Nota Integrata v5.1. Decisioni tecniche di implementazione (non consol
 
 - `DedupService` + `ExactDedupGrouping`: duplicati esatti SHA-256 su MediaItem distinti
 - Calcolo hash mancanti in lettura (senza modificare sorgenti)
-- UI Gestisci → Pulisci: Analizza + revisione gruppi; **nessuna eliminazione** ancora
+- UI Gestisci → Pulisci: Analizza + revisione gruppi
 - KPI Home: conteggio “duplicati” (elementi in più per gruppo)
-- Elimina/Sposta/Cestino: tranche successiva
+
+## Checkpoint CP5 (tranche accorpata)
+
+- **Pulisci**: “Metti nel Cestino i duplicati” con conferma (tiene il consigliato)
+- **Cestino**: elenco, ripristina, elimina uno, svuota (file fisici solo nello spazio app)
+- **Archivia v1**: elenco copie ACTIVE nello spazio personale
+- Policy: cartelle SAF/telefono non cancellate in soft-delete; solo Catalogo

@@ -103,6 +103,14 @@ class LocalFilesystemStorageAdapter(
         relativize(target)
     }
 
+    override suspend fun delete(opaqueLocator: String): Unit = withContext(Dispatchers.IO) {
+        requireCapability(StorageCapability.DELETE)
+        val file = resolve(opaqueLocator)
+        if (file.exists()) {
+            require(file.delete() || !file.exists()) { "Impossibile eliminare $opaqueLocator" }
+        }
+    }
+
     private fun requireCapability(capability: StorageCapability) {
         if (capability !in caps) {
             throw MissingCapabilityException(capability, adapterId)

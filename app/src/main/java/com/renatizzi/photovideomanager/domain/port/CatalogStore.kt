@@ -3,6 +3,7 @@ package com.renatizzi.photovideomanager.domain.port
 import com.renatizzi.photovideomanager.domain.model.ArchiveRef
 import com.renatizzi.photovideomanager.domain.model.ImportSession
 import com.renatizzi.photovideomanager.domain.model.MediaCopy
+import com.renatizzi.photovideomanager.domain.model.MediaCopyState
 import com.renatizzi.photovideomanager.domain.model.MediaFingerprint
 import com.renatizzi.photovideomanager.domain.model.MediaItem
 import com.renatizzi.photovideomanager.domain.model.MediaKind
@@ -30,6 +31,10 @@ interface CatalogStore {
     suspend fun listFingerprintsByAlgorithm(algorithm: String, level: Int): List<MediaFingerprint>
     suspend fun listFingerprintsForCopy(mediaCopyId: String): List<MediaFingerprint>
     suspend fun listAllMediaCopies(): List<MediaCopy>
+    suspend fun listMediaCopiesByState(state: MediaCopyState): List<MediaCopy>
+    suspend fun deleteMediaCopy(id: String)
+    suspend fun deleteMediaItem(id: String)
+    suspend fun deleteFingerprintsForCopy(mediaCopyId: String)
     suspend fun listMediaItems(limit: Int = 100): List<MediaItem>
     suspend fun listAllMediaItems(): List<MediaItem>
     suspend fun upsertScanSession(session: ScanSession)

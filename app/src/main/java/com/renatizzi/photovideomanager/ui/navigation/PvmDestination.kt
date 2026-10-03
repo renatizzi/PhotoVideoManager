@@ -9,7 +9,9 @@ sealed class PvmDestination(val route: String) {
     data object Config : PvmDestination("config")
     data object ArchiveSources : PvmDestination("config/archive")
     data object Acquire : PvmDestination("organizza/acquire")
+    data object ArchiveBrowse : PvmDestination("organizza/archive")
     data object Clean : PvmDestination("gestisci/clean")
+    data object Trash : PvmDestination("gestisci/trash")
     data object FeatureStub : PvmDestination("feature/{featureId}") {
         fun create(featureId: String) = "feature/$featureId"
     }

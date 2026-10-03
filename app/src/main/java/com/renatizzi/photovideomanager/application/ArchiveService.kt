@@ -1,0 +1,30 @@
+package com.renatizzi.photovideomanager.application
+
+import com.renatizzi.photovideomanager.domain.model.ArchiveEntry
+import com.renatizzi.photovideomanager.domain.model.DomainScope
+import com.renatizzi.photovideomanager.domain.model.MediaCopyState
+import com.renatizzi.photovideomanager.domain.port.CatalogStore
+import com.renatizzi.photovideomanager.domain.port.PermissionGate
+
+/**
+ * Archivia v1: elenco contenuti attivi nello spazio personale dell'app.
+ */
+class ArchiveService(
+    private val catalogStore: CatalogStore,
+    private val permissionGate: PermissionGate,
+) {
+    suspend fun listPersonalArchive(): List<ArchiveEntry> {
+        require(permissionGate.canView(DomainScope.PERSONAL))
+        val items = catalogStore.listAllMediaItems().associateBy { it.id }
+        return catalogStore.listAllMediaCopies()
+            .filter {
+                it.state == MediaCopyState.ACTIVE &&
+                    it.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID
+            }
+            .mapNotNull { copy ->
+                val item = items[copy.mediaItemId] ?: return@mapNotNull null
+                ArchiveEntry(mediaItem = item, mediaCopy = copy)
+            }
+            .sortedByDescending { it.mediaCopy.createdAtEpochMs }
+    }
+}

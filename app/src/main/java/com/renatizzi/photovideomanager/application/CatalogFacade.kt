@@ -2,21 +2,26 @@ package com.renatizzi.photovideomanager.application
 
 import com.renatizzi.photovideomanager.domain.model.AcquireCandidate
 import com.renatizzi.photovideomanager.domain.model.AcquireResult
+import com.renatizzi.photovideomanager.domain.model.ArchiveEntry
 import com.renatizzi.photovideomanager.domain.model.Availability
 import com.renatizzi.photovideomanager.domain.model.CensusResult
 import com.renatizzi.photovideomanager.domain.model.DashboardSnapshot
 import com.renatizzi.photovideomanager.domain.model.DedupAnalysisResult
 import com.renatizzi.photovideomanager.domain.model.MediaKind
 import com.renatizzi.photovideomanager.domain.model.SourceSummary
+import com.renatizzi.photovideomanager.domain.model.TrashActionResult
+import com.renatizzi.photovideomanager.domain.model.TrashEntry
 
 /**
- * Facade sottile verso UI: sorgenti, censimento, acquisizione, dedup, dashboard.
+ * Facade sottile verso UI.
  */
 class CatalogFacade(
     private val sourceRegistry: SourceRegistry,
     private val censusService: CensusService,
     private val acquisitionService: AcquisitionService,
     private val dedupService: DedupService,
+    private val trashService: TrashService,
+    private val archiveService: ArchiveService,
 ) {
     suspend fun bootstrapPersonalArchiveIfNeeded() {
         sourceRegistry.bootstrapPersonalArchiveIfNeeded()
@@ -65,6 +70,29 @@ class CatalogFacade(
 
     suspend fun analyzeExactDuplicates(): DedupAnalysisResult =
         dedupService.analyzeExactDuplicates()
+
+    suspend fun trashDuplicateExtras(
+        fingerprintValue: String,
+        keepMediaItemId: String,
+        memberCopyIds: Collection<String>,
+    ): TrashActionResult = trashService.trashDuplicateExtras(
+        fingerprintValue = fingerprintValue,
+        keepMediaItemId = keepMediaItemId,
+        memberCopyIds = memberCopyIds,
+    )
+
+    suspend fun listTrash(): List<TrashEntry> = trashService.listTrash()
+
+    suspend fun restoreFromTrash(copyId: String): TrashActionResult =
+        trashService.restoreCopy(copyId)
+
+    suspend fun purgeFromTrash(copyId: String): TrashActionResult =
+        trashService.purgeCopy(copyId)
+
+    suspend fun emptyTrash(): TrashActionResult = trashService.purgeAll()
+
+    suspend fun listPersonalArchive(): List<ArchiveEntry> =
+        archiveService.listPersonalArchive()
 
     companion object {
         const val PERSONAL_ARCHIVE_ID = "archive.personal.local"

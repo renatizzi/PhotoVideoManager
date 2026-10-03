@@ -165,6 +165,13 @@ class SafTreeStorageAdapter(
         createdUri.toString()
     }
 
+    override suspend fun delete(opaqueLocator: String): Unit = withContext(Dispatchers.IO) {
+        requireCapability(StorageCapability.DELETE)
+        val uri = documentUriOf(opaqueLocator)
+        val deleted = DocumentsContract.deleteDocument(context.contentResolver, uri)
+        require(deleted) { "Impossibile eliminare documento SAF: $opaqueLocator" }
+    }
+
     private fun requireCapability(capability: StorageCapability) {
         if (capability !in caps) {
             throw MissingCapabilityException(capability, adapterId)

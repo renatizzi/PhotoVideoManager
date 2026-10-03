@@ -10,12 +10,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -30,6 +33,10 @@ import com.renatizzi.photovideomanager.domain.model.MediaKind
 fun CleanScreen(
     state: CleanUiState,
     onAnalyze: () -> Unit,
+    onRequestTrash: (DuplicateGroup) -> Unit,
+    onConfirmTrash: () -> Unit,
+    onDismissTrash: () -> Unit,
+    onOpenTrash: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -45,7 +52,7 @@ fun CleanScreen(
             fontWeight = FontWeight.SemiBold,
         )
         Text(
-            text = stringResource(R.string.clean_intro),
+            text = stringResource(R.string.clean_intro_v2),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
         )
@@ -55,7 +62,7 @@ fun CleanScreen(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
-                text = stringResource(R.string.clean_inline_help),
+                text = stringResource(R.string.clean_inline_help_v2),
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(12.dp),
             )
@@ -63,7 +70,7 @@ fun CleanScreen(
 
         Button(
             onClick = onAnalyze,
-            enabled = !state.analyzing,
+            enabled = !state.analyzing && !state.busy,
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
@@ -75,7 +82,15 @@ fun CleanScreen(
             )
         }
 
-        if (state.analyzing) {
+        OutlinedButton(
+            onClick = onOpenTrash,
+            enabled = !state.analyzing && !state.busy,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.clean_open_trash))
+        }
+
+        if (state.analyzing || state.busy) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
@@ -113,15 +128,41 @@ fun CleanScreen(
         }
 
         state.groups.forEachIndexed { index, group ->
-            DuplicateGroupBlock(index = index + 1, group = group)
+            DuplicateGroupBlock(
+                index = index + 1,
+                group = group,
+                enabled = !state.busy && !state.analyzing,
+                onTrashExtras = { onRequestTrash(group) },
+            )
             HorizontalDivider()
         }
 
         Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = stringResource(R.string.clean_delete_note),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+    }
+
+    val pending = state.pendingTrashGroup
+    if (pending != null) {
+        AlertDialog(
+            onDismissRequest = onDismissTrash,
+            title = { Text(stringResource(R.string.clean_confirm_title)) },
+            text = {
+                Text(
+                    stringResource(
+                        R.string.clean_confirm_body,
+                        pending.extraItemCount,
+                    ),
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = onConfirmTrash) {
+                    Text(stringResource(R.string.clean_confirm_yes))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismissTrash) {
+                    Text(stringResource(R.string.clean_confirm_no))
+                }
+            },
         )
     }
 }
@@ -130,6 +171,8 @@ fun CleanScreen(
 private fun DuplicateGroupBlock(
     index: Int,
     group: DuplicateGroup,
+    enabled: Boolean,
+    onTrashExtras: () -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -155,6 +198,13 @@ private fun DuplicateGroupBlock(
         )
         group.members.forEach { member ->
             MemberRow(member)
+        }
+        OutlinedButton(
+            onClick = onTrashExtras,
+            enabled = enabled && group.extraItemCount > 0,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.clean_trash_extras))
         }
     }
 }

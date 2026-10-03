@@ -17,6 +17,12 @@ class TabNavigationTest {
     @Test
     fun tabForRoute_mapsNestedCleanToGestisci() {
         assertEquals(ShellTab.GESTISCI, tabForRoute("gestisci/clean"))
+        assertEquals(ShellTab.GESTISCI, tabForRoute("gestisci/trash"))
+    }
+
+    @Test
+    fun tabForRoute_mapsNestedArchiveToOrganizza() {
+        assertEquals(ShellTab.ORGANIZZA, tabForRoute("organizza/archive"))
     }
 
     @Test

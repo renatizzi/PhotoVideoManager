@@ -20,6 +20,12 @@ interface StorageAdapter {
         fileName: String,
         source: InputStream,
     ): String
+
+    /**
+     * Elimina il file fisico indicato da [opaqueLocator].
+     * Richiede capability DELETE. Usare con conferma utente.
+     */
+    suspend fun delete(opaqueLocator: String)
 }
 
 data class StorageEntry(

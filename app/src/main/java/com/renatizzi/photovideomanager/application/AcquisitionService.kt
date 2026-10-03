@@ -32,6 +32,7 @@ class AcquisitionService(
         val items = catalogStore.listMediaItems(limit)
         return items.mapNotNull { item ->
             val copies = catalogStore.listMediaCopiesForItem(item.id)
+                .filter { it.state == MediaCopyState.ACTIVE }
             val sourceCopy = copies.firstOrNull { it.storageLocationId != CatalogFacade.PERSONAL_LOCATION_ID }
                 ?: copies.firstOrNull()
                 ?: return@mapNotNull null
@@ -88,6 +89,7 @@ class AcquisitionService(
                     continue
                 }
                 val copies = catalogStore.listMediaCopiesForItem(itemId)
+                    .filter { it.state == MediaCopyState.ACTIVE }
                 if (copies.any { it.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID }) {
                     skipped++
                     continue

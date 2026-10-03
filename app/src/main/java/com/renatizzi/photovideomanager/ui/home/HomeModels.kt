@@ -43,6 +43,7 @@ object MacroNavigation {
                     id = "archivia",
                     titleRes = R.string.feature_archivia,
                     subtitleRes = R.string.feature_archivia_desc,
+                    available = true,
                 ),
                 MacroFeature(
                     id = "ricerca",
@@ -112,6 +113,12 @@ object MacroNavigation {
                     id = "pulisci",
                     titleRes = R.string.feature_pulisci,
                     subtitleRes = R.string.feature_pulisci_desc,
+                    available = true,
+                ),
+                MacroFeature(
+                    id = "cestino",
+                    titleRes = R.string.feature_cestino,
+                    subtitleRes = R.string.feature_cestino_desc,
                     available = true,
                 ),
             ),

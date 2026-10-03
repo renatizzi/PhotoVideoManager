@@ -54,6 +54,9 @@ interface MediaItemDao {
 
     @Query("SELECT * FROM media_items ORDER BY createdAtEpochMs ASC")
     suspend fun listAll(): List<MediaItemEntity>
+
+    @Query("DELETE FROM media_items WHERE id = :id")
+    suspend fun delete(id: String)
 }
 
 @Dao
@@ -74,6 +77,12 @@ interface MediaCopyDao {
 
     @Query("SELECT * FROM media_copies ORDER BY createdAtEpochMs DESC")
     suspend fun listAll(): List<MediaCopyEntity>
+
+    @Query("SELECT * FROM media_copies WHERE state = :state ORDER BY createdAtEpochMs DESC")
+    suspend fun listByState(state: String): List<MediaCopyEntity>
+
+    @Query("DELETE FROM media_copies WHERE id = :id")
+    suspend fun delete(id: String)
 }
 
 @Dao
@@ -91,6 +100,9 @@ interface MediaFingerprintDao {
         "SELECT * FROM media_fingerprints WHERE algorithm = :algorithm AND level = :level",
     )
     suspend fun listByAlgorithm(algorithm: String, level: Int): List<MediaFingerprintEntity>
+
+    @Query("DELETE FROM media_fingerprints WHERE mediaCopyId = :mediaCopyId")
+    suspend fun deleteByMediaCopy(mediaCopyId: String)
 }
 
 @Dao

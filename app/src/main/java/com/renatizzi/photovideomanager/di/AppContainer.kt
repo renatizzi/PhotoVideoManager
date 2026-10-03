@@ -2,10 +2,12 @@ package com.renatizzi.photovideomanager.di
 
 import android.content.Context
 import com.renatizzi.photovideomanager.application.AcquisitionService
+import com.renatizzi.photovideomanager.application.ArchiveService
 import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.application.CensusService
 import com.renatizzi.photovideomanager.application.DedupService
 import com.renatizzi.photovideomanager.application.SourceRegistry
+import com.renatizzi.photovideomanager.application.TrashService
 import com.renatizzi.photovideomanager.data.catalog.CatalogDatabase
 import com.renatizzi.photovideomanager.data.catalog.RoomCatalogStore
 import com.renatizzi.photovideomanager.data.storage.LocalFilesystemStorageAdapter
@@ -62,6 +64,17 @@ class AppContainer(context: Context) {
         permissionGate = permissionGate,
     )
 
+    val trashService: TrashService = TrashService(
+        catalogStore = catalogStore,
+        adapterFactory = adapterFactory,
+        permissionGate = permissionGate,
+    )
+
+    val archiveService: ArchiveService = ArchiveService(
+        catalogStore = catalogStore,
+        permissionGate = permissionGate,
+    )
+
     val themePreferences: ThemePreferences = ThemePreferences(appContext)
 
     val catalogFacade: CatalogFacade = CatalogFacade(
@@ -69,5 +82,7 @@ class AppContainer(context: Context) {
         censusService = censusService,
         acquisitionService = acquisitionService,
         dedupService = dedupService,
+        trashService = trashService,
+        archiveService = archiveService,
     )
 }

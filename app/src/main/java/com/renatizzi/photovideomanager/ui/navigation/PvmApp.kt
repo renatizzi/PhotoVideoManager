@@ -26,6 +26,8 @@ import com.renatizzi.photovideomanager.R
 import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.ui.acquire.AcquireScreen
 import com.renatizzi.photovideomanager.ui.acquire.AcquireViewModel
+import com.renatizzi.photovideomanager.ui.archive.ArchiveScreen
+import com.renatizzi.photovideomanager.ui.archive.ArchiveViewModel
 import com.renatizzi.photovideomanager.ui.clean.CleanScreen
 import com.renatizzi.photovideomanager.ui.clean.CleanViewModel
 import com.renatizzi.photovideomanager.ui.config.ArchiveSourcesScreen
@@ -40,6 +42,8 @@ import com.renatizzi.photovideomanager.ui.shell.PvmScaffold
 import com.renatizzi.photovideomanager.ui.shell.ShellTab
 import com.renatizzi.photovideomanager.ui.theme.PvmTheme
 import com.renatizzi.photovideomanager.ui.theme.ThemePreferences
+import com.renatizzi.photovideomanager.ui.trash.TrashScreen
+import com.renatizzi.photovideomanager.ui.trash.TrashViewModel
 
 @Composable
 fun PvmApp(
@@ -94,7 +98,9 @@ fun PvmApp(
     fun openFeature(featureId: String) {
         when (featureId) {
             "acquisisci" -> navController.navigate(PvmDestination.Acquire.route)
+            "archivia" -> navController.navigate(PvmDestination.ArchiveBrowse.route)
             "pulisci" -> navController.navigate(PvmDestination.Clean.route)
+            "cestino" -> navController.navigate(PvmDestination.Trash.route)
             else -> navController.navigate(PvmDestination.FeatureStub.create(featureId))
         }
     }
@@ -213,6 +219,47 @@ fun PvmApp(
                     CleanScreen(
                         state = cleanState,
                         onAnalyze = cleanVm::analyze,
+                        onRequestTrash = cleanVm::requestTrashExtras,
+                        onConfirmTrash = cleanVm::confirmTrashExtras,
+                        onDismissTrash = cleanVm::dismissTrashConfirm,
+                        onOpenTrash = { navController.navigate(PvmDestination.Trash.route) },
+                    )
+                }
+                composable(PvmDestination.Trash.route) {
+                    val trashVm: TrashViewModel = viewModel(
+                        factory = TrashViewModel.factory(catalogFacade),
+                    )
+                    val trashState by trashVm.state.collectAsStateWithLifecycle()
+                    LaunchedEffect(trashState.message) {
+                        trashState.message?.let {
+                            snackbarHostState.showSnackbar(it)
+                            trashVm.consumeMessage()
+                        }
+                    }
+                    TrashScreen(
+                        state = trashState,
+                        onRefresh = trashVm::refresh,
+                        onRestore = trashVm::restore,
+                        onPurge = trashVm::purge,
+                        onRequestEmpty = trashVm::requestEmptyTrash,
+                        onConfirmEmpty = trashVm::confirmEmptyTrash,
+                        onDismissEmpty = trashVm::dismissEmptyTrash,
+                    )
+                }
+                composable(PvmDestination.ArchiveBrowse.route) {
+                    val archiveBrowseVm: ArchiveViewModel = viewModel(
+                        factory = ArchiveViewModel.factory(catalogFacade),
+                    )
+                    val archiveBrowseState by archiveBrowseVm.state.collectAsStateWithLifecycle()
+                    LaunchedEffect(archiveBrowseState.message) {
+                        archiveBrowseState.message?.let {
+                            snackbarHostState.showSnackbar(it)
+                            archiveBrowseVm.consumeMessage()
+                        }
+                    }
+                    ArchiveScreen(
+                        state = archiveBrowseState,
+                        onRefresh = archiveBrowseVm::refresh,
                     )
                 }
                 composable(
