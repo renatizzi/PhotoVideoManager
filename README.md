@@ -31,13 +31,15 @@ Non incollare nel terminale le frasi delle istruzioni (es. «Torna in Home…»)
 
 ## APK sul telefono (senza cavo / senza Run da Studio)
 
-1. Doppio clic su `compila-apk.bat` (dopo almeno un Sync del progetto in Studio).
-2. Si apre la cartella con `app-debug.apk`.
-3. Copia quel file sul telefono (USB, Google Drive, email/Telegram a te stesso).
-4. Sul telefono apri il file → **Installa**.
-5. Se Android chiede il permesso: consenti l’installazione dall’app usata per aprire il file.
+1. Apri il progetto **almeno una volta** in Android Studio e fai **Sync** (così esistono SDK e `local.properties`).
+2. Doppio clic su `compila-apk.bat`.
+   - Lo script cerca da solo il Java di Android Studio (cartella `jbr`): **non serve** impostare `JAVA_HOME` a mano.
+3. Si apre la cartella con `app-debug.apk`.
+4. Copia quel file sul telefono (USB, Google Drive, email/Telegram a te stesso).
+5. Sul telefono apri il file → **Installa**.
 
-In alternativa da Android Studio: **Build → Build Bundle(s) / APK(s) → Build APK(s)** → link *locate*.
+Se `compila-apk.bat` dice ancora “Java non trovato”: in Android Studio usa  
+**Build → Build Bundle(s) / APK(s) → Build APK(s)** → link *locate* (stesso risultato, senza terminale).
 
 ## Documentazione
 
