@@ -43,8 +43,12 @@ class SearchService(
             }
             .map { item ->
                 val copies = copiesByItem.getValue(item.id)
+                val preferred = copies.firstOrNull {
+                    it.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID
+                } ?: copies.first()
                 CatalogSearchEntry(
                     mediaItem = item,
+                    previewCopy = preferred,
                     activeCopyCount = copies.size,
                     locationNames = copies.mapNotNull { copy ->
                         locations[copy.storageLocationId]?.displayName

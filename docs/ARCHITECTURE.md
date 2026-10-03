@@ -72,3 +72,8 @@ Baseline: Nota Integrata v5.1. Decisioni tecniche di implementazione (non consol
 
 - **Ricerca v1**: elenco Catalogo ACTIVE con filtro testo + tipo (foto/video/tutti)
 - KPI Home: conteggio elementi nel Cestino
+
+## Checkpoint CP7 (icona + miniature)
+
+- Icona launcher ridisegnata con safe-zone adaptive (non tagliata dalle maschere OS)
+- Miniature nelle liste: Acquisisci, Archivia, Ricerca, Pulisci, Cestino (Coil)

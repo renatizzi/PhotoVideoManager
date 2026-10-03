@@ -18,12 +18,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.renatizzi.photovideomanager.R
 import com.renatizzi.photovideomanager.domain.model.TrashEntry
+import com.renatizzi.photovideomanager.ui.common.MediaThumbnail
 
 @Composable
 fun TrashScreen(
@@ -141,17 +143,28 @@ private fun TrashRow(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-        Text(
-            stringResource(R.string.clean_member_location, entry.locationName),
-            style = MaterialTheme.typography.bodySmall,
-        )
-        if (entry.isPersonalArchive) {
-            Text(
-                stringResource(R.string.trash_personal_note),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.secondary,
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            MediaThumbnail(
+                copy = entry.mediaCopy,
+                kind = entry.mediaItem.kind,
             )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Text(
+                    stringResource(R.string.clean_member_location, entry.locationName),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                if (entry.isPersonalArchive) {
+                    Text(
+                        stringResource(R.string.trash_personal_note),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary,
+                    )
+                }
+            }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = onRestore, enabled = enabled) {

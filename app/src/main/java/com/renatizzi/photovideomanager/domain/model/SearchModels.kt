@@ -2,6 +2,7 @@ package com.renatizzi.photovideomanager.domain.model
 
 data class CatalogSearchEntry(
     val mediaItem: MediaItem,
+    val previewCopy: MediaCopy?,
     val activeCopyCount: Int,
     val locationNames: List<String>,
     val inPersonalArchive: Boolean,

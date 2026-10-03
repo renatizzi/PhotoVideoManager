@@ -20,6 +20,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -28,6 +29,7 @@ import com.renatizzi.photovideomanager.R
 import com.renatizzi.photovideomanager.domain.model.DuplicateGroup
 import com.renatizzi.photovideomanager.domain.model.DuplicateMember
 import com.renatizzi.photovideomanager.domain.model.MediaKind
+import com.renatizzi.photovideomanager.ui.common.MediaThumbnail
 
 @Composable
 fun CleanScreen(
@@ -213,26 +215,37 @@ private fun DuplicateGroupBlock(
 private fun MemberRow(member: DuplicateMember) {
     val title = member.mediaItem.displayTitle?.ifBlank { null }
         ?: member.mediaItem.id
-    Column(modifier = Modifier.padding(start = 4.dp, top = 4.dp, bottom = 4.dp)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
+    Row(
+        modifier = Modifier.padding(start = 4.dp, top = 4.dp, bottom = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        MediaThumbnail(
+            copy = member.mediaCopy,
+            kind = member.mediaItem.kind,
+            size = 48.dp,
         )
-        Text(
-            text = kindLabel(member.mediaItem.kind),
-            style = MaterialTheme.typography.bodySmall,
-        )
-        Text(
-            text = stringResource(R.string.clean_member_location, member.locationName),
-            style = MaterialTheme.typography.bodySmall,
-        )
-        if (member.isSuggestedKeep) {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = stringResource(R.string.clean_suggested_keep),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.secondary,
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
             )
+            Text(
+                text = kindLabel(member.mediaItem.kind),
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Text(
+                text = stringResource(R.string.clean_member_location, member.locationName),
+                style = MaterialTheme.typography.bodySmall,
+            )
+            if (member.isSuggestedKeep) {
+                Text(
+                    text = stringResource(R.string.clean_suggested_keep),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.secondary,
+                )
+            }
         }
     }
 }

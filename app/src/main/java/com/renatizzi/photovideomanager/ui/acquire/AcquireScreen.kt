@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.renatizzi.photovideomanager.R
 import com.renatizzi.photovideomanager.domain.model.AcquireCandidate
 import com.renatizzi.photovideomanager.domain.model.MediaKind
+import com.renatizzi.photovideomanager.ui.common.MediaThumbnail
 
 @Composable
 fun AcquireScreen(
@@ -174,6 +175,10 @@ private fun CandidateRow(
             checked = selected || candidate.alreadyInPersonalArchive,
             onCheckedChange = { if (enabled) onToggle() },
             enabled = enabled,
+        )
+        MediaThumbnail(
+            copy = candidate.sourceCopy,
+            kind = candidate.mediaItem.kind,
         )
         Column(modifier = Modifier.weight(1f)) {
             Text(

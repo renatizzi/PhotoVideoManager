@@ -15,6 +15,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.renatizzi.photovideomanager.R
 import com.renatizzi.photovideomanager.domain.model.ArchiveEntry
 import com.renatizzi.photovideomanager.domain.model.MediaKind
+import com.renatizzi.photovideomanager.ui.common.MediaThumbnail
 
 @Composable
 fun ArchiveScreen(
@@ -95,24 +97,34 @@ fun ArchiveScreen(
 private fun ArchiveRow(entry: ArchiveEntry) {
     val title = entry.mediaItem.displayTitle?.ifBlank { null } ?: entry.mediaItem.id
     val sizeLabel = entry.mediaCopy.byteSize?.let { formatBytes(it) } ?: "—"
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-        Text(
-            text = when (entry.mediaItem.kind) {
-                MediaKind.PHOTO -> stringResource(R.string.media_kind_photo)
-                MediaKind.VIDEO -> stringResource(R.string.media_kind_video)
-            },
-            style = MaterialTheme.typography.bodySmall,
+        MediaThumbnail(
+            copy = entry.mediaCopy,
+            kind = entry.mediaItem.kind,
         )
-        Text(
-            text = stringResource(R.string.archive_size, sizeLabel),
-            style = MaterialTheme.typography.bodySmall,
-        )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+            Text(
+                text = when (entry.mediaItem.kind) {
+                    MediaKind.PHOTO -> stringResource(R.string.media_kind_photo)
+                    MediaKind.VIDEO -> stringResource(R.string.media_kind_video)
+                },
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Text(
+                text = stringResource(R.string.archive_size, sizeLabel),
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
     }
 }
 

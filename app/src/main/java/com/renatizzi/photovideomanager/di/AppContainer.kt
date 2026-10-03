@@ -21,6 +21,7 @@ import com.renatizzi.photovideomanager.domain.port.CatalogStore
 import com.renatizzi.photovideomanager.domain.port.PermissionGate
 import com.renatizzi.photovideomanager.domain.port.StorageAdapter
 import com.renatizzi.photovideomanager.domain.port.SyncPort
+import com.renatizzi.photovideomanager.ui.common.ThumbnailResolver
 import com.renatizzi.photovideomanager.ui.theme.ThemePreferences
 import java.io.File
 
@@ -39,6 +40,11 @@ class AppContainer(context: Context) {
     val authPort: AuthPort = LocalTrustAuthPort()
     val syncPort: SyncPort = DisabledSyncPort()
 
+    val thumbnailResolver: ThumbnailResolver = ThumbnailResolver(
+        appContext = appContext,
+        catalogStore = catalogStore,
+        personalRoot = personalRoot,
+    )
     val sourceRegistry: SourceRegistry = SourceRegistry(
         appContext = appContext,
         catalogStore = catalogStore,
