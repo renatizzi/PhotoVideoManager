@@ -84,8 +84,8 @@
     <string name="status_unknown">Stato sconosciuto</string>
     <string name="census_title">Censisci</string>
     <string name="census_intro">Aggiungi sorgenti (dispositivo + percorso), selezionale e avviane il censimento. Poi passa al passo «Copia» per acquisire nello spazio app.</string>
-    <string name="census_inline_help">✅ selezionata per il censimento · 🟩 da selezionare · ❌ selezione rimossa · 🔄 aggiorna stato. L’icona libreria apre i media già censiti in sola lettura.</string>
-    <string name="census_legend">Legenda selezione: ✅ da censire · 🟩 da selezionare · ❌ esclusa. Usa ▶ sulla riga per censire una sola sorgente, o ▶ in alto per tutte le ✅.</string>
+    <string name="census_inline_help">✅ selezionato per il censimento · 🟩 da selezionare · ❌ selezione rimossa · 🔄 Aggiorna Stato. L’icona libreria apre i media già censiti in sola lettura.</string>
+    <string name="census_legend">Legenda: ✅ selezionato per il censimento · 🟩 da selezionare · ❌ selezione rimossa · 🔄 Aggiorna Stato. Usa ▶ sulla riga per censire una sola sorgente, o ▶ in alto per tutte le ✅.</string>
     <string name="census_folder">Censisci</string>
     <string name="census_one">Censisci questa sorgente</string>
     <string name="census_selected">Censisci selezionate</string>
