@@ -78,3 +78,8 @@ Baseline: Nota Integrata v5.1. Decisioni tecniche di implementazione (non consol
 - Icona launcher con grafica + wordmark **Media**/**Manager** (come bozza inviata)
 - Safe-zone adaptive per non tagliare titolo e elementi
 - Miniature nelle liste: Acquisisci, Archivia, Ricerca, Pulisci, Cestino (Coil)
+
+## Checkpoint CP8
+
+- Acquisisci: filtro Tutti/Foto/Video (selezione allineata al filtro)
+- Home: scorciatoie funzioni pronte + KPI cliccabili (Ricerca/Archivia/Cestino)

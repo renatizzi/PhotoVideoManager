@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -37,6 +38,7 @@ import java.time.format.DateTimeFormatter
 fun HomeScreen(
     snapshot: DashboardSnapshot?,
     onOpenTab: (ShellTab) -> Unit,
+    onOpenFeature: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -67,12 +69,14 @@ fun HomeScreen(
                     value = snapshot.photoCount.toString(),
                     detail = duplicateLabel(snapshot.duplicatePhotoCount),
                     modifier = Modifier.weight(1f),
+                    onClick = { onOpenFeature("ricerca") },
                 )
                 KpiCard(
                     title = stringResource(R.string.kpi_videos),
                     value = snapshot.videoCount.toString(),
                     detail = duplicateLabel(snapshot.duplicateVideoCount),
                     modifier = Modifier.weight(1f),
+                    onClick = { onOpenFeature("ricerca") },
                 )
             }
             Row(
@@ -84,13 +88,55 @@ fun HomeScreen(
                     value = formatBytes(snapshot.personalUsedBytes),
                     detail = spaceAvailabilityLabel(snapshot.localAvailability),
                     modifier = Modifier.weight(1f),
+                    onClick = { onOpenFeature("archivia") },
                 )
                 KpiCard(
                     title = stringResource(R.string.kpi_last_update),
                     value = formatLastUpdate(snapshot.lastUpdatedEpochMs),
                     detail = stringResource(R.string.kpi_trash, snapshot.trashCount),
                     modifier = Modifier.weight(1f),
+                    onClick = { onOpenFeature("cestino") },
                 )
+            }
+        }
+
+        Text(
+            text = stringResource(R.string.quick_features),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            OutlinedButton(
+                onClick = { onOpenFeature("acquisisci") },
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(stringResource(R.string.feature_acquisisci))
+            }
+            OutlinedButton(
+                onClick = { onOpenFeature("ricerca") },
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(stringResource(R.string.feature_ricerca))
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            OutlinedButton(
+                onClick = { onOpenFeature("pulisci") },
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(stringResource(R.string.feature_pulisci))
+            }
+            OutlinedButton(
+                onClick = { onOpenFeature("cestino") },
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(stringResource(R.string.feature_cestino))
             }
         }
 
@@ -150,9 +196,10 @@ private fun KpiCard(
     value: String,
     detail: String,
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
 ) {
     Card(
-        modifier = modifier,
+        modifier = if (onClick != null) modifier.clickable(onClick = onClick) else modifier,
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface,

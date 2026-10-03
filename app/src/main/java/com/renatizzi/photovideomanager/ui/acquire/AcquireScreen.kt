@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -27,18 +28,21 @@ import androidx.compose.ui.unit.dp
 import com.renatizzi.photovideomanager.R
 import com.renatizzi.photovideomanager.domain.model.AcquireCandidate
 import com.renatizzi.photovideomanager.domain.model.MediaKind
+import com.renatizzi.photovideomanager.domain.model.SearchKindFilter
 import com.renatizzi.photovideomanager.ui.common.MediaThumbnail
 
 @Composable
 fun AcquireScreen(
     state: AcquireUiState,
     onToggle: (String) -> Unit,
+    onKindFilter: (SearchKindFilter) -> Unit,
     onSelectPending: () -> Unit,
     onClearSelection: () -> Unit,
     onAcquire: () -> Unit,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val visible = state.visibleCandidates
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -60,6 +64,30 @@ fun AcquireScreen(
             text = stringResource(R.string.catalog_status, state.catalogCount),
             style = MaterialTheme.typography.bodyMedium,
         )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            FilterChip(
+                selected = state.kindFilter == SearchKindFilter.ALL,
+                onClick = { onKindFilter(SearchKindFilter.ALL) },
+                enabled = !state.loading && !state.acquiring,
+                label = { Text(stringResource(R.string.search_filter_all)) },
+            )
+            FilterChip(
+                selected = state.kindFilter == SearchKindFilter.PHOTO,
+                onClick = { onKindFilter(SearchKindFilter.PHOTO) },
+                enabled = !state.loading && !state.acquiring,
+                label = { Text(stringResource(R.string.search_filter_photo)) },
+            )
+            FilterChip(
+                selected = state.kindFilter == SearchKindFilter.VIDEO,
+                onClick = { onKindFilter(SearchKindFilter.VIDEO) },
+                enabled = !state.loading && !state.acquiring,
+                label = { Text(stringResource(R.string.search_filter_video)) },
+            )
+        }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -115,7 +143,7 @@ fun AcquireScreen(
         HorizontalDivider()
 
         Text(
-            text = stringResource(R.string.acquire_candidates),
+            text = stringResource(R.string.acquire_candidates_filtered, visible.size),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Medium,
         )
@@ -133,9 +161,15 @@ fun AcquireScreen(
                     color = MaterialTheme.colorScheme.error,
                 )
             }
+        } else if (!state.loading && visible.isEmpty()) {
+            Text(
+                text = stringResource(R.string.acquire_empty_filter),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+            )
         }
 
-        state.candidates.forEach { candidate ->
+        visible.forEach { candidate ->
             CandidateRow(
                 candidate = candidate,
                 selected = candidate.mediaItem.id in state.selectedIds,

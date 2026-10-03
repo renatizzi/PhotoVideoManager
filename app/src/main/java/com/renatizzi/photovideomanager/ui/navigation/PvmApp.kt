@@ -136,6 +136,7 @@ fun PvmApp(
                     HomeScreen(
                         snapshot = homeState.snapshot,
                         onOpenTab = ::navigateTab,
+                        onOpenFeature = ::openFeature,
                     )
                 }
                 composable(PvmDestination.Organizza.route) {
@@ -202,6 +203,7 @@ fun PvmApp(
                     AcquireScreen(
                         state = acquireState,
                         onToggle = acquireVm::toggleSelection,
+                        onKindFilter = acquireVm::onKindFilter,
                         onSelectPending = acquireVm::selectPendingOnly,
                         onClearSelection = acquireVm::clearSelection,
                         onAcquire = acquireVm::acquireSelected,

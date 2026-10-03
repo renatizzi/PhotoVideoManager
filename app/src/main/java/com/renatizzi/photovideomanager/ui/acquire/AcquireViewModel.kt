@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.domain.model.AcquireCandidate
+import com.renatizzi.photovideomanager.domain.model.MediaKind
+import com.renatizzi.photovideomanager.domain.model.SearchKindFilter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,11 +16,21 @@ import kotlinx.coroutines.launch
 data class AcquireUiState(
     val candidates: List<AcquireCandidate> = emptyList(),
     val selectedIds: Set<String> = emptySet(),
+    val kindFilter: SearchKindFilter = SearchKindFilter.ALL,
     val loading: Boolean = true,
     val acquiring: Boolean = false,
     val catalogCount: Long = 0,
     val message: String? = null,
-)
+) {
+    val visibleCandidates: List<AcquireCandidate>
+        get() = candidates.filter { candidate ->
+            when (kindFilter) {
+                SearchKindFilter.ALL -> true
+                SearchKindFilter.PHOTO -> candidate.mediaItem.kind == MediaKind.PHOTO
+                SearchKindFilter.VIDEO -> candidate.mediaItem.kind == MediaKind.VIDEO
+            }
+        }
+}
 
 class AcquireViewModel(
     private val catalogFacade: CatalogFacade,
@@ -39,16 +51,17 @@ class AcquireViewModel(
                 val count = catalogFacade.mediaItemCount()
                 candidates to count
             }.onSuccess { (candidates, count) ->
-                val pendingIds = candidates
-                    .filterNot { it.alreadyInPersonalArchive }
-                    .map { it.mediaItem.id }
-                    .toSet()
-                _state.update {
-                    it.copy(
+                _state.update { current ->
+                    val next = current.copy(
                         candidates = candidates,
-                        selectedIds = pendingIds,
                         catalogCount = count,
                         loading = false,
+                    )
+                    next.copy(
+                        selectedIds = next.visibleCandidates
+                            .filterNot { it.alreadyInPersonalArchive }
+                            .map { it.mediaItem.id }
+                            .toSet(),
                     )
                 }
             }.onFailure { error ->
@@ -70,10 +83,22 @@ class AcquireViewModel(
         }
     }
 
+    fun onKindFilter(filter: SearchKindFilter) {
+        _state.update { current ->
+            val next = current.copy(kindFilter = filter)
+            next.copy(
+                selectedIds = next.visibleCandidates
+                    .filterNot { it.alreadyInPersonalArchive }
+                    .map { it.mediaItem.id }
+                    .toSet(),
+            )
+        }
+    }
+
     fun selectPendingOnly() {
         _state.update { current ->
             current.copy(
-                selectedIds = current.candidates
+                selectedIds = current.visibleCandidates
                     .filterNot { it.alreadyInPersonalArchive }
                     .map { it.mediaItem.id }
                     .toSet(),
@@ -107,16 +132,18 @@ class AcquireViewModel(
                             append(", ${result.failed} non riusciti")
                         }
                     }
-                    _state.update {
-                        it.copy(
+                    _state.update { current ->
+                        val next = current.copy(
                             acquiring = false,
                             candidates = candidates,
-                            selectedIds = candidates
+                            catalogCount = count,
+                            message = msg,
+                        )
+                        next.copy(
+                            selectedIds = next.visibleCandidates
                                 .filterNot { c -> c.alreadyInPersonalArchive }
                                 .map { c -> c.mediaItem.id }
                                 .toSet(),
-                            catalogCount = count,
-                            message = msg,
                         )
                     }
                 }
