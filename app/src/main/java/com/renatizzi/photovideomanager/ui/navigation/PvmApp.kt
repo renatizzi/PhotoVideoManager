@@ -38,6 +38,8 @@ import com.renatizzi.photovideomanager.ui.home.HomeScreen
 import com.renatizzi.photovideomanager.ui.home.HomeViewModel
 import com.renatizzi.photovideomanager.ui.home.MacroHubScreen
 import com.renatizzi.photovideomanager.ui.home.MacroNavigation
+import com.renatizzi.photovideomanager.ui.search.SearchScreen
+import com.renatizzi.photovideomanager.ui.search.SearchViewModel
 import com.renatizzi.photovideomanager.ui.shell.PvmScaffold
 import com.renatizzi.photovideomanager.ui.shell.ShellTab
 import com.renatizzi.photovideomanager.ui.theme.PvmTheme
@@ -99,6 +101,7 @@ fun PvmApp(
         when (featureId) {
             "acquisisci" -> navController.navigate(PvmDestination.Acquire.route)
             "archivia" -> navController.navigate(PvmDestination.ArchiveBrowse.route)
+            "ricerca" -> navController.navigate(PvmDestination.Search.route)
             "pulisci" -> navController.navigate(PvmDestination.Clean.route)
             "cestino" -> navController.navigate(PvmDestination.Trash.route)
             else -> navController.navigate(PvmDestination.FeatureStub.create(featureId))
@@ -260,6 +263,24 @@ fun PvmApp(
                     ArchiveScreen(
                         state = archiveBrowseState,
                         onRefresh = archiveBrowseVm::refresh,
+                    )
+                }
+                composable(PvmDestination.Search.route) {
+                    val searchVm: SearchViewModel = viewModel(
+                        factory = SearchViewModel.factory(catalogFacade),
+                    )
+                    val searchState by searchVm.state.collectAsStateWithLifecycle()
+                    LaunchedEffect(searchState.message) {
+                        searchState.message?.let {
+                            snackbarHostState.showSnackbar(it)
+                            searchVm.consumeMessage()
+                        }
+                    }
+                    SearchScreen(
+                        state = searchState,
+                        onQueryChange = searchVm::onQueryChange,
+                        onKindFilter = searchVm::onKindFilter,
+                        onRefresh = searchVm::refresh,
                     )
                 }
                 composable(

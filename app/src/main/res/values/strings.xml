@@ -32,6 +32,7 @@
     <string name="kpi_duplicates_pending">duplicati: in arrivo</string>
     <string name="kpi_space_personal">Spazio personale app</string>
     <string name="kpi_catalog_hint">Catalogo locale</string>
+    <string name="kpi_trash">Nel Cestino: %1$d</string>
     <string name="hub_organizza_subtitle">Gestione e organizzazione dei contenuti</string>
     <string name="hub_componi_subtitle">Modifica e creazione di album e ricordi</string>
     <string name="hub_pubblica_subtitle">Condivisione, social e produzioni</string>
@@ -132,4 +133,18 @@
     <string name="archive_list_title">Nello spazio personale: %1$d</string>
     <string name="archive_empty">Nessun file nello spazio personale. Usa Organizza → Acquisisci dopo aver censito una cartella.</string>
     <string name="archive_size">Dimensione: %1$s</string>
+    <string name="search_title">Ricerca</string>
+    <string name="search_intro">Cerca foto e video già presenti nel Catalogo (copie attive).</string>
+    <string name="search_inline_help">Filtra per nome e tipo. Gli elementi nel Cestino non compaiono qui finché non li ripristini.</string>
+    <string name="search_query_label">Cerca</string>
+    <string name="search_query_hint">Titolo o parte del nome</string>
+    <string name="search_filter_all">Tutti</string>
+    <string name="search_filter_photo">Foto</string>
+    <string name="search_filter_video">Video</string>
+    <string name="search_results_title">Risultati: %1$d</string>
+    <string name="search_empty_catalog">Nessun elemento attivo nel Catalogo. Aggiungi una cartella e fai Censisci, oppure ripristina dal Cestino.</string>
+    <string name="search_empty_query">Nessun risultato per questa ricerca.</string>
+    <string name="search_locations">Posizioni: %1$s</string>
+    <string name="search_copies">Copie attive: %1$d</string>
+    <string name="search_in_personal">Presente nello spazio personale app</string>
 </resources>

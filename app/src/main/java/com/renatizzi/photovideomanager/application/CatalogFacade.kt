@@ -4,10 +4,12 @@ import com.renatizzi.photovideomanager.domain.model.AcquireCandidate
 import com.renatizzi.photovideomanager.domain.model.AcquireResult
 import com.renatizzi.photovideomanager.domain.model.ArchiveEntry
 import com.renatizzi.photovideomanager.domain.model.Availability
+import com.renatizzi.photovideomanager.domain.model.CatalogSearchEntry
 import com.renatizzi.photovideomanager.domain.model.CensusResult
 import com.renatizzi.photovideomanager.domain.model.DashboardSnapshot
 import com.renatizzi.photovideomanager.domain.model.DedupAnalysisResult
 import com.renatizzi.photovideomanager.domain.model.MediaKind
+import com.renatizzi.photovideomanager.domain.model.SearchKindFilter
 import com.renatizzi.photovideomanager.domain.model.SourceSummary
 import com.renatizzi.photovideomanager.domain.model.TrashActionResult
 import com.renatizzi.photovideomanager.domain.model.TrashEntry
@@ -22,6 +24,7 @@ class CatalogFacade(
     private val dedupService: DedupService,
     private val trashService: TrashService,
     private val archiveService: ArchiveService,
+    private val searchService: SearchService,
 ) {
     suspend fun bootstrapPersonalArchiveIfNeeded() {
         sourceRegistry.bootstrapPersonalArchiveIfNeeded()
@@ -39,6 +42,7 @@ class CatalogFacade(
             videoCount = sourceRegistry.countByKind(MediaKind.VIDEO),
             duplicatePhotoCount = dupPhotos,
             duplicateVideoCount = dupVideos,
+            trashCount = trashService.trashCount(),
             personalUsedBytes = sourceRegistry.personalArchiveUsedBytes(),
             lastUpdatedEpochMs = sourceRegistry.latestMediaUpdatedAtEpochMs(),
             localAvailability = availability,
@@ -93,6 +97,11 @@ class CatalogFacade(
 
     suspend fun listPersonalArchive(): List<ArchiveEntry> =
         archiveService.listPersonalArchive()
+
+    suspend fun searchCatalog(
+        query: String,
+        kindFilter: SearchKindFilter = SearchKindFilter.ALL,
+    ): List<CatalogSearchEntry> = searchService.search(query = query, kindFilter = kindFilter)
 
     companion object {
         const val PERSONAL_ARCHIVE_ID = "archive.personal.local"

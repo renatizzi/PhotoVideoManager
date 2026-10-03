@@ -88,7 +88,7 @@ fun HomeScreen(
                 KpiCard(
                     title = stringResource(R.string.kpi_last_update),
                     value = formatLastUpdate(snapshot.lastUpdatedEpochMs),
-                    detail = stringResource(R.string.kpi_catalog_hint),
+                    detail = stringResource(R.string.kpi_trash, snapshot.trashCount),
                     modifier = Modifier.weight(1f),
                 )
             }

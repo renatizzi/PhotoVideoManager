@@ -49,6 +49,7 @@ object MacroNavigation {
                     id = "ricerca",
                     titleRes = R.string.feature_ricerca,
                     subtitleRes = R.string.feature_ricerca_desc,
+                    available = true,
                 ),
                 MacroFeature(
                     id = "raggruppa",

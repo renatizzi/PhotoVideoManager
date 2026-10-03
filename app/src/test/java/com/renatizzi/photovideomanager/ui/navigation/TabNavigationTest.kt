@@ -23,6 +23,7 @@ class TabNavigationTest {
     @Test
     fun tabForRoute_mapsNestedArchiveToOrganizza() {
         assertEquals(ShellTab.ORGANIZZA, tabForRoute("organizza/archive"))
+        assertEquals(ShellTab.ORGANIZZA, tabForRoute("organizza/search"))
     }
 
     @Test

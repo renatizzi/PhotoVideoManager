@@ -67,3 +67,8 @@ Baseline: Nota Integrata v5.1. Decisioni tecniche di implementazione (non consol
 - **Cestino**: elenco, ripristina, elimina uno, svuota (file fisici solo nello spazio app)
 - **Archivia v1**: elenco copie ACTIVE nello spazio personale
 - Policy: cartelle SAF/telefono non cancellate in soft-delete; solo Catalogo
+
+## Checkpoint CP6 (tranche accorpata)
+
+- **Ricerca v1**: elenco Catalogo ACTIVE con filtro testo + tipo (foto/video/tutti)
+- KPI Home: conteggio elementi nel Cestino

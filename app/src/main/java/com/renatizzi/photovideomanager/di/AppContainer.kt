@@ -6,6 +6,7 @@ import com.renatizzi.photovideomanager.application.ArchiveService
 import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.application.CensusService
 import com.renatizzi.photovideomanager.application.DedupService
+import com.renatizzi.photovideomanager.application.SearchService
 import com.renatizzi.photovideomanager.application.SourceRegistry
 import com.renatizzi.photovideomanager.application.TrashService
 import com.renatizzi.photovideomanager.data.catalog.CatalogDatabase
@@ -75,6 +76,11 @@ class AppContainer(context: Context) {
         permissionGate = permissionGate,
     )
 
+    val searchService: SearchService = SearchService(
+        catalogStore = catalogStore,
+        permissionGate = permissionGate,
+    )
+
     val themePreferences: ThemePreferences = ThemePreferences(appContext)
 
     val catalogFacade: CatalogFacade = CatalogFacade(
@@ -84,5 +90,6 @@ class AppContainer(context: Context) {
         dedupService = dedupService,
         trashService = trashService,
         archiveService = archiveService,
+        searchService = searchService,
     )
 }
