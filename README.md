@@ -23,11 +23,21 @@ export ANDROID_HOME="$HOME/Android/Sdk"
 
 Nella cartella del progetto c’è lo script `aggiorna-da-git.bat`.
 
-1. Doppio clic su `aggiorna-da-git.bat` (oppure, nel terminale di Android Studio: `.\aggiorna-da-git.bat`).
+1. Doppio clic su `aggiorna-da-git.bat`.
 2. Attendi il messaggio OK, poi chiudi la finestra.
 3. In Android Studio: **File → Sync Project with Gradle Files**, poi **Run**.
 
 Non incollare nel terminale le frasi delle istruzioni (es. «Torna in Home…»): non sono comandi.
+
+## APK sul telefono (senza cavo / senza Run da Studio)
+
+1. Doppio clic su `compila-apk.bat` (dopo almeno un Sync del progetto in Studio).
+2. Si apre la cartella con `app-debug.apk`.
+3. Copia quel file sul telefono (USB, Google Drive, email/Telegram a te stesso).
+4. Sul telefono apri il file → **Installa**.
+5. Se Android chiede il permesso: consenti l’installazione dall’app usata per aprire il file.
+
+In alternativa da Android Studio: **Build → Build Bundle(s) / APK(s) → Build APK(s)** → link *locate*.
 
 ## Documentazione
 

@@ -6,5 +6,5 @@
     <color name="pvm_background">#F4F7F9</color>
     <color name="pvm_surface">#FFFFFF</color>
     <color name="pvm_on_surface">#1A2330</color>
-    <color name="ic_launcher_background">#1B4F72</color>
+    <color name="ic_launcher_background">#0F2048</color>
 </resources>
