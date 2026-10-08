@@ -90,3 +90,10 @@ Baseline: Nota Integrata v5.1. Decisioni tecniche di implementazione (non consol
 - Censisci = passo 1 di **Acquisisci** (non più in Impostazioni)
 - Elenco sorgenti: dispositivo + percorso; selezione ✅/🟩/❌; 🔄 stato; vedi media sola lettura; ordinamento
 - Consultazione media sorgente in sola lettura prima della copia
+
+## Navigazione convalidata (2026-10-08)
+
+Riferimento operativo: `docs/NAVIGATION_CONSOLIDATION.md` (proposta Navigazione11 + interlocuzione).
+
+Sostituisce, per la shell UI, Bottom Bar a 5 macro+Pubblica/Gestisci: **Home · Organizza · Componi · Utility · Impostazioni**.  
+Selezione elenchi: solo on/off (non più ciclo ✅/🟩/❌). Implementazione codice: tranche successiva.

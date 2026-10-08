@@ -1,6 +1,6 @@
 # Shell parity checklist — Photo&VideoManager vs BoxManager
 
-Baseline: `docs/BOXMANAGER_REUSE_ASSESSMENT.md`, Nota Integrata v5.1 §5 / M18, revisione IA 2026-10-03.
+Baseline: `docs/BOXMANAGER_REUSE_ASSESSMENT.md`, Nota Integrata v5.1 §5 / M18, revisione IA 2026-10-03, convalida navigazione `docs/NAVIGATION_CONSOLIDATION.md` (2026-10-08).
 
 ## Slot Top Bar
 
