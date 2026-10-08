@@ -1,16 +1,15 @@
 package com.renatizzi.photovideomanager.ui.shell
 
 /**
- * Contratto shared-shell (parity BoxManager).
- * Bottom: Home + 4 macro-aree + Impostazioni (solo icona).
+ * Contratto shared-shell (Nota Integrata v5.2 §5).
+ * Bottom: Home + Organizza + Componi + Utility + Impostazioni (solo icona).
  * Top: Guida + switch tema.
  */
 enum class ShellTab {
     HOME,
     ORGANIZZA,
     COMPONI,
-    PUBBLICA,
-    GESTISCI,
+    UTILITY,
     CONFIGURA,
 }
 

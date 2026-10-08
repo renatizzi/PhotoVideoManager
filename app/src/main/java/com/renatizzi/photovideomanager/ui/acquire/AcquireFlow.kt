@@ -38,13 +38,13 @@ fun AcquireFlowHeader(
             FilterChip(
                 selected = step == AcquireFlowStep.CENSUS,
                 onClick = { onStep(AcquireFlowStep.CENSUS) },
-                label = { Text(stringResource(R.string.acquire_step_census)) },
+                label = { Text(stringResource(R.string.acquire_step_sources)) },
                 modifier = Modifier.weight(1f),
             )
             FilterChip(
                 selected = step == AcquireFlowStep.COPY,
                 onClick = { onStep(AcquireFlowStep.COPY) },
-                label = { Text(stringResource(R.string.acquire_step_copy)) },
+                label = { Text(stringResource(R.string.acquire_step_import)) },
                 modifier = Modifier.weight(1f),
             )
         }

@@ -8,13 +8,12 @@ import org.junit.Test
 
 class ShellContractTest {
     @Test
-    fun shellTabs_homeFourMacroAreasAndSettings() {
-        assertEquals(6, ShellTab.entries.size)
+    fun shellTabs_homeThreeMacroAreasAndSettings() {
+        assertEquals(5, ShellTab.entries.size)
         assertTrue(ShellTab.entries.contains(ShellTab.HOME))
         assertTrue(ShellTab.entries.contains(ShellTab.ORGANIZZA))
         assertTrue(ShellTab.entries.contains(ShellTab.COMPONI))
-        assertTrue(ShellTab.entries.contains(ShellTab.PUBBLICA))
-        assertTrue(ShellTab.entries.contains(ShellTab.GESTISCI))
+        assertTrue(ShellTab.entries.contains(ShellTab.UTILITY))
         assertTrue(ShellTab.entries.contains(ShellTab.CONFIGURA))
     }
 

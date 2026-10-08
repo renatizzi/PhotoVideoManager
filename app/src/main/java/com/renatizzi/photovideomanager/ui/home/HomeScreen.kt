@@ -133,10 +133,10 @@ fun HomeScreen(
                 Text(stringResource(R.string.feature_pulisci))
             }
             OutlinedButton(
-                onClick = { onOpenFeature("cestino") },
+                onClick = { onOpenFeature("ripristina") },
                 modifier = Modifier.weight(1f),
             ) {
-                Text(stringResource(R.string.feature_cestino))
+                Text(stringResource(R.string.feature_ripristina))
             }
         }
 
@@ -168,15 +168,15 @@ fun HomeScreen(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             QuickAccessButton(
-                title = stringResource(R.string.pubblica),
-                color = MacroNavigation.pubblicaAccent,
-                onClick = { onOpenTab(ShellTab.PUBBLICA) },
+                title = stringResource(R.string.utility),
+                color = MacroNavigation.utilityAccent,
+                onClick = { onOpenTab(ShellTab.UTILITY) },
                 modifier = Modifier.weight(1f),
             )
             QuickAccessButton(
-                title = stringResource(R.string.gestisci),
-                color = MacroNavigation.gestisciAccent,
-                onClick = { onOpenTab(ShellTab.GESTISCI) },
+                title = stringResource(R.string.feature_crea),
+                color = MacroNavigation.componiAccent.copy(alpha = 0.85f),
+                onClick = { onOpenFeature("crea") },
                 modifier = Modifier.weight(1f),
             )
         }

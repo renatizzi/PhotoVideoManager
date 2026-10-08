@@ -15,14 +15,12 @@ data class SourceSummary(
     val isBuiltInPersonal: Boolean,
 )
 
-/** Stato selezione sorgente per il censimento (icone UI). */
+/** Stato selezione sorgente (Nota v5.2: solo on/off). */
 enum class SourceCensusSelection {
-    /** 🟩 da selezionare */
-    TO_SELECT,
-    /** ✅ selezionato per il censimento */
+    /** off / non selezionato */
+    NOT_SELECTED,
+    /** on / selezionato */
     SELECTED,
-    /** ❌ selezione rimossa */
-    REMOVED,
 }
 
 enum class SourceSortMode {

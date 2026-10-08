@@ -82,8 +82,7 @@ fun PvmApp(
             ShellTab.HOME -> PvmDestination.Home.route
             ShellTab.ORGANIZZA -> PvmDestination.Organizza.route
             ShellTab.COMPONI -> PvmDestination.Componi.route
-            ShellTab.PUBBLICA -> PvmDestination.Pubblica.route
-            ShellTab.GESTISCI -> PvmDestination.Gestisci.route
+            ShellTab.UTILITY -> PvmDestination.Utility.route
             ShellTab.CONFIGURA -> PvmDestination.Config.route
         }
         val current = navController.currentDestination?.route
@@ -105,10 +104,11 @@ fun PvmApp(
                 acquireStep = AcquireFlowStep.CENSUS
                 navController.navigate(PvmDestination.Acquire.route)
             }
+            "aggiorna" -> navController.navigate(PvmDestination.ArchiveBrowse.route)
             "archivia" -> navController.navigate(PvmDestination.ArchiveBrowse.route)
             "ricerca" -> navController.navigate(PvmDestination.Search.route)
             "pulisci" -> navController.navigate(PvmDestination.Clean.route)
-            "cestino" -> navController.navigate(PvmDestination.Trash.route)
+            "ripristina", "cestino" -> navController.navigate(PvmDestination.Trash.route)
             else -> navController.navigate(PvmDestination.FeatureStub.create(featureId))
         }
     }
@@ -151,15 +151,9 @@ fun PvmApp(
                         onFeatureClick = { openFeature(it.id) },
                     )
                 }
-                composable(PvmDestination.Pubblica.route) {
+                composable(PvmDestination.Utility.route) {
                     MacroHubScreen(
-                        area = MacroNavigation.areaFor(ShellTab.PUBBLICA)!!,
-                        onFeatureClick = { openFeature(it.id) },
-                    )
-                }
-                composable(PvmDestination.Gestisci.route) {
-                    MacroHubScreen(
-                        area = MacroNavigation.areaFor(ShellTab.GESTISCI)!!,
+                        area = MacroNavigation.areaFor(ShellTab.UTILITY)!!,
                         onFeatureClick = { openFeature(it.id) },
                     )
                 }

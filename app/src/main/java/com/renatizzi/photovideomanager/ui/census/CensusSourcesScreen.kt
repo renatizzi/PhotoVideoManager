@@ -3,7 +3,6 @@ package com.renatizzi.photovideomanager.ui.census
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,6 +21,7 @@ import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.SortByAlpha
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -210,16 +210,10 @@ private fun SourceCensusRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text(
-                text = when (selection) {
-                    SourceCensusSelection.SELECTED -> "✅"
-                    SourceCensusSelection.TO_SELECT -> "🟩"
-                    SourceCensusSelection.REMOVED -> "❌"
-                },
-                fontSize = 22.sp,
-                modifier = Modifier
-                    .clickable(enabled = enabled && !censusBusy, onClick = onToggleSelection)
-                    .padding(4.dp),
+            Checkbox(
+                checked = selection == SourceCensusSelection.SELECTED,
+                onCheckedChange = { onToggleSelection() },
+                enabled = enabled && !censusBusy,
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(

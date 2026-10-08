@@ -11,12 +11,13 @@ class TabNavigationTest {
     fun tabForRoute_mapsNestedAcquireToOrganizza() {
         assertEquals(ShellTab.ORGANIZZA, tabForRoute("organizza/acquire"))
         assertEquals(ShellTab.ORGANIZZA, tabForRoute("organizza"))
+        assertEquals(ShellTab.ORGANIZZA, tabForRoute("organizza/clean"))
     }
 
     @Test
-    fun tabForRoute_mapsNestedCleanToGestisci() {
-        assertEquals(ShellTab.GESTISCI, tabForRoute("gestisci/clean"))
-        assertEquals(ShellTab.GESTISCI, tabForRoute("gestisci/trash"))
+    fun tabForRoute_mapsNestedTrashToUtility() {
+        assertEquals(ShellTab.UTILITY, tabForRoute("utility/trash"))
+        assertEquals(ShellTab.UTILITY, tabForRoute("utility"))
     }
 
     @Test
@@ -37,5 +38,6 @@ class TabNavigationTest {
         assertEquals("organizza", PvmDestination.Organizza.route)
         assertFalse(PvmDestination.Acquire.route == PvmDestination.Organizza.route)
         assertTrue(PvmDestination.Acquire.route.startsWith("organizza"))
+        assertTrue(PvmDestination.Trash.route.startsWith("utility"))
     }
 }

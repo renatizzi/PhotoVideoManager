@@ -34,7 +34,7 @@ data class CensusUiState(
         }
 
     fun selectionOf(locationId: String): SourceCensusSelection =
-        selection[locationId] ?: SourceCensusSelection.TO_SELECT
+        selection[locationId] ?: SourceCensusSelection.NOT_SELECTED
 }
 
 class CensusViewModel(
@@ -84,9 +84,8 @@ class CensusViewModel(
     fun toggleSelection(locationId: String) {
         _state.update { current ->
             val next = when (current.selectionOf(locationId)) {
-                SourceCensusSelection.TO_SELECT -> SourceCensusSelection.SELECTED
-                SourceCensusSelection.SELECTED -> SourceCensusSelection.REMOVED
-                SourceCensusSelection.REMOVED -> SourceCensusSelection.SELECTED
+                SourceCensusSelection.NOT_SELECTED -> SourceCensusSelection.SELECTED
+                SourceCensusSelection.SELECTED -> SourceCensusSelection.NOT_SELECTED
             }
             current.copy(selection = current.selection + (locationId to next))
         }
@@ -148,7 +147,7 @@ class CensusViewModel(
             .keys
             .toList()
         if (ids.isEmpty()) {
-            _state.update { it.copy(message = "Seleziona almeno una sorgente (✅) da censire") }
+            _state.update { it.copy(message = "Seleziona almeno una sorgente da censire") }
             return
         }
         viewModelScope.launch {

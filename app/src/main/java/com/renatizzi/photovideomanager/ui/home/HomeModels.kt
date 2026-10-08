@@ -23,8 +23,7 @@ data class MacroAreaDefinition(
 object MacroNavigation {
     val organizaAccent = Color(0xFF1565C0)
     val componiAccent = Color(0xFF2E7D32)
-    val pubblicaAccent = Color(0xFFEF6C00)
-    val gestisciAccent = Color(0xFF6A1B9A)
+    val utilityAccent = Color(0xFF6A1B9A)
 
     val areas: List<MacroAreaDefinition> = listOf(
         MacroAreaDefinition(
@@ -40,21 +39,10 @@ object MacroNavigation {
                     available = true,
                 ),
                 MacroFeature(
-                    id = "archivia",
-                    titleRes = R.string.feature_archivia,
-                    subtitleRes = R.string.feature_archivia_desc,
+                    id = "aggiorna",
+                    titleRes = R.string.feature_aggiorna,
+                    subtitleRes = R.string.feature_aggiorna_desc,
                     available = true,
-                ),
-                MacroFeature(
-                    id = "ricerca",
-                    titleRes = R.string.feature_ricerca,
-                    subtitleRes = R.string.feature_ricerca_desc,
-                    available = true,
-                ),
-                MacroFeature(
-                    id = "raggruppa",
-                    titleRes = R.string.feature_raggruppa,
-                    subtitleRes = R.string.feature_raggruppa_desc,
                 ),
             ),
         ),
@@ -65,62 +53,48 @@ object MacroNavigation {
             accent = componiAccent,
             features = listOf(
                 MacroFeature(
+                    id = "crea",
+                    titleRes = R.string.feature_crea,
+                    subtitleRes = R.string.feature_crea_desc,
+                ),
+                MacroFeature(
                     id = "edita",
                     titleRes = R.string.feature_edita,
                     subtitleRes = R.string.feature_edita_desc,
                 ),
                 MacroFeature(
-                    id = "crea",
-                    titleRes = R.string.feature_crea,
-                    subtitleRes = R.string.feature_crea_desc,
+                    id = "pubblica",
+                    titleRes = R.string.feature_pubblica,
+                    subtitleRes = R.string.feature_pubblica_desc,
                 ),
             ),
         ),
         MacroAreaDefinition(
-            tab = ShellTab.PUBBLICA,
-            titleRes = R.string.pubblica,
-            subtitleRes = R.string.hub_pubblica_subtitle,
-            accent = pubblicaAccent,
+            tab = ShellTab.UTILITY,
+            titleRes = R.string.utility,
+            subtitleRes = R.string.hub_utility_subtitle,
+            accent = utilityAccent,
             features = listOf(
                 MacroFeature(
-                    id = "condividi",
-                    titleRes = R.string.feature_condividi,
-                    subtitleRes = R.string.feature_condividi_desc,
+                    id = "backup",
+                    titleRes = R.string.feature_backup,
+                    subtitleRes = R.string.feature_backup_desc,
                 ),
                 MacroFeature(
-                    id = "social",
-                    titleRes = R.string.feature_social,
-                    subtitleRes = R.string.feature_social_desc,
-                ),
-                MacroFeature(
-                    id = "produci",
-                    titleRes = R.string.feature_produci,
-                    subtitleRes = R.string.feature_produci_desc,
-                ),
-            ),
-        ),
-        MacroAreaDefinition(
-            tab = ShellTab.GESTISCI,
-            titleRes = R.string.gestisci,
-            subtitleRes = R.string.hub_gestisci_subtitle,
-            accent = gestisciAccent,
-            features = listOf(
-                MacroFeature(
-                    id = "salva",
-                    titleRes = R.string.feature_salva,
-                    subtitleRes = R.string.feature_salva_desc,
-                ),
-                MacroFeature(
-                    id = "pulisci",
-                    titleRes = R.string.feature_pulisci,
-                    subtitleRes = R.string.feature_pulisci_desc,
+                    id = "ripristina",
+                    titleRes = R.string.feature_ripristina,
+                    subtitleRes = R.string.feature_ripristina_desc,
                     available = true,
                 ),
                 MacroFeature(
-                    id = "cestino",
-                    titleRes = R.string.feature_cestino,
-                    subtitleRes = R.string.feature_cestino_desc,
-                    available = true,
+                    id = "revisione",
+                    titleRes = R.string.feature_revisione,
+                    subtitleRes = R.string.feature_revisione_desc,
+                ),
+                MacroFeature(
+                    id = "spazio",
+                    titleRes = R.string.feature_spazio,
+                    subtitleRes = R.string.feature_spazio_desc,
                 ),
             ),
         ),

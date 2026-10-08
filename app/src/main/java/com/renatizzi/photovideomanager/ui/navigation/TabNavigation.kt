@@ -7,8 +7,7 @@ fun tabForRoute(route: String?): ShellTab? = when {
     route == PvmDestination.Home.route -> ShellTab.HOME
     route.startsWith("organizza") -> ShellTab.ORGANIZZA
     route.startsWith("componi") -> ShellTab.COMPONI
-    route.startsWith("pubblica") -> ShellTab.PUBBLICA
-    route.startsWith("gestisci") -> ShellTab.GESTISCI
+    route.startsWith("utility") -> ShellTab.UTILITY
     route.startsWith("config") -> ShellTab.CONFIGURA
     route.startsWith("feature/") -> null
     else -> ShellTab.HOME

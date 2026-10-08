@@ -6,7 +6,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Create
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Publish
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Icon
@@ -25,8 +24,8 @@ import com.renatizzi.photovideomanager.R
 import com.renatizzi.photovideomanager.ui.theme.LocalShellTokens
 
 /**
- * Bottom Bar: Home + Organizza + Componi + Pubblica + Gestisci + Impostazioni.
- * Impostazioni: solo icona (stile BoxManager), senza etichetta testuale.
+ * Bottom Bar (Nota v5.2): Home + Organizza + Componi + Utility + Impostazioni.
+ * Impostazioni: solo icona, senza etichetta testuale.
  */
 @Composable
 fun PvmBottomBar(
@@ -82,8 +81,7 @@ private fun ShellTab.labelRes(): Int = when (this) {
     ShellTab.HOME -> R.string.home
     ShellTab.ORGANIZZA -> R.string.organizza
     ShellTab.COMPONI -> R.string.componi
-    ShellTab.PUBBLICA -> R.string.pubblica
-    ShellTab.GESTISCI -> R.string.gestisci
+    ShellTab.UTILITY -> R.string.utility
     ShellTab.CONFIGURA -> R.string.configura
 }
 
@@ -91,7 +89,6 @@ private fun ShellTab.icon(): ImageVector = when (this) {
     ShellTab.HOME -> Icons.Outlined.Home
     ShellTab.ORGANIZZA -> Icons.Outlined.FolderOpen
     ShellTab.COMPONI -> Icons.Outlined.Create
-    ShellTab.PUBBLICA -> Icons.Outlined.Publish
-    ShellTab.GESTISCI -> Icons.Outlined.Tune
+    ShellTab.UTILITY -> Icons.Outlined.Tune
     ShellTab.CONFIGURA -> Icons.Outlined.Settings
 }

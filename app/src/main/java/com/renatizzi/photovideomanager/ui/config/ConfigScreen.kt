@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,6 +23,7 @@ fun ConfigScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -35,16 +38,24 @@ fun ConfigScreen(
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
         )
         ConfigSection(
-            title = stringResource(R.string.preferenze),
+            title = stringResource(R.string.settings),
             body = stringResource(R.string.preferenze_section_hint),
         )
         ConfigSection(
-            title = stringResource(R.string.famiglia),
+            title = stringResource(R.string.config_security_privacy),
             body = stringResource(R.string.coming_soon),
         )
         ConfigSection(
-            title = stringResource(R.string.shared_archive_placeholder_title),
+            title = stringResource(R.string.config_setup_shared_archive),
             body = stringResource(R.string.shared_archive_placeholder),
+        )
+        ConfigSection(
+            title = stringResource(R.string.config_archive_access),
+            body = stringResource(R.string.config_archive_access_hint),
+        )
+        ConfigSection(
+            title = stringResource(R.string.config_play_store),
+            body = stringResource(R.string.coming_soon),
         )
     }
 }
