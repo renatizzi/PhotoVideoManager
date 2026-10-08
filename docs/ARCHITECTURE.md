@@ -91,9 +91,7 @@ Baseline: Nota Integrata v5.1. Decisioni tecniche di implementazione (non consol
 - Elenco sorgenti: dispositivo + percorso; selezione ✅/🟩/❌; 🔄 stato; vedi media sola lettura; ordinamento
 - Consultazione media sorgente in sola lettura prima della copia
 
-## Navigazione convalidata (2026-10-08)
+## Navigazione (Nota Integrata v5.2 — 2026-10-08)
 
-Riferimento operativo: `docs/NAVIGATION_CONSOLIDATION.md` (proposta Navigazione11 + interlocuzione).
-
-Sostituisce, per la shell UI, Bottom Bar a 5 macro+Pubblica/Gestisci: **Home · Organizza · Componi · Utility · Impostazioni**.  
-Selezione elenchi: solo on/off (non più ciclo ✅/🟩/❌). Implementazione codice: tranche successiva.
+Riferimento unico: `docs/PVM_Nota_Integrata.md` (§5).  
+Bottom Bar: **Home · Organizza · Componi · Utility · Impostazioni**. Selezione elenchi: on/off.

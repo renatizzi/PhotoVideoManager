@@ -1,6 +1,6 @@
 # Shell parity checklist — Photo&VideoManager vs BoxManager
 
-Baseline: `docs/BOXMANAGER_REUSE_ASSESSMENT.md`, Nota Integrata v5.1 §5 / M18, revisione IA 2026-10-03, convalida navigazione `docs/NAVIGATION_CONSOLIDATION.md` (2026-10-08).
+Baseline: `docs/BOXMANAGER_REUSE_ASSESSMENT.md`, Nota Integrata v5.2 §5 / M18 (`docs/PVM_Nota_Integrata.md`).
 
 ## Slot Top Bar
 
@@ -21,7 +21,7 @@ Baseline: `docs/BOXMANAGER_REUSE_ASSESSMENT.md`, Nota Integrata v5.1 §5 / M18, 
 | Voce | BoxManager | PVM | Stato |
 |---|---|---|---|
 | Globale su tutte le schermate shell | sì | sì (`PvmScaffold`) | OK |
-| Destinazioni | 5 tab dominio BM | **Home + Organizza + Componi + Pubblica + Gestisci + Impostazioni** | OK |
+| Destinazioni | 5 tab dominio BM | **Home + Organizza + Componi + Utility + Impostazioni** (Nota v5.2) | OK |
 | Configura / Impostazioni | tab BM | **solo icona** (senza etichetta) | OK |
 | Colori active/inactive da token | sì | sì | OK |
 
