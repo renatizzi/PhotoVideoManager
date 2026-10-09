@@ -229,8 +229,9 @@ fun PvmApp(
                                     if (ok) {
                                         acquireStep = AcquireFlowStep.CENSUS
                                         homeViewModel.refresh()
-                                        navController.navigate(PvmDestination.Home.route) {
-                                            popUpTo(PvmDestination.Home.route) { inclusive = true }
+                                        // Dopo Importa → Aggiorna (Catalogo), non restare su Importa.
+                                        navController.navigate(PvmDestination.Aggiorna.route) {
+                                            popUpTo(PvmDestination.Acquire.route) { inclusive = true }
                                             launchSingleTop = true
                                         }
                                     }

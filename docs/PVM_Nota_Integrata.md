@@ -200,7 +200,7 @@ Ambito: Catalogo logico.
 
 **Acquisisci** — alimentazione del Catalogo da fonti esterne. **Unico processo** (censimento e acquisizione non sono separati in menu):
 1. pagina **Acquisisci**: elenco fonti (dispositivo + percorso), selezione on/off, riepilogo → **Conferma**;
-2. pagina **Importa** (schermata successiva del medesimo processo, non voce hub): selezione file → Importa → esito → Dashboard.
+2. pagina **Importa** (schermata successiva del medesimo processo, non voce hub): selezione file → Importa → esito → **Aggiorna** (Catalogo).
 
 Niente chip/passi di navigazione «1. Fonti / 2. Importa» come livelli di menu.
 

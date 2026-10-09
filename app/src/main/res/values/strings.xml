@@ -59,7 +59,7 @@
     <string name="acquisisci_conferma">CONFERMA</string>
     <string name="importa_title">Importa</string>
     <string name="importa_intro">Seleziona i file che intendi importare nel Catalogo personale e clicca su Importa per confermare.</string>
-    <string name="importa_static_help">Schermata successiva di Acquisisci (non voce di menu). Dopo Importa si torna alla Dashboard.</string>
+    <string name="importa_static_help">Schermata successiva di Acquisisci (non voce di menu). Dopo Importa si apre Aggiorna (Catalogo).</string>
     <string name="importa_elenco">Elenco file da importare</string>
     <string name="importa_riepilogo_static">Originali xxx · disponibili xxx · non importabili xxx · duplicati xxx</string>
     <string name="importa_riepilogo">Originali %1$d · foto %2$d · video %3$d · già in archivio %4$d · selezionati %5$d</string>
@@ -181,7 +181,7 @@
     <string name="acquire_selected">Acquisisci selezionati (%1$d)</string>
     <string name="acquire_in_progress">Acquisizione in corso…</string>
     <string name="acquire_from_source">Sorgente: %1$s</string>
-    <string name="acquire_already_personal">Già nello spazio personale</string>
+    <string name="acquire_already_personal">Già in Catalogo</string>
     <string name="acquire_shared_note">Copia verso l’Archivio Condiviso familiare: arriverà in una versione successiva.</string>
     <string name="media_kind_photo">Tipo: foto</string>
     <string name="media_kind_video">Tipo: video</string>
