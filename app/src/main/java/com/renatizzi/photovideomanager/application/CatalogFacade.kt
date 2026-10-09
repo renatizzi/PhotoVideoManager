@@ -35,13 +35,12 @@ class CatalogFacade(
     suspend fun mediaItemCount(): Long = sourceRegistry.mediaItemCount()
 
     /**
-     * KPI Dashboard — semantica consolidata:
-     * - `photoCount` / `videoCount` = elementi con almeno una copia ACTIVE
-     *   (stesso universo di Aggiorna / Catalogo; esclusi cestino e orfani).
-     * - `acquired*Count` / `*UsedBytes` = sole copie nello spazio personale app
-     *   (dopo Importa); restano 0 finché non si importa.
-     * - `personalUsedBytes` = byte reali su disco nello spazio app (può includere
-     *   staging/orfani non ancora collegati a MediaCopy ACTIVE).
+     * KPI Dashboard — semantica 0.15.7:
+     * - `photoCount` / `videoCount` = Catalogo ACTIVE (= Aggiorna).
+     * - `photoUsedBytes` / `videoUsedBytes` = spazio degli **originali in Catalogo**
+     *   (già dopo CONFERMA; copia preferita: spazio app se c’è, altrimenti sorgente).
+     * - `acquired*Count` / `acquired*Bytes` = sole copie nello spazio app (dopo IMPORTA).
+     * - `personalUsedBytes` = byte su disco nello spazio app (anche staging/orfani).
      */
     suspend fun dashboardSnapshot(): DashboardSnapshot {
         bootstrapPersonalArchiveIfNeeded()
@@ -52,29 +51,39 @@ class CatalogFacade(
         val acquiredPhotos = personal.count { it.mediaItem.kind == MediaKind.PHOTO }.toLong()
         val acquiredVideos = personal.count { it.mediaItem.kind == MediaKind.VIDEO }.toLong()
         val personalDiskBytes = sourceRegistry.personalArchiveUsedBytes()
-        var photoBytes = personal
+        var acquiredPhotoBytes = personal
             .filter { it.mediaItem.kind == MediaKind.PHOTO }
             .sumOf { it.mediaCopy.byteSize ?: 0L }
-        var videoBytes = personal
+        var acquiredVideoBytes = personal
             .filter { it.mediaItem.kind == MediaKind.VIDEO }
             .sumOf { it.mediaCopy.byteSize ?: 0L }
-        // Se le copie personali non hanno byteSize ma lo spazio app ha file,
-        // ripartisci i byte disco proporzionalmente al conteggio acquisite.
-        val catalogedBytes = photoBytes + videoBytes
-        if (catalogedBytes == 0L && personalDiskBytes > 0L && personal.isNotEmpty()) {
+        val catalogedPersonalBytes = acquiredPhotoBytes + acquiredVideoBytes
+        if (catalogedPersonalBytes == 0L && personalDiskBytes > 0L && personal.isNotEmpty()) {
             val total = acquiredPhotos + acquiredVideos
             if (total > 0L) {
-                photoBytes = personalDiskBytes * acquiredPhotos / total
-                videoBytes = personalDiskBytes - photoBytes
+                acquiredPhotoBytes = personalDiskBytes * acquiredPhotos / total
+                acquiredVideoBytes = personalDiskBytes - acquiredPhotoBytes
             }
         }
+        // Spazio originali Catalogo (preferisci copia personale se presente).
+        val catalogEntries = runCatching {
+            searchService.search(query = "", kindFilter = SearchKindFilter.ALL)
+        }.getOrDefault(emptyList())
+        val photoCatalogBytes = catalogEntries
+            .filter { it.mediaItem.kind == MediaKind.PHOTO }
+            .sumOf { it.previewCopy?.byteSize ?: 0L }
+        val videoCatalogBytes = catalogEntries
+            .filter { it.mediaItem.kind == MediaKind.VIDEO }
+            .sumOf { it.previewCopy?.byteSize ?: 0L }
         return DashboardSnapshot(
             photoCount = sourceRegistry.countByKind(MediaKind.PHOTO),
             videoCount = sourceRegistry.countByKind(MediaKind.VIDEO),
             acquiredPhotoCount = acquiredPhotos,
             acquiredVideoCount = acquiredVideos,
-            photoUsedBytes = photoBytes,
-            videoUsedBytes = videoBytes,
+            photoUsedBytes = photoCatalogBytes,
+            videoUsedBytes = videoCatalogBytes,
+            acquiredPhotoBytes = acquiredPhotoBytes,
+            acquiredVideoBytes = acquiredVideoBytes,
             duplicatePhotoCount = dupPhotos,
             duplicateVideoCount = dupVideos,
             trashCount = trashService.trashCount(),

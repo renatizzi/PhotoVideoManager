@@ -111,6 +111,7 @@ class CensusService(
                     val resolvedKind =
                         detectMediaKind(child.displayName, metadata?.mimeType ?: child.mimeType)
                             ?: kind
+                    val resolvedSize = metadata?.byteSize ?: child.byteSize
                     val createdAt = System.currentTimeMillis()
                     val itemId = "media.${UUID.randomUUID()}"
                     val copyId = "copy.${UUID.randomUUID()}"
@@ -132,15 +133,15 @@ class CensusService(
                             mediaItemId = itemId,
                             storageLocationId = locationId,
                             opaqueLocator = child.opaqueLocator,
-                            byteSize = metadata?.byteSize,
-                            mimeType = metadata?.mimeType,
+                            byteSize = resolvedSize,
+                            mimeType = metadata?.mimeType ?: child.mimeType,
                             state = MediaCopyState.ACTIVE,
                             createdAtEpochMs = createdAt,
                         ),
                     )
                     // Fingerprint L0 tecnico: size+name (non determina azioni automatiche).
                     val l0 = listOfNotNull(
-                        metadata?.byteSize?.toString(),
+                        resolvedSize?.toString(),
                         child.displayName.lowercase(),
                     ).joinToString("|")
                     if (l0.isNotBlank()) {

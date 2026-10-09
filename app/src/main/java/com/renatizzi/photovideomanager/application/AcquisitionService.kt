@@ -73,7 +73,9 @@ class AcquisitionService(
         if (location.adapterKind != StorageAdapterKind.SAF_TREE) return location.displayName
         if (location.opaqueLocator.isBlank()) return location.displayName
         return runCatching {
-            SafPathLabels.humanPath(Uri.parse(location.opaqueLocator))
+            val uri = Uri.parse(location.opaqueLocator)
+            SafPathLabels.humanPath(uri)
+                ?: location.displayName.takeUnless { SafPathLabels.looksIllegible(it) }
         }.getOrNull()
     }
 

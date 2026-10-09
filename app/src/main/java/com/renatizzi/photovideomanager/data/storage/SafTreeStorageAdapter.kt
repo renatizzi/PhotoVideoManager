@@ -65,6 +65,7 @@ class SafTreeStorageAdapter(
                         DocumentsContract.Document.COLUMN_DOCUMENT_ID,
                         DocumentsContract.Document.COLUMN_DISPLAY_NAME,
                         DocumentsContract.Document.COLUMN_MIME_TYPE,
+                        DocumentsContract.Document.COLUMN_SIZE,
                     ),
                     null,
                     null,
@@ -73,10 +74,16 @@ class SafTreeStorageAdapter(
                     val idIdx = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
                     val nameIdx = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
                     val mimeIdx = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_MIME_TYPE)
+                    val sizeIdx = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_SIZE)
                     while (cursor.moveToNext()) {
                         val docId = cursor.getString(idIdx) ?: continue
                         val name = cursor.getString(nameIdx) ?: docId
                         val mime = cursor.getString(mimeIdx)
+                        val size = if (sizeIdx >= 0 && !cursor.isNull(sizeIdx)) {
+                            cursor.getLong(sizeIdx)
+                        } else {
+                            null
+                        }
                         val childUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, docId)
                         result.add(
                             StorageEntry(
@@ -84,6 +91,7 @@ class SafTreeStorageAdapter(
                                 displayName = name,
                                 isDirectory = mime == DocumentsContract.Document.MIME_TYPE_DIR,
                                 mimeType = mime,
+                                byteSize = size,
                             ),
                         )
                     }

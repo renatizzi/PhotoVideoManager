@@ -78,7 +78,7 @@ class CensusViewModel(
                         selection = selection,
                         catalogCount = snap.photoCount + snap.videoCount,
                         acquiredCount = snap.acquiredPhotoCount + snap.acquiredVideoCount,
-                        acquiredUsedBytes = snap.photoUsedBytes + snap.videoUsedBytes,
+                        acquiredUsedBytes = snap.acquiredPhotoBytes + snap.acquiredVideoBytes,
                         deviceAlias = deviceAlias,
                         loading = false,
                     )
@@ -186,10 +186,10 @@ class CensusViewModel(
                         ?: catalogFacade.mediaItemCount(),
                     acquiredCount = snap?.let { s -> s.acquiredPhotoCount + s.acquiredVideoCount }
                         ?: it.acquiredCount,
-                    acquiredUsedBytes = snap?.let { s -> s.photoUsedBytes + s.videoUsedBytes }
+                    acquiredUsedBytes = snap?.let { s -> s.acquiredPhotoBytes + s.acquiredVideoBytes }
                         ?: it.acquiredUsedBytes,
-                    message = "Censimento terminato: trovati $totalFound, " +
-                        "nuovi $totalAdded, già noti $totalSkipped",
+                    message = "Censimento ok ($totalFound trovati, $totalAdded nuovi). " +
+                        "Premi IMPORTA per copiare nello spazio app.",
                 )
             }
             onDone(true, ids.toSet())

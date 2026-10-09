@@ -34,6 +34,8 @@ data class StorageEntry(
     val isDirectory: Boolean,
     /** MIME tipizzato dall'adapter quando disponibile (es. SAF listing). */
     val mimeType: String? = null,
+    /** Dimensione dal listing (es. SAF COLUMN_SIZE), se disponibile. */
+    val byteSize: Long? = null,
 )
 
 data class StorageMetadata(

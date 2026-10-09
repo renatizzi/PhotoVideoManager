@@ -8,7 +8,7 @@ Documento tecnico, architetturale e funzionale di riferimento (**documento unico
 - **Responsabile:** Renato Stefanizzi
 - **Delta v5.1 → v5.2:** recepita la revisione di navigazione (proposta Navigazione11 + interlocuzione 08/10/2026). Aggiornati §5 e chiarimenti di collocazione in §6. Nessun nuovo requisito di dominio inventato.
 - **Delta v5.2 → v5.3:** **congelamento layout UI** anteprima `0.14.6-preview` (Dashboard densità BoxManager; Accesso rapido Home fissato; albero §5 confermato). Nessun nuovo requisito di dominio. Affinamenti estetici minori (es. spessore ombre) ammessi in seguito senza riaprire la struttura.
-- **HOLD 0.15.4–0.15.6 (09/10/2026):** stop sviluppo nuove feature fino a convalida Renato su **coerenza KPI / sorgenti**. Fix 0.15.4: tetto 300. Fix 0.15.5: KPI originali = ACTIVE. Fix 0.15.6: SAF **Google Drive** riconosciuto come dispositivo distinto (non «Tutta la memoria» del telefono); Acquisisci «spazio acquisite» = byte delle sole copie importate (coerente con `di cui acquisite`, non orfani su disco). Semantica: *originali* = Catalogo ACTIVE; *acquisite / spazio acquisite* = dopo Importa.
+- **HOLD 0.15.4–0.15.7 (09/10/2026):** stop sviluppo nuove feature fino a convalida Renato su **coerenza KPI / sorgenti**. Fix 0.15.7: Home **Spazio foto/video** = byte degli originali in Catalogo (già dopo CONFERMA); sotto-riga **di cui in spazio app** = conteggio/byte dopo **IMPORTA**. Etichetta «di cui acquisite» → «di cui in spazio app» per evitare confusione con il verbo Acquisisci.
 
 # 1. Scopo del progetto e regole operative
 ## 1.1 Scopo
@@ -320,8 +320,8 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 ## 7.1 FASE CORRENTE: HOLD CONSOLIDAMENTO KPI / AGGIORNA
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 (architettura) + vertical slice già scaffoldate (M03–M07 / M09 / M16 in forma v1) + **M18 layout congelato (v5.3)**.
 STATO ATTUALE (09/10/2026): **HOLD** — nessun avanzamento su stub/feature nuove finché Renato non convalida:
-- Home: `Foto/Video originali` = elementi con copia ACTIVE (= stesso totale di Aggiorna); `di cui acquisite` + `Spazio … acquisite` solo dopo **Importa**;
-- Aggiorna: riepilogo/elenco = elementi ACTIVE (fix 0.15.4 tetto 300; fix 0.15.5 allineamento conteggio KPI).
+- Home: `Foto/Video originali` + `Spazio foto/video` = Catalogo ACTIVE (dopo CONFERMA); `di cui in spazio app` = dopo **IMPORTA**;
+- Aggiorna: riepilogo/elenco = elementi ACTIVE (fix 0.15.4–0.15.5).
 Ordine operativo aggregato (riprendere solo dopo convalida HOLD):
 1. **Acquisisci → Importa** — dati reali (censimento SAF + acquisizione SHA-256 nello spazio app) — *fatto 0.14.7+*; consultazione fonti › — *fatto 0.15.0*;
 2. **Aggiorna** — elenco Catalogo reale + Pulisci + Allinea — *fatto 0.14.8+*; **conteggio allineato al Catalogo — 0.15.4**; menu contestuale riga = backlog M08/M12;

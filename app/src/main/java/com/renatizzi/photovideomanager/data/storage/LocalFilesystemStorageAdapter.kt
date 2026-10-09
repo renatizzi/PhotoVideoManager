@@ -55,6 +55,7 @@ class LocalFilesystemStorageAdapter(
                     opaqueLocator = relativize(file),
                     displayName = file.name,
                     isDirectory = file.isDirectory,
+                    byteSize = if (file.isFile) file.length() else null,
                 )
             }.orEmpty()
         }
