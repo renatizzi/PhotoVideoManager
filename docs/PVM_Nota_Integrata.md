@@ -343,6 +343,8 @@ Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consoli
 | BL-02 | Estetica Home | Affinare spessore ombre dei riquadri Accesso rapido / ricerca (layout già congelato). | Renato 09/10/2026 |
 | BL-03 | **Acquisisci — selezione fonti a 3 stati** | Gestione dispositivi/cartelle in elenco Acquisisci con **riquadro di selezione a tre stati** (non più solo on/off): selezionato (✓) · non selezionato (vuoto) · escluso/rimosso (**X**). L’idea preferita è usare la X nel riquadro stesso (niente icona cestino separata) per togliere dalla lista le fonti non più di interesse. Definire effetto su Catalogo già censito e su Importa. | Renato 09/10/2026 |
 | BL-04 | **Eliminazione multi-selezione** | Su Importa e sugli altri elenchi media: poter deselezionare/eliminare (o escludere dall’import) più elementi insieme, così da evitare di copiare in Catalogo file indesiderati. Riuso del pattern selezione già in UI. | Renato 09/10/2026 |
+| BL-05 | **Acquisisci — nascondere «Spazio interno app»** | La sorgente built-in «Spazio interno app» risulta pleonastica in elenco fonti: non mostrarla (o non esporla come fonte censibile). Restano le sole fonti esterne scelte dall’utente. | Renato 09/10/2026 |
+| BL-06 | **Aggiorna — menu contestuale «Rinomina»** | Nel menu contestuale riga di Organizza → Aggiorna aggiungere anche **Rinomina** (oltre alle azioni già previste / stub). | Renato 09/10/2026 |
 
 Fine documento
 

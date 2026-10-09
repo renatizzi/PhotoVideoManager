@@ -7,8 +7,11 @@ import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.domain.model.AcquireCandidate
 import com.renatizzi.photovideomanager.domain.model.MediaKind
 import com.renatizzi.photovideomanager.domain.model.SearchKindFilter
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -52,6 +55,13 @@ class AcquireViewModel(
 ) : ViewModel() {
     private val _state = MutableStateFlow(AcquireUiState())
     val state: StateFlow<AcquireUiState> = _state.asStateFlow()
+
+    /**
+     * Evento one-shot: Importa riuscita → navigare ad Aggiorna.
+     * Evita callback Compose che possono perdersi per race/ricomposizione.
+     */
+    private val _goToAggiorna = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val goToAggiorna: SharedFlow<Unit> = _goToAggiorna.asSharedFlow()
 
     init {
         refresh(null)
@@ -135,61 +145,80 @@ class AcquireViewModel(
         _state.update { it.copy(selectedIds = emptySet()) }
     }
 
-    fun acquireSelected(onDone: (Boolean) -> Unit = {}) {
+    fun acquireSelected() {
         val ids = _state.value.selectedIds
         if (ids.isEmpty()) {
             _state.update { it.copy(message = "Seleziona almeno un elemento") }
-            onDone(false)
             return
         }
         viewModelScope.launch {
             _state.update { it.copy(acquiring = true, message = null) }
-            runCatching { catalogFacade.acquireToPersonalArchive(ids) }
-                .onSuccess { result ->
-                    val sources = _state.value.sourceLocationIds.takeIf { it.isNotEmpty() }
-                    val candidates = catalogFacade.listAcquireCandidates(sourceLocationIds = sources)
-                    val count = catalogFacade.mediaItemCount()
-                    val msg = result.message?.takeIf { it.isNotBlank() } ?: buildString {
-                        append("Acquisizione terminata: ")
-                        append("${result.acquired} copiati")
-                        if (result.skippedAlreadyPresent > 0) {
-                            append(", ${result.skippedAlreadyPresent} già presenti")
+            val acquireResult = runCatching { catalogFacade.acquireToPersonalArchive(ids) }
+            acquireResult.fold(
+                onSuccess = { result ->
+                    // Refresh elenco: non deve bloccare la navigazione se fallisce.
+                    runCatching {
+                        val sources = _state.value.sourceLocationIds.takeIf { it.isNotEmpty() }
+                        val candidates = catalogFacade.listAcquireCandidates(sourceLocationIds = sources)
+                        val count = catalogFacade.mediaItemCount()
+                        candidates to count
+                    }.onSuccess { (candidates, count) ->
+                        _state.update { current ->
+                            val next = current.copy(
+                                acquiring = false,
+                                candidates = candidates,
+                                catalogCount = count,
+                                message = result.message?.takeIf { it.isNotBlank() }
+                                    ?: defaultAcquireMessage(result.acquired, result.skippedAlreadyPresent, result.failed),
+                            )
+                            next.copy(
+                                selectedIds = next.kindFiltered
+                                    .filterNot { c -> c.alreadyInPersonalArchive }
+                                    .map { c -> c.mediaItem.id }
+                                    .toSet(),
+                            )
                         }
-                        if (result.failed > 0) {
-                            append(", ${result.failed} non riusciti")
+                    }.onFailure {
+                        _state.update {
+                            it.copy(
+                                acquiring = false,
+                                message = result.message?.takeIf { m -> m.isNotBlank() }
+                                    ?: defaultAcquireMessage(
+                                        result.acquired,
+                                        result.skippedAlreadyPresent,
+                                        result.failed,
+                                    ),
+                            )
                         }
                     }
-                    _state.update { current ->
-                        val next = current.copy(
-                            acquiring = false,
-                            candidates = candidates,
-                            catalogCount = count,
-                            message = msg,
-                        )
-                        next.copy(
-                            selectedIds = next.kindFiltered
-                                .filterNot { c -> c.alreadyInPersonalArchive }
-                                .map { c -> c.mediaItem.id }
-                                .toSet(),
-                        )
+                    if (result.acquired > 0 || result.skippedAlreadyPresent > 0) {
+                        // tryEmit: non bloccare se il collector Compose non è ancora pronto.
+                        _goToAggiorna.tryEmit(Unit)
                     }
-                    onDone(result.acquired > 0 || result.skippedAlreadyPresent > 0)
-                }
-                .onFailure { error ->
+                },
+                onFailure = { error ->
                     _state.update {
                         it.copy(
                             acquiring = false,
                             message = error.message ?: "Acquisizione non riuscita",
                         )
                     }
-                    onDone(false)
-                }
+                },
+            )
         }
     }
 
     fun consumeMessage() {
         _state.update { it.copy(message = null) }
     }
+
+    private fun defaultAcquireMessage(acquired: Int, skipped: Int, failed: Int): String =
+        buildString {
+            append("Acquisizione terminata: ")
+            append("$acquired copiati")
+            if (skipped > 0) append(", $skipped già presenti")
+            if (failed > 0) append(", $failed non riusciti")
+        }
 
     companion object {
         fun factory(catalogFacade: CatalogFacade): ViewModelProvider.Factory =

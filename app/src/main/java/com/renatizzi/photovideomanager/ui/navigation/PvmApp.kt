@@ -196,6 +196,17 @@ fun PvmApp(
                             acquireVm.refresh(acquireSourceIds.takeIf { it.isNotEmpty() })
                         }
                     }
+                    // Navigazione post-Importa via SharedFlow (affidabile rispetto al callback UI).
+                    LaunchedEffect(acquireVm) {
+                        acquireVm.goToAggiorna.collect {
+                            acquireStep = AcquireFlowStep.CENSUS
+                            homeViewModel.refresh()
+                            navController.navigate(PvmDestination.Aggiorna.route) {
+                                popUpTo(PvmDestination.Acquire.route) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    }
                     when (acquireStep) {
                         AcquireFlowStep.CENSUS -> AcquisisciStaticScreen(
                             state = censusState,
@@ -224,19 +235,7 @@ fun PvmApp(
                             onRefresh = {
                                 acquireVm.refresh(acquireSourceIds.takeIf { it.isNotEmpty() })
                             },
-                            onImporta = {
-                                acquireVm.acquireSelected { ok ->
-                                    if (ok) {
-                                        acquireStep = AcquireFlowStep.CENSUS
-                                        homeViewModel.refresh()
-                                        // Dopo Importa → Aggiorna (Catalogo), non restare su Importa.
-                                        navController.navigate(PvmDestination.Aggiorna.route) {
-                                            popUpTo(PvmDestination.Acquire.route) { inclusive = true }
-                                            launchSingleTop = true
-                                        }
-                                    }
-                                }
-                            },
+                            onImporta = { acquireVm.acquireSelected() },
                             onBackToAcquisisci = { acquireStep = AcquireFlowStep.CENSUS },
                         )
                     }
