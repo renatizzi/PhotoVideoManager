@@ -22,7 +22,8 @@ data class CensusUiState(
     val censusBusyLocationIds: Set<String> = emptySet(),
     val catalogCount: Long = 0,
     val acquiredCount: Long = 0,
-    val personalUsedBytes: Long = 0,
+    /** Byte delle sole copie acquisite (spazio app catalogato), non orfani su disco. */
+    val acquiredUsedBytes: Long = 0,
     val deviceAlias: String = "",
     val message: String? = null,
 ) {
@@ -77,7 +78,7 @@ class CensusViewModel(
                         selection = selection,
                         catalogCount = snap.photoCount + snap.videoCount,
                         acquiredCount = snap.acquiredPhotoCount + snap.acquiredVideoCount,
-                        personalUsedBytes = snap.personalUsedBytes,
+                        acquiredUsedBytes = snap.photoUsedBytes + snap.videoUsedBytes,
                         deviceAlias = deviceAlias,
                         loading = false,
                     )
@@ -185,7 +186,8 @@ class CensusViewModel(
                         ?: catalogFacade.mediaItemCount(),
                     acquiredCount = snap?.let { s -> s.acquiredPhotoCount + s.acquiredVideoCount }
                         ?: it.acquiredCount,
-                    personalUsedBytes = snap?.personalUsedBytes ?: it.personalUsedBytes,
+                    acquiredUsedBytes = snap?.let { s -> s.photoUsedBytes + s.videoUsedBytes }
+                        ?: it.acquiredUsedBytes,
                     message = "Censimento terminato: trovati $totalFound, " +
                         "nuovi $totalAdded, già noti $totalSkipped",
                 )

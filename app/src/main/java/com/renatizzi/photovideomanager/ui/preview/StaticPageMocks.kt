@@ -89,6 +89,7 @@ fun AcquisisciStaticScreen(
     ) { uri ->
         if (uri != null) {
             val name = com.renatizzi.photovideomanager.data.storage.SafPathLabels.folderTitle(
+                context,
                 uri,
                 context.getString(R.string.external_source_default_name),
             )
@@ -134,7 +135,7 @@ fun AcquisisciStaticScreen(
                 sources.size,
                 state.catalogCount,
                 state.acquiredCount,
-                formatBytes(state.personalUsedBytes),
+                formatBytes(state.acquiredUsedBytes),
             ),
             style = MaterialTheme.typography.bodySmall,
         )

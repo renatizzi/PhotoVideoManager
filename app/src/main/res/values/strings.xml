@@ -47,7 +47,7 @@
     <string name="acquisisci_elenco_fonti">Elenco fonti del Catalogo</string>
     <string name="acquisisci_riepilogo_static">Elementi selezionati per l\'importazione: xxx · di cui foto xx · di cui video yy</string>
     <string name="acquisisci_riepilogo">Sorgenti selezionate: %1$d di %2$d · elementi in Catalogo: %3$d</string>
-    <string name="acquisisci_riepilogo_full">Sorgenti %1$d/%2$d · Catalogo %3$d · di cui acquisite %4$d · spazio app %5$s</string>
+    <string name="acquisisci_riepilogo_full">Sorgenti %1$d/%2$d · Catalogo %3$d · di cui acquisite %4$d · spazio acquisite %5$s</string>
     <string name="acquisisci_empty_sources">Nessuna fonte esterna. Tocca + per aggiungere una cartella (SAF).</string>
     <string name="acquisisci_rename_device">Dispositivo: %1$s (tocca per rinominare)</string>
     <string name="acquisisci_rename_device_title">Nome dispositivo</string>

@@ -62,10 +62,12 @@ fun CensusSourcesScreen(
         contract = ActivityResultContracts.OpenDocumentTree(),
     ) { uri ->
         if (uri != null) {
-            val name = uri.lastPathSegment
-                ?.substringAfterLast(':')
-                ?.substringAfterLast('/')
-                ?: context.getString(R.string.external_source_default_name)
+            val name = com.renatizzi.photovideomanager.data.storage.SafPathLabels
+                .folderTitle(
+                    context,
+                    uri,
+                    context.getString(R.string.external_source_default_name),
+                )
             onAddSource(uri, name)
         }
     }

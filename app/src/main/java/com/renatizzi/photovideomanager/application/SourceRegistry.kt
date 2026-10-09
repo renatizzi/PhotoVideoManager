@@ -110,11 +110,13 @@ class SourceRegistry(
 
         val archiveId = "archive.external.${UUID.randomUUID()}"
         val locationId = "location.saf.${UUID.randomUUID()}"
-        val pathLabel = SafPathLabels.humanPath(treeUri)
+        val pathLabel = SafPathLabels.humanPathOrCloud(appContext, treeUri)
+        val queriedName = SafPathLabels.queryTreeDisplayName(appContext, treeUri)
         val name = when {
-            displayName.isNotBlank() && !looksIllegible(displayName) -> displayName
-            pathLabel != null -> SafPathLabels.folderTitle(treeUri, pathLabel)
-            else -> "Cartella dispositivo"
+            queriedName != null && !SafPathLabels.looksIllegible(queriedName) -> queriedName
+            displayName.isNotBlank() && !looksIllegible(displayName) &&
+                !displayName.equals("primary", ignoreCase = true) -> displayName
+            else -> SafPathLabels.folderTitle(appContext, treeUri, pathLabel)
         }
 
         catalogStore.upsertArchive(
@@ -206,7 +208,19 @@ class SourceRegistry(
 
     private fun deviceLabelFor(location: StorageLocation): String = when (location.adapterKind) {
         StorageAdapterKind.LOCAL_FS -> "Spazio app MediaManager"
-        StorageAdapterKind.SAF_TREE -> deviceAliasOrDefault()
+        StorageAdapterKind.SAF_TREE -> {
+            if (location.opaqueLocator.isBlank()) {
+                deviceAliasOrDefault()
+            } else {
+                runCatching {
+                    SafPathLabels.deviceLabelForTree(
+                        appContext,
+                        Uri.parse(location.opaqueLocator),
+                        deviceAliasOrDefault(),
+                    )
+                }.getOrDefault(deviceAliasOrDefault())
+            }
+        }
         StorageAdapterKind.MEDIA_STORE -> "Galleria di sistema"
         StorageAdapterKind.SMB -> "Rete / NAS"
     }
@@ -218,7 +232,8 @@ class SourceRegistry(
         if (location.opaqueLocator.isBlank()) return location.displayName
         return runCatching {
             val uri = Uri.parse(location.opaqueLocator)
-            SafPathLabels.humanPath(uri)
+            SafPathLabels.humanPathOrCloud(appContext, uri)
+                .takeUnless { SafPathLabels.looksIllegible(it) }
                 ?: location.displayName.takeUnless { looksIllegible(it) }
                 ?: "Cartella dispositivo"
         }.getOrDefault(location.displayName)
@@ -227,15 +242,21 @@ class SourceRegistry(
     private fun resolveDisplayName(location: StorageLocation, pathLabel: String): String {
         labelStore.sourceAlias(location.id)?.let { return it }
         if (location.adapterKind == StorageAdapterKind.SAF_TREE && location.opaqueLocator.isNotBlank()) {
-            val derived = SafPathLabels.folderTitle(Uri.parse(location.opaqueLocator), pathLabel)
+            val uri = Uri.parse(location.opaqueLocator)
+            val derived = SafPathLabels.folderTitle(appContext, uri, pathLabel)
             val stored = location.displayName
-            // Usa sempre il titolo derivato se lo stored è illegibile, uguale al solo volume,
-            // o è un vecchio «Memoria principale» senza cartella.
-            val volumeOnly = !pathLabel.contains('/')
+            val provider = SafPathLabels.providerOf(uri)
+            val volumeOnly = provider == SafPathLabels.SafProvider.LOCAL_STORAGE &&
+                !pathLabel.contains('/')
+            // Ripara etichette errate: illegibili, radice volume, o cloud mostrato come
+            // «Tutta la memoria» / «Memoria principale».
             if (looksIllegible(stored) ||
                 stored == pathLabel ||
                 (volumeOnly && stored.equals(pathLabel, ignoreCase = true)) ||
-                stored.equals(SafPathLabels.volumeLabel("primary"), ignoreCase = true)
+                stored.equals(SafPathLabels.volumeLabel("primary"), ignoreCase = true) ||
+                (provider != SafPathLabels.SafProvider.LOCAL_STORAGE &&
+                    (stored.equals(SafPathLabels.ROOT_FOLDER_TITLE, ignoreCase = true) ||
+                        stored.equals(SafPathLabels.volumeLabel("primary"), ignoreCase = true)))
             ) {
                 return derived
             }
@@ -245,14 +266,7 @@ class SourceRegistry(
         return pathLabel.substringAfterLast('/').ifBlank { pathLabel }
     }
 
-    private fun looksIllegible(name: String): Boolean {
-        if (name.isBlank()) return true
-        val lower = name.lowercase()
-        return lower.contains("encoded=") ||
-            lower.startsWith("acc=") ||
-            lower.contains("doc=") ||
-            (name.length > 40 && !name.contains('/') && name.count { it == '-' || it == '_' } > 4)
-    }
+    private fun looksIllegible(name: String): Boolean = SafPathLabels.looksIllegible(name)
 
     companion object {
         const val PERSONAL_ARCHIVE_ID = CatalogFacade.PERSONAL_ARCHIVE_ID

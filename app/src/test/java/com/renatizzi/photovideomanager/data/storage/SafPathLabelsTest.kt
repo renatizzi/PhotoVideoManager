@@ -2,6 +2,7 @@ package com.renatizzi.photovideomanager.data.storage
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Test
 
 class SafPathLabelsTest {
@@ -35,14 +36,33 @@ class SafPathLabelsTest {
 
     @Test
     fun folderTitle_rootVolumeUsesExplicitName() {
-        // humanPath("primary:") → "Memoria principale" → titolo radice
+        val path = SafPathLabels.humanizeDocumentId("primary:")
+        val relative = path.substringAfter('/', missingDelimiterValue = "")
+        val title = if (relative.isBlank()) SafPathLabels.ROOT_FOLDER_TITLE
+        else relative.substringAfterLast('/')
+        assertEquals(SafPathLabels.ROOT_FOLDER_TITLE, title)
+    }
+
+    @Test
+    fun providerOfAuthority_drive() {
         assertEquals(
-            SafPathLabels.ROOT_FOLDER_TITLE,
-            SafPathLabels.humanizeDocumentId("primary:").let { path ->
-                val relative = path.substringAfter('/', missingDelimiterValue = "")
-                if (relative.isBlank()) SafPathLabels.ROOT_FOLDER_TITLE
-                else relative.substringAfterLast('/')
-            },
+            SafPathLabels.SafProvider.GOOGLE_DRIVE,
+            SafPathLabels.providerOfAuthority("com.google.android.apps.docs.storage"),
         )
+    }
+
+    @Test
+    fun providerOfAuthority_localExternalStorage() {
+        assertEquals(
+            SafPathLabels.SafProvider.LOCAL_STORAGE,
+            SafPathLabels.providerOfAuthority("com.android.externalstorage.documents"),
+        )
+    }
+
+    @Test
+    fun humanizeDocumentId_opaqueWithoutColon_notMemoriaPrincipale() {
+        val label = SafPathLabels.humanizeDocumentId("opaqueDriveDocId123")
+        assertFalse(label.contains("Memoria principale"))
+        assertNotEquals(SafPathLabels.ROOT_FOLDER_TITLE, label)
     }
 }
