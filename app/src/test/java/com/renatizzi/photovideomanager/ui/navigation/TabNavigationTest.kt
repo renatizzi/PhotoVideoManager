@@ -25,6 +25,14 @@ class TabNavigationTest {
         assertEquals(ShellTab.ORGANIZZA, tabForRoute("organizza/aggiorna"))
         assertEquals(ShellTab.ORGANIZZA, tabForRoute("organizza/search"))
         assertEquals(ShellTab.ORGANIZZA, tabForRoute("organizza/acquire"))
+        assertEquals(
+            ShellTab.ORGANIZZA,
+            tabForRoute("organizza/acquire/browse/location.saf.demo"),
+        )
+        assertTrue(
+            PvmDestination.SourceBrowse.create("location.saf.demo")
+                .startsWith("organizza/acquire/browse/"),
+        )
     }
 
     @Test

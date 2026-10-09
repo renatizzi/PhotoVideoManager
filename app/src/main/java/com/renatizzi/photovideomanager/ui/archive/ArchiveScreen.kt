@@ -96,7 +96,9 @@ fun ArchiveScreen(
 @Composable
 private fun ArchiveRow(entry: ArchiveEntry) {
     val title = entry.mediaItem.displayTitle?.ifBlank { null } ?: entry.mediaItem.id
-    val sizeLabel = entry.mediaCopy.byteSize?.let { formatBytes(it) } ?: "—"
+    val sizeLabel = entry.mediaCopy.byteSize?.let {
+        com.renatizzi.photovideomanager.ui.common.formatBytes(it)
+    } ?: "—"
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -128,11 +130,3 @@ private fun ArchiveRow(entry: ArchiveEntry) {
     }
 }
 
-private fun formatBytes(bytes: Long): String {
-    if (bytes < 1024) return "$bytes B"
-    val kb = bytes / 1024.0
-    if (kb < 1024) return String.format("%.1f KB", kb)
-    val mb = kb / 1024.0
-    if (mb < 1024) return String.format("%.1f MB", mb)
-    return String.format("%.2f GB", mb / 1024.0)
-}

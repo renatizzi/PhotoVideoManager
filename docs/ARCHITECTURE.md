@@ -96,4 +96,6 @@ Baseline: Nota Integrata **v5.3** (`docs/PVM_Nota_Integrata.md`). Decisioni tecn
 Riferimento unico: `docs/PVM_Nota_Integrata.md` (§5 / §5.6).  
 Bottom Bar: **Home · Organizza · Componi · Utility · Impostazioni**. Selezione elenchi: on/off.  
 Home Accesso rapido congelato: Acquisisci · Aggiorna · Crea · Edita · Backup · Ripristina.  
-Sviluppo corrente: wiring dominio dietro layout congelato (Acquisisci→Importa per primi).
+Sviluppo corrente: wiring dominio dietro layout congelato.  
+Completato in autonomia fino a `0.15.0-preview`: Acquisisci→Importa, browse fonti, Aggiorna Catalogo, Home KPI reali.  
+Stop naturale: Componi / Backup / CONFIGURA (servono specifica/convalida prodotto).

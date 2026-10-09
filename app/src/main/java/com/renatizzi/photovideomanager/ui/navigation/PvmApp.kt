@@ -28,6 +28,8 @@ import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.ui.acquire.AcquireFlowStep
 import com.renatizzi.photovideomanager.ui.acquire.AcquireViewModel
 import com.renatizzi.photovideomanager.ui.census.CensusViewModel
+import com.renatizzi.photovideomanager.ui.census.SourceBrowseScreen
+import com.renatizzi.photovideomanager.ui.census.SourceBrowseViewModel
 import com.renatizzi.photovideomanager.ui.clean.CleanScreen
 import com.renatizzi.photovideomanager.ui.clean.CleanViewModel
 import com.renatizzi.photovideomanager.ui.config.ConfigScreen
@@ -61,6 +63,7 @@ fun PvmApp(
     }
     var helpOpen by remember { mutableStateOf(false) }
     var acquireStep by remember { mutableStateOf(AcquireFlowStep.CENSUS) }
+    var pendingSearchQuery by remember { mutableStateOf<String?>(null) }
     val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
     val backStack by navController.currentBackStackEntryAsState()
@@ -139,6 +142,10 @@ fun PvmApp(
                         snapshot = homeState.snapshot,
                         onOpenTab = ::navigateTab,
                         onOpenFeature = ::openFeature,
+                        onSearchCatalog = { query ->
+                            pendingSearchQuery = query
+                            navController.navigate(PvmDestination.Search.route)
+                        },
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
@@ -200,6 +207,9 @@ fun PvmApp(
                                     if (ok) acquireStep = AcquireFlowStep.COPY
                                 }
                             },
+                            onBrowse = { locationId ->
+                                navController.navigate(PvmDestination.SourceBrowse.create(locationId))
+                            },
                         )
                         AcquireFlowStep.COPY -> ImportaStaticScreen(
                             state = acquireState,
@@ -221,6 +231,27 @@ fun PvmApp(
                             onBackToAcquisisci = { acquireStep = AcquireFlowStep.CENSUS },
                         )
                     }
+                }
+                composable(
+                    route = PvmDestination.SourceBrowse.route,
+                    arguments = listOf(navArgument("locationId") { type = NavType.StringType }),
+                ) { entry ->
+                    val locationId = entry.arguments?.getString("locationId").orEmpty()
+                    val browseVm: SourceBrowseViewModel = viewModel(
+                        factory = SourceBrowseViewModel.factory(catalogFacade, locationId),
+                    )
+                    val browseState by browseVm.state.collectAsStateWithLifecycle()
+                    LaunchedEffect(browseState.message) {
+                        browseState.message?.let {
+                            snackbarHostState.showSnackbar(it)
+                            browseVm.consumeMessage()
+                        }
+                    }
+                    SourceBrowseScreen(
+                        state = browseState,
+                        onSortMode = browseVm::setSortMode,
+                        onRefresh = browseVm::refresh,
+                    )
                 }
                 composable(PvmDestination.Aggiorna.route) {
                     val aggiornaVm: SearchViewModel = viewModel(
@@ -294,6 +325,13 @@ fun PvmApp(
                         factory = SearchViewModel.factory(catalogFacade),
                     )
                     val searchState by searchVm.state.collectAsStateWithLifecycle()
+                    LaunchedEffect(pendingSearchQuery) {
+                        val q = pendingSearchQuery
+                        if (q != null) {
+                            searchVm.onQueryChange(q)
+                            pendingSearchQuery = null
+                        }
+                    }
                     LaunchedEffect(searchState.message) {
                         searchState.message?.let {
                             snackbarHostState.showSnackbar(it)

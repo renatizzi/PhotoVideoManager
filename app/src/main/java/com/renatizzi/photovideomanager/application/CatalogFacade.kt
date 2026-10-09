@@ -37,9 +37,22 @@ class CatalogFacade(
         val availability = localStorageAvailability()
         val (dupPhotos, dupVideos) = runCatching { dedupService.currentExactDuplicateExtras() }
             .getOrDefault(0L to 0L)
+        val personal = runCatching { archiveService.listPersonalArchive() }.getOrDefault(emptyList())
+        val acquiredPhotos = personal.count { it.mediaItem.kind == MediaKind.PHOTO }.toLong()
+        val acquiredVideos = personal.count { it.mediaItem.kind == MediaKind.VIDEO }.toLong()
+        val photoBytes = personal
+            .filter { it.mediaItem.kind == MediaKind.PHOTO }
+            .sumOf { it.mediaCopy.byteSize ?: 0L }
+        val videoBytes = personal
+            .filter { it.mediaItem.kind == MediaKind.VIDEO }
+            .sumOf { it.mediaCopy.byteSize ?: 0L }
         return DashboardSnapshot(
             photoCount = sourceRegistry.countByKind(MediaKind.PHOTO),
             videoCount = sourceRegistry.countByKind(MediaKind.VIDEO),
+            acquiredPhotoCount = acquiredPhotos,
+            acquiredVideoCount = acquiredVideos,
+            photoUsedBytes = photoBytes,
+            videoUsedBytes = videoBytes,
             duplicatePhotoCount = dupPhotos,
             duplicateVideoCount = dupVideos,
             trashCount = trashService.trashCount(),

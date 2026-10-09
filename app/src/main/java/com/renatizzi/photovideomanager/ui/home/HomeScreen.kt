@@ -39,17 +39,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.renatizzi.photovideomanager.R
 import com.renatizzi.photovideomanager.domain.model.DashboardSnapshot
+import com.renatizzi.photovideomanager.ui.common.formatBytes
 
 /**
  * Dashboard densità stile BoxManager: titolo grande, KPI a due colonne senza card,
@@ -61,11 +66,19 @@ fun HomeScreen(
     snapshot: DashboardSnapshot?,
     onOpenTab: (com.renatizzi.photovideomanager.ui.shell.ShellTab) -> Unit,
     onOpenFeature: (String) -> Unit,
+    onSearchCatalog: (String) -> Unit = { onOpenFeature("ricerca") },
     modifier: Modifier = Modifier,
 ) {
     var searchQuery by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
     val photos = snapshot?.photoCount?.toString() ?: "0"
     val videos = snapshot?.videoCount?.toString() ?: "0"
+    val acquiredPhotos = (snapshot?.acquiredPhotoCount ?: 0L).toString()
+    val acquiredVideos = (snapshot?.acquiredVideoCount ?: 0L).toString()
+    val photoSpace = formatBytes(snapshot?.photoUsedBytes ?: 0L)
+    val videoSpace = formatBytes(snapshot?.videoUsedBytes ?: 0L)
+    val dupPhotos = (snapshot?.duplicatePhotoCount ?: 0L).toString()
+    val dupVideos = (snapshot?.duplicateVideoCount ?: 0L).toString()
     val accent = MaterialTheme.colorScheme.primary
     val labelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.68f)
 
@@ -108,16 +121,16 @@ fun HomeScreen(
                 KpiMetric(
                     label = stringResource(R.string.kpi_foto_originali),
                     value = photos,
-                    detail = stringResource(R.string.kpi_di_cui_acquisite, "xxx"),
+                    detail = stringResource(R.string.kpi_di_cui_acquisite, acquiredPhotos),
                     labelColor = labelColor,
                     onClick = { onOpenFeature("ricerca") },
                 )
                 KpiMetric(
                     label = stringResource(R.string.kpi_spazio_foto),
-                    value = "xxx MB",
-                    detail = stringResource(R.string.kpi_di_cui_duplicati, "xxx"),
+                    value = photoSpace,
+                    detail = stringResource(R.string.kpi_di_cui_duplicati, dupPhotos),
                     labelColor = labelColor,
-                    onClick = { onOpenFeature("spazio") },
+                    onClick = { onOpenFeature("pulisci") },
                 )
             }
             Column(
@@ -132,16 +145,16 @@ fun HomeScreen(
                 KpiMetric(
                     label = stringResource(R.string.kpi_video_originali),
                     value = videos,
-                    detail = stringResource(R.string.kpi_di_cui_acquisiti, "xxx"),
+                    detail = stringResource(R.string.kpi_di_cui_acquisiti, acquiredVideos),
                     labelColor = labelColor,
                     onClick = { onOpenFeature("ricerca") },
                 )
                 KpiMetric(
                     label = stringResource(R.string.kpi_spazio_video),
-                    value = "xxx MB",
-                    detail = stringResource(R.string.kpi_di_cui_duplicati, "xxx"),
+                    value = videoSpace,
+                    detail = stringResource(R.string.kpi_di_cui_duplicati, dupVideos),
                     labelColor = labelColor,
-                    onClick = { onOpenFeature("spazio") },
+                    onClick = { onOpenFeature("pulisci") },
                 )
             }
         }
@@ -170,8 +183,7 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 10.dp, vertical = 8.dp)
-                    .height(52.dp)
-                    .clickable { onOpenFeature("ricerca") },
+                    .height(52.dp),
                 placeholder = {
                     Text(
                         text = stringResource(R.string.dashboard_search_hint),
@@ -182,7 +194,12 @@ fun HomeScreen(
                     Icon(
                         Icons.Outlined.Search,
                         contentDescription = null,
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clickable {
+                                focusManager.clearFocus()
+                                onSearchCatalog(searchQuery)
+                            },
                     )
                 },
                 trailingIcon = {
@@ -195,6 +212,13 @@ fun HomeScreen(
                 singleLine = true,
                 textStyle = MaterialTheme.typography.bodyMedium,
                 shape = RoundedCornerShape(10.dp),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        focusManager.clearFocus()
+                        onSearchCatalog(searchQuery)
+                    },
+                ),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.surface,
                     unfocusedContainerColor = MaterialTheme.colorScheme.surface,
