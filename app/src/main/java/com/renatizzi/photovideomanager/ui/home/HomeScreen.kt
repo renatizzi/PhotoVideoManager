@@ -7,16 +7,21 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -30,15 +35,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.renatizzi.photovideomanager.R
 import com.renatizzi.photovideomanager.domain.model.DashboardSnapshot
 
 /**
- * Home senza scrolling: densità tarata per viewport tipico.
- * Accessi: Acquisisci, Aggiorna, Crea, Edita, Backup, Ripristina.
+ * Dashboard densità stile BoxManager: tipografia più grande, KPI a due colonne,
+ * riquadro ricerca, accesso rapido a tessere che riempiono lo spazio restante.
+ * Nessuno scrolling.
  */
 @Composable
 fun HomeScreen(
@@ -48,98 +57,127 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    val photos = snapshot?.photoCount?.toString() ?: "xxx"
-    val videos = snapshot?.videoCount?.toString() ?: "xxx"
+    val photos = snapshot?.photoCount?.toString() ?: "0"
+    val videos = snapshot?.videoCount?.toString() ?: "0"
+    val accent = MaterialTheme.colorScheme.primary
+    val labelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.72f)
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .padding(horizontal = 14.dp, vertical = 10.dp),
     ) {
         Text(
             text = stringResource(R.string.dashboard_title),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.headlineMedium.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 28.sp,
+                lineHeight = 32.sp,
+            ),
+            color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
             text = stringResource(R.string.dashboard_subtitle),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+            style = MaterialTheme.typography.bodyMedium,
+            color = labelColor,
         )
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
+        // KPI stile BoxManager: due colonne, etichetta + numero grande
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(18.dp),
         ) {
-            KpiCard(
-                title = stringResource(R.string.kpi_foto_originali),
-                value = photos,
-                detail = stringResource(R.string.kpi_di_cui_acquisite, "xxx"),
+            Column(
                 modifier = Modifier.weight(1f),
-            )
-            KpiCard(
-                title = stringResource(R.string.kpi_video_originali),
-                value = videos,
-                detail = stringResource(R.string.kpi_di_cui_acquisiti, "xxx"),
-                modifier = Modifier.weight(1f),
-            )
-        }
-        Spacer(modifier = Modifier.height(4.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            KpiCard(
-                title = stringResource(R.string.kpi_spazio_foto),
-                value = "xxx MB",
-                detail = stringResource(R.string.kpi_di_cui_duplicati, "xxx"),
-                modifier = Modifier.weight(1f),
-            )
-            KpiCard(
-                title = stringResource(R.string.kpi_spazio_video),
-                value = "xxx MB",
-                detail = stringResource(R.string.kpi_di_cui_duplicati, "xxx"),
-                modifier = Modifier.weight(1f),
-            )
-        }
-
-        Spacer(modifier = Modifier.height(6.dp))
-
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(46.dp)
-                .clickable { onOpenFeature("ricerca") },
-            placeholder = {
-                Text(
-                    stringResource(R.string.feature_ricerca),
-                    style = MaterialTheme.typography.bodySmall,
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                KpiMetric(
+                    label = stringResource(R.string.kpi_foto_originali),
+                    value = photos,
+                    detail = stringResource(R.string.kpi_di_cui_acquisite, "xxx"),
+                    labelColor = labelColor,
+                    onClick = { onOpenFeature("ricerca") },
                 )
-            },
-            leadingIcon = {
-                Icon(Icons.Outlined.Search, contentDescription = null, modifier = Modifier.height(18.dp))
-            },
-            trailingIcon = {
-                Icon(Icons.Outlined.Mic, contentDescription = null, modifier = Modifier.height(18.dp))
-            },
-            singleLine = true,
-            textStyle = MaterialTheme.typography.bodySmall,
-            colors = OutlinedTextFieldDefaults.colors(),
-        )
+                KpiMetric(
+                    label = stringResource(R.string.kpi_spazio_foto),
+                    value = "xxx MB",
+                    detail = stringResource(R.string.kpi_di_cui_duplicati, "xxx"),
+                    labelColor = labelColor,
+                    onClick = { onOpenFeature("spazio") },
+                )
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                KpiMetric(
+                    label = stringResource(R.string.kpi_video_originali),
+                    value = videos,
+                    detail = stringResource(R.string.kpi_di_cui_acquisiti, "xxx"),
+                    labelColor = labelColor,
+                    onClick = { onOpenFeature("ricerca") },
+                )
+                KpiMetric(
+                    label = stringResource(R.string.kpi_spazio_video),
+                    value = "xxx MB",
+                    detail = stringResource(R.string.kpi_di_cui_duplicati, "xxx"),
+                    labelColor = labelColor,
+                    onClick = { onOpenFeature("spazio") },
+                )
+            }
+        }
 
+        Spacer(modifier = Modifier.height(12.dp))
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f))
+        Spacer(modifier = Modifier.height(10.dp))
+
+        SectionHeader(
+            icon = Icons.Outlined.Search,
+            title = stringResource(R.string.feature_ricerca),
+            tint = accent,
+        )
         Spacer(modifier = Modifier.height(6.dp))
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        ) {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp)
+                    .clickable { onOpenFeature("ricerca") },
+                placeholder = { Text(stringResource(R.string.search_query_hint)) },
+                leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+                trailingIcon = { Icon(Icons.Outlined.Mic, contentDescription = null) },
+                singleLine = true,
+                shape = RoundedCornerShape(10.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                ),
+            )
+        }
 
-        Text(
-            text = stringResource(R.string.quick_access),
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.SemiBold,
+        Spacer(modifier = Modifier.height(12.dp))
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f))
+        Spacer(modifier = Modifier.height(8.dp))
+
+        SectionHeader(
+            icon = Icons.Outlined.Bolt,
+            title = stringResource(R.string.quick_access),
+            tint = accent,
         )
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
+        // Tessere grandi che riempiono tutto lo spazio restante (come BoxManager)
         val quick = listOf(
             "acquisisci" to R.string.feature_acquisisci,
             "aggiorna" to R.string.feature_aggiorna,
@@ -148,18 +186,26 @@ fun HomeScreen(
             "backup" to R.string.feature_backup,
             "ripristina" to R.string.feature_ripristina,
         )
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             quick.chunked(2).forEach { pair ->
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     pair.forEach { (id, titleRes) ->
-                        QuickAccessButton(
+                        QuickAccessTile(
                             title = stringResource(titleRes),
-                            color = MacroNavigation.organizaAccent,
                             onClick = { onOpenFeature(id) },
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
                         )
                     }
                 }
@@ -169,64 +215,108 @@ fun HomeScreen(
 }
 
 @Composable
-private fun KpiCard(
+private fun SectionHeader(
+    icon: ImageVector,
     title: String,
-    value: String,
-    detail: String,
-    modifier: Modifier = Modifier,
+    tint: Color,
 ) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp),
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
-                maxLines = 1,
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-            )
-            Text(
-                text = detail,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
-                maxLines = 1,
-            )
-        }
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.size(20.dp),
+        )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+        )
     }
 }
 
 @Composable
-private fun QuickAccessButton(
+private fun KpiMetric(
+    label: String,
+    value: String,
+    detail: String,
+    labelColor: Color,
+    onClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = labelColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                contentDescription = null,
+                tint = labelColor,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+        Text(
+            text = value,
+            style = MaterialTheme.typography.headlineMedium.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 30.sp,
+                lineHeight = 34.sp,
+            ),
+            maxLines = 1,
+        )
+        Text(
+            text = detail,
+            style = MaterialTheme.typography.bodySmall,
+            color = labelColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+@Composable
+private fun QuickAccessTile(
     title: String,
-    color: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(
-        modifier = modifier
-            .height(36.dp)
-            .background(color.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
+    Card(
+        modifier = modifier.clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
-        Text(
-            text = title.uppercase(),
-            color = color,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 1,
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 12.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
