@@ -24,16 +24,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.renatizzi.photovideomanager.R
 import com.renatizzi.photovideomanager.application.CatalogFacade
-import com.renatizzi.photovideomanager.ui.acquire.AcquireFlowScaffold
 import com.renatizzi.photovideomanager.ui.acquire.AcquireFlowStep
-import com.renatizzi.photovideomanager.ui.acquire.AcquireScreen
-import com.renatizzi.photovideomanager.ui.acquire.AcquireViewModel
-import com.renatizzi.photovideomanager.ui.archive.ArchiveScreen
-import com.renatizzi.photovideomanager.ui.archive.ArchiveViewModel
-import com.renatizzi.photovideomanager.ui.census.CensusSourcesScreen
-import com.renatizzi.photovideomanager.ui.census.CensusViewModel
-import com.renatizzi.photovideomanager.ui.census.SourceBrowseScreen
-import com.renatizzi.photovideomanager.ui.census.SourceBrowseViewModel
 import com.renatizzi.photovideomanager.ui.clean.CleanScreen
 import com.renatizzi.photovideomanager.ui.clean.CleanViewModel
 import com.renatizzi.photovideomanager.ui.config.ConfigScreen
@@ -42,6 +33,10 @@ import com.renatizzi.photovideomanager.ui.home.HomeScreen
 import com.renatizzi.photovideomanager.ui.home.HomeViewModel
 import com.renatizzi.photovideomanager.ui.home.MacroHubScreen
 import com.renatizzi.photovideomanager.ui.home.MacroNavigation
+import com.renatizzi.photovideomanager.ui.preview.AcquisisciStaticScreen
+import com.renatizzi.photovideomanager.ui.preview.AggiornaStaticScreen
+import com.renatizzi.photovideomanager.ui.preview.ComponiLandingStaticScreen
+import com.renatizzi.photovideomanager.ui.preview.ImportaStaticScreen
 import com.renatizzi.photovideomanager.ui.search.SearchScreen
 import com.renatizzi.photovideomanager.ui.search.SearchViewModel
 import com.renatizzi.photovideomanager.ui.shell.PvmScaffold
@@ -104,11 +99,13 @@ fun PvmApp(
                 acquireStep = AcquireFlowStep.CENSUS
                 navController.navigate(PvmDestination.Acquire.route)
             }
-            "aggiorna" -> navController.navigate(PvmDestination.ArchiveBrowse.route)
-            "archivia" -> navController.navigate(PvmDestination.ArchiveBrowse.route)
+            "aggiorna" -> navController.navigate(PvmDestination.Aggiorna.route)
             "ricerca" -> navController.navigate(PvmDestination.Search.route)
             "pulisci" -> navController.navigate(PvmDestination.Clean.route)
             "ripristina", "cestino" -> navController.navigate(PvmDestination.Trash.route)
+            "salva", "condividi", "raggruppa", "edita", "crea", "pubblica", "spazio",
+            "backup", "revisione",
+            -> navController.navigate(PvmDestination.FeatureStub.create(featureId))
             else -> navController.navigate(PvmDestination.FeatureStub.create(featureId))
         }
     }
@@ -146,10 +143,8 @@ fun PvmApp(
                     )
                 }
                 composable(PvmDestination.Componi.route) {
-                    MacroHubScreen(
-                        area = MacroNavigation.areaFor(ShellTab.COMPONI)!!,
-                        onFeatureClick = { openFeature(it.id) },
-                    )
+                    // Anteprima statica landing Componi (template): elenco + Crea/Edita/Pubblica
+                    ComponiLandingStaticScreen()
                 }
                 composable(PvmDestination.Utility.route) {
                     MacroHubScreen(
@@ -160,82 +155,28 @@ fun PvmApp(
                 composable(PvmDestination.Config.route) {
                     ConfigScreen()
                 }
+                // Acquisisci: UN solo processo. Pagina fonti → Conferma → Importa (senza chip di passo).
                 composable(PvmDestination.Acquire.route) {
-                    val censusVm: CensusViewModel = viewModel(
-                        factory = CensusViewModel.factory(catalogFacade),
-                    )
-                    val censusState by censusVm.state.collectAsStateWithLifecycle()
-                    LaunchedEffect(censusState.message) {
-                        censusState.message?.let {
-                            snackbarHostState.showSnackbar(it)
-                            censusVm.consumeMessage()
-                        }
-                    }
-                    val acquireVm: AcquireViewModel = viewModel(
-                        factory = AcquireViewModel.factory(catalogFacade),
-                    )
-                    val acquireState by acquireVm.state.collectAsStateWithLifecycle()
-                    LaunchedEffect(acquireState.message) {
-                        acquireState.message?.let {
-                            snackbarHostState.showSnackbar(it)
-                            acquireVm.consumeMessage()
-                        }
-                    }
-                    LaunchedEffect(acquireStep) {
-                        if (acquireStep == AcquireFlowStep.COPY) acquireVm.refresh()
-                        if (acquireStep == AcquireFlowStep.CENSUS) censusVm.refresh()
-                    }
-                    AcquireFlowScaffold(
-                        step = acquireStep,
-                        onStep = { acquireStep = it },
-                    ) {
-                        when (acquireStep) {
-                            AcquireFlowStep.CENSUS -> CensusSourcesScreen(
-                                state = censusState,
-                                onAddSource = censusVm::addSafSource,
-                                onToggleSelection = censusVm::toggleSelection,
-                                onRefreshStatus = censusVm::refresh,
-                                onCensusSelected = censusVm::censusSelected,
-                                onCensusOne = censusVm::censusOne,
-                                onRemove = censusVm::removeSource,
-                                onBrowse = { locationId ->
-                                    navController.navigate(
-                                        PvmDestination.SourceBrowse.create(locationId),
-                                    )
-                                },
-                                onSortMode = censusVm::setSortMode,
-                            )
-                            AcquireFlowStep.COPY -> AcquireScreen(
-                                state = acquireState,
-                                onToggle = acquireVm::toggleSelection,
-                                onKindFilter = acquireVm::onKindFilter,
-                                onSelectPending = acquireVm::selectPendingOnly,
-                                onClearSelection = acquireVm::clearSelection,
-                                onAcquire = acquireVm::acquireSelected,
-                                onRefresh = acquireVm::refresh,
-                            )
-                        }
+                    when (acquireStep) {
+                        AcquireFlowStep.CENSUS -> AcquisisciStaticScreen(
+                            onConferma = { acquireStep = AcquireFlowStep.COPY },
+                        )
+                        AcquireFlowStep.COPY -> ImportaStaticScreen(
+                            onImporta = {
+                                // Anteprima: torna in Home dopo "Importa"
+                                acquireStep = AcquireFlowStep.CENSUS
+                                navController.navigate(PvmDestination.Home.route) {
+                                    popUpTo(PvmDestination.Home.route) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            },
+                            onBackToAcquisisci = { acquireStep = AcquireFlowStep.CENSUS },
+                        )
                     }
                 }
-                composable(
-                    route = PvmDestination.SourceBrowse.route,
-                    arguments = listOf(navArgument("locationId") { type = NavType.StringType }),
-                ) { entry ->
-                    val locationId = entry.arguments?.getString("locationId").orEmpty()
-                    val browseVm: SourceBrowseViewModel = viewModel(
-                        factory = SourceBrowseViewModel.factory(catalogFacade, locationId),
-                    )
-                    val browseState by browseVm.state.collectAsStateWithLifecycle()
-                    LaunchedEffect(browseState.message) {
-                        browseState.message?.let {
-                            snackbarHostState.showSnackbar(it)
-                            browseVm.consumeMessage()
-                        }
-                    }
-                    SourceBrowseScreen(
-                        state = browseState,
-                        onSortMode = browseVm::setSortMode,
-                        onRefresh = browseVm::refresh,
+                composable(PvmDestination.Aggiorna.route) {
+                    AggiornaStaticScreen(
+                        onPulisci = { navController.navigate(PvmDestination.Clean.route) },
                     )
                 }
                 composable(PvmDestination.Clean.route) {
@@ -277,22 +218,6 @@ fun PvmApp(
                         onRequestEmpty = trashVm::requestEmptyTrash,
                         onConfirmEmpty = trashVm::confirmEmptyTrash,
                         onDismissEmpty = trashVm::dismissEmptyTrash,
-                    )
-                }
-                composable(PvmDestination.ArchiveBrowse.route) {
-                    val archiveBrowseVm: ArchiveViewModel = viewModel(
-                        factory = ArchiveViewModel.factory(catalogFacade),
-                    )
-                    val archiveBrowseState by archiveBrowseVm.state.collectAsStateWithLifecycle()
-                    LaunchedEffect(archiveBrowseState.message) {
-                        archiveBrowseState.message?.let {
-                            snackbarHostState.showSnackbar(it)
-                            archiveBrowseVm.consumeMessage()
-                        }
-                    }
-                    ArchiveScreen(
-                        state = archiveBrowseState,
-                        onRefresh = archiveBrowseVm::refresh,
                     )
                 }
                 composable(PvmDestination.Search.route) {

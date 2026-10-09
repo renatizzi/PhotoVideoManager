@@ -14,12 +14,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,20 +36,23 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.renatizzi.photovideomanager.R
-import com.renatizzi.photovideomanager.domain.model.Availability
 import com.renatizzi.photovideomanager.domain.model.DashboardSnapshot
-import com.renatizzi.photovideomanager.ui.shell.ShellTab
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
+/**
+ * Home / Dashboard — struttura statica allineata al template Navigazione11 (slide 4).
+ * KPI + Ricerca nel Catalogo + Accesso rapido (funzioni, non macro Bottom Bar).
+ */
 @Composable
 fun HomeScreen(
     snapshot: DashboardSnapshot?,
-    onOpenTab: (ShellTab) -> Unit,
+    onOpenTab: (com.renatizzi.photovideomanager.ui.shell.ShellTab) -> Unit,
     onOpenFeature: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var searchQuery by remember { mutableStateOf("") }
+    val photos = snapshot?.photoCount?.toString() ?: "xxx"
+    val videos = snapshot?.videoCount?.toString() ?: "xxx"
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -59,134 +71,113 @@ fun HomeScreen(
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
         )
 
-        if (snapshot != null) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                KpiCard(
-                    title = stringResource(R.string.kpi_photos),
-                    value = snapshot.photoCount.toString(),
-                    detail = duplicateLabel(snapshot.duplicatePhotoCount),
-                    modifier = Modifier.weight(1f),
-                    onClick = { onOpenFeature("ricerca") },
-                )
-                KpiCard(
-                    title = stringResource(R.string.kpi_videos),
-                    value = snapshot.videoCount.toString(),
-                    detail = duplicateLabel(snapshot.duplicateVideoCount),
-                    modifier = Modifier.weight(1f),
-                    onClick = { onOpenFeature("ricerca") },
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                KpiCard(
-                    title = stringResource(R.string.kpi_space),
-                    value = formatBytes(snapshot.personalUsedBytes),
-                    detail = spaceAvailabilityLabel(snapshot.localAvailability),
-                    modifier = Modifier.weight(1f),
-                    onClick = { onOpenFeature("archivia") },
-                )
-                KpiCard(
-                    title = stringResource(R.string.kpi_last_update),
-                    value = formatLastUpdate(snapshot.lastUpdatedEpochMs),
-                    detail = stringResource(R.string.kpi_trash, snapshot.trashCount),
-                    modifier = Modifier.weight(1f),
-                    onClick = { onOpenFeature("cestino") },
-                )
-            }
+        Surface(
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(
+                text = stringResource(R.string.dashboard_inline_help),
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(12.dp),
+            )
         }
 
+        // KPI 2x2 — template
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            KpiCard(
+                title = stringResource(R.string.kpi_foto_originali),
+                value = photos,
+                detail = stringResource(R.string.kpi_di_cui_acquisite, "xxx"),
+                modifier = Modifier.weight(1f),
+                onClick = { onOpenFeature("ricerca") },
+            )
+            KpiCard(
+                title = stringResource(R.string.kpi_video_originali),
+                value = videos,
+                detail = stringResource(R.string.kpi_di_cui_acquisiti, "xxx"),
+                modifier = Modifier.weight(1f),
+                onClick = { onOpenFeature("ricerca") },
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            KpiCard(
+                title = stringResource(R.string.kpi_spazio_foto),
+                value = "xxx MB",
+                detail = stringResource(R.string.kpi_di_cui_duplicati, "xxx"),
+                modifier = Modifier.weight(1f),
+                onClick = { onOpenFeature("spazio") },
+            )
+            KpiCard(
+                title = stringResource(R.string.kpi_spazio_video),
+                value = "xxx MB",
+                detail = stringResource(R.string.kpi_di_cui_duplicati, "xxx"),
+                modifier = Modifier.weight(1f),
+                onClick = { onOpenFeature("spazio") },
+            )
+        }
+
+        // Ricerca nel Catalogo — motore unico, un riquadro
         Text(
-            text = stringResource(R.string.quick_features),
+            text = stringResource(R.string.feature_ricerca),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
         )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            OutlinedButton(
-                onClick = { onOpenFeature("acquisisci") },
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(stringResource(R.string.feature_acquisisci))
-            }
-            OutlinedButton(
-                onClick = { onOpenFeature("ricerca") },
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(stringResource(R.string.feature_ricerca))
-            }
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            OutlinedButton(
-                onClick = { onOpenFeature("pulisci") },
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(stringResource(R.string.feature_pulisci))
-            }
-            OutlinedButton(
-                onClick = { onOpenFeature("ripristina") },
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(stringResource(R.string.feature_ripristina))
-            }
-        }
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onOpenFeature("ricerca") },
+            placeholder = { Text(stringResource(R.string.search_query_hint)) },
+            leadingIcon = {
+                Icon(Icons.Outlined.Search, contentDescription = null)
+            },
+            trailingIcon = {
+                Icon(Icons.Outlined.Mic, contentDescription = null)
+            },
+            singleLine = true,
+        )
 
+        // Accesso rapido — funzioni (NON le macro già in Bottom Bar)
         Text(
             text = stringResource(R.string.quick_access),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
         )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            QuickAccessButton(
-                title = stringResource(R.string.organizza),
-                color = MacroNavigation.organizaAccent,
-                onClick = { onOpenTab(ShellTab.ORGANIZZA) },
-                modifier = Modifier.weight(1f),
-            )
-            QuickAccessButton(
-                title = stringResource(R.string.componi),
-                color = MacroNavigation.componiAccent,
-                onClick = { onOpenTab(ShellTab.COMPONI) },
-                modifier = Modifier.weight(1f),
-            )
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            QuickAccessButton(
-                title = stringResource(R.string.utility),
-                color = MacroNavigation.utilityAccent,
-                onClick = { onOpenTab(ShellTab.UTILITY) },
-                modifier = Modifier.weight(1f),
-            )
-            QuickAccessButton(
-                title = stringResource(R.string.feature_crea),
-                color = MacroNavigation.componiAccent.copy(alpha = 0.85f),
-                onClick = { onOpenFeature("crea") },
-                modifier = Modifier.weight(1f),
-            )
-        }
-
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = stringResource(R.string.dashboard_inline_help),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+        val quick = listOf(
+            "acquisisci" to R.string.feature_acquisisci,
+            "crea" to R.string.feature_crea,
+            "condividi" to R.string.feature_condividi,
+            "raggruppa" to R.string.feature_raggruppa,
+            "edita" to R.string.feature_edita,
+            "pulisci" to R.string.feature_pulisci,
+            "salva" to R.string.feature_salva,
+            "ripristina" to R.string.feature_ripristina,
         )
+        quick.chunked(2).forEach { pair ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                pair.forEach { (id, titleRes) ->
+                    QuickAccessButton(
+                        title = stringResource(titleRes),
+                        color = MacroNavigation.organizaAccent,
+                        onClick = { onOpenFeature(id) },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                if (pair.size == 1) Spacer(modifier = Modifier.weight(1f))
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
@@ -201,9 +192,7 @@ private fun KpiCard(
     Card(
         modifier = if (onClick != null) modifier.clickable(onClick = onClick) else modifier,
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
         Column(
@@ -238,50 +227,17 @@ private fun QuickAccessButton(
 ) {
     Box(
         modifier = modifier
-            .height(72.dp)
-            .background(color, RoundedCornerShape(12.dp))
+            .height(56.dp)
+            .background(color.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
             .padding(12.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = title,
-            color = Color.White,
-            style = MaterialTheme.typography.titleMedium,
+            color = color,
+            style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.SemiBold,
         )
     }
-}
-
-@Composable
-private fun duplicateLabel(count: Long?): String =
-    if (count == null) {
-        stringResource(R.string.kpi_duplicates_pending)
-    } else {
-        stringResource(R.string.kpi_duplicates, count)
-    }
-
-@Composable
-private fun spaceAvailabilityLabel(availability: Availability): String = when (availability) {
-    Availability.AVAILABLE -> stringResource(R.string.kpi_space_personal)
-    Availability.UNAVAILABLE -> stringResource(R.string.storage_local_unavailable)
-    Availability.UNKNOWN -> stringResource(R.string.storage_local_unknown)
-}
-
-private fun formatBytes(bytes: Long): String {
-    if (bytes < 1024) return "$bytes B"
-    val kb = bytes / 1024.0
-    if (kb < 1024) return String.format("%.1f KB", kb)
-    val mb = kb / 1024.0
-    if (mb < 1024) return String.format("%.1f MB", mb)
-    val gb = mb / 1024.0
-    return String.format("%.2f GB", gb)
-}
-
-private fun formatLastUpdate(epochMs: Long?): String {
-    if (epochMs == null || epochMs <= 0L) return "—"
-    val formatter = DateTimeFormatter.ofPattern("dd/MM HH:mm")
-    return Instant.ofEpochMilli(epochMs)
-        .atZone(ZoneId.systemDefault())
-        .format(formatter)
 }

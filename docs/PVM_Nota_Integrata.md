@@ -145,7 +145,7 @@ La Home Page è la pagina di atterraggio e il principale hub operativo.
 Contiene:
 - KPI di sintesi del Catalogo;
 - **Ricerca nel Catalogo** — motore unico, **un solo riquadro**, valido per foto/video e per album/raccolte; lo stesso motore è riusabile in tutte le pagine dove è prevista la ricerca;
-- Accesso rapido alle destinazioni delle macroaree (numero di link aumentabile senza introdurre nuove funzioni).
+- Accesso rapido alle **funzioni** (es. Acquisisci, Crea, Condividi, Raggruppa, Edita, Pulisci, Salva, Ripristina). Non duplica le macro già presenti in Bottom Bar.
 
 La navigazione mantiene la distinzione tra Home, macrofunzioni e CONFIGURA.
 
@@ -196,11 +196,11 @@ La UI deve gestire esplicitamente almeno: stato iniziale; caricamento; contenuto
 
 Ambito: Catalogo logico.
 
-**Acquisisci** — alimentazione del Catalogo da fonti esterne. Unico processo a due fasi:
-1. individuazione/selezione fonti (dispositivi e cartelle) → Conferma;
-2. schermata **Importa** (selezione file) → importazione nel Catalogo personale → esito → ritorno alla Dashboard.
+**Acquisisci** — alimentazione del Catalogo da fonti esterne. **Unico processo** (censimento e acquisizione non sono separati in menu):
+1. pagina **Acquisisci**: elenco fonti (dispositivo + percorso), selezione on/off, riepilogo → **Conferma**;
+2. pagina **Importa** (schermata successiva del medesimo processo, non voce hub): selezione file → Importa → esito → Dashboard.
 
-Concettualmente due fasi; una sola voce hub. Il censimento non è voce di menu separata.
+Niente chip/passi di navigazione «1. Fonti / 2. Importa» come livelli di menu.
 
 **Aggiorna** — gestione del Catalogo (modifica, spostamento, eliminazione di singoli elementi via menu contestuale). Include:
 - **Pulisci** — esclusivamente eliminazione duplicati;
