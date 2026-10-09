@@ -367,6 +367,7 @@ fun ImportaStaticScreen(
     onKindFilter: (SearchKindFilter) -> Unit,
     onRefresh: () -> Unit,
     onImporta: () -> Unit,
+    onContinue: () -> Unit = {},
     onBackToAcquisisci: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -376,6 +377,7 @@ fun ImportaStaticScreen(
     val photos = pool.count { it.mediaItem.kind == MediaKind.PHOTO }
     val videos = pool.count { it.mediaItem.kind == MediaKind.VIDEO }
     val already = pool.count { it.alreadyInPersonalArchive }
+    val allAlreadyInCatalog = pool.isNotEmpty() && already == pool.size
     val busy = state.loading || state.acquiring
 
     Column(
@@ -390,7 +392,11 @@ fun ImportaStaticScreen(
             fontWeight = FontWeight.SemiBold,
         )
         Text(
-            text = stringResource(R.string.importa_intro),
+            text = if (allAlreadyInCatalog) {
+                stringResource(R.string.importa_all_in_catalog)
+            } else {
+                stringResource(R.string.importa_intro)
+            },
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
         )
@@ -412,7 +418,7 @@ fun ImportaStaticScreen(
             style = MaterialTheme.typography.bodySmall,
         )
 
-        // Azioni in alto (layout congelato): refresh + IMPORTA; Annulla = torna ad Acquisisci
+        // Azioni: IMPORTA (o CONTINUA se tutto già in Catalogo); Annulla = torna ad Acquisisci
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -422,8 +428,8 @@ fun ImportaStaticScreen(
                 Icon(Icons.Outlined.Refresh, contentDescription = stringResource(R.string.refresh_sources))
             }
             Button(
-                onClick = onImporta,
-                enabled = !busy && state.selectedIds.isNotEmpty(),
+                onClick = if (allAlreadyInCatalog) onContinue else onImporta,
+                enabled = !busy && (allAlreadyInCatalog || state.selectedIds.isNotEmpty()),
                 modifier = Modifier.weight(1f),
             ) {
                 if (state.acquiring) {
@@ -433,7 +439,12 @@ fun ImportaStaticScreen(
                         color = MaterialTheme.colorScheme.onPrimary,
                     )
                 } else {
-                    Text(stringResource(R.string.importa_action))
+                    Text(
+                        stringResource(
+                            if (allAlreadyInCatalog) R.string.importa_continua
+                            else R.string.importa_action,
+                        ),
+                    )
                 }
             }
             OutlinedButton(onClick = onBackToAcquisisci, enabled = !busy) {

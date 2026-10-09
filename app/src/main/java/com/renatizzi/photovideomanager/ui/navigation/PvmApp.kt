@@ -236,6 +236,7 @@ fun PvmApp(
                                 acquireVm.refresh(acquireSourceIds.takeIf { it.isNotEmpty() })
                             },
                             onImporta = { acquireVm.acquireSelected() },
+                            onContinue = { acquireVm.continueToAggiorna() },
                             onBackToAcquisisci = { acquireStep = AcquireFlowStep.CENSUS },
                         )
                     }

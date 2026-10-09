@@ -65,8 +65,10 @@
     <string name="importa_riepilogo">Originali %1$d · foto %2$d · video %3$d · già in archivio %4$d · selezionati %5$d</string>
     <string name="importa_empty">Nessun file da importare. Torna ad Acquisisci, aggiungi fonti e conferma il censimento.</string>
     <string name="importa_empty_deselected">Nessun file selezionato. Tocca Tutti / Foto / Video per selezionare di nuovo.</string>
+    <string name="importa_all_in_catalog">Tutti i file sono già in Catalogo. Premi CONTINUA per aprire Aggiorna.</string>
     <string name="importa_riga_meta">%1$s</string>
     <string name="importa_action">IMPORTA</string>
+    <string name="importa_continua">CONTINUA</string>
     <string name="importa_annulla">Annulla</string>
     <string name="importa_back_acquisisci">Annulla</string>
     <string name="componi_album">ALBUM</string>

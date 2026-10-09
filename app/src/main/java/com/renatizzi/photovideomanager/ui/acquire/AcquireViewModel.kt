@@ -212,6 +212,11 @@ class AcquireViewModel(
         _state.update { it.copy(message = null) }
     }
 
+    /** Tutti già in Catalogo: nessun import da fare → vai ad Aggiorna. */
+    fun continueToAggiorna() {
+        _goToAggiorna.tryEmit(Unit)
+    }
+
     private fun defaultAcquireMessage(acquired: Int, skipped: Int, failed: Int): String =
         buildString {
             append("Acquisizione terminata: ")

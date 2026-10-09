@@ -345,6 +345,8 @@ Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consoli
 | BL-04 | **Eliminazione multi-selezione** | Su Importa e sugli altri elenchi media: poter deselezionare/eliminare (o escludere dall’import) più elementi insieme, così da evitare di copiare in Catalogo file indesiderati. Riuso del pattern selezione già in UI. | Renato 09/10/2026 |
 | BL-05 | **Acquisisci — nascondere «Spazio interno app»** | La sorgente built-in «Spazio interno app» risulta pleonastica in elenco fonti: non mostrarla (o non esporla come fonte censibile). Restano le sole fonti esterne scelte dall’utente. | Renato 09/10/2026 |
 | BL-06 | **Aggiorna — menu contestuale «Rinomina»** | Nel menu contestuale riga di Organizza → Aggiorna aggiungere anche **Rinomina** (oltre alle azioni già previste / stub). | Renato 09/10/2026 |
+| BL-07 | **Aggiorna — «Sposta» nel menu contestuale** | Con Catalogo logico unico, «Sposta» tra voci di Catalogo è ambiguo/fuorviante. Valutare: rimuovere Sposta; oppure reinterpretarlo come spostamento della **copia fisica** tra ubicazioni (sorgente ↔ spazio app ↔ futuro Archivio Condiviso), non come spostamento «nel» Catalogo. | Renato 09/10/2026 |
+| BL-08 | **Copia da Catalogo → dispositivo** | Export esplicito: copiare un file dal Catalogo (copia preferita / spazio app) verso una cartella del dispositivo (SAF createDocument / tree). Utile per condividere fuori dall’app senza aprire l’archivio interno. Distinguere da Sposta; non tocca gli originali sulle sorgenti censite salvo scelta esplicita. | Renato 09/10/2026 |
 
 Fine documento
 
