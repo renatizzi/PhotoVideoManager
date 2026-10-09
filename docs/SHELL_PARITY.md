@@ -1,6 +1,6 @@
 # Shell parity checklist — Photo&VideoManager vs BoxManager
 
-Baseline: `docs/BOXMANAGER_REUSE_ASSESSMENT.md`, Nota Integrata v5.2 §5 / M18 (`docs/PVM_Nota_Integrata.md`).
+Baseline: `docs/BOXMANAGER_REUSE_ASSESSMENT.md`, Nota Integrata **v5.3** §5 / §5.6 / M18 (`docs/PVM_Nota_Integrata.md`). Layout UI congelato (`0.14.6-preview`).
 
 ## Slot Top Bar
 

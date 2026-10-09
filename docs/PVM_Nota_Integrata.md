@@ -2,11 +2,12 @@
 
 Documento tecnico, architetturale e funzionale di riferimento (**documento unico**).
 
-- **File:** PVM_Nota_Integrata_v5.2
-- **Versione:** 5.2
-- **Data ultima modifica:** 08/10/2026
+- **File:** PVM_Nota_Integrata_v5.3 (fonte operativa: `docs/PVM_Nota_Integrata.md`)
+- **Versione:** 5.3
+- **Data ultima modifica:** 09/10/2026
 - **Responsabile:** Renato Stefanizzi
 - **Delta v5.1 → v5.2:** recepita la revisione di navigazione (proposta Navigazione11 + interlocuzione 08/10/2026). Aggiornati §5 e chiarimenti di collocazione in §6. Nessun nuovo requisito di dominio inventato.
+- **Delta v5.2 → v5.3:** **congelamento layout UI** anteprima `0.14.6-preview` (Dashboard densità BoxManager; Accesso rapido Home fissato; albero §5 confermato). Nessun nuovo requisito di dominio. Affinamenti estetici minori (es. spessore ombre) ammessi in seguito senza riaprire la struttura.
 
 # 1. Scopo del progetto e regole operative
 ## 1.1 Scopo
@@ -126,7 +127,7 @@ La disponibilità delle sorgenti deve essere verificata nell'ambito della sessio
 
 # 5. Navigazione e struttura UI
 
-**STATO:** sezione aggiornata e consolidata il 08/10/2026 (v5.2). Sostituisce integralmente il §5 della v5.1. I requisiti di dominio restano sostanzialmente inalterati; cambia l’albero di navigazione UI.
+**STATO:** albero navigazione consolidato il 08/10/2026 (v5.2); **layout UI congelato** il 09/10/2026 (v5.3, build `0.14.6-preview`). I requisiti di dominio restano sostanzialmente inalterati rispetto a v5.1; cambia solo collocazione UI (v5.2) e densità/struttura visuale Home (v5.3).
 
 ## 5.0 Principi
 
@@ -143,11 +144,11 @@ La disponibilità delle sorgenti deve essere verificata nell'ambito della sessio
 La Home Page è la pagina di atterraggio e il principale hub operativo.
 
 Contiene:
-- KPI di sintesi del Catalogo;
+- KPI di sintesi del Catalogo (due colonne Foto / Video, densità tipografica allineata a BoxManager; senza card separate per ogni metrica);
 - **Ricerca nel Catalogo** — motore unico, **un solo riquadro**, valido per foto/video e per album/raccolte; lo stesso motore è riusabile in tutte le pagine dove è prevista la ricerca;
-- Accesso rapido alle **funzioni** (es. Acquisisci, Crea, Condividi, Raggruppa, Edita, Pulisci, Salva, Ripristina). Non duplica le macro già presenti in Bottom Bar.
+- **Accesso rapido** (congelato v5.3): **Acquisisci**, **Aggiorna**, **Crea**, **Edita**, **Backup**, **Ripristina**. Griglia 2×3 a tessere che riempiono lo spazio restante del viewport. Non duplica le macro già presenti in Bottom Bar. Non include Archivio Condiviso né scorciatoie a macro Bottom Bar.
 
-La navigazione mantiene la distinzione tra Home, macrofunzioni e CONFIGURA.
+La navigazione mantiene la distinzione tra Home, macrofunzioni e CONFIGURA. Home **senza scrolling** sul viewport tipico.
 
 Le schermate devono mantenere coerenza con struttura e principi UI già consolidati in BoxManager (shared shell), adattando branding e contenuti PVM.
 
@@ -250,6 +251,25 @@ Rami:
 
 Come in v5.1: INITIAL, LOADING, EMPTY, IN_PROGRESS, COMPLETED, ERROR, SOURCE_UNAVAILABLE, NEEDS_AUTHORIZATION, CONFIRM_DESTRUCTIVE.
 
+## 5.6 Congelamento layout UI (v5.3)
+
+**STATO FUNZIONALE:** layout delle schermate di anteprima **congelato** a partire da MediaManager `0.14.6-preview` (commit di riferimento densità Dashboard).
+
+**Cosa è congelato (non modificare senza decisione esplicita di Renato):**
+- Bottom Bar: Home · Organizza · Componi · Utility · Impostazioni (solo icona);
+- Home: struttura sezioni (titolo, KPI a colonne, ricerca, Accesso rapido 2×3) e densità complessiva;
+- Acquisisci → Importa: unico processo, azioni in alto, selezione on/off, niente chip di passo;
+- Componi landing: elenco Album/Raccolte + azioni +Album/+Raccolta/⋮;
+- Aggiorna (layout): ricerca + elenco + Pulisci in alto (Allinea = refresh).
+
+**Cosa resta liberamente evolutivo dietro il layout:**
+- collegamento a ViewModel/servizi di dominio (dati reali al posto dei mock);
+- stati LOADING/EMPTY/ERROR e messaggi;
+- affinamenti estetici minori (ombre, radius, padding ± pochi dp) senza cambiare gerarchia o contenuti delle sezioni;
+- CONFIGURA e feature ancora stub (Crea/Edita/Pubblica/Backup/…) quando M11/M14/M15 saranno in sviluppo.
+
+**VINCOLO per Cursor:** dopo il congelamento, lo sviluppo procede **senza riaprire la struttura UI**; eventuale feedback estetico si raccoglie in backlog e si applica a tranche dedicate.
+
 # 6. Macrofunzioni principali
 
 Le macrofunzioni di dominio (Censimento, Acquisizione, Archivio Condiviso, Deduplicazione, Organizzazione, Ricerca, Editing/Produzione, Backup, …) restano definite nel merito come in v5.1.
@@ -296,9 +316,14 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Per ogni macro-attività ChatGPT definisce requisiti, vincoli, decisioni progettuali, criteri di accettazione e punti da approfondire. Cursor, prima dello sviluppo, analizza le criticità tecniche indicate, evidenzia eventuali ulteriori criticità rilevanti e propone soluzioni tecniche compatibili con la specifica consolidata. Lo sviluppo inizia solo dopo la chiusura della fase di approfondimento della relativa macro-attività.
 - Come precisato, Cursor non può trasformare autonomamente una proposta tecnica in requisito consolidato.
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
-## 7.1 FASE CORRENTE: AVVIO DELLO SVILUPPO
-PRIMA MACRO-ATTIVITÀ: M02 – ARCHITETTURA APPLICATIVA
-STATO ATTUALE: AVVIO DELLO SVILUPPO.
+## 7.1 FASE CORRENTE: SVILUPPO DIETRO UI CONGELATA
+MACRO-ATTIVITÀ DI RIFERIMENTO: M02 (architettura) + vertical slice già scaffoldate (M03–M07 / M09 / M16 in forma v1) + **M18 layout congelato (v5.3)**.
+STATO ATTUALE (09/10/2026): UI di navigazione e Dashboard **congelate**; ripresa sviluppo = collegare i servizi di dominio già presenti alle schermate congelate, senza inventare requisiti.
+Ordine operativo aggregato (Cursor in autonomia, senza chiedere conferma su dettagli tecnici):
+1. **Acquisisci → Importa** — dati reali (censimento SAF + acquisizione SHA-256 nello spazio app);
+2. **Home KPI / ricerca** — snapshot e deep-link già parzialmente vivi; completare coerenza;
+3. **Aggiorna** — elenco Catalogo reale + Pulisci (già vivo) + Allinea (refresh disponibilità);
+4. Feature ancora stub (Componi/Backup/CONFIGURA) — solo quando la relativa macro-attività entra in sviluppo; fino ad allora restano stub/landing.
 Nota: Le dipendenze riportate per ciascuna macro-attività della Roadmap devono indicare esclusivamente le dipendenze dirette da macro-attività precedenti, ossia quelle il cui output costituisce un input necessario alla macro-attività corrente. Le dipendenze transitive non devono essere ripetute.
 Regola di aggiornamento della roadmap
 La tabella costituisce l'unico riferimento operativo per lo stato di avanzamento. Non viene creato un file Excel parallelo come fonte di riferimento. Ogni decisione consolidata, criticità emersa, modifica dello stato o chiusura di una macro-attività deve essere recepita nella Nota Integrata.

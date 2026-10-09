@@ -1,6 +1,6 @@
 # Photo&VideoManager — Architettura applicativa (M02)
 
-Baseline: Nota Integrata v5.1. Decisioni tecniche di implementazione (non consolidano requisiti).
+Baseline: Nota Integrata **v5.3** (`docs/PVM_Nota_Integrata.md`). Decisioni tecniche di implementazione (non consolidano requisiti). Layout UI congelato a `0.14.6-preview` (§5.6).
 
 ## Layer
 
@@ -91,7 +91,9 @@ Baseline: Nota Integrata v5.1. Decisioni tecniche di implementazione (non consol
 - Elenco sorgenti: dispositivo + percorso; selezione ✅/🟩/❌; 🔄 stato; vedi media sola lettura; ordinamento
 - Consultazione media sorgente in sola lettura prima della copia
 
-## Navigazione (Nota Integrata v5.2 — 2026-10-08)
+## Navigazione (Nota Integrata v5.3 — 2026-10-09)
 
-Riferimento unico: `docs/PVM_Nota_Integrata.md` (§5).  
-Bottom Bar: **Home · Organizza · Componi · Utility · Impostazioni**. Selezione elenchi: on/off.
+Riferimento unico: `docs/PVM_Nota_Integrata.md` (§5 / §5.6).  
+Bottom Bar: **Home · Organizza · Componi · Utility · Impostazioni**. Selezione elenchi: on/off.  
+Home Accesso rapido congelato: Acquisisci · Aggiorna · Crea · Edita · Backup · Ripristina.  
+Sviluppo corrente: wiring dominio dietro layout congelato (Acquisisci→Importa per primi).
