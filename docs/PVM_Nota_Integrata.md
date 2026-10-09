@@ -320,9 +320,9 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 (architettura) + vertical slice già scaffoldate (M03–M07 / M09 / M16 in forma v1) + **M18 layout congelato (v5.3)**.
 STATO ATTUALE (09/10/2026): UI di navigazione e Dashboard **congelate**; ripresa sviluppo = collegare i servizi di dominio già presenti alle schermate congelate, senza inventare requisiti.
 Ordine operativo aggregato (Cursor in autonomia, senza chiedere conferma su dettagli tecnici):
-1. **Acquisisci → Importa** — dati reali (censimento SAF + acquisizione SHA-256 nello spazio app);
-2. **Home KPI / ricerca** — snapshot e deep-link già parzialmente vivi; completare coerenza;
-3. **Aggiorna** — elenco Catalogo reale + Pulisci (già vivo) + Allinea (refresh disponibilità);
+1. **Acquisisci → Importa** — dati reali (censimento SAF + acquisizione SHA-256 nello spazio app) — *avviato in 0.14.7*;
+2. **Aggiorna** — elenco Catalogo reale + Pulisci (già vivo) + Allinea (refresh elenco) — *avviato in 0.14.8*; menu contestuale riga = backlog M08/M12;
+3. **Home KPI / ricerca** — snapshot e deep-link già parzialmente vivi; completare coerenza (conteggi spazio/duplicati);
 4. Feature ancora stub (Componi/Backup/CONFIGURA) — solo quando la relativa macro-attività entra in sviluppo; fino ad allora restano stub/landing.
 Nota: Le dipendenze riportate per ciascuna macro-attività della Roadmap devono indicare esclusivamente le dipendenze dirette da macro-attività precedenti, ossia quelle il cui output costituisce un input necessario alla macro-attività corrente. Le dipendenze transitive non devono essere ripetute.
 Regola di aggiornamento della roadmap

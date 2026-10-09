@@ -69,6 +69,9 @@
     <string name="aggiorna_static_help"> </string>
     <string name="aggiorna_catalogo_title">Il tuo Catalogo</string>
     <string name="aggiorna_riepilogo_static">Riepilogo: file originali xxx · disponibili xxx · non importabili xxx · duplicati xxx</string>
+    <string name="aggiorna_riepilogo">Elementi nel Catalogo: %1$d · di cui foto %2$d · di cui video %3$d</string>
+    <string name="aggiorna_empty">Catalogo vuoto. Usa Acquisisci per aggiungere foto e video.</string>
+    <string name="aggiorna_menu_soon">Menu contestuale (modifica / sposta / elimina): in arrivo</string>
     <string name="componi_static_help"> </string>
     <string name="componi_elenco_title">Elenco degli album e raccolte</string>
     <string name="componi_empty_static">Nessun album / raccolta: per crearne uno, clicca sul relativo bottone.</string>

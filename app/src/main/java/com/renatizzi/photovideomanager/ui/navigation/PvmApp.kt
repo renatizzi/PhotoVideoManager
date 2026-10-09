@@ -223,8 +223,28 @@ fun PvmApp(
                     }
                 }
                 composable(PvmDestination.Aggiorna.route) {
+                    val aggiornaVm: SearchViewModel = viewModel(
+                        factory = SearchViewModel.factory(catalogFacade),
+                    )
+                    val aggiornaState by aggiornaVm.state.collectAsStateWithLifecycle()
+                    val menuSoon = stringResource(R.string.aggiorna_menu_soon)
+                    var menuPing by remember { mutableStateOf(0) }
+                    LaunchedEffect(aggiornaState.message) {
+                        aggiornaState.message?.let {
+                            snackbarHostState.showSnackbar(it)
+                            aggiornaVm.consumeMessage()
+                        }
+                    }
+                    LaunchedEffect(menuPing) {
+                        if (menuPing > 0) snackbarHostState.showSnackbar(menuSoon)
+                    }
                     AggiornaStaticScreen(
+                        state = aggiornaState,
+                        onQueryChange = aggiornaVm::onQueryChange,
+                        onKindFilter = aggiornaVm::onKindFilter,
+                        onRefresh = aggiornaVm::refresh,
                         onPulisci = { navController.navigate(PvmDestination.Clean.route) },
+                        onRowMenu = { menuPing += 1 },
                     )
                 }
                 composable(PvmDestination.Clean.route) {

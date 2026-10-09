@@ -450,16 +450,17 @@ private fun ImportCandidateRow(
 
 @Composable
 fun AggiornaStaticScreen(
+    state: com.renatizzi.photovideomanager.ui.search.SearchUiState,
+    onQueryChange: (String) -> Unit,
+    onKindFilter: (SearchKindFilter) -> Unit,
+    onRefresh: () -> Unit,
     onPulisci: () -> Unit,
+    onRowMenu: (String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    var query by remember { mutableStateOf("") }
-    val items = listOf(
-        "foto_vacanze.jpg" to "Pictures",
-        "video_compleanno.mp4" to "Movies",
-        "scan_documento.jpg" to "DCIM",
-        "IMG_2024_001.jpg" to "Camera",
-    )
+    val entries = state.entries
+    val photos = entries.count { it.mediaItem.kind == MediaKind.PHOTO }
+    val videos = entries.count { it.mediaItem.kind == MediaKind.VIDEO }
 
     Column(
         modifier = modifier
@@ -478,22 +479,25 @@ fun AggiornaStaticScreen(
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
         )
 
-        CatalogSearchField(query = query, onQueryChange = { query = it })
+        CatalogSearchField(query = state.query, onQueryChange = onQueryChange)
 
         Text(
             text = stringResource(R.string.aggiorna_catalogo_title),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Medium,
         )
-        Text(stringResource(R.string.aggiorna_riepilogo_static), style = MaterialTheme.typography.bodySmall)
+        Text(
+            text = stringResource(R.string.aggiorna_riepilogo, entries.size, photos, videos),
+            style = MaterialTheme.typography.bodySmall,
+        )
 
-        // Azioni in alto: refresh (allinea) + PULISCI
+        // Azioni in alto: refresh (Allinea) + PULISCI
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = {}) {
+            IconButton(onClick = onRefresh, enabled = !state.loading) {
                 Icon(
                     Icons.Outlined.Refresh,
                     contentDescription = stringResource(R.string.aggiorna_refresh_cd),
@@ -504,23 +508,53 @@ fun AggiornaStaticScreen(
             }
         }
 
-        KindFilters()
+        KindFilters(
+            selected = state.kindFilter,
+            enabled = !state.loading,
+            onSelect = onKindFilter,
+        )
 
         Column(
             modifier = Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState()),
         ) {
-            items.forEach { (name, src) ->
-                HorizontalDivider()
-                MediaRow(
-                    title = name,
-                    subtitle = stringResource(R.string.importa_riga_meta, src),
-                    checked = false,
-                    showMenu = true,
+            if (state.loading && entries.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else if (entries.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.aggiorna_empty),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+                    modifier = Modifier.padding(vertical = 12.dp),
                 )
+            } else {
+                entries.forEach { entry ->
+                    HorizontalDivider()
+                    val title = entry.mediaItem.displayTitle?.ifBlank { null }
+                        ?: entry.previewCopy?.opaqueLocator?.substringAfterLast('/')
+                            ?.substringAfterLast(':')
+                        ?: entry.mediaItem.id
+                    val loc = entry.locationNames.firstOrNull().orEmpty()
+                    MediaRow(
+                        title = title,
+                        subtitle = stringResource(R.string.importa_riga_meta, loc.ifBlank { "—" }),
+                        checked = false,
+                        showMenu = true,
+                        previewCopy = entry.previewCopy,
+                        kind = entry.mediaItem.kind,
+                        onMenu = { onRowMenu(entry.mediaItem.id) },
+                    )
+                }
+                HorizontalDivider()
             }
-            HorizontalDivider()
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
@@ -664,6 +698,9 @@ private fun MediaRow(
     subtitle: String,
     checked: Boolean,
     showMenu: Boolean = false,
+    previewCopy: com.renatizzi.photovideomanager.domain.model.MediaCopy? = null,
+    kind: MediaKind = MediaKind.PHOTO,
+    onMenu: () -> Unit = {},
 ) {
     Row(
         modifier = Modifier
@@ -673,25 +710,31 @@ private fun MediaRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Checkbox(checked = checked, onCheckedChange = null)
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(6.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                Icons.Outlined.Image,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+        if (previewCopy != null) {
+            MediaThumbnail(copy = previewCopy, kind = kind)
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Outlined.Image,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
         Column(modifier = Modifier.weight(1f)) {
             Text(title, fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyMedium)
             Text(subtitle, style = MaterialTheme.typography.bodySmall)
         }
         if (showMenu) {
-            Icon(Icons.Outlined.MoreVert, contentDescription = stringResource(R.string.componi_menu_cd))
+            IconButton(onClick = onMenu) {
+                Icon(Icons.Outlined.MoreVert, contentDescription = stringResource(R.string.componi_menu_cd))
+            }
         }
     }
 }
