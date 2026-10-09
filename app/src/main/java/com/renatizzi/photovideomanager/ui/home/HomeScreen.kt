@@ -35,8 +35,8 @@ import com.renatizzi.photovideomanager.R
 import com.renatizzi.photovideomanager.domain.model.DashboardSnapshot
 
 /**
- * Home / Dashboard — senza scrolling, senza help contestuale.
- * KPI + Ricerca + Accesso rapido: Acquisisci, Aggiorna, Crea, Edita.
+ * Home senza scrolling: KPI + ricerca + 6 accessi rapidi funzioni.
+ * Compattato per restare in un viewport tipico.
  */
 @Composable
 fun HomeScreen(
@@ -52,23 +52,23 @@ fun HomeScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Text(
             text = stringResource(R.string.dashboard_title),
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
         )
         Text(
             text = stringResource(R.string.dashboard_subtitle),
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
         )
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             KpiCard(
                 title = stringResource(R.string.kpi_foto_originali),
@@ -85,7 +85,7 @@ fun HomeScreen(
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             KpiCard(
                 title = stringResource(R.string.kpi_spazio_foto),
@@ -101,19 +101,14 @@ fun HomeScreen(
             )
         }
 
-        Text(
-            text = stringResource(R.string.feature_ricerca),
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold,
-        )
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp)
+                .height(48.dp)
                 .clickable { onOpenFeature("ricerca") },
-            placeholder = { Text(stringResource(R.string.search_query_hint)) },
+            placeholder = { Text(stringResource(R.string.feature_ricerca)) },
             leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
             trailingIcon = { Icon(Icons.Outlined.Mic, contentDescription = null) },
             singleLine = true,
@@ -121,7 +116,7 @@ fun HomeScreen(
 
         Text(
             text = stringResource(R.string.quick_access),
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
         )
         val quick = listOf(
@@ -129,11 +124,13 @@ fun HomeScreen(
             "aggiorna" to R.string.feature_aggiorna,
             "crea" to R.string.feature_crea,
             "edita" to R.string.feature_edita,
+            "backup" to R.string.feature_backup,
+            "ripristina" to R.string.feature_ripristina,
         )
         quick.chunked(2).forEach { pair ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 pair.forEach { (id, titleRes) ->
                     QuickAccessButton(
@@ -157,13 +154,13 @@ private fun KpiCard(
 ) {
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+            verticalArrangement = Arrangement.spacedBy(1.dp),
         ) {
             Text(
                 text = title,
@@ -172,7 +169,7 @@ private fun KpiCard(
             )
             Text(
                 text = value,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
             )
             Text(
@@ -193,16 +190,15 @@ private fun QuickAccessButton(
 ) {
     Box(
         modifier = modifier
-            .height(48.dp)
-            .background(color.copy(alpha = 0.12f), RoundedCornerShape(10.dp))
-            .clickable(onClick = onClick)
-            .padding(8.dp),
+            .height(40.dp)
+            .background(color.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = title.uppercase(),
             color = color,
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.SemiBold,
         )
     }

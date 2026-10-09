@@ -52,7 +52,12 @@
     <string name="importa_riepilogo_static">Originali xxx · disponibili xxx · non importabili xxx · duplicati xxx</string>
     <string name="importa_riga_meta">Tipo: media · Sorgente: %1$s</string>
     <string name="importa_action">IMPORTA</string>
-    <string name="importa_back_acquisisci">Torna ad Acquisisci</string>
+    <string name="importa_annulla">Annulla</string>
+    <string name="importa_back_acquisisci">Annulla</string>
+    <string name="componi_album">ALBUM</string>
+    <string name="componi_raccolta">RACCOLTA</string>
+    <string name="componi_add_cd">Crea composizione</string>
+    <string name="componi_menu_cd">Menu contestuale (modifica, pubblica, elimina)</string>
     <string name="aggiorna_static_intro">Mantieni aggiornato il tuo Catalogo eliminando eventuali duplicati.</string>
     <string name="aggiorna_static_help"> </string>
     <string name="aggiorna_catalogo_title">Il tuo Catalogo</string>
