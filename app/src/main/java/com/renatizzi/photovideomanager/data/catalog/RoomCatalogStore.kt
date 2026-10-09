@@ -25,6 +25,12 @@ class RoomCatalogStore(
     override suspend fun countMediaItemsByKind(kind: MediaKind): Long =
         db.mediaItemDao().countByKind(kind.name)
 
+    override suspend fun purgeOrphanMediaItems(): Int {
+        val orphans = db.mediaItemDao().listOrphanIds()
+        orphans.forEach { db.mediaItemDao().delete(it) }
+        return orphans.size
+    }
+
     override suspend fun latestMediaUpdatedAtEpochMs(): Long? =
         db.mediaItemDao().latestUpdatedAt()
 

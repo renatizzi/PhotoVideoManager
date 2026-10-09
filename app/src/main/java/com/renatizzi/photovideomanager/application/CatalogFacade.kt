@@ -28,13 +28,16 @@ class CatalogFacade(
 ) {
     suspend fun bootstrapPersonalArchiveIfNeeded() {
         sourceRegistry.bootstrapPersonalArchiveIfNeeded()
+        // Orfani: MediaItem rimasti dopo CASCADE su sorgente rimossa (senza copie).
+        runCatching { sourceRegistry.purgeOrphanMediaItems() }
     }
 
     suspend fun mediaItemCount(): Long = sourceRegistry.mediaItemCount()
 
     /**
      * KPI Dashboard — semantica consolidata:
-     * - `photoCount` / `videoCount` = elementi nel Catalogo (dopo censimento Acquisisci).
+     * - `photoCount` / `videoCount` = elementi con almeno una copia ACTIVE
+     *   (stesso universo di Aggiorna / Catalogo; esclusi cestino e orfani).
      * - `acquired*Count` / `*UsedBytes` = sole copie nello spazio personale app
      *   (dopo Importa); restano 0 finché non si importa.
      * - `personalUsedBytes` = byte reali su disco nello spazio app (può includere

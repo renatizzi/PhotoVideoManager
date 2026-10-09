@@ -62,7 +62,7 @@
     <string name="importa_static_help">Schermata successiva di Acquisisci (non voce di menu). Dopo Importa si torna alla Dashboard.</string>
     <string name="importa_elenco">Elenco file da importare</string>
     <string name="importa_riepilogo_static">Originali xxx · disponibili xxx · non importabili xxx · duplicati xxx</string>
-    <string name="importa_riepilogo">Candidati %1$d · foto %2$d · video %3$d · già in archivio %4$d · selezionati %5$d</string>
+    <string name="importa_riepilogo">Originali %1$d · foto %2$d · video %3$d · già in archivio %4$d · selezionati %5$d</string>
     <string name="importa_empty">Nessun file da importare. Torna ad Acquisisci, aggiungi fonti e conferma il censimento.</string>
     <string name="importa_empty_deselected">Nessun file selezionato. Tocca Tutti / Foto / Video per selezionare di nuovo.</string>
     <string name="importa_riga_meta">%1$s</string>

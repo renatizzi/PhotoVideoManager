@@ -31,7 +31,7 @@ class AcquisitionService(
     private val permissionGate: PermissionGate,
 ) {
     /**
-     * Candidati Importa. Se [sourceLocationIds] è non vuoto, limita alle sole fonti
+     * Originali Importa (candidati tecnici). Se [sourceLocationIds] è non vuoto, limita alle sole fonti
      * confermate in Acquisisci (non all’intero Catalogo).
      */
     suspend fun listCandidates(

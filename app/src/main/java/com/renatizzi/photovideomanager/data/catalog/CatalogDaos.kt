@@ -37,11 +37,34 @@ interface MediaItemDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: MediaItemEntity)
 
-    @Query("SELECT COUNT(*) FROM media_items")
+    /** Elementi con almeno una copia ACTIVE (= Catalogo / Aggiorna). */
+    @Query(
+        """
+        SELECT COUNT(DISTINCT mi.id) FROM media_items mi
+        INNER JOIN media_copies mc ON mc.mediaItemId = mi.id
+        WHERE mc.state = 'ACTIVE'
+        """,
+    )
     suspend fun count(): Long
 
-    @Query("SELECT COUNT(*) FROM media_items WHERE kind = :kind")
+    @Query(
+        """
+        SELECT COUNT(DISTINCT mi.id) FROM media_items mi
+        INNER JOIN media_copies mc ON mc.mediaItemId = mi.id
+        WHERE mi.kind = :kind AND mc.state = 'ACTIVE'
+        """,
+    )
     suspend fun countByKind(kind: String): Long
+
+    /** MediaItem senza alcuna copia (es. dopo CASCADE su sorgente rimossa). */
+    @Query(
+        """
+        SELECT mi.id FROM media_items mi
+        LEFT JOIN media_copies mc ON mc.mediaItemId = mi.id
+        WHERE mc.id IS NULL
+        """,
+    )
+    suspend fun listOrphanIds(): List<String>
 
     @Query("SELECT MAX(updatedAtEpochMs) FROM media_items")
     suspend fun latestUpdatedAt(): Long?

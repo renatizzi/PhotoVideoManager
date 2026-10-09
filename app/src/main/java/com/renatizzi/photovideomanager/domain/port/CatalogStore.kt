@@ -13,6 +13,8 @@ import com.renatizzi.photovideomanager.domain.model.StorageLocation
 interface CatalogStore {
     suspend fun countMediaItems(): Long
     suspend fun countMediaItemsByKind(kind: MediaKind): Long
+    /** Elimina MediaItem senza copie residue (orfani post-rimozione sorgente). */
+    suspend fun purgeOrphanMediaItems(): Int
     suspend fun latestMediaUpdatedAtEpochMs(): Long?
     suspend fun upsertArchive(archive: ArchiveRef)
     suspend fun listArchives(): List<ArchiveRef>

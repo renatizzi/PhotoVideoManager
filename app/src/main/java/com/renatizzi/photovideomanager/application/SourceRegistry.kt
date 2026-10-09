@@ -187,11 +187,15 @@ class SourceRegistry(
         if (location.archiveId != PERSONAL_ARCHIVE_ID) {
             catalogStore.deleteArchive(location.archiveId)
         }
+        // CASCADE cancella le MediaCopy; restano MediaItem orfani → cleanup.
+        catalogStore.purgeOrphanMediaItems()
     }
 
     suspend fun mediaItemCount(): Long = catalogStore.countMediaItems()
 
     suspend fun countByKind(kind: MediaKind): Long = catalogStore.countMediaItemsByKind(kind)
+
+    suspend fun purgeOrphanMediaItems(): Int = catalogStore.purgeOrphanMediaItems()
 
     suspend fun latestMediaUpdatedAtEpochMs(): Long? = catalogStore.latestMediaUpdatedAtEpochMs()
 
