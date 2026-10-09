@@ -242,6 +242,7 @@ fun PvmApp(
                         state = aggiornaState,
                         onQueryChange = aggiornaVm::onQueryChange,
                         onKindFilter = aggiornaVm::onKindFilter,
+                        onToggleSelection = aggiornaVm::toggleSelection,
                         onRefresh = aggiornaVm::refresh,
                         onPulisci = { navController.navigate(PvmDestination.Clean.route) },
                         onRowMenu = { menuPing += 1 },

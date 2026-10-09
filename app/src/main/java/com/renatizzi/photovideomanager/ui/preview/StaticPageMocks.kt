@@ -453,6 +453,7 @@ fun AggiornaStaticScreen(
     state: com.renatizzi.photovideomanager.ui.search.SearchUiState,
     onQueryChange: (String) -> Unit,
     onKindFilter: (SearchKindFilter) -> Unit,
+    onToggleSelection: (String) -> Unit = {},
     onRefresh: () -> Unit,
     onPulisci: () -> Unit,
     onRowMenu: (String) -> Unit = {},
@@ -546,10 +547,11 @@ fun AggiornaStaticScreen(
                     MediaRow(
                         title = title,
                         subtitle = stringResource(R.string.importa_riga_meta, loc.ifBlank { "—" }),
-                        checked = false,
+                        checked = entry.mediaItem.id in state.selectedIds,
                         showMenu = true,
                         previewCopy = entry.previewCopy,
                         kind = entry.mediaItem.kind,
+                        onCheckedChange = { onToggleSelection(entry.mediaItem.id) },
                         onMenu = { onRowMenu(entry.mediaItem.id) },
                     )
                 }
@@ -700,6 +702,7 @@ private fun MediaRow(
     showMenu: Boolean = false,
     previewCopy: com.renatizzi.photovideomanager.domain.model.MediaCopy? = null,
     kind: MediaKind = MediaKind.PHOTO,
+    onCheckedChange: (() -> Unit)? = null,
     onMenu: () -> Unit = {},
 ) {
     Row(
@@ -709,7 +712,14 @@ private fun MediaRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Checkbox(checked = checked, onCheckedChange = null)
+        Checkbox(
+            checked = checked,
+            onCheckedChange = if (onCheckedChange != null) {
+                { onCheckedChange() }
+            } else {
+                null
+            },
+        )
         if (previewCopy != null) {
             MediaThumbnail(copy = previewCopy, kind = kind)
         } else {

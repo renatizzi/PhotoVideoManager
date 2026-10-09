@@ -18,6 +18,7 @@ data class SearchUiState(
     val query: String = "",
     val kindFilter: SearchKindFilter = SearchKindFilter.ALL,
     val entries: List<CatalogSearchEntry> = emptyList(),
+    val selectedIds: Set<String> = emptySet(),
     val loading: Boolean = true,
     val message: String? = null,
 )
@@ -30,7 +31,7 @@ class SearchViewModel(
     private var searchJob: Job? = null
 
     init {
-        runSearch()
+        runSearch(cycleSelection = false)
     }
 
     fun onQueryChange(query: String) {
@@ -38,20 +39,32 @@ class SearchViewModel(
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
             delay(250)
-            runSearch()
+            runSearch(cycleSelection = false)
         }
     }
 
+    /**
+     * Chip Tutti / Foto / Video: filtra l’elenco e cicla i flag di selezione
+     * degli elementi risultanti (tutti on → tutti off → tutti on …).
+     */
     fun onKindFilter(filter: SearchKindFilter) {
         _state.update { it.copy(kindFilter = filter) }
-        runSearch()
+        runSearch(cycleSelection = true)
+    }
+
+    fun toggleSelection(mediaItemId: String) {
+        _state.update { current ->
+            val next = current.selectedIds.toMutableSet()
+            if (!next.add(mediaItemId)) next.remove(mediaItemId)
+            current.copy(selectedIds = next)
+        }
     }
 
     fun refresh() {
-        runSearch()
+        runSearch(cycleSelection = false)
     }
 
-    private fun runSearch() {
+    private fun runSearch(cycleSelection: Boolean) {
         val query = _state.value.query
         val filter = _state.value.kindFilter
         viewModelScope.launch {
@@ -60,7 +73,21 @@ class SearchViewModel(
                 catalogFacade.bootstrapPersonalArchiveIfNeeded()
                 catalogFacade.searchCatalog(query = query, kindFilter = filter)
             }.onSuccess { entries ->
-                _state.update { it.copy(entries = entries, loading = false) }
+                _state.update { current ->
+                    val ids = entries.map { it.mediaItem.id }
+                    val selectedIds = if (cycleSelection) {
+                        val allSelected = ids.isNotEmpty() &&
+                            ids.all { it in current.selectedIds }
+                        if (allSelected) emptySet() else ids.toSet()
+                    } else {
+                        current.selectedIds.intersect(ids.toSet())
+                    }
+                    current.copy(
+                        entries = entries,
+                        selectedIds = selectedIds,
+                        loading = false,
+                    )
+                }
             }.onFailure { error ->
                 _state.update {
                     it.copy(

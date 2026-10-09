@@ -83,14 +83,20 @@ class AcquireViewModel(
         }
     }
 
+    /**
+     * Chip Tutti / Foto / Video: applica il filtro e cicla la selezione dei
+     * candidati visibili importabili (tutti flag → nessuno → tutti …).
+     */
     fun onKindFilter(filter: SearchKindFilter) {
         _state.update { current ->
             val next = current.copy(kindFilter = filter)
+            val selectableIds = next.visibleCandidates
+                .filterNot { it.alreadyInPersonalArchive }
+                .map { it.mediaItem.id }
+            val allSelected = selectableIds.isNotEmpty() &&
+                selectableIds.all { it in current.selectedIds }
             next.copy(
-                selectedIds = next.visibleCandidates
-                    .filterNot { it.alreadyInPersonalArchive }
-                    .map { it.mediaItem.id }
-                    .toSet(),
+                selectedIds = if (allSelected) emptySet() else selectableIds.toSet(),
             )
         }
     }
