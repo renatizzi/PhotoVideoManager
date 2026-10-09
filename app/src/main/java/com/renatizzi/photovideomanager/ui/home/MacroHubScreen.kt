@@ -17,7 +17,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -55,16 +54,6 @@ fun MacroHubScreen(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
         )
-        Surface(
-            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(
-                text = stringResource(R.string.hub_preview_help),
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(12.dp),
-            )
-        }
 
         area.features.chunked(2).forEach { row ->
             Row(

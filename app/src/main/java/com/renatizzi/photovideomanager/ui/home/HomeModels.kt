@@ -88,12 +88,12 @@ object MacroNavigation {
                 ),
                 MacroFeature(
                     id = "revisione",
-                    titleRes = R.string.feature_revisione,
+                    titleRes = R.string.feature_revisione_sorgenti,
                     subtitleRes = R.string.feature_revisione_desc,
                 ),
                 MacroFeature(
                     id = "spazio",
-                    titleRes = R.string.feature_spazio,
+                    titleRes = R.string.feature_verifica_spazio,
                     subtitleRes = R.string.feature_spazio_desc,
                 ),
             ),
