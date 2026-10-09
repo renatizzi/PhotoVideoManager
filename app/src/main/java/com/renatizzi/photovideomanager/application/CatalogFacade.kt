@@ -32,6 +32,14 @@ class CatalogFacade(
 
     suspend fun mediaItemCount(): Long = sourceRegistry.mediaItemCount()
 
+    /**
+     * KPI Dashboard — semantica consolidata:
+     * - `photoCount` / `videoCount` = elementi nel Catalogo (dopo censimento Acquisisci).
+     * - `acquired*Count` / `*UsedBytes` = sole copie nello spazio personale app
+     *   (dopo Importa); restano 0 finché non si importa.
+     * - `personalUsedBytes` = byte reali su disco nello spazio app (può includere
+     *   staging/orfani non ancora collegati a MediaCopy ACTIVE).
+     */
     suspend fun dashboardSnapshot(): DashboardSnapshot {
         bootstrapPersonalArchiveIfNeeded()
         val availability = localStorageAvailability()
@@ -40,12 +48,23 @@ class CatalogFacade(
         val personal = runCatching { archiveService.listPersonalArchive() }.getOrDefault(emptyList())
         val acquiredPhotos = personal.count { it.mediaItem.kind == MediaKind.PHOTO }.toLong()
         val acquiredVideos = personal.count { it.mediaItem.kind == MediaKind.VIDEO }.toLong()
-        val photoBytes = personal
+        val personalDiskBytes = sourceRegistry.personalArchiveUsedBytes()
+        var photoBytes = personal
             .filter { it.mediaItem.kind == MediaKind.PHOTO }
             .sumOf { it.mediaCopy.byteSize ?: 0L }
-        val videoBytes = personal
+        var videoBytes = personal
             .filter { it.mediaItem.kind == MediaKind.VIDEO }
             .sumOf { it.mediaCopy.byteSize ?: 0L }
+        // Se le copie personali non hanno byteSize ma lo spazio app ha file,
+        // ripartisci i byte disco proporzionalmente al conteggio acquisite.
+        val catalogedBytes = photoBytes + videoBytes
+        if (catalogedBytes == 0L && personalDiskBytes > 0L && personal.isNotEmpty()) {
+            val total = acquiredPhotos + acquiredVideos
+            if (total > 0L) {
+                photoBytes = personalDiskBytes * acquiredPhotos / total
+                videoBytes = personalDiskBytes - photoBytes
+            }
+        }
         return DashboardSnapshot(
             photoCount = sourceRegistry.countByKind(MediaKind.PHOTO),
             videoCount = sourceRegistry.countByKind(MediaKind.VIDEO),
@@ -56,7 +75,7 @@ class CatalogFacade(
             duplicatePhotoCount = dupPhotos,
             duplicateVideoCount = dupVideos,
             trashCount = trashService.trashCount(),
-            personalUsedBytes = sourceRegistry.personalArchiveUsedBytes(),
+            personalUsedBytes = personalDiskBytes,
             lastUpdatedEpochMs = sourceRegistry.latestMediaUpdatedAtEpochMs(),
             localAvailability = availability,
         )

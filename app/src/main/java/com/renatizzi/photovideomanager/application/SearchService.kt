@@ -11,6 +11,9 @@ import com.renatizzi.photovideomanager.domain.port.PermissionGate
 /**
  * Ricerca v1: trova MediaItem con almeno una copia ACTIVE nel Catalogo.
  * Filtro testo su titolo (o id) e filtro tipo foto/video.
+ *
+ * Nessun tetto artificiale basso: Aggiorna/Home devono poter mostrare
+ * l’intero Catalogo (censimenti tipici >1000 elementi).
  */
 class SearchService(
     private val catalogStore: CatalogStore,
@@ -19,7 +22,7 @@ class SearchService(
     suspend fun search(
         query: String,
         kindFilter: SearchKindFilter = SearchKindFilter.ALL,
-        limit: Int = 300,
+        limit: Int = DEFAULT_LIMIT,
     ): List<CatalogSearchEntry> {
         require(permissionGate.canView(DomainScope.PERSONAL))
         val locations = catalogStore.listStorageLocations().associateBy { it.id }
@@ -61,5 +64,10 @@ class SearchService(
             .sortedByDescending { it.mediaItem.updatedAtEpochMs }
             .take(limit)
             .toList()
+    }
+
+    companion object {
+        /** Soft cap solo anti-OOM; non deve truncare cataloghi reali. */
+        const val DEFAULT_LIMIT = 100_000
     }
 }

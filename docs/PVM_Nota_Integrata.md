@@ -8,6 +8,7 @@ Documento tecnico, architetturale e funzionale di riferimento (**documento unico
 - **Responsabile:** Renato Stefanizzi
 - **Delta v5.1 → v5.2:** recepita la revisione di navigazione (proposta Navigazione11 + interlocuzione 08/10/2026). Aggiornati §5 e chiarimenti di collocazione in §6. Nessun nuovo requisito di dominio inventato.
 - **Delta v5.2 → v5.3:** **congelamento layout UI** anteprima `0.14.6-preview` (Dashboard densità BoxManager; Accesso rapido Home fissato; albero §5 confermato). Nessun nuovo requisito di dominio. Affinamenti estetici minori (es. spessore ombre) ammessi in seguito senza riaprire la struttura.
+- **HOLD 0.15.4 (09/10/2026):** stop sviluppo nuove feature fino a convalida Renato su **coerenza KPI Home ↔ elenco Aggiorna**. Bug trovato: `SearchService` truncava a 300 risultati (Catalogo 1551 foto → Aggiorna ne mostrava 300). Semantica KPI: *originali* = elementi in Catalogo (censimento); *acquisite / spazio foto|video acquisit\** = sole copie nello spazio personale app (dopo Importa); *spazio app* (Acquisisci) = byte su disco nello spazio app.
 
 # 1. Scopo del progetto e regole operative
 ## 1.1 Scopo
@@ -316,14 +317,16 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Per ogni macro-attività ChatGPT definisce requisiti, vincoli, decisioni progettuali, criteri di accettazione e punti da approfondire. Cursor, prima dello sviluppo, analizza le criticità tecniche indicate, evidenzia eventuali ulteriori criticità rilevanti e propone soluzioni tecniche compatibili con la specifica consolidata. Lo sviluppo inizia solo dopo la chiusura della fase di approfondimento della relativa macro-attività.
 - Come precisato, Cursor non può trasformare autonomamente una proposta tecnica in requisito consolidato.
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
-## 7.1 FASE CORRENTE: SVILUPPO DIETRO UI CONGELATA
+## 7.1 FASE CORRENTE: HOLD CONSOLIDAMENTO KPI / AGGIORNA
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 (architettura) + vertical slice già scaffoldate (M03–M07 / M09 / M16 in forma v1) + **M18 layout congelato (v5.3)**.
-STATO ATTUALE (09/10/2026): UI di navigazione e Dashboard **congelate**; ripresa sviluppo = collegare i servizi di dominio già presenti alle schermate congelate, senza inventare requisiti.
-Ordine operativo aggregato (Cursor in autonomia, senza chiedere conferma su dettagli tecnici):
+STATO ATTUALE (09/10/2026): **HOLD** — nessun avanzamento su stub/feature nuove finché Renato non convalida:
+- Home: `Foto/Video originali` = conteggio Catalogo; `di cui acquisite` + `Spazio … acquisite` valorizzati solo dopo **Importa** (non dopo solo Acquisisci/censimento);
+- Aggiorna: riepilogo/elenco = **tutti** gli elementi ACTIVE del Catalogo (fix 0.15.4: rimosso tetto 300 di `SearchService`).
+Ordine operativo aggregato (riprendere solo dopo convalida HOLD):
 1. **Acquisisci → Importa** — dati reali (censimento SAF + acquisizione SHA-256 nello spazio app) — *fatto 0.14.7+*; consultazione fonti › — *fatto 0.15.0*;
-2. **Aggiorna** — elenco Catalogo reale + Pulisci + Allinea — *fatto 0.14.8+*; menu contestuale riga = backlog M08/M12;
-3. **Home KPI / ricerca** — acquisite/spazio/duplicati reali + ricerca con query — *fatto 0.15.0*;
-4. Feature ancora stub (Componi/Backup/CONFIGURA) — **richiede convalida/specifica** prima dello sviluppo (M11/M14/M15); fino ad allora restano stub/landing.
+2. **Aggiorna** — elenco Catalogo reale + Pulisci + Allinea — *fatto 0.14.8+*; **conteggio allineato al Catalogo — 0.15.4**; menu contestuale riga = backlog M08/M12;
+3. **Home KPI / ricerca** — semantica consolidata in 0.15.4; acquisite/spazio restano 0 finché non si importa;
+4. Feature ancora stub (Componi/Backup/CONFIGURA) — **bloccate dal HOLD** + richiedono convalida/specifica (M11/M14/M15).
 Nota: Le dipendenze riportate per ciascuna macro-attività della Roadmap devono indicare esclusivamente le dipendenze dirette da macro-attività precedenti, ossia quelle il cui output costituisce un input necessario alla macro-attività corrente. Le dipendenze transitive non devono essere ripetute.
 Regola di aggiornamento della roadmap
 La tabella costituisce l'unico riferimento operativo per lo stato di avanzamento. Non viene creato un file Excel parallelo come fonte di riferimento. Ogni decisione consolidata, criticità emersa, modifica dello stato o chiusura di una macro-attività deve essere recepita nella Nota Integrata.

@@ -79,12 +79,16 @@ class SearchViewModel(
             }.onSuccess { entries ->
                 _state.update { current ->
                     val ids = entries.map { it.mediaItem.id }
+                    val idSet = ids.toSet()
                     val selectedIds = if (cycleSelection) {
                         val allSelected = ids.isNotEmpty() &&
                             ids.all { it in current.selectedIds }
-                        if (allSelected) emptySet() else ids.toSet()
+                        if (allSelected) emptySet() else idSet
+                    } else if (current.selectedIds.isEmpty()) {
+                        // Primo caricamento / refresh a selezione vuota: mostra tutto.
+                        idSet
                     } else {
-                        current.selectedIds.intersect(ids.toSet())
+                        current.selectedIds.intersect(idSet)
                     }
                     current.copy(
                         entries = entries,
