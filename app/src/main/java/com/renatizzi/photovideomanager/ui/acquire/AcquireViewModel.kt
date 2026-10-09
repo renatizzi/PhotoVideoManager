@@ -110,10 +110,11 @@ class AcquireViewModel(
         _state.update { it.copy(selectedIds = emptySet()) }
     }
 
-    fun acquireSelected() {
+    fun acquireSelected(onDone: (Boolean) -> Unit = {}) {
         val ids = _state.value.selectedIds
         if (ids.isEmpty()) {
             _state.update { it.copy(message = "Seleziona almeno un elemento") }
+            onDone(false)
             return
         }
         viewModelScope.launch {
@@ -146,6 +147,8 @@ class AcquireViewModel(
                                 .toSet(),
                         )
                     }
+                    // Torna in Dashboard se almeno un file è stato copiato (Nota §5.4.1).
+                    onDone(result.acquired > 0 || result.skippedAlreadyPresent > 0)
                 }
                 .onFailure { error ->
                     _state.update {
@@ -154,6 +157,7 @@ class AcquireViewModel(
                             message = error.message ?: "Acquisizione non riuscita",
                         )
                     }
+                    onDone(false)
                 }
         }
     }

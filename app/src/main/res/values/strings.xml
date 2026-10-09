@@ -46,6 +46,8 @@
     <string name="acquisisci_static_help">Unico processo Acquisisci: questa pagina elenca le fonti; Conferma apre Importa. Selezione on/off (default tutto selezionato). Nessun passo «Fonti» separato in menu.</string>
     <string name="acquisisci_elenco_fonti">Elenco fonti del Catalogo</string>
     <string name="acquisisci_riepilogo_static">Elementi selezionati per l\'importazione: xxx · di cui foto xx · di cui video yy</string>
+    <string name="acquisisci_riepilogo">Sorgenti selezionate: %1$d di %2$d · elementi in Catalogo: %3$d</string>
+    <string name="acquisisci_empty_sources">Nessuna fonte esterna. Tocca + per aggiungere una cartella (SAF).</string>
     <string name="acquisisci_tutti">Tutti</string>
     <string name="acquisisci_conferma">CONFERMA</string>
     <string name="importa_title">Importa</string>
@@ -53,6 +55,8 @@
     <string name="importa_static_help">Schermata successiva di Acquisisci (non voce di menu). Dopo Importa si torna alla Dashboard.</string>
     <string name="importa_elenco">Elenco file da importare</string>
     <string name="importa_riepilogo_static">Originali xxx · disponibili xxx · non importabili xxx · duplicati xxx</string>
+    <string name="importa_riepilogo">Candidati %1$d · foto %2$d · video %3$d · già in archivio %4$d · selezionati %5$d</string>
+    <string name="importa_empty">Nessun file da importare. Torna ad Acquisisci, aggiungi fonti e conferma il censimento.</string>
     <string name="importa_riga_meta">Tipo: media · Sorgente: %1$s</string>
     <string name="importa_action">IMPORTA</string>
     <string name="importa_annulla">Annulla</string>

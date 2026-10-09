@@ -26,6 +26,8 @@ import androidx.navigation.navArgument
 import com.renatizzi.photovideomanager.R
 import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.ui.acquire.AcquireFlowStep
+import com.renatizzi.photovideomanager.ui.acquire.AcquireViewModel
+import com.renatizzi.photovideomanager.ui.census.CensusViewModel
 import com.renatizzi.photovideomanager.ui.clean.CleanScreen
 import com.renatizzi.photovideomanager.ui.clean.CleanViewModel
 import com.renatizzi.photovideomanager.ui.config.ConfigScreen
@@ -159,19 +161,61 @@ fun PvmApp(
                 composable(PvmDestination.Config.route) {
                     ConfigScreen()
                 }
-                // Acquisisci: UN solo processo. Pagina fonti → Conferma → Importa (senza chip di passo).
+                // Acquisisci: UN solo processo. Layout congelato + dominio reale (censimento → acquisizione).
                 composable(PvmDestination.Acquire.route) {
+                    val censusVm: CensusViewModel = viewModel(
+                        factory = CensusViewModel.factory(catalogFacade),
+                    )
+                    val acquireVm: AcquireViewModel = viewModel(
+                        factory = AcquireViewModel.factory(catalogFacade),
+                    )
+                    val censusState by censusVm.state.collectAsStateWithLifecycle()
+                    val acquireState by acquireVm.state.collectAsStateWithLifecycle()
+                    LaunchedEffect(censusState.message) {
+                        censusState.message?.let {
+                            snackbarHostState.showSnackbar(it)
+                            censusVm.consumeMessage()
+                        }
+                    }
+                    LaunchedEffect(acquireState.message) {
+                        acquireState.message?.let {
+                            snackbarHostState.showSnackbar(it)
+                            acquireVm.consumeMessage()
+                        }
+                    }
+                    LaunchedEffect(acquireStep) {
+                        if (acquireStep == AcquireFlowStep.COPY) {
+                            acquireVm.refresh()
+                        }
+                    }
                     when (acquireStep) {
                         AcquireFlowStep.CENSUS -> AcquisisciStaticScreen(
-                            onConferma = { acquireStep = AcquireFlowStep.COPY },
+                            state = censusState,
+                            onAddSource = censusVm::addSafSource,
+                            onToggleSelection = censusVm::toggleSelection,
+                            onSetAllSelected = censusVm::setAllSelected,
+                            onRefresh = censusVm::refresh,
+                            onConferma = {
+                                censusVm.confirmSelected { ok ->
+                                    if (ok) acquireStep = AcquireFlowStep.COPY
+                                }
+                            },
                         )
                         AcquireFlowStep.COPY -> ImportaStaticScreen(
+                            state = acquireState,
+                            onToggle = acquireVm::toggleSelection,
+                            onKindFilter = acquireVm::onKindFilter,
+                            onRefresh = acquireVm::refresh,
                             onImporta = {
-                                // Anteprima: torna in Home dopo "Importa"
-                                acquireStep = AcquireFlowStep.CENSUS
-                                navController.navigate(PvmDestination.Home.route) {
-                                    popUpTo(PvmDestination.Home.route) { inclusive = true }
-                                    launchSingleTop = true
+                                acquireVm.acquireSelected { ok ->
+                                    if (ok) {
+                                        acquireStep = AcquireFlowStep.CENSUS
+                                        homeViewModel.refresh()
+                                        navController.navigate(PvmDestination.Home.route) {
+                                            popUpTo(PvmDestination.Home.route) { inclusive = true }
+                                            launchSingleTop = true
+                                        }
+                                    }
                                 }
                             },
                             onBackToAcquisisci = { acquireStep = AcquireFlowStep.CENSUS },

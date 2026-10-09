@@ -56,12 +56,22 @@ class CensusViewModel(
                 sources to count
             }.onSuccess { (sources, count) ->
                 _state.update { current ->
-                    val kept = current.selection.filterKeys { id ->
-                        sources.any { it.locationId == id && !it.isBuiltInPersonal }
+                    val censableIds = sources
+                        .filterNot { it.isBuiltInPersonal }
+                        .map { it.locationId }
+                        .toSet()
+                    // Default: tutto selezionato (Nota); nuove sorgenti entrano selezionate.
+                    val selection = buildMap {
+                        for (id in censableIds) {
+                            put(
+                                id,
+                                current.selection[id] ?: SourceCensusSelection.SELECTED,
+                            )
+                        }
                     }
                     current.copy(
                         sources = sources,
-                        selection = kept,
+                        selection = selection,
                         catalogCount = count,
                         loading = false,
                     )
@@ -88,6 +98,71 @@ class CensusViewModel(
                 SourceCensusSelection.SELECTED -> SourceCensusSelection.NOT_SELECTED
             }
             current.copy(selection = current.selection + (locationId to next))
+        }
+    }
+
+    fun setAllSelected(selected: Boolean) {
+        _state.update { current ->
+            val value =
+                if (selected) SourceCensusSelection.SELECTED else SourceCensusSelection.NOT_SELECTED
+            current.copy(
+                selection = current.visibleSources.associate { it.locationId to value },
+            )
+        }
+    }
+
+    /**
+     * Conferma (layout congelato): censisce le sorgenti selezionate, poi invoca [onDone].
+     * [onDone] riceve `true` se almeno una sorgente è stata censita senza errori bloccanti.
+     */
+    fun confirmSelected(onDone: (Boolean) -> Unit) {
+        val ids = _state.value.selection
+            .filterValues { it == SourceCensusSelection.SELECTED }
+            .keys
+            .toList()
+        if (ids.isEmpty()) {
+            _state.update { it.copy(message = "Seleziona almeno una sorgente") }
+            onDone(false)
+            return
+        }
+        viewModelScope.launch {
+            var ok = true
+            var totalFound = 0
+            var totalAdded = 0
+            var totalSkipped = 0
+            for (id in ids) {
+                _state.update {
+                    it.copy(censusBusyLocationIds = it.censusBusyLocationIds + id, message = null)
+                }
+                val result = runCatching { catalogFacade.censusSource(id) }
+                result.onSuccess { census ->
+                    totalFound += census.mediaFound
+                    totalAdded += census.mediaAdded
+                    totalSkipped += census.mediaSkippedExisting
+                }.onFailure { error ->
+                    ok = false
+                    _state.update {
+                        it.copy(
+                            censusBusyLocationIds = it.censusBusyLocationIds - id,
+                            message = error.message ?: "Censimento non riuscito",
+                        )
+                    }
+                    onDone(false)
+                    return@launch
+                }
+                _state.update {
+                    it.copy(censusBusyLocationIds = it.censusBusyLocationIds - id)
+                }
+            }
+            val count = catalogFacade.mediaItemCount()
+            _state.update {
+                it.copy(
+                    catalogCount = count,
+                    message = "Censimento terminato: trovati $totalFound, " +
+                        "nuovi $totalAdded, già noti $totalSkipped",
+                )
+            }
+            onDone(ok)
         }
     }
 
