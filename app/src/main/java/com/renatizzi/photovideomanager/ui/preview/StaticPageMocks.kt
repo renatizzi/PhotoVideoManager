@@ -571,6 +571,7 @@ fun AggiornaStaticScreen(
     var menuForId by remember { mutableStateOf<String?>(null) }
     var renameTarget by remember { mutableStateOf<CatalogSearchEntry?>(null) }
     var renameText by remember { mutableStateOf("") }
+    var trashTarget by remember { mutableStateOf<CatalogSearchEntry?>(null) }
 
     Column(
         modifier = modifier
@@ -677,7 +678,7 @@ fun AggiornaStaticScreen(
                         },
                         onTrash = {
                             menuForId = null
-                            onTrash(id)
+                            trashTarget = entry
                         },
                         onCopyToDevice = {
                             menuForId = null
@@ -717,6 +718,35 @@ fun AggiornaStaticScreen(
             },
             dismissButton = {
                 TextButton(onClick = { renameTarget = null }) {
+                    Text(stringResource(R.string.importa_annulla))
+                }
+            },
+        )
+    }
+
+    trashTarget?.let { target ->
+        val label = target.mediaItem.displayTitle?.ifBlank { null }
+            ?: target.previewCopy?.opaqueLocator?.substringAfterLast('/')
+                ?.substringAfterLast(':')
+            ?: target.mediaItem.id
+        AlertDialog(
+            onDismissRequest = { trashTarget = null },
+            title = { Text(stringResource(R.string.aggiorna_trash_confirm_title)) },
+            text = {
+                Text(stringResource(R.string.aggiorna_trash_confirm_body, label))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onTrash(target.mediaItem.id)
+                        trashTarget = null
+                    },
+                ) {
+                    Text(stringResource(R.string.aggiorna_trash_confirm_yes))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { trashTarget = null }) {
                     Text(stringResource(R.string.importa_annulla))
                 }
             },

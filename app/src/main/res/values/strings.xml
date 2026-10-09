@@ -87,6 +87,9 @@
     <string name="aggiorna_menu_trash">Elimina</string>
     <string name="aggiorna_rename_title">Rinomina</string>
     <string name="aggiorna_rename_label">Nome visualizzato</string>
+    <string name="aggiorna_trash_confirm_title">Eliminare dal Catalogo?</string>
+    <string name="aggiorna_trash_confirm_body">«%1$s» andrà nel Cestino. Gli originali sulle cartelle del telefono restano intatti; potrai ripristinare dal Cestino.</string>
+    <string name="aggiorna_trash_confirm_yes">Sì, nel Cestino</string>
     <string name="componi_static_help"> </string>
     <string name="componi_elenco_title">Elenco degli album e raccolte</string>
     <string name="componi_empty_static">Nessun album / raccolta: per crearne uno, clicca sul relativo bottone.</string>

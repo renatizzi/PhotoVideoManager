@@ -322,10 +322,11 @@ MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) 
 STATO ATTUALE (10/10/2026): HOLD KPI/Importa **chiuso** (convalida Renato). Ripresa autonomia Cursor.
 Ordine operativo aggregato:
 1. **Acquisisci → Importa** — *fatto*; CONTINUA se già in Catalogo — *0.15.12*;
-2. **Aggiorna** — elenco reale + Pulisci; **menu contestuale v1** (Rinomina / Elimina→Cestino / Copia su dispositivo) — *0.16.0*; Sposta = BL-07;
+2. **Aggiorna** — elenco reale + Pulisci; **menu contestuale v1** (Rinomina / Elimina→Cestino con conferma / Copia su dispositivo) — *0.16.0–0.16.1*; Sposta = BL-07;
 3. **Home KPI / ricerca** — consolidati 0.15.x;
 4. **BL-05** nascondere Spazio interno app — *0.16.0*;
 5. Feature stub Componi/Backup/CONFIGURA — solo con specifica (M11/M14/M15); fino ad allora stub.
+Vertical slice dietro UI congelata: **essenzialmente completo** (0.16.1). Prossimi sviluppi di dominio solo con specifica ChatGPT (M11/M14/M15) o decisioni su BL-01/03/04/07.
 Nota: Le dipendenze riportate per ciascuna macro-attività della Roadmap devono indicare esclusivamente le dipendenze dirette da macro-attività precedenti, ossia quelle il cui output costituisce un input necessario alla macro-attività corrente. Le dipendenze transitive non devono essere ripetute.
 Regola di aggiornamento della roadmap
 La tabella costituisce l'unico riferimento operativo per lo stato di avanzamento. Non viene creato un file Excel parallelo come fonte di riferimento. Ogni decisione consolidata, criticità emersa, modifica dello stato o chiusura di una macro-attività deve essere recepita nella Nota Integrata.
