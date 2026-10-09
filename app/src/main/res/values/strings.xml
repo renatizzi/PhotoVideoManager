@@ -25,10 +25,13 @@
     <string name="storage_local_unavailable">Storage locale: non disponibile</string>
     <string name="storage_local_unknown">Storage locale: stato sconosciuto</string>
     <string name="dashboard_title">Dashboard</string>
-    <string name="dashboard_subtitle">Panoramica del Catalogo e scorciatoie</string>
+    <string name="dashboard_subtitle">Panoramica del Catalogo</string>
     <string name="dashboard_inline_help"> </string>
+    <string name="dashboard_search_hint">Cerca…</string>
     <string name="quick_access">Accesso rapido</string>
     <string name="quick_features">Funzioni pronte</string>
+    <string name="kpi_col_foto">Foto</string>
+    <string name="kpi_col_video">Video</string>
     <string name="kpi_foto_originali">Foto originali</string>
     <string name="kpi_video_originali">Video originali</string>
     <string name="kpi_spazio_foto">Spazio foto acquisite</string>

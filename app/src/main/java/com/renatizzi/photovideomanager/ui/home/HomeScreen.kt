@@ -1,6 +1,5 @@
 package com.renatizzi.photovideomanager.ui.home
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,9 +15,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.AddAPhoto
 import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.outlined.CloudUpload
+import androidx.compose.material.icons.outlined.CreateNewFolder
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.SettingsBackupRestore
+import androidx.compose.material.icons.outlined.Sync
+import androidx.compose.material.icons.outlined.Videocam
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -45,8 +52,8 @@ import com.renatizzi.photovideomanager.R
 import com.renatizzi.photovideomanager.domain.model.DashboardSnapshot
 
 /**
- * Dashboard densità stile BoxManager: tipografia più grande, KPI a due colonne,
- * riquadro ricerca, accesso rapido a tessere che riempiono lo spazio restante.
+ * Dashboard densità stile BoxManager: titolo grande, KPI a due colonne senza card,
+ * ricerca in riquadro, accesso rapido a tessere che riempiono lo spazio restante.
  * Nessuno scrolling.
  */
 @Composable
@@ -60,39 +67,44 @@ fun HomeScreen(
     val photos = snapshot?.photoCount?.toString() ?: "0"
     val videos = snapshot?.videoCount?.toString() ?: "0"
     val accent = MaterialTheme.colorScheme.primary
-    val labelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.72f)
+    val labelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.68f)
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 14.dp, vertical = 10.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
     ) {
         Text(
             text = stringResource(R.string.dashboard_title),
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontWeight = FontWeight.Bold,
-                fontSize = 28.sp,
-                lineHeight = 32.sp,
+                fontSize = 30.sp,
+                lineHeight = 34.sp,
             ),
             color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
             text = stringResource(R.string.dashboard_subtitle),
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
             color = labelColor,
         )
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // KPI stile BoxManager: due colonne, etichetta + numero grande
+        // KPI stile BoxManager: due colonne con intestazione, etichetta› + numero grande
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(18.dp),
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                KpiColumnHeader(
+                    icon = Icons.Outlined.Image,
+                    title = stringResource(R.string.kpi_col_foto),
+                    tint = accent,
+                )
                 KpiMetric(
                     label = stringResource(R.string.kpi_foto_originali),
                     value = photos,
@@ -110,8 +122,13 @@ fun HomeScreen(
             }
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                KpiColumnHeader(
+                    icon = Icons.Outlined.Videocam,
+                    title = stringResource(R.string.kpi_col_video),
+                    tint = accent,
+                )
                 KpiMetric(
                     label = stringResource(R.string.kpi_video_originali),
                     value = videos,
@@ -129,9 +146,9 @@ fun HomeScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f))
         Spacer(modifier = Modifier.height(10.dp))
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.75f))
+        Spacer(modifier = Modifier.height(8.dp))
 
         SectionHeader(
             icon = Icons.Outlined.Search,
@@ -143,7 +160,7 @@ fun HomeScreen(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         ) {
@@ -152,12 +169,31 @@ fun HomeScreen(
                 onValueChange = { searchQuery = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(10.dp)
+                    .padding(horizontal = 10.dp, vertical = 8.dp)
+                    .height(52.dp)
                     .clickable { onOpenFeature("ricerca") },
-                placeholder = { Text(stringResource(R.string.search_query_hint)) },
-                leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-                trailingIcon = { Icon(Icons.Outlined.Mic, contentDescription = null) },
+                placeholder = {
+                    Text(
+                        text = stringResource(R.string.dashboard_search_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        Icons.Outlined.Search,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                    )
+                },
+                trailingIcon = {
+                    Icon(
+                        Icons.Outlined.Mic,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                    )
+                },
                 singleLine = true,
+                textStyle = MaterialTheme.typography.bodyMedium,
                 shape = RoundedCornerShape(10.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -166,8 +202,8 @@ fun HomeScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f))
+        Spacer(modifier = Modifier.height(10.dp))
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.75f))
         Spacer(modifier = Modifier.height(8.dp))
 
         SectionHeader(
@@ -179,12 +215,12 @@ fun HomeScreen(
 
         // Tessere grandi che riempiono tutto lo spazio restante (come BoxManager)
         val quick = listOf(
-            "acquisisci" to R.string.feature_acquisisci,
-            "aggiorna" to R.string.feature_aggiorna,
-            "crea" to R.string.feature_crea,
-            "edita" to R.string.feature_edita,
-            "backup" to R.string.feature_backup,
-            "ripristina" to R.string.feature_ripristina,
+            Triple("acquisisci", R.string.feature_acquisisci, Icons.Outlined.AddAPhoto),
+            Triple("aggiorna", R.string.feature_aggiorna, Icons.Outlined.Sync),
+            Triple("crea", R.string.feature_crea, Icons.Outlined.CreateNewFolder),
+            Triple("edita", R.string.feature_edita, Icons.Outlined.Edit),
+            Triple("backup", R.string.feature_backup, Icons.Outlined.CloudUpload),
+            Triple("ripristina", R.string.feature_ripristina, Icons.Outlined.SettingsBackupRestore),
         )
         Column(
             modifier = Modifier
@@ -199,9 +235,10 @@ fun HomeScreen(
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    pair.forEach { (id, titleRes) ->
+                    pair.forEach { (id, titleRes, icon) ->
                         QuickAccessTile(
                             title = stringResource(titleRes),
+                            icon = icon,
                             onClick = { onOpenFeature(id) },
                             modifier = Modifier
                                 .weight(1f)
@@ -228,12 +265,37 @@ private fun SectionHeader(
             imageVector = icon,
             contentDescription = null,
             tint = tint,
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier.size(18.dp),
         )
         Text(
             text = title,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleMedium.copy(fontSize = 17.sp),
             fontWeight = FontWeight.SemiBold,
+        )
+    }
+}
+
+@Composable
+private fun KpiColumnHeader(
+    icon: ImageVector,
+    title: String,
+    tint: Color,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.size(18.dp),
+        )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp),
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
@@ -257,7 +319,7 @@ private fun KpiMetric(
         ) {
             Text(
                 text = label,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
                 color = labelColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -267,21 +329,21 @@ private fun KpiMetric(
                 imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
                 contentDescription = null,
                 tint = labelColor,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(16.dp),
             )
         }
         Text(
             text = value,
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontWeight = FontWeight.Bold,
-                fontSize = 30.sp,
-                lineHeight = 34.sp,
+                fontSize = 32.sp,
+                lineHeight = 36.sp,
             ),
             maxLines = 1,
         )
         Text(
             text = detail,
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
             color = labelColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -292,9 +354,11 @@ private fun KpiMetric(
 @Composable
 private fun QuickAccessTile(
     title: String,
+    icon: ImageVector,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val accent = MaterialTheme.colorScheme.primary
     Card(
         modifier = modifier.clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
@@ -303,17 +367,24 @@ private fun QuickAccessTile(
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 12.dp),
-            contentAlignment = Alignment.Center,
+                .padding(horizontal = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = accent,
+                modifier = Modifier.size(26.dp),
+            )
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary,
+                color = accent,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

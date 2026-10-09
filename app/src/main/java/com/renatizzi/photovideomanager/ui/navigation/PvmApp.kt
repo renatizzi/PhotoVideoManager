@@ -1,6 +1,7 @@
 package com.renatizzi.photovideomanager.ui.navigation
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.SnackbarHostState
@@ -126,7 +127,9 @@ fun PvmApp(
             NavHost(
                 navController = navController,
                 startDestination = PvmDestination.Home.route,
-                modifier = Modifier.padding(padding),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
             ) {
                 composable(PvmDestination.Home.route) {
                     LaunchedEffect(Unit) { homeViewModel.refresh() }
@@ -134,6 +137,7 @@ fun PvmApp(
                         snapshot = homeState.snapshot,
                         onOpenTab = ::navigateTab,
                         onOpenFeature = ::openFeature,
+                        modifier = Modifier.fillMaxSize(),
                     )
                 }
                 composable(PvmDestination.Organizza.route) {
