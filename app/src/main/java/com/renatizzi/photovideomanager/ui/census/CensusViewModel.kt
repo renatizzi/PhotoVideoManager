@@ -189,7 +189,7 @@ class CensusViewModel(
                     acquiredUsedBytes = snap?.let { s -> s.acquiredPhotoBytes + s.acquiredVideoBytes }
                         ?: it.acquiredUsedBytes,
                     message = "Censimento ok ($totalFound trovati, $totalAdded nuovi). " +
-                        "Premi IMPORTA per copiare nello spazio app.",
+                        "Premi IMPORTA per registrarli in Catalogo.",
                 )
             }
             onDone(true, ids.toSet())

@@ -8,7 +8,7 @@ Documento tecnico, architetturale e funzionale di riferimento (**documento unico
 - **Responsabile:** Renato Stefanizzi
 - **Delta v5.1 → v5.2:** recepita la revisione di navigazione (proposta Navigazione11 + interlocuzione 08/10/2026). Aggiornati §5 e chiarimenti di collocazione in §6. Nessun nuovo requisito di dominio inventato.
 - **Delta v5.2 → v5.3:** **congelamento layout UI** anteprima `0.14.6-preview` (Dashboard densità BoxManager; Accesso rapido Home fissato; albero §5 confermato). Nessun nuovo requisito di dominio. Affinamenti estetici minori (es. spessore ombre) ammessi in seguito senza riaprire la struttura.
-- **HOLD 0.15.4–0.15.8 (09/10/2026):** stop sviluppo nuove feature fino a convalida Renato su **coerenza KPI / sorgenti**. Fix 0.15.7: Home **Spazio foto/video** = originali Catalogo; «di cui in spazio app» dopo IMPORTA. Fix **0.15.8 (bug reale):** dopo IMPORTA i KPI tornavano a 0 perché Room `@Insert(REPLACE)` su `storage_locations` + FK CASCADE cancellava le MediaCopy personali al bootstrap Home; DAO passati a `@Upsert` + bootstrap idempotente.
+- **HOLD 0.15.4–0.15.9 (09/10/2026):** stop sviluppo nuove feature fino a convalida Renato su **coerenza KPI / sorgenti**. Fix 0.15.7–0.15.8: spazio originali + persistenza IMPORTA (`@Upsert`). Etichetta KPI (decisione Renato 09/10): **«di cui in Catalogo»** (non «in spazio app» / non «acquisite»). Conteggio = copie dopo **IMPORTA** nel Catalogo personale.
 
 # 1. Scopo del progetto e regole operative
 ## 1.1 Scopo
@@ -320,7 +320,7 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 ## 7.1 FASE CORRENTE: HOLD CONSOLIDAMENTO KPI / AGGIORNA
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 (architettura) + vertical slice già scaffoldate (M03–M07 / M09 / M16 in forma v1) + **M18 layout congelato (v5.3)**.
 STATO ATTUALE (09/10/2026): **HOLD** — nessun avanzamento su stub/feature nuove finché Renato non convalida:
-- Home: `Foto/Video originali` + `Spazio foto/video` = Catalogo ACTIVE (dopo CONFERMA); `di cui in spazio app` = dopo **IMPORTA** (persistenza corretta dal 0.15.8);
+- Home: `Foto/Video originali` + `Spazio foto/video` = dopo CONFERMA; `di cui in Catalogo` = dopo **IMPORTA** (0.15.8+ persistenza; etichetta 0.15.9);
 - Aggiorna: riepilogo/elenco = elementi ACTIVE (fix 0.15.4–0.15.5).
 Ordine operativo aggregato (riprendere solo dopo convalida HOLD):
 1. **Acquisisci → Importa** — dati reali (censimento SAF + acquisizione SHA-256 nello spazio app) — *fatto 0.14.7+*; consultazione fonti › — *fatto 0.15.0*;

@@ -36,10 +36,9 @@
     <string name="kpi_video_originali">Video originali</string>
     <string name="kpi_spazio_foto">Spazio foto</string>
     <string name="kpi_spazio_video">Spazio video</string>
-    <string name="kpi_di_cui_acquisite">di cui in spazio app: %1$s</string>
-    <string name="kpi_di_cui_acquisiti">di cui in spazio app: %1$s</string>
+    <string name="kpi_di_cui_acquisite">di cui in Catalogo: %1$s</string>
+    <string name="kpi_di_cui_acquisiti">di cui in Catalogo: %1$s</string>
     <string name="kpi_di_cui_duplicati">di cui per duplicati: %1$s</string>
-    <string name="kpi_spazio_in_app">di cui in spazio app: %1$s</string>
     <string name="kpi_photos">Foto totali</string>
     <string name="kpi_videos">Video totali</string>
     <string name="hub_preview_help">Anteprima struttura UI (template Navigazione11). Le schede sono le funzioni hub della macroarea.</string>
