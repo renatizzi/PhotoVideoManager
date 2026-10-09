@@ -1,7 +1,6 @@
 package com.renatizzi.photovideomanager.application
 
 import android.net.Uri
-import android.util.Log
 import com.renatizzi.photovideomanager.data.storage.SafPathLabels
 import com.renatizzi.photovideomanager.data.storage.StorageAdapterFactory
 import com.renatizzi.photovideomanager.domain.model.AcquireCandidate
@@ -114,10 +113,6 @@ class AcquisitionService(
 
         val stagingParent = ".pvm_staging/$sessionId"
 
-        // #region agent log
-        Log.d(PVM_DEBUG, "acquire START ids=${mediaItemIds.size} dest=${destination.id}")
-        // #endregion
-
         for (itemId in mediaItemIds) {
             try {
                 val item = catalogStore.getMediaItem(itemId)
@@ -145,9 +140,6 @@ class AcquisitionService(
                 val sourceAdapter = adapterFactory.create(sourceLocation)
                 if (sourceAdapter.availability() != Availability.AVAILABLE) {
                     failed++
-                    // #region agent log
-                    Log.d(PVM_DEBUG, "acquire FAIL unavailable item=$itemId hypothesisId=5")
-                    // #endregion
                     continue
                 }
 
@@ -187,13 +179,6 @@ class AcquisitionService(
                     stagedMeta.byteSize != byteCount
                 ) {
                     failed++
-                    // #region agent log
-                    Log.d(
-                        PVM_DEBUG,
-                        "acquire FAIL sizeVerify staged=${stagedMeta.byteSize} " +
-                            "src=${sourceCopy.byteSize} bytes=$byteCount hypothesisId=6",
-                    )
-                    // #endregion
                     continue
                 }
 
@@ -232,14 +217,8 @@ class AcquisitionService(
                     ),
                 )
                 acquired++
-            } catch (t: Throwable) {
+            } catch (_: Throwable) {
                 failed++
-                // #region agent log
-                Log.d(
-                    PVM_DEBUG,
-                    "acquire FAIL catch item=$itemId ${t.javaClass.simpleName}: ${t.message} hypothesisId=1,5",
-                )
-                // #endregion
             }
         }
 
@@ -256,19 +235,6 @@ class AcquisitionService(
             lastError = lastError,
         )
         catalogStore.upsertImportSession(session)
-
-        val personalAfter = catalogStore.listAllMediaCopies()
-            .count {
-                it.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID &&
-                    it.state == MediaCopyState.ACTIVE
-            }
-        // #region agent log
-        Log.d(
-            PVM_DEBUG,
-            "acquire DONE acquired=$acquired skipped=$skipped failed=$failed " +
-                "personalCopies=$personalAfter hypothesisId=1,2,4",
-        )
-        // #endregion
 
         val summary = buildString {
             append("Acquisizione terminata: $acquired copiati")
@@ -287,6 +253,5 @@ class AcquisitionService(
 
     companion object {
         const val DEFAULT_CANDIDATE_LIMIT = 5_000
-        private const val PVM_DEBUG = "PVM_DEBUG"
     }
 }
