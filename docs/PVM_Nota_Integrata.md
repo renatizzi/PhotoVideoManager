@@ -329,6 +329,16 @@ Regola di aggiornamento della roadmap
 La tabella costituisce l'unico riferimento operativo per lo stato di avanzamento. Non viene creato un file Excel parallelo come fonte di riferimento. Ogni decisione consolidata, criticità emersa, modifica dello stato o chiusura di una macro-attività deve essere recepita nella Nota Integrata.
 Una macro-attività può passare a SVILUPPO solo dopo che ChatGPT ha consolidato requisiti e criteri di accettazione e che Cursor ha completato l'approfondimento tecnico preliminare. Le criticità che richiedono una decisione progettuale vengono riportate nella Nota e risolte prima dell'avvio dello sviluppo interessato
 ## 7.2 Roadmap aggiornata al 01/10/2026
+
+## 7.3 Backlog — future implementazioni (non consolidato)
+
+Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consolidati**. Non interrompono lo sviluppo corrente; da recepire in specifica quando ChatGPT le valorizza.
+
+| ID | Area | Nota | Origine |
+|---|---|---|---|
+| BL-01 | **Pulisci** (Organizza → Aggiorna) | Oltre ai duplicati esatti, Pulisci dovrà poter eliminare anche **file indesiderati** già importati/censiti che non sono foto/video utili (es. file con estensione anomala tipo `.12.jpg` non riconosciuti correttamente come foto, scarti, allegati spurî). Definire criteri di riconoscimento, conferma utente e rapporto con Cestino. | Renato 09/10/2026 |
+| BL-02 | Estetica Home | Affinare spessore ombre dei riquadri Accesso rapido / ricerca (layout già congelato). | Renato 09/10/2026 |
+
 Fine documento
 
 === TABLE 1 ===
