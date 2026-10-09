@@ -338,7 +338,8 @@ Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consoli
 |---|---|---|---|
 | BL-01 | **Pulisci** (Organizza → Aggiorna) | Oltre ai duplicati esatti, Pulisci dovrà poter eliminare anche **file indesiderati** già importati/censiti che non sono foto/video utili (es. file con estensione anomala tipo `.12.jpg` non riconosciuti correttamente come foto, scarti, allegati spurî). Definire criteri di riconoscimento, conferma utente e rapporto con Cestino. | Renato 09/10/2026 |
 | BL-02 | Estetica Home | Affinare spessore ombre dei riquadri Accesso rapido / ricerca (layout già congelato). | Renato 09/10/2026 |
-| BL-03 | **Eliminazione multi-selezione** | Su Importa e sugli altri elenchi media: poter deselezionare/eliminare (o escludere dall’import) più elementi insieme, così da evitare di copiare in Catalogo file indesiderati. Riuso del pattern selezione on/off già in UI. | Renato 09/10/2026 |
+| BL-03 | **Acquisisci — selezione fonti a 3 stati** | Gestione dispositivi/cartelle in elenco Acquisisci con **riquadro di selezione a tre stati** (non più solo on/off): selezionato (✓) · non selezionato (vuoto) · escluso/rimosso (**X**). L’idea preferita è usare la X nel riquadro stesso (niente icona cestino separata) per togliere dalla lista le fonti non più di interesse. Definire effetto su Catalogo già censito e su Importa. | Renato 09/10/2026 |
+| BL-04 | **Eliminazione multi-selezione** | Su Importa e sugli altri elenchi media: poter deselezionare/eliminare (o escludere dall’import) più elementi insieme, così da evitare di copiare in Catalogo file indesiderati. Riuso del pattern selezione già in UI. | Renato 09/10/2026 |
 
 Fine documento
 
