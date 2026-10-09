@@ -3,6 +3,8 @@ package com.renatizzi.photovideomanager.application
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import com.renatizzi.photovideomanager.data.SourceLabelStore
+import com.renatizzi.photovideomanager.data.storage.SafPathLabels
 import com.renatizzi.photovideomanager.data.storage.StorageAdapterFactory
 import com.renatizzi.photovideomanager.domain.model.ArchiveKind
 import com.renatizzi.photovideomanager.domain.model.ArchiveRef
@@ -25,6 +27,7 @@ class SourceRegistry(
     private val adapterFactory: StorageAdapterFactory,
     private val permissionGate: PermissionGate,
     private val personalRoot: java.io.File,
+    private val labelStore: SourceLabelStore,
 ) {
     suspend fun bootstrapPersonalArchiveIfNeeded() {
         require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
@@ -73,12 +76,18 @@ class SourceRegistry(
                 location.availability
             }
             val archive = archives[location.archiveId]
+            val pathLabel = pathLabelFor(location)
+            val displayName = resolveDisplayName(location, pathLabel)
+            // Auto-ripara displayName in Catalogo se ancora un token SAF illegibile.
+            if (displayName != location.displayName && looksIllegible(location.displayName)) {
+                catalogStore.upsertStorageLocation(location.copy(displayName = displayName))
+            }
             SourceSummary(
                 locationId = location.id,
                 archiveId = location.archiveId,
-                displayName = location.displayName,
+                displayName = displayName,
                 deviceLabel = deviceLabelFor(location),
-                pathLabel = pathLabelFor(location),
+                pathLabel = pathLabel,
                 adapterKind = location.adapterKind,
                 availability = availability,
                 isSharedArchive = archive?.isSharedArchive == true,
@@ -101,7 +110,12 @@ class SourceRegistry(
 
         val archiveId = "archive.external.${UUID.randomUUID()}"
         val locationId = "location.saf.${UUID.randomUUID()}"
-        val name = displayName.ifBlank { treeUri.lastPathSegment ?: "Sorgente esterna" }
+        val pathLabel = SafPathLabels.humanPath(treeUri)
+        val name = when {
+            displayName.isNotBlank() && !looksIllegible(displayName) -> displayName
+            pathLabel != null -> SafPathLabels.folderTitle(treeUri, pathLabel)
+            else -> "Cartella dispositivo"
+        }
 
         catalogStore.upsertArchive(
             ArchiveRef(
@@ -129,13 +143,32 @@ class SourceRegistry(
             archiveId = saved.archiveId,
             displayName = saved.displayName,
             deviceLabel = deviceLabelFor(saved),
-            pathLabel = pathLabelFor(saved),
+            pathLabel = pathLabel ?: saved.displayName,
             adapterKind = saved.adapterKind,
             availability = saved.availability,
             isSharedArchive = false,
             isBuiltInPersonal = false,
         )
     }
+
+    suspend fun renameSource(locationId: String, newName: String) {
+        require(locationId != PERSONAL_LOCATION_ID)
+        val clean = newName.trim()
+        require(clean.isNotEmpty()) { "Nome non valido" }
+        val location = catalogStore.getStorageLocation(locationId) ?: return
+        labelStore.setSourceAlias(locationId, clean)
+        catalogStore.upsertStorageLocation(location.copy(displayName = clean))
+        catalogStore.listArchives().firstOrNull { it.id == location.archiveId }?.let { archive ->
+            catalogStore.upsertArchive(archive.copy(displayName = clean))
+        }
+    }
+
+    fun setDeviceAlias(alias: String?) {
+        labelStore.setDeviceAlias(alias)
+    }
+
+    fun deviceAliasOrDefault(): String =
+        labelStore.deviceAlias() ?: SafPathLabels.deviceLabel(appContext)
 
     suspend fun removeSource(locationId: String) {
         require(locationId != PERSONAL_LOCATION_ID) { "La sorgente personale integrata non è rimovibile" }
@@ -149,6 +182,7 @@ class SourceRegistry(
                 )
             }
         }
+        labelStore.setSourceAlias(locationId, null)
         catalogStore.deleteStorageLocation(locationId)
         if (location.archiveId != PERSONAL_ARCHIVE_ID) {
             catalogStore.deleteArchive(location.archiveId)
@@ -168,7 +202,7 @@ class SourceRegistry(
 
     private fun deviceLabelFor(location: StorageLocation): String = when (location.adapterKind) {
         StorageAdapterKind.LOCAL_FS -> "Spazio app MediaManager"
-        StorageAdapterKind.SAF_TREE -> "Questo dispositivo"
+        StorageAdapterKind.SAF_TREE -> deviceAliasOrDefault()
         StorageAdapterKind.MEDIA_STORE -> "Galleria di sistema"
         StorageAdapterKind.SMB -> "Rete / NAS"
     }
@@ -180,20 +214,25 @@ class SourceRegistry(
         if (location.opaqueLocator.isBlank()) return location.displayName
         return runCatching {
             val uri = Uri.parse(location.opaqueLocator)
-            val last = uri.lastPathSegment.orEmpty()
-            when {
-                last.contains(':') -> {
-                    val volume = last.substringBefore(':')
-                    val path = last.substringAfter(':', missingDelimiterValue = "")
-                        .replace("%2F", "/", ignoreCase = true)
-                        .replace("%2f", "/")
-                    if (path.isBlank()) volume.ifBlank { location.displayName }
-                    else "$volume/$path"
-                }
-                last.isNotBlank() -> last.replace("%2F", "/", ignoreCase = true)
-                else -> location.displayName
-            }
+            SafPathLabels.humanPath(uri)
+                ?: location.displayName.takeUnless { looksIllegible(it) }
+                ?: "Cartella dispositivo"
         }.getOrDefault(location.displayName)
+    }
+
+    private fun resolveDisplayName(location: StorageLocation, pathLabel: String): String {
+        labelStore.sourceAlias(location.id)?.let { return it }
+        if (!looksIllegible(location.displayName)) return location.displayName
+        return pathLabel.substringAfterLast('/').ifBlank { pathLabel }
+    }
+
+    private fun looksIllegible(name: String): Boolean {
+        if (name.isBlank()) return true
+        val lower = name.lowercase()
+        return lower.contains("encoded=") ||
+            lower.startsWith("acc=") ||
+            lower.contains("doc=") ||
+            (name.length > 40 && !name.contains('/') && name.count { it == '-' || it == '_' } > 4)
     }
 
     companion object {

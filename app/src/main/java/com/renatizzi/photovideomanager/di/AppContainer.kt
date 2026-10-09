@@ -9,6 +9,7 @@ import com.renatizzi.photovideomanager.application.DedupService
 import com.renatizzi.photovideomanager.application.SearchService
 import com.renatizzi.photovideomanager.application.SourceRegistry
 import com.renatizzi.photovideomanager.application.TrashService
+import com.renatizzi.photovideomanager.data.SourceLabelStore
 import com.renatizzi.photovideomanager.data.catalog.CatalogDatabase
 import com.renatizzi.photovideomanager.data.catalog.RoomCatalogStore
 import com.renatizzi.photovideomanager.data.storage.LocalFilesystemStorageAdapter
@@ -45,12 +46,15 @@ class AppContainer(context: Context) {
         catalogStore = catalogStore,
         personalRoot = personalRoot,
     )
+    val sourceLabelStore: SourceLabelStore = SourceLabelStore(appContext)
+
     val sourceRegistry: SourceRegistry = SourceRegistry(
         appContext = appContext,
         catalogStore = catalogStore,
         adapterFactory = adapterFactory,
         permissionGate = permissionGate,
         personalRoot = personalRoot,
+        labelStore = sourceLabelStore,
     )
 
     val censusService: CensusService = CensusService(

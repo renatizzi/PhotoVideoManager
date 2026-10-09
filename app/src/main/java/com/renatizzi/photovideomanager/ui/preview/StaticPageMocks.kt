@@ -24,6 +24,9 @@ import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -35,6 +38,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,12 +62,14 @@ import com.renatizzi.photovideomanager.domain.model.StorageAdapterKind
 import com.renatizzi.photovideomanager.ui.acquire.AcquireUiState
 import com.renatizzi.photovideomanager.ui.census.CensusUiState
 import com.renatizzi.photovideomanager.ui.common.MediaThumbnail
+import com.renatizzi.photovideomanager.ui.common.formatBytes
 
 /**
  * Layout congelato (Nota v5.3 §5.6) — azioni in alto.
  * Acquisisci/Importa ricevono dati reali; Aggiorna/Componi restano mock fino al wiring.
  */
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AcquisisciStaticScreen(
     state: CensusUiState,
@@ -73,6 +79,8 @@ fun AcquisisciStaticScreen(
     onRefresh: () -> Unit,
     onConferma: () -> Unit,
     onBrowse: (String) -> Unit = {},
+    onRenameSource: (String, String) -> Unit = { _, _ -> },
+    onRenameDevice: (String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -80,10 +88,10 @@ fun AcquisisciStaticScreen(
         contract = ActivityResultContracts.OpenDocumentTree(),
     ) { uri ->
         if (uri != null) {
-            val name = uri.lastPathSegment
-                ?.substringAfterLast(':')
-                ?.substringAfterLast('/')
-                ?: context.getString(R.string.external_source_default_name)
+            val name = com.renatizzi.photovideomanager.data.storage.SafPathLabels.folderTitle(
+                uri,
+                context.getString(R.string.external_source_default_name),
+            )
             onAddSource(uri, name)
         }
     }
@@ -93,6 +101,9 @@ fun AcquisisciStaticScreen(
     }
     val allChecked = sources.isNotEmpty() && selectedCount == sources.size
     val busy = state.loading || state.censusBusyLocationIds.isNotEmpty()
+    var renameTarget by remember { mutableStateOf<SourceSummary?>(null) }
+    var renameDeviceOpen by remember { mutableStateOf(false) }
+    var renameText by remember { mutableStateOf("") }
 
     Column(
         modifier = modifier
@@ -118,13 +129,24 @@ fun AcquisisciStaticScreen(
         )
         Text(
             text = stringResource(
-                R.string.acquisisci_riepilogo,
+                R.string.acquisisci_riepilogo_full,
                 selectedCount,
                 sources.size,
                 state.catalogCount,
+                state.acquiredCount,
+                formatBytes(state.personalUsedBytes),
             ),
             style = MaterialTheme.typography.bodySmall,
         )
+        TextButton(
+            onClick = {
+                renameText = state.deviceAlias
+                renameDeviceOpen = true
+            },
+            enabled = !busy,
+        ) {
+            Text(stringResource(R.string.acquisisci_rename_device, state.deviceAlias.ifBlank { "…" }))
+        }
 
         // Azioni in alto (layout congelato): refresh, +, CONFERMA
         Row(
@@ -206,6 +228,10 @@ fun AcquisisciStaticScreen(
                         enabled = !busy,
                         onToggle = { onToggleSelection(source.locationId) },
                         onBrowse = { onBrowse(source.locationId) },
+                        onLongPress = {
+                            renameTarget = source
+                            renameText = source.displayName
+                        },
                     )
                 }
                 HorizontalDivider()
@@ -213,8 +239,66 @@ fun AcquisisciStaticScreen(
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
+
+    renameTarget?.let { target ->
+        AlertDialog(
+            onDismissRequest = { renameTarget = null },
+            title = { Text(stringResource(R.string.acquisisci_rename_source_title)) },
+            text = {
+                OutlinedTextField(
+                    value = renameText,
+                    onValueChange = { renameText = it },
+                    singleLine = true,
+                    label = { Text(stringResource(R.string.acquisisci_rename_source_label)) },
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (renameText.isNotBlank()) {
+                            onRenameSource(target.locationId, renameText.trim())
+                        }
+                        renameTarget = null
+                    },
+                ) { Text(stringResource(R.string.ok)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { renameTarget = null }) {
+                    Text(stringResource(R.string.importa_annulla))
+                }
+            },
+        )
+    }
+    if (renameDeviceOpen) {
+        AlertDialog(
+            onDismissRequest = { renameDeviceOpen = false },
+            title = { Text(stringResource(R.string.acquisisci_rename_device_title)) },
+            text = {
+                OutlinedTextField(
+                    value = renameText,
+                    onValueChange = { renameText = it },
+                    singleLine = true,
+                    label = { Text(stringResource(R.string.acquisisci_rename_device_label)) },
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onRenameDevice(renameText.trim())
+                        renameDeviceOpen = false
+                    },
+                ) { Text(stringResource(R.string.ok)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { renameDeviceOpen = false }) {
+                    Text(stringResource(R.string.importa_annulla))
+                }
+            },
+        )
+    }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SourceRow(
     source: SourceSummary,
@@ -223,6 +307,7 @@ private fun SourceRow(
     enabled: Boolean,
     onToggle: () -> Unit,
     onBrowse: () -> Unit,
+    onLongPress: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -238,11 +323,17 @@ private fun SourceRow(
         Column(
             modifier = Modifier
                 .weight(1f)
-                .padding(end = 4.dp),
+                .padding(end = 4.dp)
+                .combinedClickable(
+                    enabled = enabled,
+                    onClick = onBrowse,
+                    onLongClick = onLongPress,
+                ),
         ) {
-            Text(source.deviceLabel, fontWeight = FontWeight.SemiBold)
+            // Titolo = nome cartella (rinominabile); sottotitolo = dispositivo + tipo
+            Text(source.displayName, fontWeight = FontWeight.SemiBold)
             Text(
-                text = adapterKindLabel(source.adapterKind),
+                text = "${source.deviceLabel} · ${adapterKindLabel(source.adapterKind)}",
                 style = MaterialTheme.typography.labelMedium,
             )
             Text(source.pathLabel, style = MaterialTheme.typography.bodySmall)
@@ -289,11 +380,12 @@ fun ImportaStaticScreen(
     onBackToAcquisisci: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val visible = state.visibleCandidates
-    val selected = visible.count { it.mediaItem.id in state.selectedIds }
-    val photos = visible.count { it.mediaItem.kind == MediaKind.PHOTO }
-    val videos = visible.count { it.mediaItem.kind == MediaKind.VIDEO }
-    val already = visible.count { it.alreadyInPersonalArchive }
+    val pool = state.kindFiltered
+    val listed = state.listedCandidates
+    val selected = pool.count { it.mediaItem.id in state.selectedIds }
+    val photos = pool.count { it.mediaItem.kind == MediaKind.PHOTO }
+    val videos = pool.count { it.mediaItem.kind == MediaKind.VIDEO }
+    val already = pool.count { it.alreadyInPersonalArchive }
     val busy = state.loading || state.acquiring
 
     Column(
@@ -321,7 +413,7 @@ fun ImportaStaticScreen(
         Text(
             text = stringResource(
                 R.string.importa_riepilogo,
-                visible.size,
+                pool.size,
                 photos,
                 videos,
                 already,
@@ -370,7 +462,7 @@ fun ImportaStaticScreen(
                 .weight(1f)
                 .verticalScroll(rememberScrollState()),
         ) {
-            if (state.loading && visible.isEmpty()) {
+            if (state.loading && pool.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -379,15 +471,19 @@ fun ImportaStaticScreen(
                 ) {
                     CircularProgressIndicator()
                 }
-            } else if (visible.isEmpty()) {
+            } else if (listed.isEmpty()) {
                 Text(
-                    text = stringResource(R.string.importa_empty),
+                    text = if (pool.isEmpty()) {
+                        stringResource(R.string.importa_empty)
+                    } else {
+                        stringResource(R.string.importa_empty_deselected)
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
                     modifier = Modifier.padding(vertical = 12.dp),
                 )
             } else {
-                visible.forEach { candidate ->
+                listed.forEach { candidate ->
                     HorizontalDivider()
                     ImportCandidateRow(
                         candidate = candidate,
@@ -460,6 +556,7 @@ fun AggiornaStaticScreen(
     modifier: Modifier = Modifier,
 ) {
     val entries = state.entries
+    val listed = state.listedEntries
     val photos = entries.count { it.mediaItem.kind == MediaKind.PHOTO }
     val videos = entries.count { it.mediaItem.kind == MediaKind.VIDEO }
 
@@ -529,15 +626,19 @@ fun AggiornaStaticScreen(
                 ) {
                     CircularProgressIndicator()
                 }
-            } else if (entries.isEmpty()) {
+            } else if (listed.isEmpty()) {
                 Text(
-                    text = stringResource(R.string.aggiorna_empty),
+                    text = if (entries.isEmpty()) {
+                        stringResource(R.string.aggiorna_empty)
+                    } else {
+                        stringResource(R.string.importa_empty_deselected)
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
                     modifier = Modifier.padding(vertical = 12.dp),
                 )
             } else {
-                entries.forEach { entry ->
+                listed.forEach { entry ->
                     HorizontalDivider()
                     val title = entry.mediaItem.displayTitle?.ifBlank { null }
                         ?: entry.previewCopy?.opaqueLocator?.substringAfterLast('/')

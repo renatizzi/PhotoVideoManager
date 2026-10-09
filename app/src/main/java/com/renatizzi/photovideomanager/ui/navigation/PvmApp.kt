@@ -63,6 +63,7 @@ fun PvmApp(
     }
     var helpOpen by remember { mutableStateOf(false) }
     var acquireStep by remember { mutableStateOf(AcquireFlowStep.CENSUS) }
+    var acquireSourceIds by remember { mutableStateOf<Set<String>>(emptySet()) }
     var pendingSearchQuery by remember { mutableStateOf<String?>(null) }
     val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -190,9 +191,9 @@ fun PvmApp(
                             acquireVm.consumeMessage()
                         }
                     }
-                    LaunchedEffect(acquireStep) {
+                    LaunchedEffect(acquireStep, acquireSourceIds) {
                         if (acquireStep == AcquireFlowStep.COPY) {
-                            acquireVm.refresh()
+                            acquireVm.refresh(acquireSourceIds.takeIf { it.isNotEmpty() })
                         }
                     }
                     when (acquireStep) {
@@ -203,19 +204,26 @@ fun PvmApp(
                             onSetAllSelected = censusVm::setAllSelected,
                             onRefresh = censusVm::refresh,
                             onConferma = {
-                                censusVm.confirmSelected { ok ->
-                                    if (ok) acquireStep = AcquireFlowStep.COPY
+                                censusVm.confirmSelected { ok, sourceIds ->
+                                    if (ok) {
+                                        acquireSourceIds = sourceIds
+                                        acquireStep = AcquireFlowStep.COPY
+                                    }
                                 }
                             },
                             onBrowse = { locationId ->
                                 navController.navigate(PvmDestination.SourceBrowse.create(locationId))
                             },
+                            onRenameSource = censusVm::renameSource,
+                            onRenameDevice = censusVm::setDeviceAlias,
                         )
                         AcquireFlowStep.COPY -> ImportaStaticScreen(
                             state = acquireState,
                             onToggle = acquireVm::toggleSelection,
                             onKindFilter = acquireVm::onKindFilter,
-                            onRefresh = acquireVm::refresh,
+                            onRefresh = {
+                                acquireVm.refresh(acquireSourceIds.takeIf { it.isNotEmpty() })
+                            },
                             onImporta = {
                                 acquireVm.acquireSelected { ok ->
                                     if (ok) {

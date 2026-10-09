@@ -26,25 +26,43 @@ class AcquisitionService(
     private val adapterFactory: StorageAdapterFactory,
     private val permissionGate: PermissionGate,
 ) {
-    suspend fun listCandidates(limit: Int = 200): List<AcquireCandidate> {
+    /**
+     * Candidati Importa. Se [sourceLocationIds] è non vuoto, limita alle sole fonti
+     * confermate in Acquisisci (non all’intero Catalogo).
+     */
+    suspend fun listCandidates(
+        sourceLocationIds: Set<String>? = null,
+        limit: Int = DEFAULT_CANDIDATE_LIMIT,
+    ): List<AcquireCandidate> {
         catalogStore.listArchives() // warm
         val locations = catalogStore.listStorageLocations().associateBy { it.id }
-        val items = catalogStore.listMediaItems(limit)
-        return items.mapNotNull { item ->
+        val filterIds = sourceLocationIds?.filter { it != CatalogFacade.PERSONAL_LOCATION_ID }?.toSet()
+        val items = catalogStore.listAllMediaItems()
+        val result = ArrayList<AcquireCandidate>(minOf(items.size, limit))
+        for (item in items) {
+            if (result.size >= limit) break
             val copies = catalogStore.listMediaCopiesForItem(item.id)
                 .filter { it.state == MediaCopyState.ACTIVE }
-            val sourceCopy = copies.firstOrNull { it.storageLocationId != CatalogFacade.PERSONAL_LOCATION_ID }
-                ?: copies.firstOrNull()
-                ?: return@mapNotNull null
+            val sourceCopy = copies.firstOrNull { copy ->
+                copy.storageLocationId != CatalogFacade.PERSONAL_LOCATION_ID &&
+                    (filterIds == null || copy.storageLocationId in filterIds)
+            } ?: continue
             val sourceLocation = locations[sourceCopy.storageLocationId]
             val alreadyPersonal = copies.any { it.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID }
-            AcquireCandidate(
-                mediaItem = item,
-                sourceCopy = sourceCopy,
-                sourceLocationName = sourceLocation?.displayName ?: sourceCopy.storageLocationId,
-                alreadyInPersonalArchive = alreadyPersonal,
+            result.add(
+                AcquireCandidate(
+                    mediaItem = item,
+                    sourceCopy = sourceCopy,
+                    sourceLocationName = sourceLocation?.displayName ?: sourceCopy.storageLocationId,
+                    alreadyInPersonalArchive = alreadyPersonal,
+                ),
             )
         }
+        return result
+    }
+
+    companion object {
+        const val DEFAULT_CANDIDATE_LIMIT = 5_000
     }
 
     suspend fun acquireToPersonalArchive(mediaItemIds: Collection<String>): AcquireResult {

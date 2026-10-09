@@ -21,6 +21,9 @@ data class CensusUiState(
     val loading: Boolean = true,
     val censusBusyLocationIds: Set<String> = emptySet(),
     val catalogCount: Long = 0,
+    val acquiredCount: Long = 0,
+    val personalUsedBytes: Long = 0,
+    val deviceAlias: String = "",
     val message: String? = null,
 ) {
     val visibleSources: List<SourceSummary>
@@ -52,9 +55,9 @@ class CensusViewModel(
             _state.update { it.copy(loading = true, message = null) }
             runCatching {
                 val sources = catalogFacade.listSources(refresh = true)
-                val count = catalogFacade.mediaItemCount()
-                sources to count
-            }.onSuccess { (sources, count) ->
+                val snap = catalogFacade.dashboardSnapshot()
+                Triple(sources, snap, catalogFacade.deviceAliasOrDefault())
+            }.onSuccess { (sources, snap, deviceAlias) ->
                 _state.update { current ->
                     val censableIds = sources
                         .filterNot { it.isBuiltInPersonal }
@@ -72,7 +75,10 @@ class CensusViewModel(
                     current.copy(
                         sources = sources,
                         selection = selection,
-                        catalogCount = count,
+                        catalogCount = snap.photoCount + snap.videoCount,
+                        acquiredCount = snap.acquiredPhotoCount + snap.acquiredVideoCount,
+                        personalUsedBytes = snap.personalUsedBytes,
+                        deviceAlias = deviceAlias,
                         loading = false,
                     )
                 }
@@ -85,6 +91,26 @@ class CensusViewModel(
                 }
             }
         }
+    }
+
+    fun renameSource(locationId: String, newName: String) {
+        viewModelScope.launch {
+            runCatching { catalogFacade.renameSource(locationId, newName) }
+                .onSuccess {
+                    refresh()
+                    _state.update { it.copy(message = "Nome sorgente aggiornato") }
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(message = error.message ?: "Impossibile rinominare la sorgente")
+                    }
+                }
+        }
+    }
+
+    fun setDeviceAlias(alias: String) {
+        catalogFacade.setDeviceAlias(alias.trim().ifEmpty { null })
+        refresh()
     }
 
     fun setSortMode(mode: SourceSortMode) {
@@ -113,20 +139,19 @@ class CensusViewModel(
 
     /**
      * Conferma (layout congelato): censisce le sorgenti selezionate, poi invoca [onDone].
-     * [onDone] riceve `true` se almeno una sorgente è stata censita senza errori bloccanti.
+     * [onDone] riceve successo e gli id delle fonti da usare in Importa.
      */
-    fun confirmSelected(onDone: (Boolean) -> Unit) {
+    fun confirmSelected(onDone: (Boolean, Set<String>) -> Unit) {
         val ids = _state.value.selection
             .filterValues { it == SourceCensusSelection.SELECTED }
             .keys
             .toList()
         if (ids.isEmpty()) {
             _state.update { it.copy(message = "Seleziona almeno una sorgente") }
-            onDone(false)
+            onDone(false, emptySet())
             return
         }
         viewModelScope.launch {
-            var ok = true
             var totalFound = 0
             var totalAdded = 0
             var totalSkipped = 0
@@ -140,29 +165,32 @@ class CensusViewModel(
                     totalAdded += census.mediaAdded
                     totalSkipped += census.mediaSkippedExisting
                 }.onFailure { error ->
-                    ok = false
                     _state.update {
                         it.copy(
                             censusBusyLocationIds = it.censusBusyLocationIds - id,
                             message = error.message ?: "Censimento non riuscito",
                         )
                     }
-                    onDone(false)
+                    onDone(false, emptySet())
                     return@launch
                 }
                 _state.update {
                     it.copy(censusBusyLocationIds = it.censusBusyLocationIds - id)
                 }
             }
-            val count = catalogFacade.mediaItemCount()
+            val snap = runCatching { catalogFacade.dashboardSnapshot() }.getOrNull()
             _state.update {
                 it.copy(
-                    catalogCount = count,
+                    catalogCount = snap?.let { s -> s.photoCount + s.videoCount }
+                        ?: catalogFacade.mediaItemCount(),
+                    acquiredCount = snap?.let { s -> s.acquiredPhotoCount + s.acquiredVideoCount }
+                        ?: it.acquiredCount,
+                    personalUsedBytes = snap?.personalUsedBytes ?: it.personalUsedBytes,
                     message = "Censimento terminato: trovati $totalFound, " +
                         "nuovi $totalAdded, già noti $totalSkipped",
                 )
             }
-            onDone(ok)
+            onDone(true, ids.toSet())
         }
     }
 

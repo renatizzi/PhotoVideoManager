@@ -32,6 +32,8 @@ data class StorageEntry(
     val opaqueLocator: String,
     val displayName: String,
     val isDirectory: Boolean,
+    /** MIME tipizzato dall'adapter quando disponibile (es. SAF listing). */
+    val mimeType: String? = null,
 )
 
 data class StorageMetadata(

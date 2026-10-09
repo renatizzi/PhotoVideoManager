@@ -17,18 +17,33 @@ data class AcquireUiState(
     val candidates: List<AcquireCandidate> = emptyList(),
     val selectedIds: Set<String> = emptySet(),
     val kindFilter: SearchKindFilter = SearchKindFilter.ALL,
+    val sourceLocationIds: Set<String> = emptySet(),
     val loading: Boolean = true,
     val acquiring: Boolean = false,
     val catalogCount: Long = 0,
     val message: String? = null,
 ) {
-    val visibleCandidates: List<AcquireCandidate>
+    /** Pool filtrato per tipo (Tutti/Foto/Video). */
+    val kindFiltered: List<AcquireCandidate>
         get() = candidates.filter { candidate ->
             when (kindFilter) {
                 SearchKindFilter.ALL -> true
                 SearchKindFilter.PHOTO -> candidate.mediaItem.kind == MediaKind.PHOTO
                 SearchKindFilter.VIDEO -> candidate.mediaItem.kind == MediaKind.VIDEO
             }
+        }
+
+    @Deprecated("Use kindFiltered", ReplaceWith("kindFiltered"))
+    val visibleCandidates: List<AcquireCandidate>
+        get() = kindFiltered
+
+    /**
+     * Elenco mostrato: solo elementi selezionati (o già in archivio).
+     * Se tutto deselezionato → lista vuota (coerente col filtro a zero risultati).
+     */
+    val listedCandidates: List<AcquireCandidate>
+        get() = kindFiltered.filter {
+            it.mediaItem.id in selectedIds || it.alreadyInPersonalArchive
         }
 }
 
@@ -39,26 +54,29 @@ class AcquireViewModel(
     val state: StateFlow<AcquireUiState> = _state.asStateFlow()
 
     init {
-        refresh()
+        refresh(null)
     }
 
-    fun refresh() {
+    fun refresh(sourceLocationIds: Set<String>? = _state.value.sourceLocationIds.takeIf { it.isNotEmpty() }) {
         viewModelScope.launch {
             _state.update { it.copy(loading = true, message = null) }
             runCatching {
                 catalogFacade.bootstrapPersonalArchiveIfNeeded()
-                val candidates = catalogFacade.listAcquireCandidates()
+                val candidates = catalogFacade.listAcquireCandidates(
+                    sourceLocationIds = sourceLocationIds,
+                )
                 val count = catalogFacade.mediaItemCount()
-                candidates to count
-            }.onSuccess { (candidates, count) ->
+                Triple(candidates, count, sourceLocationIds.orEmpty())
+            }.onSuccess { (candidates, count, sources) ->
                 _state.update { current ->
                     val next = current.copy(
                         candidates = candidates,
                         catalogCount = count,
+                        sourceLocationIds = sources,
                         loading = false,
                     )
                     next.copy(
-                        selectedIds = next.visibleCandidates
+                        selectedIds = next.kindFiltered
                             .filterNot { it.alreadyInPersonalArchive }
                             .map { it.mediaItem.id }
                             .toSet(),
@@ -85,12 +103,13 @@ class AcquireViewModel(
 
     /**
      * Chip Tutti / Foto / Video: applica il filtro e cicla la selezione dei
-     * candidati visibili importabili (tutti flag → nessuno → tutti …).
+     * candidati del pool (tutti flag → nessuno → tutti …).
+     * Con selezione vuota l’elenco risulta vuoto.
      */
     fun onKindFilter(filter: SearchKindFilter) {
         _state.update { current ->
             val next = current.copy(kindFilter = filter)
-            val selectableIds = next.visibleCandidates
+            val selectableIds = next.kindFiltered
                 .filterNot { it.alreadyInPersonalArchive }
                 .map { it.mediaItem.id }
             val allSelected = selectableIds.isNotEmpty() &&
@@ -104,7 +123,7 @@ class AcquireViewModel(
     fun selectPendingOnly() {
         _state.update { current ->
             current.copy(
-                selectedIds = current.visibleCandidates
+                selectedIds = current.kindFiltered
                     .filterNot { it.alreadyInPersonalArchive }
                     .map { it.mediaItem.id }
                     .toSet(),
@@ -127,7 +146,8 @@ class AcquireViewModel(
             _state.update { it.copy(acquiring = true, message = null) }
             runCatching { catalogFacade.acquireToPersonalArchive(ids) }
                 .onSuccess { result ->
-                    val candidates = catalogFacade.listAcquireCandidates()
+                    val sources = _state.value.sourceLocationIds.takeIf { it.isNotEmpty() }
+                    val candidates = catalogFacade.listAcquireCandidates(sourceLocationIds = sources)
                     val count = catalogFacade.mediaItemCount()
                     val msg = result.message ?: buildString {
                         append("Acquisizione terminata: ")
@@ -147,13 +167,12 @@ class AcquireViewModel(
                             message = msg,
                         )
                         next.copy(
-                            selectedIds = next.visibleCandidates
+                            selectedIds = next.kindFiltered
                                 .filterNot { c -> c.alreadyInPersonalArchive }
                                 .map { c -> c.mediaItem.id }
                                 .toSet(),
                         )
                     }
-                    // Torna in Dashboard se almeno un file è stato copiato (Nota §5.4.1).
                     onDone(result.acquired > 0 || result.skippedAlreadyPresent > 0)
                 }
                 .onFailure { error ->

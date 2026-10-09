@@ -76,11 +76,21 @@ class CatalogFacade(
 
     suspend fun removeSource(locationId: String) = sourceRegistry.removeSource(locationId)
 
+    suspend fun renameSource(locationId: String, newName: String) =
+        sourceRegistry.renameSource(locationId, newName)
+
+    fun setDeviceAlias(alias: String?) = sourceRegistry.setDeviceAlias(alias)
+
+    fun deviceAliasOrDefault(): String = sourceRegistry.deviceAliasOrDefault()
+
     suspend fun censusSource(locationId: String): CensusResult =
         censusService.censusSource(locationId)
 
-    suspend fun listAcquireCandidates(limit: Int = 200): List<AcquireCandidate> =
-        acquisitionService.listCandidates(limit)
+    suspend fun listAcquireCandidates(
+        sourceLocationIds: Set<String>? = null,
+        limit: Int = AcquisitionService.DEFAULT_CANDIDATE_LIMIT,
+    ): List<AcquireCandidate> =
+        acquisitionService.listCandidates(sourceLocationIds = sourceLocationIds, limit = limit)
 
     suspend fun acquireToPersonalArchive(mediaItemIds: Collection<String>): AcquireResult =
         acquisitionService.acquireToPersonalArchive(mediaItemIds)

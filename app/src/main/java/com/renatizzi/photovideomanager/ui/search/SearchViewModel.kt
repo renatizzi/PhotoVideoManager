@@ -21,7 +21,11 @@ data class SearchUiState(
     val selectedIds: Set<String> = emptySet(),
     val loading: Boolean = true,
     val message: String? = null,
-)
+) {
+    /** Elenco UI: solo selezionati; se nessuno → vuoto (coerente con Importa). */
+    val listedEntries: List<CatalogSearchEntry>
+        get() = entries.filter { it.mediaItem.id in selectedIds }
+}
 
 class SearchViewModel(
     private val catalogFacade: CatalogFacade,

@@ -42,7 +42,7 @@ fun AcquireScreen(
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val visible = state.visibleCandidates
+    val visible = state.kindFiltered
     Column(
         modifier = modifier
             .fillMaxSize()

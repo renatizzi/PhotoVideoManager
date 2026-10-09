@@ -83,6 +83,7 @@ class SafTreeStorageAdapter(
                                 opaqueLocator = childUri.toString(),
                                 displayName = name,
                                 isDirectory = mime == DocumentsContract.Document.MIME_TYPE_DIR,
+                                mimeType = mime,
                             ),
                         )
                     }
