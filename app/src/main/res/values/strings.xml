@@ -104,7 +104,7 @@
     <string name="feature_spazio_desc">Controllo dello spazio nel workflow</string>
     <string name="aggiorna_refresh_cd">Aggiorna Catalogo / allinea sorgenti</string>
     <string name="componi_landing_intro">Crea, gestisci e pubblica i tuoi album fotografici e le raccolte di foto e video di eventi e ricordi. Ottimizza i media del Catalogo.</string>
-    <string name="componi_riepilogo_static">Riepilogo: Album/raccolte: xxx</string>
+    <string name="componi_riepilogo_static">Riepilogo: Album: xxx · Raccolte: xxx</string>
     <string name="feature_pulisci">Pulisci</string>
     <string name="feature_pulisci_desc">Solo eliminazione duplicati</string>
     <string name="feature_cestino">Cestino</string>
