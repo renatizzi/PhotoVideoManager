@@ -39,7 +39,12 @@ class ArchiveSourcesViewModel(
                 sources to count
             }.onSuccess { (sources, count) ->
                 _state.update {
-                    it.copy(sources = sources, catalogCount = count, loading = false)
+                    it.copy(
+                        // BL-05: non mostrare «Spazio interno app» (built-in).
+                        sources = sources.filterNot { s -> s.isBuiltInPersonal },
+                        catalogCount = count,
+                        loading = false,
+                    )
                 }
             }.onFailure { error ->
                 _state.update {

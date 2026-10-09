@@ -35,6 +35,14 @@ class TrashService(
         }
     }
 
+    /** Mette nel Cestino tutte le copie ACTIVE di un MediaItem. */
+    suspend fun trashMediaItem(mediaItemId: String): TrashActionResult {
+        val ids = catalogStore.listMediaCopiesForItem(mediaItemId)
+            .filter { it.state == MediaCopyState.ACTIVE }
+            .map { it.id }
+        return trashCopies(ids)
+    }
+
     suspend fun trashCopies(copyIds: Collection<String>): TrashActionResult {
         require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
         var n = 0
@@ -47,7 +55,7 @@ class TrashService(
         return TrashActionResult(
             affected = n,
             message = if (n == 0) {
-                "Nessuna copia da spostare"
+                "Nessuna copia da cestinare"
             } else {
                 "Spostate nel Cestino: $n. Gli originali sulle cartelle del telefono restano intatti."
             },

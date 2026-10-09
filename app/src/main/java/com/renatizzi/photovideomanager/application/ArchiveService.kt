@@ -39,4 +39,18 @@ class ArchiveService(
             }
             .sortedByDescending { it.mediaCopy.createdAtEpochMs }
     }
+
+    suspend fun renameMediaTitle(mediaItemId: String, newTitle: String) {
+        require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
+        val clean = newTitle.trim()
+        require(clean.isNotEmpty()) { "Nome non valido" }
+        val item = catalogStore.getMediaItem(mediaItemId)
+            ?: error("Elemento non trovato")
+        catalogStore.upsertMediaItem(
+            item.copy(
+                displayTitle = clean,
+                updatedAtEpochMs = System.currentTimeMillis(),
+            ),
+        )
+    }
 }

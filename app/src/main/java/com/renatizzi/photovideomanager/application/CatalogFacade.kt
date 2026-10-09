@@ -25,6 +25,7 @@ class CatalogFacade(
     private val trashService: TrashService,
     private val archiveService: ArchiveService,
     private val searchService: SearchService,
+    private val exportService: ExportService,
 ) {
     suspend fun bootstrapPersonalArchiveIfNeeded() {
         sourceRegistry.bootstrapPersonalArchiveIfNeeded()
@@ -159,6 +160,17 @@ class CatalogFacade(
         query: String,
         kindFilter: SearchKindFilter = SearchKindFilter.ALL,
     ): List<CatalogSearchEntry> = searchService.search(query = query, kindFilter = kindFilter)
+
+    suspend fun renameMediaTitle(mediaItemId: String, newTitle: String) =
+        archiveService.renameMediaTitle(mediaItemId, newTitle)
+
+    suspend fun trashMediaItem(mediaItemId: String): TrashActionResult =
+        trashService.trashMediaItem(mediaItemId)
+
+    suspend fun exportMediaItemToUri(
+        mediaItemId: String,
+        destUri: android.net.Uri,
+    ): Result<String> = exportService.exportMediaItemToUri(mediaItemId, destUri)
 
     companion object {
         const val PERSONAL_ARCHIVE_ID = "archive.personal.local"

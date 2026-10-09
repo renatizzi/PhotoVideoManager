@@ -30,6 +30,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -54,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import com.renatizzi.photovideomanager.R
 import com.renatizzi.photovideomanager.domain.model.AcquireCandidate
 import com.renatizzi.photovideomanager.domain.model.Availability
+import com.renatizzi.photovideomanager.domain.model.CatalogSearchEntry
 import com.renatizzi.photovideomanager.domain.model.MediaKind
 import com.renatizzi.photovideomanager.domain.model.SearchKindFilter
 import com.renatizzi.photovideomanager.domain.model.SourceCensusSelection
@@ -63,10 +66,11 @@ import com.renatizzi.photovideomanager.ui.acquire.AcquireUiState
 import com.renatizzi.photovideomanager.ui.census.CensusUiState
 import com.renatizzi.photovideomanager.ui.common.MediaThumbnail
 import com.renatizzi.photovideomanager.ui.common.formatBytes
+import com.renatizzi.photovideomanager.ui.search.SearchUiState
 
 /**
  * Layout congelato (Nota v5.3 §5.6) — azioni in alto.
- * Acquisisci/Importa ricevono dati reali; Aggiorna/Componi restano mock fino al wiring.
+ * Acquisisci/Importa/Aggiorna: dati reali; Componi landing resta template fino a M11.
  */
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -547,19 +551,26 @@ private fun ImportCandidateRow(
 
 @Composable
 fun AggiornaStaticScreen(
-    state: com.renatizzi.photovideomanager.ui.search.SearchUiState,
+    state: SearchUiState,
     onQueryChange: (String) -> Unit,
     onKindFilter: (SearchKindFilter) -> Unit,
     onToggleSelection: (String) -> Unit = {},
     onRefresh: () -> Unit,
     onPulisci: () -> Unit,
-    onRowMenu: (String) -> Unit = {},
+    onRename: (String, String) -> Unit = { _, _ -> },
+    onTrash: (String) -> Unit = {},
+    onExportRequest: (mediaItemId: String, suggestedName: String, mime: String) -> Unit = { _, _, _ -> },
+    suggestedFileName: (String) -> String = { "media" },
+    exportMime: (String) -> String = { "*/*" },
     modifier: Modifier = Modifier,
 ) {
     val entries = state.entries
     val listed = state.listedEntries
     val photos = entries.count { it.mediaItem.kind == MediaKind.PHOTO }
     val videos = entries.count { it.mediaItem.kind == MediaKind.VIDEO }
+    var menuForId by remember { mutableStateOf<String?>(null) }
+    var renameTarget by remember { mutableStateOf<CatalogSearchEntry?>(null) }
+    var renameText by remember { mutableStateOf("") }
 
     Column(
         modifier = modifier
@@ -646,21 +657,70 @@ fun AggiornaStaticScreen(
                             ?.substringAfterLast(':')
                         ?: entry.mediaItem.id
                     val loc = entry.locationNames.firstOrNull().orEmpty()
+                    val id = entry.mediaItem.id
                     MediaRow(
                         title = title,
                         subtitle = stringResource(R.string.importa_riga_meta, loc.ifBlank { "—" }),
-                        checked = entry.mediaItem.id in state.selectedIds,
+                        checked = id in state.selectedIds,
                         showMenu = true,
+                        menuExpanded = menuForId == id,
+                        onMenuExpandedChange = { open ->
+                            menuForId = if (open) id else null
+                        },
                         previewCopy = entry.previewCopy,
                         kind = entry.mediaItem.kind,
-                        onCheckedChange = { onToggleSelection(entry.mediaItem.id) },
-                        onMenu = { onRowMenu(entry.mediaItem.id) },
+                        onCheckedChange = { onToggleSelection(id) },
+                        onRename = {
+                            menuForId = null
+                            renameTarget = entry
+                            renameText = title
+                        },
+                        onTrash = {
+                            menuForId = null
+                            onTrash(id)
+                        },
+                        onCopyToDevice = {
+                            menuForId = null
+                            onExportRequest(id, suggestedFileName(id), exportMime(id))
+                        },
                     )
                 }
                 HorizontalDivider()
             }
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+
+    renameTarget?.let { target ->
+        AlertDialog(
+            onDismissRequest = { renameTarget = null },
+            title = { Text(stringResource(R.string.aggiorna_rename_title)) },
+            text = {
+                OutlinedTextField(
+                    value = renameText,
+                    onValueChange = { renameText = it },
+                    singleLine = true,
+                    label = { Text(stringResource(R.string.aggiorna_rename_label)) },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onRename(target.mediaItem.id, renameText)
+                        renameTarget = null
+                    },
+                    enabled = renameText.isNotBlank(),
+                ) {
+                    Text(stringResource(R.string.ok))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { renameTarget = null }) {
+                    Text(stringResource(R.string.importa_annulla))
+                }
+            },
+        )
     }
 }
 
@@ -802,9 +862,14 @@ private fun MediaRow(
     subtitle: String,
     checked: Boolean,
     showMenu: Boolean = false,
+    menuExpanded: Boolean = false,
+    onMenuExpandedChange: (Boolean) -> Unit = {},
     previewCopy: com.renatizzi.photovideomanager.domain.model.MediaCopy? = null,
     kind: MediaKind = MediaKind.PHOTO,
     onCheckedChange: (() -> Unit)? = null,
+    onRename: () -> Unit = {},
+    onTrash: () -> Unit = {},
+    onCopyToDevice: () -> Unit = {},
     onMenu: () -> Unit = {},
 ) {
     Row(
@@ -844,8 +909,30 @@ private fun MediaRow(
             Text(subtitle, style = MaterialTheme.typography.bodySmall)
         }
         if (showMenu) {
-            IconButton(onClick = onMenu) {
-                Icon(Icons.Outlined.MoreVert, contentDescription = stringResource(R.string.componi_menu_cd))
+            Box {
+                IconButton(onClick = { onMenuExpandedChange(true); onMenu() }) {
+                    Icon(
+                        Icons.Outlined.MoreVert,
+                        contentDescription = stringResource(R.string.aggiorna_menu_cd),
+                    )
+                }
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { onMenuExpandedChange(false) },
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.aggiorna_menu_rename)) },
+                        onClick = onRename,
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.aggiorna_menu_copy_device)) },
+                        onClick = onCopyToDevice,
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.aggiorna_menu_trash)) },
+                        onClick = onTrash,
+                    )
+                }
             }
         }
     }

@@ -4,11 +4,11 @@ Documento tecnico, architetturale e funzionale di riferimento (**documento unico
 
 - **File:** PVM_Nota_Integrata_v5.3 (fonte operativa: `docs/PVM_Nota_Integrata.md`)
 - **Versione:** 5.3
-- **Data ultima modifica:** 09/10/2026
+- **Data ultima modifica:** 10/10/2026
 - **Responsabile:** Renato Stefanizzi
 - **Delta v5.1 → v5.2:** recepita la revisione di navigazione (proposta Navigazione11 + interlocuzione 08/10/2026). Aggiornati §5 e chiarimenti di collocazione in §6. Nessun nuovo requisito di dominio inventato.
 - **Delta v5.2 → v5.3:** **congelamento layout UI** anteprima `0.14.6-preview` (Dashboard densità BoxManager; Accesso rapido Home fissato; albero §5 confermato). Nessun nuovo requisito di dominio. Affinamenti estetici minori (es. spessore ombre) ammessi in seguito senza riaprire la struttura.
-- **HOLD 0.15.4–0.15.9 (09/10/2026):** stop sviluppo nuove feature fino a convalida Renato su **coerenza KPI / sorgenti**. Fix 0.15.7–0.15.8: spazio originali + persistenza IMPORTA (`@Upsert`). Etichetta KPI (decisione Renato 09/10): **«di cui in Catalogo»** (non «in spazio app» / non «acquisite»). Conteggio = copie dopo **IMPORTA** nel Catalogo personale.
+- **HOLD 0.15.4–0.15.12 chiuso (09–10/10/2026):** Renato ha convalidato KPI/Importa/navigazione; ripresa sviluppo dietro UI congelata da **0.16.0**.
 
 # 1. Scopo del progetto e regole operative
 ## 1.1 Scopo
@@ -317,16 +317,15 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Per ogni macro-attività ChatGPT definisce requisiti, vincoli, decisioni progettuali, criteri di accettazione e punti da approfondire. Cursor, prima dello sviluppo, analizza le criticità tecniche indicate, evidenzia eventuali ulteriori criticità rilevanti e propone soluzioni tecniche compatibili con la specifica consolidata. Lo sviluppo inizia solo dopo la chiusura della fase di approfondimento della relativa macro-attività.
 - Come precisato, Cursor non può trasformare autonomamente una proposta tecnica in requisito consolidato.
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
-## 7.1 FASE CORRENTE: HOLD CONSOLIDAMENTO KPI / AGGIORNA
-MACRO-ATTIVITÀ DI RIFERIMENTO: M02 (architettura) + vertical slice già scaffoldate (M03–M07 / M09 / M16 in forma v1) + **M18 layout congelato (v5.3)**.
-STATO ATTUALE (09/10/2026): **HOLD** — nessun avanzamento su stub/feature nuove finché Renato non convalida:
-- Home: `Foto/Video originali` + `Spazio foto/video` = dopo CONFERMA; `di cui in Catalogo` = dopo **IMPORTA** (0.15.8+ persistenza; etichetta 0.15.9);
-- Aggiorna: riepilogo/elenco = elementi ACTIVE (fix 0.15.4–0.15.5).
-Ordine operativo aggregato (riprendere solo dopo convalida HOLD):
-1. **Acquisisci → Importa** — dati reali (censimento SAF + acquisizione SHA-256 nello spazio app) — *fatto 0.14.7+*; consultazione fonti › — *fatto 0.15.0*;
-2. **Aggiorna** — elenco Catalogo reale + Pulisci + Allinea — *fatto 0.14.8+*; **conteggio allineato al Catalogo — 0.15.4**; menu contestuale riga = backlog M08/M12;
-3. **Home KPI / ricerca** — semantica consolidata in 0.15.4; acquisite/spazio restano 0 finché non si importa;
-4. Feature ancora stub (Componi/Backup/CONFIGURA) — **bloccate dal HOLD** + richiedono convalida/specifica (M11/M14/M15).
+## 7.1 FASE CORRENTE: SVILUPPO DIETRO UI CONGELATA (HOLD chiuso)
+MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)**.
+STATO ATTUALE (10/10/2026): HOLD KPI/Importa **chiuso** (convalida Renato). Ripresa autonomia Cursor.
+Ordine operativo aggregato:
+1. **Acquisisci → Importa** — *fatto*; CONTINUA se già in Catalogo — *0.15.12*;
+2. **Aggiorna** — elenco reale + Pulisci; **menu contestuale v1** (Rinomina / Elimina→Cestino / Copia su dispositivo) — *0.16.0*; Sposta = BL-07;
+3. **Home KPI / ricerca** — consolidati 0.15.x;
+4. **BL-05** nascondere Spazio interno app — *0.16.0*;
+5. Feature stub Componi/Backup/CONFIGURA — solo con specifica (M11/M14/M15); fino ad allora stub.
 Nota: Le dipendenze riportate per ciascuna macro-attività della Roadmap devono indicare esclusivamente le dipendenze dirette da macro-attività precedenti, ossia quelle il cui output costituisce un input necessario alla macro-attività corrente. Le dipendenze transitive non devono essere ripetute.
 Regola di aggiornamento della roadmap
 La tabella costituisce l'unico riferimento operativo per lo stato di avanzamento. Non viene creato un file Excel parallelo come fonte di riferimento. Ogni decisione consolidata, criticità emersa, modifica dello stato o chiusura di una macro-attività deve essere recepita nella Nota Integrata.
@@ -343,10 +342,10 @@ Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consoli
 | BL-02 | Estetica Home | Affinare spessore ombre dei riquadri Accesso rapido / ricerca (layout già congelato). | Renato 09/10/2026 |
 | BL-03 | **Acquisisci — selezione fonti a 3 stati** | Gestione dispositivi/cartelle in elenco Acquisisci con **riquadro di selezione a tre stati** (non più solo on/off): selezionato (✓) · non selezionato (vuoto) · escluso/rimosso (**X**). L’idea preferita è usare la X nel riquadro stesso (niente icona cestino separata) per togliere dalla lista le fonti non più di interesse. Definire effetto su Catalogo già censito e su Importa. | Renato 09/10/2026 |
 | BL-04 | **Eliminazione multi-selezione** | Su Importa e sugli altri elenchi media: poter deselezionare/eliminare (o escludere dall’import) più elementi insieme, così da evitare di copiare in Catalogo file indesiderati. Riuso del pattern selezione già in UI. | Renato 09/10/2026 |
-| BL-05 | **Acquisisci — nascondere «Spazio interno app»** | La sorgente built-in «Spazio interno app» risulta pleonastica in elenco fonti: non mostrarla (o non esporla come fonte censibile). Restano le sole fonti esterne scelte dall’utente. | Renato 09/10/2026 |
-| BL-06 | **Aggiorna — menu contestuale «Rinomina»** | Nel menu contestuale riga di Organizza → Aggiorna aggiungere anche **Rinomina** (oltre alle azioni già previste / stub). | Renato 09/10/2026 |
+| BL-05 | **Acquisisci — nascondere «Spazio interno app»** | ~~Pleonastica in elenco fonti~~ — *fatto 0.16.0* (già filtrata in Acquisisci; nascosta anche in CONFIGURA fonti). | Renato 09/10/2026 |
+| BL-06 | **Aggiorna — menu contestuale «Rinomina»** | ~~Aggiungere Rinomina~~ — *fatto 0.16.0* (insieme a Elimina→Cestino e Copia su dispositivo). | Renato 09/10/2026 |
 | BL-07 | **Aggiorna — «Sposta» nel menu contestuale** | Con Catalogo logico unico, «Sposta» tra voci di Catalogo è ambiguo/fuorviante. Valutare: rimuovere Sposta; oppure reinterpretarlo come spostamento della **copia fisica** tra ubicazioni (sorgente ↔ spazio app ↔ futuro Archivio Condiviso), non come spostamento «nel» Catalogo. | Renato 09/10/2026 |
-| BL-08 | **Copia da Catalogo → dispositivo** | Export esplicito: copiare un file dal Catalogo (copia preferita / spazio app) verso una cartella del dispositivo (SAF createDocument / tree). Utile per condividere fuori dall’app senza aprire l’archivio interno. Distinguere da Sposta; non tocca gli originali sulle sorgenti censite salvo scelta esplicita. | Renato 09/10/2026 |
+| BL-08 | **Copia da Catalogo → dispositivo** | ~~Export esplicito SAF CreateDocument~~ — *fatto 0.16.0* (menu Aggiorna «Copia su dispositivo»; preferisce copia spazio app). Sposta resta BL-07. | Renato 09/10/2026 |
 
 Fine documento
 

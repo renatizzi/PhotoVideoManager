@@ -1,10 +1,12 @@
 package com.renatizzi.photovideomanager.ui.search
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.domain.model.CatalogSearchEntry
+import com.renatizzi.photovideomanager.domain.model.MediaKind
 import com.renatizzi.photovideomanager.domain.model.SearchKindFilter
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -66,6 +68,72 @@ class SearchViewModel(
 
     fun refresh() {
         runSearch(cycleSelection = false)
+    }
+
+    fun renameMedia(mediaItemId: String, newTitle: String) {
+        viewModelScope.launch {
+            runCatching { catalogFacade.renameMediaTitle(mediaItemId, newTitle) }
+                .onSuccess {
+                    _state.update { it.copy(message = "Rinominato") }
+                    runSearch(cycleSelection = false)
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(message = error.message ?: "Rinomina non riuscita")
+                    }
+                }
+        }
+    }
+
+    fun trashMedia(mediaItemId: String) {
+        viewModelScope.launch {
+            runCatching { catalogFacade.trashMediaItem(mediaItemId) }
+                .onSuccess { result ->
+                    _state.update {
+                        it.copy(message = result.message ?: "Spostato nel Cestino")
+                    }
+                    runSearch(cycleSelection = false)
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(message = error.message ?: "Eliminazione non riuscita")
+                    }
+                }
+        }
+    }
+
+    fun exportMedia(mediaItemId: String, destUri: Uri) {
+        viewModelScope.launch {
+            catalogFacade.exportMediaItemToUri(mediaItemId, destUri)
+                .onSuccess { name ->
+                    _state.update { it.copy(message = "Copiato su dispositivo: $name") }
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(message = error.message ?: "Copia su dispositivo non riuscita")
+                    }
+                }
+        }
+    }
+
+    fun suggestedExportFileName(mediaItemId: String): String {
+        val entry = _state.value.entries.firstOrNull { it.mediaItem.id == mediaItemId }
+        val title = entry?.mediaItem?.displayTitle?.ifBlank { null }
+        if (title != null) return title
+        val kind = entry?.mediaItem?.kind
+        return when (kind) {
+            MediaKind.VIDEO -> "video_${mediaItemId.takeLast(8)}.mp4"
+            else -> "foto_${mediaItemId.takeLast(8)}.jpg"
+        }
+    }
+
+    fun exportMimeType(mediaItemId: String): String {
+        val entry = _state.value.entries.firstOrNull { it.mediaItem.id == mediaItemId }
+        entry?.previewCopy?.mimeType?.takeIf { it.isNotBlank() }?.let { return it }
+        return when (entry?.mediaItem?.kind) {
+            MediaKind.VIDEO -> "video/*"
+            else -> "image/*"
+        }
     }
 
     private fun runSearch(cycleSelection: Boolean) {

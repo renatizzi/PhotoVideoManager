@@ -1,5 +1,7 @@
 package com.renatizzi.photovideomanager.ui.navigation
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -267,16 +269,21 @@ fun PvmApp(
                         factory = SearchViewModel.factory(catalogFacade),
                     )
                     val aggiornaState by aggiornaVm.state.collectAsStateWithLifecycle()
-                    val menuSoon = stringResource(R.string.aggiorna_menu_soon)
-                    var menuPing by remember { mutableStateOf(0) }
+                    var pendingExportId by remember { mutableStateOf<String?>(null) }
+                    val createDocument = rememberLauncherForActivityResult(
+                        contract = ActivityResultContracts.CreateDocument("*/*"),
+                    ) { uri ->
+                        val id = pendingExportId
+                        pendingExportId = null
+                        if (uri != null && id != null) {
+                            aggiornaVm.exportMedia(id, uri)
+                        }
+                    }
                     LaunchedEffect(aggiornaState.message) {
                         aggiornaState.message?.let {
                             snackbarHostState.showSnackbar(it)
                             aggiornaVm.consumeMessage()
                         }
-                    }
-                    LaunchedEffect(menuPing) {
-                        if (menuPing > 0) snackbarHostState.showSnackbar(menuSoon)
                     }
                     AggiornaStaticScreen(
                         state = aggiornaState,
@@ -285,7 +292,14 @@ fun PvmApp(
                         onToggleSelection = aggiornaVm::toggleSelection,
                         onRefresh = aggiornaVm::refresh,
                         onPulisci = { navController.navigate(PvmDestination.Clean.route) },
-                        onRowMenu = { menuPing += 1 },
+                        onRename = aggiornaVm::renameMedia,
+                        onTrash = aggiornaVm::trashMedia,
+                        onExportRequest = { mediaItemId, suggestedName, _ ->
+                            pendingExportId = mediaItemId
+                            createDocument.launch(suggestedName)
+                        },
+                        suggestedFileName = aggiornaVm::suggestedExportFileName,
+                        exportMime = aggiornaVm::exportMimeType,
                     )
                 }
                 composable(PvmDestination.Clean.route) {
