@@ -31,14 +31,22 @@ class SourceRegistry(
 ) {
     suspend fun bootstrapPersonalArchiveIfNeeded() {
         require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
-        catalogStore.upsertArchive(
-            ArchiveRef(
-                id = PERSONAL_ARCHIVE_ID,
-                displayName = "Archivio personale locale",
-                kind = ArchiveKind.PERSONAL_LOCAL,
-                isSharedArchive = false,
-            ),
-        )
+        val archives = catalogStore.listArchives()
+        if (archives.none { it.id == PERSONAL_ARCHIVE_ID }) {
+            catalogStore.upsertArchive(
+                ArchiveRef(
+                    id = PERSONAL_ARCHIVE_ID,
+                    displayName = "Archivio personale locale",
+                    kind = ArchiveKind.PERSONAL_LOCAL,
+                    isSharedArchive = false,
+                ),
+            )
+        }
+        val existing = catalogStore.getStorageLocation(PERSONAL_LOCATION_ID)
+        if (existing != null) {
+            // Già presente: non riscrivere. (Con DAO @Upsert è sicuro, ma evitiamo I/O).
+            return
+        }
         val localAdapter = adapterFactory.create(
             StorageLocation(
                 id = PERSONAL_LOCATION_ID,

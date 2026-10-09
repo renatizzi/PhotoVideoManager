@@ -1,6 +1,7 @@
 package com.renatizzi.photovideomanager.application
 
 import android.net.Uri
+import android.util.Log
 import com.renatizzi.photovideomanager.data.storage.SafPathLabels
 import com.renatizzi.photovideomanager.data.storage.StorageAdapterFactory
 import com.renatizzi.photovideomanager.domain.model.AcquireCandidate
@@ -79,10 +80,6 @@ class AcquisitionService(
         }.getOrNull()
     }
 
-    companion object {
-        const val DEFAULT_CANDIDATE_LIMIT = 5_000
-    }
-
     suspend fun acquireToPersonalArchive(mediaItemIds: Collection<String>): AcquireResult {
         require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
         val destination = catalogStore.getStorageLocation(CatalogFacade.PERSONAL_LOCATION_ID)
@@ -117,6 +114,10 @@ class AcquisitionService(
 
         val stagingParent = ".pvm_staging/$sessionId"
 
+        // #region agent log
+        Log.d(PVM_DEBUG, "acquire START ids=${mediaItemIds.size} dest=${destination.id}")
+        // #endregion
+
         for (itemId in mediaItemIds) {
             try {
                 val item = catalogStore.getMediaItem(itemId)
@@ -144,6 +145,9 @@ class AcquisitionService(
                 val sourceAdapter = adapterFactory.create(sourceLocation)
                 if (sourceAdapter.availability() != Availability.AVAILABLE) {
                     failed++
+                    // #region agent log
+                    Log.d(PVM_DEBUG, "acquire FAIL unavailable item=$itemId hypothesisId=5")
+                    // #endregion
                     continue
                 }
 
@@ -183,6 +187,13 @@ class AcquisitionService(
                     stagedMeta.byteSize != byteCount
                 ) {
                     failed++
+                    // #region agent log
+                    Log.d(
+                        PVM_DEBUG,
+                        "acquire FAIL sizeVerify staged=${stagedMeta.byteSize} " +
+                            "src=${sourceCopy.byteSize} bytes=$byteCount hypothesisId=6",
+                    )
+                    // #endregion
                     continue
                 }
 
@@ -221,8 +232,14 @@ class AcquisitionService(
                     ),
                 )
                 acquired++
-            } catch (_: Throwable) {
+            } catch (t: Throwable) {
                 failed++
+                // #region agent log
+                Log.d(
+                    PVM_DEBUG,
+                    "acquire FAIL catch item=$itemId ${t.javaClass.simpleName}: ${t.message} hypothesisId=1,5",
+                )
+                // #endregion
             }
         }
 
@@ -230,22 +247,46 @@ class AcquisitionService(
             failed > 0 && acquired == 0 && skipped == 0 -> ImportSessionState.FAILED
             else -> ImportSessionState.COMPLETED
         }
+        val lastError = if (failed > 0) "$failed elementi non acquisiti" else null
         session = session.copy(
             state = finalState,
             updatedAtEpochMs = System.currentTimeMillis(),
             itemsDone = acquired + skipped,
             itemsFailed = failed,
-            lastError = if (failed > 0) "$failed elementi non acquisiti" else null,
+            lastError = lastError,
         )
         catalogStore.upsertImportSession(session)
 
+        val personalAfter = catalogStore.listAllMediaCopies()
+            .count {
+                it.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID &&
+                    it.state == MediaCopyState.ACTIVE
+            }
+        // #region agent log
+        Log.d(
+            PVM_DEBUG,
+            "acquire DONE acquired=$acquired skipped=$skipped failed=$failed " +
+                "personalCopies=$personalAfter hypothesisId=1,2,4",
+        )
+        // #endregion
+
+        val summary = buildString {
+            append("Acquisizione terminata: $acquired copiati")
+            if (skipped > 0) append(", $skipped già presenti")
+            if (failed > 0) append(", $failed non riusciti")
+        }
         return AcquireResult(
             sessionId = sessionId,
             state = finalState,
             acquired = acquired,
             skippedAlreadyPresent = skipped,
             failed = failed,
-            message = null,
+            message = summary,
         )
+    }
+
+    companion object {
+        const val DEFAULT_CANDIDATE_LIMIT = 5_000
+        private const val PVM_DEBUG = "PVM_DEBUG"
     }
 }

@@ -1,5 +1,6 @@
 package com.renatizzi.photovideomanager.application
 
+import android.util.Log
 import com.renatizzi.photovideomanager.domain.model.AcquireCandidate
 import com.renatizzi.photovideomanager.domain.model.AcquireResult
 import com.renatizzi.photovideomanager.domain.model.ArchiveEntry
@@ -43,11 +44,22 @@ class CatalogFacade(
      * - `personalUsedBytes` = byte su disco nello spazio app (anche staging/orfani).
      */
     suspend fun dashboardSnapshot(): DashboardSnapshot {
+        // #region agent log
+        val personalBeforeBootstrap = runCatching { archiveService.listPersonalArchive() }
+            .getOrDefault(emptyList()).size
+        // #endregion
         bootstrapPersonalArchiveIfNeeded()
         val availability = localStorageAvailability()
         val (dupPhotos, dupVideos) = runCatching { dedupService.currentExactDuplicateExtras() }
             .getOrDefault(0L to 0L)
         val personal = runCatching { archiveService.listPersonalArchive() }.getOrDefault(emptyList())
+        // #region agent log
+        Log.d(
+            PVM_DEBUG,
+            "dashboard personalBeforeBootstrap=$personalBeforeBootstrap " +
+                "personalAfter=${personal.size} diskBytesHint hypothesisId=2,3,4",
+        )
+        // #endregion
         val acquiredPhotos = personal.count { it.mediaItem.kind == MediaKind.PHOTO }.toLong()
         val acquiredVideos = personal.count { it.mediaItem.kind == MediaKind.VIDEO }.toLong()
         val personalDiskBytes = sourceRegistry.personalArchiveUsedBytes()
@@ -75,9 +87,19 @@ class CatalogFacade(
         val videoCatalogBytes = catalogEntries
             .filter { it.mediaItem.kind == MediaKind.VIDEO }
             .sumOf { it.previewCopy?.byteSize ?: 0L }
+        val photoCount = sourceRegistry.countByKind(MediaKind.PHOTO)
+        val videoCount = sourceRegistry.countByKind(MediaKind.VIDEO)
+        // #region agent log
+        Log.d(
+            PVM_DEBUG,
+            "dashboard KPI photos=$photoCount videos=$videoCount " +
+                "acquiredPhotos=$acquiredPhotos acquiredVideos=$acquiredVideos " +
+                "catalogPhotoBytes=$photoCatalogBytes personalDisk=$personalDiskBytes hypothesisId=2,4",
+        )
+        // #endregion
         return DashboardSnapshot(
-            photoCount = sourceRegistry.countByKind(MediaKind.PHOTO),
-            videoCount = sourceRegistry.countByKind(MediaKind.VIDEO),
+            photoCount = photoCount,
+            videoCount = videoCount,
             acquiredPhotoCount = acquiredPhotos,
             acquiredVideoCount = acquiredVideos,
             photoUsedBytes = photoCatalogBytes,
@@ -163,5 +185,6 @@ class CatalogFacade(
     companion object {
         const val PERSONAL_ARCHIVE_ID = "archive.personal.local"
         const val PERSONAL_LOCATION_ID = "location.personal.local.root"
+        private const val PVM_DEBUG = "PVM_DEBUG"
     }
 }

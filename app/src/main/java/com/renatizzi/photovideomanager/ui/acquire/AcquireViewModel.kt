@@ -149,7 +149,7 @@ class AcquireViewModel(
                     val sources = _state.value.sourceLocationIds.takeIf { it.isNotEmpty() }
                     val candidates = catalogFacade.listAcquireCandidates(sourceLocationIds = sources)
                     val count = catalogFacade.mediaItemCount()
-                    val msg = result.message ?: buildString {
+                    val msg = result.message?.takeIf { it.isNotBlank() } ?: buildString {
                         append("Acquisizione terminata: ")
                         append("${result.acquired} copiati")
                         if (result.skippedAlreadyPresent > 0) {

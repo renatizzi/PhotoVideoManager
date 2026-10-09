@@ -1,13 +1,22 @@
 package com.renatizzi.photovideomanager.data.catalog
 
 import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Upsert
 
+/**
+ * DAO Catalogo.
+ *
+ * Importante: usare [Upsert] (INSERT ON CONFLICT DO UPDATE), **non**
+ * `@Insert(onConflict = REPLACE)`. REPLACE in SQLite elimina la riga e la
+ * reinserisce: con `ForeignKey(onDelete = CASCADE)` cancellerebbe tutte le
+ * MediaCopy / fingerprint figlie. Sintomo: dopo IMPORTA, Home chiama
+ * `bootstrapPersonalArchiveIfNeeded()` → upsert location personale →
+ * acquiredPhotoCount torna a 0.
+ */
 @Dao
 interface ArchiveDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun upsert(entity: ArchiveEntity)
 
     @Query("SELECT * FROM archives ORDER BY displayName")
@@ -19,7 +28,7 @@ interface ArchiveDao {
 
 @Dao
 interface StorageLocationDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun upsert(entity: StorageLocationEntity)
 
     @Query("SELECT * FROM storage_locations ORDER BY displayName")
@@ -34,7 +43,7 @@ interface StorageLocationDao {
 
 @Dao
 interface MediaItemDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun upsert(entity: MediaItemEntity)
 
     /** Elementi con almeno una copia ACTIVE (= Catalogo / Aggiorna). */
@@ -84,7 +93,7 @@ interface MediaItemDao {
 
 @Dao
 interface MediaCopyDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun upsert(entity: MediaCopyEntity)
 
     @Query(
@@ -104,13 +113,18 @@ interface MediaCopyDao {
     @Query("SELECT * FROM media_copies WHERE state = :state ORDER BY createdAtEpochMs DESC")
     suspend fun listByState(state: String): List<MediaCopyEntity>
 
+    @Query(
+        "SELECT COUNT(*) FROM media_copies WHERE storageLocationId = :storageLocationId AND state = :state",
+    )
+    suspend fun countByLocationAndState(storageLocationId: String, state: String): Long
+
     @Query("DELETE FROM media_copies WHERE id = :id")
     suspend fun delete(id: String)
 }
 
 @Dao
 interface MediaFingerprintDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun upsert(entity: MediaFingerprintEntity)
 
     @Query("SELECT * FROM media_fingerprints")
@@ -130,7 +144,7 @@ interface MediaFingerprintDao {
 
 @Dao
 interface ScanSessionDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun upsert(entity: ScanSessionEntity)
 
     @Query("SELECT * FROM scan_sessions WHERE id = :id LIMIT 1")
@@ -140,7 +154,7 @@ interface ScanSessionDao {
 
 @Dao
 interface ImportSessionDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun upsert(entity: ImportSessionEntity)
 
     @Query("SELECT * FROM import_sessions WHERE id = :id LIMIT 1")
