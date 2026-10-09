@@ -163,6 +163,5 @@ class CatalogFacade(
     companion object {
         const val PERSONAL_ARCHIVE_ID = "archive.personal.local"
         const val PERSONAL_LOCATION_ID = "location.personal.local.root"
-        private const val PVM_DEBUG = "PVM_DEBUG"
     }
 }
