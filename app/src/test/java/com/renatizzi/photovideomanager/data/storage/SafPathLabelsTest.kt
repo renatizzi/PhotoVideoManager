@@ -32,4 +32,17 @@ class SafPathLabelsTest {
         assertFalse(label.contains("encoded=", ignoreCase = true))
         assertFalse(label.startsWith("acc="))
     }
+
+    @Test
+    fun folderTitle_rootVolumeUsesExplicitName() {
+        // humanPath("primary:") → "Memoria principale" → titolo radice
+        assertEquals(
+            SafPathLabels.ROOT_FOLDER_TITLE,
+            SafPathLabels.humanizeDocumentId("primary:").let { path ->
+                val relative = path.substringAfter('/', missingDelimiterValue = "")
+                if (relative.isBlank()) SafPathLabels.ROOT_FOLDER_TITLE
+                else relative.substringAfterLast('/')
+            },
+        )
+    }
 }

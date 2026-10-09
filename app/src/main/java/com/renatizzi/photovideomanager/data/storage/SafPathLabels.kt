@@ -20,10 +20,21 @@ object SafPathLabels {
         return Build.MODEL.ifBlank { "Questo dispositivo" }
     }
 
+    /**
+     * Titolo cartella per UI. Se l’albero è la radice del volume
+     * (es. solo «Memoria principale»), usa un nome esplicito di radice.
+     */
     fun folderTitle(treeUri: Uri, fallback: String): String {
         val path = humanPath(treeUri) ?: return fallback.ifBlank { "Cartella" }
-        return path.substringAfterLast('/').ifBlank { path }
+        val relative = path.substringAfter('/', missingDelimiterValue = "")
+        return if (relative.isBlank()) {
+            ROOT_FOLDER_TITLE
+        } else {
+            relative.substringAfterLast('/').ifBlank { relative }
+        }
     }
+
+    const val ROOT_FOLDER_TITLE = "Tutta la memoria"
 
     fun humanPath(treeUri: Uri): String? {
         val docId = runCatching { DocumentsContract.getTreeDocumentId(treeUri) }.getOrNull()

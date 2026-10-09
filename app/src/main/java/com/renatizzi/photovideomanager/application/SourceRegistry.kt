@@ -222,6 +222,21 @@ class SourceRegistry(
 
     private fun resolveDisplayName(location: StorageLocation, pathLabel: String): String {
         labelStore.sourceAlias(location.id)?.let { return it }
+        if (location.adapterKind == StorageAdapterKind.SAF_TREE && location.opaqueLocator.isNotBlank()) {
+            val derived = SafPathLabels.folderTitle(Uri.parse(location.opaqueLocator), pathLabel)
+            val stored = location.displayName
+            // Usa sempre il titolo derivato se lo stored è illegibile, uguale al solo volume,
+            // o è un vecchio «Memoria principale» senza cartella.
+            val volumeOnly = !pathLabel.contains('/')
+            if (looksIllegible(stored) ||
+                stored == pathLabel ||
+                (volumeOnly && stored.equals(pathLabel, ignoreCase = true)) ||
+                stored.equals(SafPathLabels.volumeLabel("primary"), ignoreCase = true)
+            ) {
+                return derived
+            }
+            return stored
+        }
         if (!looksIllegible(location.displayName)) return location.displayName
         return pathLabel.substringAfterLast('/').ifBlank { pathLabel }
     }

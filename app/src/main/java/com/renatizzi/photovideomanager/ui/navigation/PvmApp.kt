@@ -216,6 +216,7 @@ fun PvmApp(
                             },
                             onRenameSource = censusVm::renameSource,
                             onRenameDevice = censusVm::setDeviceAlias,
+                            onRemoveSource = censusVm::removeSource,
                         )
                         AcquireFlowStep.COPY -> ImportaStaticScreen(
                             state = acquireState,

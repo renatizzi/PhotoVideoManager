@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Refresh
@@ -81,6 +82,7 @@ fun AcquisisciStaticScreen(
     onBrowse: (String) -> Unit = {},
     onRenameSource: (String, String) -> Unit = { _, _ -> },
     onRenameDevice: (String) -> Unit = {},
+    onRemoveSource: (String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -228,6 +230,7 @@ fun AcquisisciStaticScreen(
                         enabled = !busy,
                         onToggle = { onToggleSelection(source.locationId) },
                         onBrowse = { onBrowse(source.locationId) },
+                        onRemove = { onRemoveSource(source.locationId) },
                         onLongPress = {
                             renameTarget = source
                             renameText = source.displayName
@@ -307,6 +310,7 @@ private fun SourceRow(
     enabled: Boolean,
     onToggle: () -> Unit,
     onBrowse: () -> Unit,
+    onRemove: () -> Unit,
     onLongPress: () -> Unit,
 ) {
     Row(
@@ -330,13 +334,9 @@ private fun SourceRow(
                     onLongClick = onLongPress,
                 ),
         ) {
-            // Titolo = nome cartella (rinominabile); sottotitolo = dispositivo + tipo
+            // Titolo = nome cartella; sotto = solo percorso (stesso formato di Importa)
             Text(source.displayName, fontWeight = FontWeight.SemiBold)
-            Text(
-                text = "${source.deviceLabel} · ${adapterKindLabel(source.adapterKind)}",
-                style = MaterialTheme.typography.labelMedium,
-            )
-            Text(source.pathLabel, style = MaterialTheme.typography.bodySmall)
+            Text(source.pathLabel, style = MaterialTheme.typography.bodyMedium)
             Text(
                 text = when (source.availability) {
                     Availability.AVAILABLE -> stringResource(R.string.status_available)
@@ -355,19 +355,20 @@ private fun SourceRow(
         if (busy) {
             CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
         } else {
+            IconButton(
+                onClick = onRemove,
+                enabled = enabled,
+            ) {
+                Icon(
+                    Icons.Outlined.DeleteOutline,
+                    contentDescription = stringResource(R.string.acquisisci_remove_source_cd),
+                )
+            }
             IconButton(onClick = onBrowse, enabled = enabled) {
                 Text(">", style = MaterialTheme.typography.titleLarge)
             }
         }
     }
-}
-
-@Composable
-private fun adapterKindLabel(kind: StorageAdapterKind): String = when (kind) {
-    StorageAdapterKind.LOCAL_FS -> stringResource(R.string.adapter_local)
-    StorageAdapterKind.SAF_TREE -> stringResource(R.string.adapter_saf)
-    StorageAdapterKind.MEDIA_STORE -> stringResource(R.string.adapter_mediastore)
-    StorageAdapterKind.SMB -> stringResource(R.string.adapter_smb)
 }
 
 @Composable

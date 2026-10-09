@@ -1,5 +1,7 @@
 package com.renatizzi.photovideomanager.application
 
+import android.net.Uri
+import com.renatizzi.photovideomanager.data.storage.SafPathLabels
 import com.renatizzi.photovideomanager.data.storage.StorageAdapterFactory
 import com.renatizzi.photovideomanager.domain.model.AcquireCandidate
 import com.renatizzi.photovideomanager.domain.model.AcquireResult
@@ -10,7 +12,9 @@ import com.renatizzi.photovideomanager.domain.model.ImportSessionState
 import com.renatizzi.photovideomanager.domain.model.MediaCopy
 import com.renatizzi.photovideomanager.domain.model.MediaCopyState
 import com.renatizzi.photovideomanager.domain.model.MediaFingerprint
+import com.renatizzi.photovideomanager.domain.model.StorageAdapterKind
 import com.renatizzi.photovideomanager.domain.model.StorageCapability
+import com.renatizzi.photovideomanager.domain.model.StorageLocation
 import com.renatizzi.photovideomanager.domain.port.CatalogStore
 import com.renatizzi.photovideomanager.domain.port.PermissionGate
 import java.security.MessageDigest
@@ -53,12 +57,24 @@ class AcquisitionService(
                 AcquireCandidate(
                     mediaItem = item,
                     sourceCopy = sourceCopy,
-                    sourceLocationName = sourceLocation?.displayName ?: sourceCopy.storageLocationId,
+                    sourceLocationName = sourcePathLabel(sourceLocation)
+                        ?: sourceLocation?.displayName
+                        ?: sourceCopy.storageLocationId,
                     alreadyInPersonalArchive = alreadyPersonal,
                 ),
             )
         }
         return result
+    }
+
+    /** Stesso formato percorso usato in Acquisisci (es. Memoria principale/Pictures). */
+    private fun sourcePathLabel(location: StorageLocation?): String? {
+        if (location == null) return null
+        if (location.adapterKind != StorageAdapterKind.SAF_TREE) return location.displayName
+        if (location.opaqueLocator.isBlank()) return location.displayName
+        return runCatching {
+            SafPathLabels.humanPath(Uri.parse(location.opaqueLocator))
+        }.getOrNull()
     }
 
     companion object {

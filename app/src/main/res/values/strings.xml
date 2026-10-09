@@ -54,6 +54,7 @@
     <string name="acquisisci_rename_device_label">Es. Telefono Renato</string>
     <string name="acquisisci_rename_source_title">Nome sorgente / cartella</string>
     <string name="acquisisci_rename_source_label">Nome visualizzato</string>
+    <string name="acquisisci_remove_source_cd">Rimuovi fonte dall\'elenco</string>
     <string name="acquisisci_tutti">Tutti</string>
     <string name="acquisisci_conferma">CONFERMA</string>
     <string name="importa_title">Importa</string>
@@ -64,7 +65,7 @@
     <string name="importa_riepilogo">Candidati %1$d · foto %2$d · video %3$d · già in archivio %4$d · selezionati %5$d</string>
     <string name="importa_empty">Nessun file da importare. Torna ad Acquisisci, aggiungi fonti e conferma il censimento.</string>
     <string name="importa_empty_deselected">Nessun file selezionato. Tocca Tutti / Foto / Video per selezionare di nuovo.</string>
-    <string name="importa_riga_meta">Tipo: media · Sorgente: %1$s</string>
+    <string name="importa_riga_meta">%1$s</string>
     <string name="importa_action">IMPORTA</string>
     <string name="importa_annulla">Annulla</string>
     <string name="importa_back_acquisisci">Annulla</string>
