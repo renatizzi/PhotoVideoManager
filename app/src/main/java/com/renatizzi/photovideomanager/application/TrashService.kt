@@ -10,9 +10,10 @@ import com.renatizzi.photovideomanager.domain.port.CatalogStore
 import com.renatizzi.photovideomanager.domain.port.PermissionGate
 
 /**
- * Cestino catalogo (soft-delete).
- * - SAF/esterni: solo stato TRASHED nel Catalogo (file originali intatti).
- * - Spazio personale: TRASHED; allo svuota si cancella anche il file app.
+ * Cestino Catalogo.
+ * - File del dispositivo: solo rimozione dal Catalogo (file fisico intatto).
+ * - Copia gestita dall’app: in Cestino; allo svuota si cancella anche il file gestito dall’app.
+ * Elenco e ripristino sono **per elemento di Catalogo** (una riga), non per ogni copia fisica.
  */
 class TrashService(
     private val catalogStore: CatalogStore,
@@ -23,19 +24,37 @@ class TrashService(
         require(permissionGate.canView(DomainScope.PERSONAL))
         val items = catalogStore.listAllMediaItems().associateBy { it.id }
         val locations = catalogStore.listStorageLocations().associateBy { it.id }
-        return catalogStore.listMediaCopiesByState(MediaCopyState.TRASHED).mapNotNull { copy ->
-            val item = items[copy.mediaItemId] ?: return@mapNotNull null
-            val location = locations[copy.storageLocationId]
-            TrashEntry(
-                mediaItem = item,
-                mediaCopy = copy,
-                locationName = location?.displayName ?: copy.storageLocationId,
-                isPersonalArchive = copy.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID,
-            )
-        }
+        val trashed = catalogStore.listMediaCopiesByState(MediaCopyState.TRASHED)
+        return trashed
+            .groupBy { it.mediaItemId }
+            .mapNotNull { (mediaItemId, copies) ->
+                val item = items[mediaItemId] ?: return@mapNotNull null
+                // Preferisci mostrare la posizione «file del dispositivo» se c’è.
+                val deviceCopy = copies.firstOrNull {
+                    it.storageLocationId != CatalogFacade.PERSONAL_LOCATION_ID
+                }
+                val personalCopy = copies.firstOrNull {
+                    it.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID
+                }
+                val displayCopy = deviceCopy ?: personalCopy ?: copies.first()
+                val location = locations[displayCopy.storageLocationId]
+                val locationName = when {
+                    displayCopy.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID ->
+                        "Catalogo"
+                    else -> location?.displayName ?: "File del dispositivo"
+                }
+                TrashEntry(
+                    mediaItem = item,
+                    mediaCopy = displayCopy,
+                    locationName = locationName,
+                    isPersonalArchive = personalCopy != null,
+                    trashedCopyIds = copies.map { it.id },
+                )
+            }
+            .sortedByDescending { it.mediaCopy.createdAtEpochMs }
     }
 
-    /** Mette nel Cestino tutte le copie ACTIVE di un MediaItem. */
+    /** Mette nel Cestino tutte le copie attive di un elemento di Catalogo. */
     suspend fun trashMediaItem(mediaItemId: String): TrashActionResult {
         val ids = catalogStore.listMediaCopiesForItem(mediaItemId)
             .filter { it.state == MediaCopyState.ACTIVE }
@@ -55,9 +74,9 @@ class TrashService(
         return TrashActionResult(
             affected = n,
             message = if (n == 0) {
-                "Nessuna copia da cestinare"
+                "Niente da eliminare"
             } else {
-                "Spostate nel Cestino: $n. Gli originali sulle cartelle del telefono restano intatti."
+                "Spostato nel Cestino. Il file del dispositivo non è stato cancellato."
             },
         )
     }
@@ -91,22 +110,71 @@ class TrashService(
         )
     }
 
-    suspend fun restoreCopy(copyId: String): TrashActionResult {
+    /** Ripristina tutte le copie in Cestino dello stesso elemento di Catalogo. */
+    suspend fun restoreMediaItem(mediaItemId: String): TrashActionResult {
         require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
-        val copy = catalogStore.getMediaCopy(copyId)
-            ?: return TrashActionResult(0, "Elemento non trovato")
-        if (copy.state != MediaCopyState.TRASHED) {
-            return TrashActionResult(0, "Elemento non è nel Cestino")
+        val trashed = catalogStore.listMediaCopiesForItem(mediaItemId)
+            .filter { it.state == MediaCopyState.TRASHED }
+        if (trashed.isEmpty()) {
+            return TrashActionResult(0, "Elemento non trovato nel Cestino")
         }
-        catalogStore.upsertMediaCopy(copy.copy(state = MediaCopyState.ACTIVE))
-        return TrashActionResult(1, "Ripristinato nel Catalogo")
+        for (copy in trashed) {
+            catalogStore.upsertMediaCopy(copy.copy(state = MediaCopyState.ACTIVE))
+        }
+        return TrashActionResult(trashed.size, "Ripristinato nel Catalogo")
     }
 
-    suspend fun purgeCopy(copyId: String): TrashActionResult {
-        require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
+    @Deprecated("Usare restoreMediaItem", ReplaceWith("restoreMediaItem(mediaItemId)"))
+    suspend fun restoreCopy(copyId: String): TrashActionResult {
         val copy = catalogStore.getMediaCopy(copyId)
             ?: return TrashActionResult(0, "Elemento non trovato")
-        // Solo spazio personale: cancellazione fisica. Altri locator: solo catalogo.
+        return restoreMediaItem(copy.mediaItemId)
+    }
+
+    /** Elimina definitivamente tutte le copie in Cestino dello stesso elemento. */
+    suspend fun purgeMediaItem(mediaItemId: String): TrashActionResult {
+        require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
+        val trashed = catalogStore.listMediaCopiesForItem(mediaItemId)
+            .filter { it.state == MediaCopyState.TRASHED }
+        if (trashed.isEmpty()) {
+            return TrashActionResult(0, "Elemento non trovato")
+        }
+        var n = 0
+        var removedManagedFile = false
+        for (copy in trashed) {
+            n += purgeOneCopy(copy.id).affected
+            if (copy.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID) {
+                removedManagedFile = true
+            }
+        }
+        return TrashActionResult(
+            affected = n,
+            message = if (removedManagedFile) {
+                "Eliminato definitivamente dal Catalogo"
+            } else {
+                "Rimosso dal Catalogo (file del dispositivo non toccato)"
+            },
+        )
+    }
+
+    @Deprecated("Usare purgeMediaItem", ReplaceWith("purgeMediaItem(mediaItemId)"))
+    suspend fun purgeCopy(copyId: String): TrashActionResult {
+        val copy = catalogStore.getMediaCopy(copyId)
+            ?: return TrashActionResult(0, "Elemento non trovato")
+        // Se ci sono altre copie in Cestino dello stesso item, purga tutto l’item
+        // per evitare residui (es. riga «Eraser» rimasta dopo un ripristino parziale).
+        val siblings = catalogStore.listMediaCopiesForItem(copy.mediaItemId)
+            .filter { it.state == MediaCopyState.TRASHED }
+        return if (siblings.size > 1) {
+            purgeMediaItem(copy.mediaItemId)
+        } else {
+            purgeOneCopy(copyId)
+        }
+    }
+
+    private suspend fun purgeOneCopy(copyId: String): TrashActionResult {
+        val copy = catalogStore.getMediaCopy(copyId)
+            ?: return TrashActionResult(0, "Elemento non trovato")
         if (copy.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID) {
             val location = catalogStore.getStorageLocation(copy.storageLocationId)
             if (location != null) {
@@ -127,23 +195,30 @@ class TrashService(
         return TrashActionResult(
             affected = 1,
             message = if (copy.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID) {
-                "Eliminato definitivamente (anche dal file nello spazio app)"
+                "Eliminato definitivamente dal Catalogo"
             } else {
-                "Rimosso dal Catalogo (file originale sul telefono non toccato)"
+                "Rimosso dal Catalogo (file del dispositivo non toccato)"
             },
         )
     }
 
     suspend fun purgeAll(): TrashActionResult {
         require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
-        val trashed = catalogStore.listMediaCopiesByState(MediaCopyState.TRASHED)
+        val itemIds = catalogStore.listMediaCopiesByState(MediaCopyState.TRASHED)
+            .map { it.mediaItemId }
+            .toSet()
         var n = 0
-        for (copy in trashed) {
-            n += purgeCopy(copy.id).affected
+        for (id in itemIds) {
+            n += purgeMediaItem(id).affected
         }
-        return TrashActionResult(n, "Cestino svuotato: $n elementi")
+        return TrashActionResult(n, "Cestino svuotato")
     }
 
+    /** Conta elementi di Catalogo in Cestino (non le singole copie fisiche). */
     suspend fun trashCount(): Long =
-        catalogStore.listMediaCopiesByState(MediaCopyState.TRASHED).size.toLong()
+        catalogStore.listMediaCopiesByState(MediaCopyState.TRASHED)
+            .map { it.mediaItemId }
+            .toSet()
+            .size
+            .toLong()
 }

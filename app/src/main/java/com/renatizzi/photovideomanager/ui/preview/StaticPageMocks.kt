@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Refresh
@@ -85,6 +86,7 @@ fun AcquisisciStaticScreen(
     onBrowse: (String) -> Unit = {},
     onRenameSource: (String, String) -> Unit = { _, _ -> },
     onRenameDevice: (String) -> Unit = {},
+    onRemoveSource: (String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -107,6 +109,7 @@ fun AcquisisciStaticScreen(
     val allChecked = sources.isNotEmpty() && selectedCount == sources.size
     val busy = state.loading || state.censusBusyLocationIds.isNotEmpty()
     var renameTarget by remember { mutableStateOf<SourceSummary?>(null) }
+    var removeTarget by remember { mutableStateOf<SourceSummary?>(null) }
     var renameDeviceOpen by remember { mutableStateOf(false) }
     var renameText by remember { mutableStateOf("") }
 
@@ -233,6 +236,7 @@ fun AcquisisciStaticScreen(
                         enabled = !busy,
                         onToggle = { onToggleSelection(source.locationId) },
                         onBrowse = { onBrowse(source.locationId) },
+                        onRemove = { removeTarget = source },
                         onLongPress = {
                             renameTarget = source
                             renameText = source.displayName
@@ -301,6 +305,28 @@ fun AcquisisciStaticScreen(
             },
         )
     }
+    removeTarget?.let { target ->
+        AlertDialog(
+            onDismissRequest = { removeTarget = null },
+            title = { Text(stringResource(R.string.acquisisci_remove_confirm_title)) },
+            text = {
+                Text(stringResource(R.string.acquisisci_remove_confirm_body, target.displayName))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onRemoveSource(target.locationId)
+                        removeTarget = null
+                    },
+                ) { Text(stringResource(R.string.dialog_yes)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { removeTarget = null }) {
+                    Text(stringResource(R.string.dialog_no))
+                }
+            },
+        )
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -312,6 +338,7 @@ private fun SourceRow(
     enabled: Boolean,
     onToggle: () -> Unit,
     onBrowse: () -> Unit,
+    onRemove: () -> Unit,
     onLongPress: () -> Unit,
 ) {
     Row(
@@ -357,6 +384,12 @@ private fun SourceRow(
         if (busy) {
             CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
         } else {
+            IconButton(onClick = onRemove, enabled = enabled) {
+                Icon(
+                    Icons.Outlined.DeleteOutline,
+                    contentDescription = stringResource(R.string.acquisisci_remove_source_cd),
+                )
+            }
             IconButton(onClick = onBrowse, enabled = enabled) {
                 Text(">", style = MaterialTheme.typography.titleLarge)
             }
@@ -557,6 +590,7 @@ fun AggiornaStaticScreen(
     onToggleSelection: (String) -> Unit = {},
     onRefresh: () -> Unit,
     onPulisci: () -> Unit,
+    onEdit: (String) -> Unit = {},
     onRename: (String, String) -> Unit = { _, _ -> },
     onTrash: (String) -> Unit = {},
     onExportRequest: (mediaItemId: String, suggestedName: String, mime: String) -> Unit = { _, _, _ -> },
@@ -671,6 +705,10 @@ fun AggiornaStaticScreen(
                         previewCopy = entry.previewCopy,
                         kind = entry.mediaItem.kind,
                         onCheckedChange = { onToggleSelection(id) },
+                        onEdit = {
+                            menuForId = null
+                            onEdit(id)
+                        },
                         onRename = {
                             menuForId = null
                             renameTarget = entry
@@ -725,15 +763,11 @@ fun AggiornaStaticScreen(
     }
 
     trashTarget?.let { target ->
-        val label = target.mediaItem.displayTitle?.ifBlank { null }
-            ?: target.previewCopy?.opaqueLocator?.substringAfterLast('/')
-                ?.substringAfterLast(':')
-            ?: target.mediaItem.id
         AlertDialog(
             onDismissRequest = { trashTarget = null },
             title = { Text(stringResource(R.string.aggiorna_trash_confirm_title)) },
             text = {
-                Text(stringResource(R.string.aggiorna_trash_confirm_body, label))
+                Text(stringResource(R.string.aggiorna_trash_confirm_body))
             },
             confirmButton = {
                 TextButton(
@@ -742,12 +776,12 @@ fun AggiornaStaticScreen(
                         trashTarget = null
                     },
                 ) {
-                    Text(stringResource(R.string.aggiorna_trash_confirm_yes))
+                    Text(stringResource(R.string.dialog_yes))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { trashTarget = null }) {
-                    Text(stringResource(R.string.importa_annulla))
+                    Text(stringResource(R.string.dialog_no))
                 }
             },
         )
@@ -897,6 +931,7 @@ private fun MediaRow(
     previewCopy: com.renatizzi.photovideomanager.domain.model.MediaCopy? = null,
     kind: MediaKind = MediaKind.PHOTO,
     onCheckedChange: (() -> Unit)? = null,
+    onEdit: () -> Unit = {},
     onRename: () -> Unit = {},
     onTrash: () -> Unit = {},
     onCopyToDevice: () -> Unit = {},
@@ -950,6 +985,10 @@ private fun MediaRow(
                     expanded = menuExpanded,
                     onDismissRequest = { onMenuExpandedChange(false) },
                 ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.aggiorna_menu_edit)) },
+                        onClick = onEdit,
+                    )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.aggiorna_menu_rename)) },
                         onClick = onRename,

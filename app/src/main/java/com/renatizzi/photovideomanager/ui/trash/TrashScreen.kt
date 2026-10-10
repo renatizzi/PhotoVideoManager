@@ -105,8 +105,8 @@ fun TrashScreen(
             TrashRow(
                 entry = entry,
                 enabled = !state.busy,
-                onRestore = { onRestore(entry.mediaCopy.id) },
-                onPurge = { onPurge(entry.mediaCopy.id) },
+                onRestore = { onRestore(entry.mediaItem.id) },
+                onPurge = { onPurge(entry.mediaItem.id) },
             )
             HorizontalDivider()
         }

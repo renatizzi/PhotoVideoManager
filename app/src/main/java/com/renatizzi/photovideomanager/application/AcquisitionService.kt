@@ -86,7 +86,7 @@ class AcquisitionService(
 
         val destAdapter = adapterFactory.create(destination)
         if (destAdapter.availability() != Availability.AVAILABLE) {
-            return AcquireResult("", ImportSessionState.FAILED, 0, 0, 0, "Spazio app non disponibile")
+            return AcquireResult("", ImportSessionState.FAILED, 0, 0, 0, "Catalogo non disponibile")
         }
         if (StorageCapability.WRITE !in destAdapter.capabilities()) {
             return AcquireResult("", ImportSessionState.FAILED, 0, 0, 0, "Destinazione non scrivibile")

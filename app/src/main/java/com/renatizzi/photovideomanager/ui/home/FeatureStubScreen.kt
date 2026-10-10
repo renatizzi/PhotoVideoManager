@@ -25,7 +25,11 @@ fun FeatureStubScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
-            text = featureId.replaceFirstChar { it.uppercase() },
+            text = when (featureId) {
+                "ripristina_backup" -> stringResource(R.string.ripristina_open_backup)
+                "backup" -> stringResource(R.string.feature_backup)
+                else -> featureId.replaceFirstChar { it.uppercase() }
+            },
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold,
         )

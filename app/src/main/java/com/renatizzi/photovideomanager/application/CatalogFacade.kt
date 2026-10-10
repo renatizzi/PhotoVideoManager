@@ -142,11 +142,11 @@ class CatalogFacade(
 
     suspend fun listTrash(): List<TrashEntry> = trashService.listTrash()
 
-    suspend fun restoreFromTrash(copyId: String): TrashActionResult =
-        trashService.restoreCopy(copyId)
+    suspend fun restoreFromTrash(mediaItemId: String): TrashActionResult =
+        trashService.restoreMediaItem(mediaItemId)
 
-    suspend fun purgeFromTrash(copyId: String): TrashActionResult =
-        trashService.purgeCopy(copyId)
+    suspend fun purgeFromTrash(mediaItemId: String): TrashActionResult =
+        trashService.purgeMediaItem(mediaItemId)
 
     suspend fun emptyTrash(): TrashActionResult = trashService.purgeAll()
 

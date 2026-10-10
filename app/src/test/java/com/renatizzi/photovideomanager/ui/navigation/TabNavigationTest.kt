@@ -17,6 +17,7 @@ class TabNavigationTest {
     @Test
     fun tabForRoute_mapsNestedTrashToUtility() {
         assertEquals(ShellTab.UTILITY, tabForRoute("utility/trash"))
+        assertEquals(ShellTab.UTILITY, tabForRoute("utility/ripristina"))
         assertEquals(ShellTab.UTILITY, tabForRoute("utility"))
     }
 

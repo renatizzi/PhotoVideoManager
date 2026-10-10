@@ -28,6 +28,7 @@ Proteggere i contenuti attraverso backup e meccanismi di recupero.
 - Cursor viene coinvolto sulla base di una specifica consolidata e, quando richiesto, per approfondimenti tecnici separati dalla Nota Integrata.
 - Cursor non deve inventare requisiti, modificare decisioni vincolanti, introdurre backend/cloud obbligatori o modificare l'architettura senza una decisione esplicita.
 - **Comunicazione con Renato (vincolante, 10/10/2026):** linguaggio sempre comprensibile a un non addetto ai lavori; niente gergo tecnico. Per ogni prova dell’app sul telefono: istruzioni passo-passo dettagliate (cosa toccare, cosa deve apparire, cosa segnalare se non torna).
+- **Terminologia UI (vincolante, 10/10/2026):** legenda in `docs/TERMINOLOGIA_UI.md` — usare **Catalogo** (non «spazio app»), **File del dispositivo** (non «file interno»); conferme stile BoxManager (`Conferma …?` + **SÌ** / **NO**).
 - Il lavoro procede per macro-attività: obiettivi → input → decisioni → output → criteri di completamento.
 - Le idee che emergono fuori dal percorso corrente vengono registrate nel Backlog e non interrompono la macro-attività in corso.
 - Evitare divagazioni, fughe in avanti, assunzioni non autorizzate, duplicazioni e regressioni concettuali.
@@ -323,11 +324,12 @@ MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) 
 STATO ATTUALE (10/10/2026): HOLD KPI/Importa **chiuso** (convalida Renato). Ripresa autonomia Cursor.
 Ordine operativo aggregato:
 1. **Acquisisci → Importa** — *fatto*; CONTINUA se già in Catalogo — *0.15.12*;
-2. **Aggiorna** — elenco reale + Pulisci; **menu contestuale v1** (Rinomina / Elimina→Cestino con conferma / Copia su dispositivo) — *0.16.0–0.16.1*; Sposta = BL-07;
-3. **Home KPI / ricerca** — consolidati 0.15.x;
-4. **BL-05** nascondere Spazio interno app — *0.16.0*;
+2. **Aggiorna** — menu: **Modifica** (stub) / Rinomina / Copia su dispositivo / Elimina (conferma BoxManager) — *0.16.2*; Sposta = BL-07;
+3. **Cestino** — una riga per elemento Catalogo; Ripristina ripristina tutte le copie; atterraggio Ripristina = Cestino + Backup (stub) — *0.16.2*;
+4. **BL-05** nascondere «Spazio interno app» — *0.16.0*; terminologia Catalogo / File del dispositivo — *0.16.2*;
 5. Feature stub Componi/Backup/CONFIGURA — solo con specifica (M11/M14/M15); fino ad allora stub.
-Vertical slice dietro UI congelata: **essenzialmente completo** (0.16.1). Prossimi sviluppi di dominio solo con specifica ChatGPT (M11/M14/M15) o decisioni su BL-01/03/04/07.
+6. **Scansione dispositivi** (chiarimento 10/10/2026): oggi l’app **non** cerca da sola tablet/PC/SSD in rete. Vede solo le cartelle che aggiungi con **+** (es. telefono e Google Drive). Rete/NAS e dischi sul router = sviluppo successivo (tipo SMB), non automatico.
+Congelamento punti Renato 10/10/2026 recepito in 0.16.2 + `docs/TERMINOLOGIA_UI.md`.
 Nota: Le dipendenze riportate per ciascuna macro-attività della Roadmap devono indicare esclusivamente le dipendenze dirette da macro-attività precedenti, ossia quelle il cui output costituisce un input necessario alla macro-attività corrente. Le dipendenze transitive non devono essere ripetute.
 Regola di aggiornamento della roadmap
 La tabella costituisce l'unico riferimento operativo per lo stato di avanzamento. Non viene creato un file Excel parallelo come fonte di riferimento. Ogni decisione consolidata, criticità emersa, modifica dello stato o chiusura di una macro-attività deve essere recepita nella Nota Integrata.
@@ -348,6 +350,8 @@ Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consoli
 | BL-06 | **Aggiorna — menu contestuale «Rinomina»** | ~~Aggiungere Rinomina~~ — *fatto 0.16.0* (insieme a Elimina→Cestino e Copia su dispositivo). | Renato 09/10/2026 |
 | BL-07 | **Aggiorna — «Sposta» nel menu contestuale** | Con Catalogo logico unico, «Sposta» tra voci di Catalogo è ambiguo/fuorviante. Valutare: rimuovere Sposta; oppure reinterpretarlo come spostamento della **copia fisica** tra ubicazioni (sorgente ↔ spazio app ↔ futuro Archivio Condiviso), non come spostamento «nel» Catalogo. | Renato 09/10/2026 |
 | BL-08 | **Copia da Catalogo → dispositivo** | ~~Export esplicito SAF CreateDocument~~ — *fatto 0.16.0* (menu Aggiorna «Copia su dispositivo»; preferisce copia spazio app). Sposta resta BL-07. | Renato 09/10/2026 |
+| BL-09 | **Scansione rete / tablet / SSD router** | Oggi solo cartelle aggiunte a mano (+). Valutare individuazione dispositivi Wi‑Fi, tablet, PC e dischi sul router (es. SMB/NAS) senza inventare sync automatica. | Renato 10/10/2026 |
+| BL-10 | **Fonti apparire senza scelta utente** | Eraser/Facebook comparsi in Acquisisci senza selezione esplicita — verificare con prove; rimozione fonte ora in UI; evitare duplicati stessa cartella. | Renato 10/10/2026 |
 
 Fine documento
 

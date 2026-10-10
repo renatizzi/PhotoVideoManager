@@ -14,9 +14,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import kotlinx.coroutines.launch
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -44,6 +46,7 @@ import com.renatizzi.photovideomanager.ui.preview.AcquisisciStaticScreen
 import com.renatizzi.photovideomanager.ui.preview.AggiornaStaticScreen
 import com.renatizzi.photovideomanager.ui.preview.ComponiLandingStaticScreen
 import com.renatizzi.photovideomanager.ui.preview.ImportaStaticScreen
+import com.renatizzi.photovideomanager.ui.restore.RipristinaLandingScreen
 import com.renatizzi.photovideomanager.ui.search.SearchScreen
 import com.renatizzi.photovideomanager.ui.search.SearchViewModel
 import com.renatizzi.photovideomanager.ui.shell.PvmScaffold
@@ -111,9 +114,10 @@ fun PvmApp(
             "aggiorna" -> navController.navigate(PvmDestination.Aggiorna.route)
             "ricerca" -> navController.navigate(PvmDestination.Search.route)
             "pulisci" -> navController.navigate(PvmDestination.Clean.route)
-            "ripristina", "cestino" -> navController.navigate(PvmDestination.Trash.route)
+            "ripristina" -> navController.navigate(PvmDestination.Ripristina.route)
+            "cestino" -> navController.navigate(PvmDestination.Trash.route)
             "salva", "condividi", "raggruppa", "edita", "crea", "pubblica", "spazio",
-            "backup", "revisione",
+            "backup", "revisione", "ripristina_backup",
             -> navController.navigate(PvmDestination.FeatureStub.create(featureId))
             else -> navController.navigate(PvmDestination.FeatureStub.create(featureId))
         }
@@ -229,6 +233,7 @@ fun PvmApp(
                             },
                             onRenameSource = censusVm::renameSource,
                             onRenameDevice = censusVm::setDeviceAlias,
+                            onRemoveSource = censusVm::removeSource,
                         )
                         AcquireFlowStep.COPY -> ImportaStaticScreen(
                             state = acquireState,
@@ -285,6 +290,8 @@ fun PvmApp(
                             aggiornaVm.consumeMessage()
                         }
                     }
+                    val editSoon = stringResource(R.string.aggiorna_edit_soon)
+                    val scope = rememberCoroutineScope()
                     AggiornaStaticScreen(
                         state = aggiornaState,
                         onQueryChange = aggiornaVm::onQueryChange,
@@ -292,6 +299,10 @@ fun PvmApp(
                         onToggleSelection = aggiornaVm::toggleSelection,
                         onRefresh = aggiornaVm::refresh,
                         onPulisci = { navController.navigate(PvmDestination.Clean.route) },
+                        onEdit = { _ ->
+                            // Voce menu presente; funzione di editing in preparazione.
+                            scope.launch { snackbarHostState.showSnackbar(editSoon) }
+                        },
                         onRename = aggiornaVm::renameMedia,
                         onTrash = aggiornaVm::trashMedia,
                         onExportRequest = { mediaItemId, suggestedName, _ ->
@@ -300,6 +311,14 @@ fun PvmApp(
                         },
                         suggestedFileName = aggiornaVm::suggestedExportFileName,
                         exportMime = aggiornaVm::exportMimeType,
+                    )
+                }
+                composable(PvmDestination.Ripristina.route) {
+                    RipristinaLandingScreen(
+                        onOpenTrash = { navController.navigate(PvmDestination.Trash.route) },
+                        onOpenBackupRestore = {
+                            navController.navigate(PvmDestination.FeatureStub.create("ripristina_backup"))
+                        },
                     )
                 }
                 composable(PvmDestination.Clean.route) {

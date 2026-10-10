@@ -51,7 +51,7 @@ class SourceRegistry(
             StorageLocation(
                 id = PERSONAL_LOCATION_ID,
                 archiveId = PERSONAL_ARCHIVE_ID,
-                displayName = "Spazio interno app",
+                displayName = "Catalogo",
                 adapterKind = StorageAdapterKind.LOCAL_FS,
                 opaqueLocator = "",
             ),
@@ -60,7 +60,7 @@ class SourceRegistry(
             StorageLocation(
                 id = PERSONAL_LOCATION_ID,
                 archiveId = PERSONAL_ARCHIVE_ID,
-                displayName = "Spazio interno app",
+                displayName = "Catalogo",
                 adapterKind = StorageAdapterKind.LOCAL_FS,
                 opaqueLocator = "",
                 availability = localAdapter.availability(),
@@ -106,6 +106,17 @@ class SourceRegistry(
 
     suspend fun registerSafFolder(treeUri: Uri, displayName: String): SourceSummary {
         require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
+        val uriKey = treeUri.toString()
+        // Stessa cartella già presente: non crearne una seconda.
+        catalogStore.listStorageLocations()
+            .firstOrNull {
+                it.adapterKind == StorageAdapterKind.SAF_TREE && it.opaqueLocator == uriKey
+            }
+            ?.let { existing ->
+                return listSources(refreshAvailability = true)
+                    .first { it.locationId == existing.id }
+            }
+
         val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
         runCatching {
             appContext.contentResolver.takePersistableUriPermission(treeUri, flags)
@@ -140,7 +151,7 @@ class SourceRegistry(
             archiveId = archiveId,
             displayName = name,
             adapterKind = StorageAdapterKind.SAF_TREE,
-            opaqueLocator = treeUri.toString(),
+            opaqueLocator = uriKey,
             availability = Availability.UNKNOWN,
         )
         val availability = runCatching { adapterFactory.create(location).availability() }
@@ -215,7 +226,7 @@ class SourceRegistry(
     }
 
     private fun deviceLabelFor(location: StorageLocation): String = when (location.adapterKind) {
-        StorageAdapterKind.LOCAL_FS -> "Spazio app MediaManager"
+        StorageAdapterKind.LOCAL_FS -> "Catalogo"
         StorageAdapterKind.SAF_TREE -> {
             if (location.opaqueLocator.isBlank()) {
                 deviceAliasOrDefault()

@@ -47,10 +47,10 @@ class TrashViewModel(
         }
     }
 
-    fun restore(copyId: String) {
+    fun restore(mediaItemId: String) {
         viewModelScope.launch {
             _state.update { it.copy(busy = true, message = null) }
-            runCatching { catalogFacade.restoreFromTrash(copyId) }
+            runCatching { catalogFacade.restoreFromTrash(mediaItemId) }
                 .onSuccess { result ->
                     val entries = catalogFacade.listTrash()
                     _state.update {
@@ -65,10 +65,10 @@ class TrashViewModel(
         }
     }
 
-    fun purge(copyId: String) {
+    fun purge(mediaItemId: String) {
         viewModelScope.launch {
             _state.update { it.copy(busy = true, message = null) }
-            runCatching { catalogFacade.purgeFromTrash(copyId) }
+            runCatching { catalogFacade.purgeFromTrash(mediaItemId) }
                 .onSuccess { result ->
                     val entries = catalogFacade.listTrash()
                     _state.update {
