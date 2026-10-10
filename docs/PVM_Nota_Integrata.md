@@ -319,17 +319,17 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Per ogni macro-attività ChatGPT definisce requisiti, vincoli, decisioni progettuali, criteri di accettazione e punti da approfondire. Cursor, prima dello sviluppo, analizza le criticità tecniche indicate, evidenzia eventuali ulteriori criticità rilevanti e propone soluzioni tecniche compatibili con la specifica consolidata. Lo sviluppo inizia solo dopo la chiusura della fase di approfondimento della relativa macro-attività.
 - Come precisato, Cursor non può trasformare autonomamente una proposta tecnica in requisito consolidato.
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
-## 7.1 FASE CORRENTE: SVILUPPO DIETRO UI CONGELATA (HOLD chiuso)
+## 7.1 FASE CORRENTE: CORREZIONE DOPO VERIFICA KO (0.16.2)
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)**.
-STATO ATTUALE (10/10/2026): HOLD KPI/Importa **chiuso** (convalida Renato). Ripresa autonomia Cursor.
-Ordine operativo aggregato:
-1. **Acquisisci → Importa** — *fatto*; CONTINUA se già in Catalogo — *0.15.12*;
-2. **Aggiorna** — menu: **Modifica** (stub) / Rinomina / Copia su dispositivo / Elimina (conferma BoxManager) — *0.16.2*; Sposta = BL-07;
-3. **Cestino** — una riga per elemento Catalogo; Ripristina ripristina tutte le copie; atterraggio Ripristina = Cestino + Backup (stub) — *0.16.2*;
-4. **BL-05** nascondere «Spazio interno app» — *0.16.0*; terminologia Catalogo / File del dispositivo — *0.16.2*;
-5. Feature stub Componi/Backup/CONFIGURA — solo con specifica (M11/M14/M15); fino ad allora stub.
-6. **Scansione dispositivi** (chiarimento 10/10/2026): oggi l’app **non** cerca da sola tablet/PC/SSD in rete. Vede solo le cartelle che aggiungi con **+** (es. telefono e Google Drive). Rete/NAS e dischi sul router = sviluppo successivo (tipo SMB), non automatico.
-Congelamento punti Renato 10/10/2026 recepito in 0.16.2 + `docs/TERMINOLOGIA_UI.md`.
+STATO ATTUALE (10/10/2026): HOLD KPI/Importa **chiuso**. Verifica telefono di **0.16.2 = KO** (Renato): non recepiti i criteri di selezione fonti a **3 stati** (BL-03) e altri requisiti già convalidati; in 0.16.2 è stata introdotta un’icona cestino separata, **non** conforme a BL-03 («X nel riquadro, niente icona cestino separata»).
+Ordine operativo aggregato (post-KO — da rifinire nel piano rinnovato):
+1. **Priorità P0 — BL-03**: riquadro selezione fonti a 3 stati (✓ / vuoto / **X**); rimuovere icona cestino separata; definire effetto su Catalogo già censito e su Importa.
+2. **P0 — allineamento requisiti convalidati** emersi in verifica (terminologia, messaggi BoxManager, Cestino una riga, menu Modifica, Ripristina landing) senza regressioni rispetto a 0.15.x KPI/Importa.
+3. **P1 — BL-10**: fonti Eraser/Facebook apparire senza scelta utente — capire causa e prevenire.
+4. **P1 — BL-04**: multi-selezione / esclusione in Importa.
+5. **P2 — BL-07 / BL-09 / BL-01 / BL-02**: Sposta; scansione rete/tablet/SSD; Pulisci file indesiderati; estetica ombre.
+6. Feature stub Componi/Backup/CONFIGURA — solo con specifica (M11/M14/M15).
+Documenti di sessione: `docs/TERMINOLOGIA_UI.md`; prompt di continuità `docs/PROMPT_CONTINUITA_AGENTE.md`.
 Nota: Le dipendenze riportate per ciascuna macro-attività della Roadmap devono indicare esclusivamente le dipendenze dirette da macro-attività precedenti, ossia quelle il cui output costituisce un input necessario alla macro-attività corrente. Le dipendenze transitive non devono essere ripetute.
 Regola di aggiornamento della roadmap
 La tabella costituisce l'unico riferimento operativo per lo stato di avanzamento. Non viene creato un file Excel parallelo come fonte di riferimento. Ogni decisione consolidata, criticità emersa, modifica dello stato o chiusura di una macro-attività deve essere recepita nella Nota Integrata.
@@ -344,7 +344,7 @@ Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consoli
 |---|---|---|---|
 | BL-01 | **Pulisci** (Organizza → Aggiorna) | Oltre ai duplicati esatti, Pulisci dovrà poter eliminare anche **file indesiderati** già importati/censiti che non sono foto/video utili (es. file con estensione anomala tipo `.12.jpg` non riconosciuti correttamente come foto, scarti, allegati spurî). Definire criteri di riconoscimento, conferma utente e rapporto con Cestino. | Renato 09/10/2026 |
 | BL-02 | Estetica Home | Affinare spessore ombre dei riquadri Accesso rapido / ricerca (layout già congelato). | Renato 09/10/2026 |
-| BL-03 | **Acquisisci — selezione fonti a 3 stati** | Gestione dispositivi/cartelle in elenco Acquisisci con **riquadro di selezione a tre stati** (non più solo on/off): selezionato (✓) · non selezionato (vuoto) · escluso/rimosso (**X**). L’idea preferita è usare la X nel riquadro stesso (niente icona cestino separata) per togliere dalla lista le fonti non più di interesse. Definire effetto su Catalogo già censito e su Importa. | Renato 09/10/2026 |
+| BL-03 | **Acquisisci — selezione fonti a 3 stati** | Gestione dispositivi/cartelle in elenco Acquisisci con **riquadro di selezione a tre stati** (non più solo on/off): selezionato (✓) · non selezionato (vuoto) · escluso/rimosso (**X**). L’idea preferita è usare la X nel riquadro stesso (**niente icona cestino separata**). **Verifica 0.16.2 = KO**: Cursor ha messo icona cestino invece del 3° stato. Priorità P0 del piano rinnovato. Definire effetto su Catalogo già censito e su Importa. | Renato 09–10/10/2026 |
 | BL-04 | **Eliminazione multi-selezione** | Su Importa e sugli altri elenchi media: poter deselezionare/eliminare (o escludere dall’import) più elementi insieme, così da evitare di copiare in Catalogo file indesiderati. Riuso del pattern selezione già in UI. | Renato 09/10/2026 |
 | BL-05 | **Acquisisci — nascondere «Spazio interno app»** | ~~Pleonastica in elenco fonti~~ — *fatto 0.16.0* (già filtrata in Acquisisci; nascosta anche in CONFIGURA fonti). | Renato 09/10/2026 |
 | BL-06 | **Aggiorna — menu contestuale «Rinomina»** | ~~Aggiungere Rinomina~~ — *fatto 0.16.0* (insieme a Elimina→Cestino e Copia su dispositivo). | Renato 09/10/2026 |
