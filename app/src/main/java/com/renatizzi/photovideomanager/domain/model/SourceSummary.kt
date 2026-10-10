@@ -15,12 +15,26 @@ data class SourceSummary(
     val isBuiltInPersonal: Boolean,
 )
 
-/** Stato selezione sorgente (Nota v5.2: solo on/off). */
+/**
+ * Stato selezione sorgente in Acquisisci (BL-03): riquadro a tre stati.
+ * - [SELECTED]: ✓ nel riquadro → usata in Conferma/Importa
+ * - [NOT_SELECTED]: riquadro vuoto → resta in elenco, non usata
+ * - [EXCLUDED]: X nel riquadro → tolta dall’elenco (dopo conferma)
+ */
 enum class SourceCensusSelection {
-    /** off / non selezionato */
-    NOT_SELECTED,
-    /** on / selezionato */
+    /** on / selezionato (✓) */
     SELECTED,
+    /** off / non selezionato (vuoto) */
+    NOT_SELECTED,
+    /** escluso / rimosso (X) — niente icona cestino separata */
+    EXCLUDED,
+}
+
+/** Ciclo BL-03: ✓ → vuoto → X → ✓ */
+fun SourceCensusSelection.cycleNext(): SourceCensusSelection = when (this) {
+    SourceCensusSelection.SELECTED -> SourceCensusSelection.NOT_SELECTED
+    SourceCensusSelection.NOT_SELECTED -> SourceCensusSelection.EXCLUDED
+    SourceCensusSelection.EXCLUDED -> SourceCensusSelection.SELECTED
 }
 
 enum class SourceSortMode {

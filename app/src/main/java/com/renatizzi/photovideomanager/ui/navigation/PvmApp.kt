@@ -218,6 +218,7 @@ fun PvmApp(
                             state = censusState,
                             onAddSource = censusVm::addSafSource,
                             onToggleSelection = censusVm::toggleSelection,
+                            onSetSelection = censusVm::setSelection,
                             onSetAllSelected = censusVm::setAllSelected,
                             onRefresh = censusVm::refresh,
                             onConferma = {

@@ -1,8 +1,9 @@
 # Prompt di continuità — un solo agente (Photo&VideoManager)
 
-**Data:** 10/10/2026  
+**Data:** 10/10/2026 (aggiornato: build correttiva 0.16.3-preview in verifica telefono)  
 **Autore del handoff:** sessione Cursor + interlocuzione Renato Stefanizzi  
-**Uso:** incolla questo intero documento come primo messaggio a un **unico** agente Cursor Cloud / Composer. Non spezzare in più agenti.
+**Uso:** incolla questo intero documento come primo messaggio a un **unico** agente Cursor Cloud / Composer. Non spezzare in più agenti.  
+**Nota avanzamento:** BL-03 portato in codice su branch `cursor/bl03-acquisisci-tre-stati-c499` (da `m02-…-e02a`); **non chiudere** senza OK Renato sul telefono.
 
 ---
 

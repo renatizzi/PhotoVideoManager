@@ -8,6 +8,7 @@ import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.domain.model.SourceCensusSelection
 import com.renatizzi.photovideomanager.domain.model.SourceSortMode
 import com.renatizzi.photovideomanager.domain.model.SourceSummary
+import com.renatizzi.photovideomanager.domain.model.cycleNext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -118,13 +119,17 @@ class CensusViewModel(
         _state.update { it.copy(sortMode = mode) }
     }
 
+    /** Ciclo BL-03 sul riquadro: ✓ → vuoto → X → ✓. */
     fun toggleSelection(locationId: String) {
         _state.update { current ->
-            val next = when (current.selectionOf(locationId)) {
-                SourceCensusSelection.NOT_SELECTED -> SourceCensusSelection.SELECTED
-                SourceCensusSelection.SELECTED -> SourceCensusSelection.NOT_SELECTED
-            }
+            val next = current.selectionOf(locationId).cycleNext()
             current.copy(selection = current.selection + (locationId to next))
+        }
+    }
+
+    fun setSelection(locationId: String, value: SourceCensusSelection) {
+        _state.update { current ->
+            current.copy(selection = current.selection + (locationId to value))
         }
     }
 
@@ -132,6 +137,7 @@ class CensusViewModel(
         _state.update { current ->
             val value =
                 if (selected) SourceCensusSelection.SELECTED else SourceCensusSelection.NOT_SELECTED
+            // «Tutti» non mette X: solo selezionato / non selezionato sulle fonti ancora in elenco.
             current.copy(
                 selection = current.visibleSources.associate { it.locationId to value },
             )

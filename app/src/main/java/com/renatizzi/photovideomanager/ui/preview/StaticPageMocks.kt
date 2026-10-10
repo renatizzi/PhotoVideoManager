@@ -20,7 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Refresh
@@ -63,8 +62,10 @@ import com.renatizzi.photovideomanager.domain.model.SearchKindFilter
 import com.renatizzi.photovideomanager.domain.model.SourceCensusSelection
 import com.renatizzi.photovideomanager.domain.model.SourceSummary
 import com.renatizzi.photovideomanager.domain.model.StorageAdapterKind
+import com.renatizzi.photovideomanager.domain.model.cycleNext
 import com.renatizzi.photovideomanager.ui.acquire.AcquireUiState
 import com.renatizzi.photovideomanager.ui.census.CensusUiState
+import com.renatizzi.photovideomanager.ui.census.SourceSelectionBox
 import com.renatizzi.photovideomanager.ui.common.MediaThumbnail
 import com.renatizzi.photovideomanager.ui.common.formatBytes
 import com.renatizzi.photovideomanager.ui.search.SearchUiState
@@ -80,6 +81,7 @@ fun AcquisisciStaticScreen(
     state: CensusUiState,
     onAddSource: (Uri, String) -> Unit,
     onToggleSelection: (String) -> Unit,
+    onSetSelection: (String, SourceCensusSelection) -> Unit = { _, _ -> },
     onSetAllSelected: (Boolean) -> Unit,
     onRefresh: () -> Unit,
     onConferma: () -> Unit,
@@ -102,16 +104,30 @@ fun AcquisisciStaticScreen(
             onAddSource(uri, name)
         }
     }
+    // Fonti con X (escluse in attesa di conferma) restano visibili con la X nel riquadro.
     val sources = state.visibleSources
     val selectedCount = sources.count {
         state.selectionOf(it.locationId) == SourceCensusSelection.SELECTED
     }
-    val allChecked = sources.isNotEmpty() && selectedCount == sources.size
+    val activeCount = sources.count {
+        state.selectionOf(it.locationId) != SourceCensusSelection.EXCLUDED
+    }
+    val allChecked = activeCount > 0 && selectedCount == activeCount
     val busy = state.loading || state.censusBusyLocationIds.isNotEmpty()
     var renameTarget by remember { mutableStateOf<SourceSummary?>(null) }
     var removeTarget by remember { mutableStateOf<SourceSummary?>(null) }
     var renameDeviceOpen by remember { mutableStateOf(false) }
     var renameText by remember { mutableStateOf("") }
+
+    fun cycleSourceSelection(source: SourceSummary) {
+        val current = state.selectionOf(source.locationId)
+        val next = current.cycleNext()
+        onToggleSelection(source.locationId)
+        // Arrivati a X: mostra conferma; SÌ toglie dall’elenco, NO torna al riquadro vuoto.
+        if (next == SourceCensusSelection.EXCLUDED) {
+            removeTarget = source
+        }
+    }
 
     Column(
         modifier = modifier
@@ -230,13 +246,11 @@ fun AcquisisciStaticScreen(
                     HorizontalDivider()
                     SourceRow(
                         source = source,
-                        selected = state.selectionOf(source.locationId) ==
-                            SourceCensusSelection.SELECTED,
+                        selection = state.selectionOf(source.locationId),
                         busy = source.locationId in state.censusBusyLocationIds,
                         enabled = !busy,
-                        onToggle = { onToggleSelection(source.locationId) },
+                        onToggle = { cycleSourceSelection(source) },
                         onBrowse = { onBrowse(source.locationId) },
-                        onRemove = { removeTarget = source },
                         onLongPress = {
                             renameTarget = source
                             renameText = source.displayName
@@ -307,7 +321,11 @@ fun AcquisisciStaticScreen(
     }
     removeTarget?.let { target ->
         AlertDialog(
-            onDismissRequest = { removeTarget = null },
+            onDismissRequest = {
+                // NO / fuori dialogo: torna al riquadro vuoto (non selezionata).
+                onSetSelection(target.locationId, SourceCensusSelection.NOT_SELECTED)
+                removeTarget = null
+            },
             title = { Text(stringResource(R.string.acquisisci_remove_confirm_title)) },
             text = {
                 Text(stringResource(R.string.acquisisci_remove_confirm_body, target.displayName))
@@ -321,7 +339,12 @@ fun AcquisisciStaticScreen(
                 ) { Text(stringResource(R.string.dialog_yes)) }
             },
             dismissButton = {
-                TextButton(onClick = { removeTarget = null }) {
+                TextButton(
+                    onClick = {
+                        onSetSelection(target.locationId, SourceCensusSelection.NOT_SELECTED)
+                        removeTarget = null
+                    },
+                ) {
                     Text(stringResource(R.string.dialog_no))
                 }
             },
@@ -333,12 +356,11 @@ fun AcquisisciStaticScreen(
 @Composable
 private fun SourceRow(
     source: SourceSummary,
-    selected: Boolean,
+    selection: SourceCensusSelection,
     busy: Boolean,
     enabled: Boolean,
     onToggle: () -> Unit,
     onBrowse: () -> Unit,
-    onRemove: () -> Unit,
     onLongPress: () -> Unit,
 ) {
     Row(
@@ -347,10 +369,11 @@ private fun SourceRow(
             .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Checkbox(
-            checked = selected,
-            onCheckedChange = { onToggle() },
-            enabled = enabled,
+        SourceSelectionBox(
+            selection = selection,
+            enabled = enabled && !busy,
+            onClick = onToggle,
+            modifier = Modifier.padding(end = 8.dp),
         )
         Column(
             modifier = Modifier
@@ -384,12 +407,6 @@ private fun SourceRow(
         if (busy) {
             CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
         } else {
-            IconButton(onClick = onRemove, enabled = enabled) {
-                Icon(
-                    Icons.Outlined.DeleteOutline,
-                    contentDescription = stringResource(R.string.acquisisci_remove_source_cd),
-                )
-            }
             IconButton(onClick = onBrowse, enabled = enabled) {
                 Text(">", style = MaterialTheme.typography.titleLarge)
             }
