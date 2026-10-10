@@ -3,10 +3,12 @@ chcp 65001 >nul
 setlocal EnableExtensions
 
 REM ============================================
-REM  Sblocca il pull se aggiorna-da-git.bat
-REM  e stato creato a mano e blocca Git.
-REM  Usare UNA VOLTA, poi usare aggiorna-da-git.bat
+REM  Sblocca se aggiorna-da-git.bat locale
+REM  blocca Git, poi aggiorna il branch di lavoro.
+REM  Usare UNA VOLTA se aggiorna-da-git.bat fallisce.
 REM ============================================
+
+set "BRANCH_LAVORO=cursor/m02-architettura-applicativa-e02a"
 
 cd /d "%~dp0"
 
@@ -20,17 +22,31 @@ if exist "aggiorna-da-git.bat" (
 )
 
 echo.
-echo Eseguo git fetch + git pull ...
+echo Scarico da GitHub e passo al branch di lavoro...
 git fetch origin
-git pull
 if errorlevel 1 (
-  echo ERRORE: pull non riuscito. Controlla il messaggio sopra.
+  echo ERRORE: fetch non riuscito. Controlla internet / login GitHub.
+  goto :end
+)
+
+git checkout "%BRANCH_LAVORO%" 2>nul
+if errorlevel 1 (
+  git checkout -b "%BRANCH_LAVORO%" "origin/%BRANCH_LAVORO%"
+  if errorlevel 1 (
+    echo ERRORE: impossibile passare a %BRANCH_LAVORO%.
+    goto :end
+  )
+)
+
+git reset --hard "origin/%BRANCH_LAVORO%"
+if errorlevel 1 (
+  echo ERRORE: aggiornamento non riuscito.
   goto :end
 )
 
 echo.
-echo OK. Ora dovresti avere il nuovo aggiorna-da-git.bat da GitHub.
-echo Prossimi passi in Android Studio: Sync Project with Gradle Files, poi Run.
+echo OK. Ora hai il codice aggiornato e il nuovo aggiorna-da-git.bat.
+echo Prossimi passi: Sync in Android Studio, oppure compila-apk.bat.
 echo Puoi cancellare aggiorna-da-git-vecchio.bat se vuoi.
 
 :end
