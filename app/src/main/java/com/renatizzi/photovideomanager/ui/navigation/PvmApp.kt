@@ -115,7 +115,8 @@ fun PvmApp(
             "ricerca" -> navController.navigate(PvmDestination.Search.route)
             "pulisci" -> navController.navigate(PvmDestination.Clean.route)
             "ripristina" -> navController.navigate(PvmDestination.Ripristina.route)
-            "cestino" -> navController.navigate(PvmDestination.Trash.route)
+            // Nota §5.4.3: ingresso Cestino solo via Ripristina.
+            "cestino" -> navController.navigate(PvmDestination.Ripristina.route)
             "salva", "condividi", "raggruppa", "edita", "crea", "pubblica", "spazio",
             "backup", "revisione", "ripristina_backup",
             -> navController.navigate(PvmDestination.FeatureStub.create(featureId))
@@ -298,6 +299,7 @@ fun PvmApp(
                         onQueryChange = aggiornaVm::onQueryChange,
                         onKindFilter = aggiornaVm::onKindFilter,
                         onToggleSelection = aggiornaVm::toggleSelection,
+                        onSetSelection = aggiornaVm::setSelection,
                         onRefresh = aggiornaVm::refresh,
                         onPulisci = { navController.navigate(PvmDestination.Clean.route) },
                         onEdit = { _ ->
@@ -339,7 +341,6 @@ fun PvmApp(
                         onRequestTrash = cleanVm::requestTrashExtras,
                         onConfirmTrash = cleanVm::confirmTrashExtras,
                         onDismissTrash = cleanVm::dismissTrashConfirm,
-                        onOpenTrash = { navController.navigate(PvmDestination.Trash.route) },
                     )
                 }
                 composable(PvmDestination.Trash.route) {

@@ -63,6 +63,7 @@ import com.renatizzi.photovideomanager.domain.model.SourceCensusSelection
 import com.renatizzi.photovideomanager.domain.model.SourceSummary
 import com.renatizzi.photovideomanager.domain.model.StorageAdapterKind
 import com.renatizzi.photovideomanager.domain.model.cycleNext
+import com.renatizzi.photovideomanager.domain.model.cycleNextCatalog
 import com.renatizzi.photovideomanager.ui.acquire.AcquireUiState
 import com.renatizzi.photovideomanager.ui.census.CensusUiState
 import com.renatizzi.photovideomanager.ui.census.SourceSelectionBox
@@ -605,6 +606,7 @@ fun AggiornaStaticScreen(
     onQueryChange: (String) -> Unit,
     onKindFilter: (SearchKindFilter) -> Unit,
     onToggleSelection: (String) -> Unit = {},
+    onSetSelection: (String, SourceCensusSelection) -> Unit = { _, _ -> },
     onRefresh: () -> Unit,
     onPulisci: () -> Unit,
     onEdit: (String) -> Unit = {},
@@ -623,6 +625,16 @@ fun AggiornaStaticScreen(
     var renameTarget by remember { mutableStateOf<CatalogSearchEntry?>(null) }
     var renameText by remember { mutableStateOf("") }
     var trashTarget by remember { mutableStateOf<CatalogSearchEntry?>(null) }
+
+    fun cycleCatalogRow(entry: CatalogSearchEntry) {
+        val id = entry.mediaItem.id
+        val next = state.selectionOf(id).cycleNextCatalog()
+        onToggleSelection(id)
+        // X = Elimina dal Catalogo → Cestino (conferma); niente voce menu ridondante.
+        if (next == SourceCensusSelection.EXCLUDED) {
+            trashTarget = entry
+        }
+    }
 
     Column(
         modifier = modifier
@@ -692,11 +704,7 @@ fun AggiornaStaticScreen(
                 }
             } else if (listed.isEmpty()) {
                 Text(
-                    text = if (entries.isEmpty()) {
-                        stringResource(R.string.aggiorna_empty)
-                    } else {
-                        stringResource(R.string.importa_empty_deselected)
-                    },
+                    text = stringResource(R.string.aggiorna_empty),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
                     modifier = Modifier.padding(vertical = 12.dp),
@@ -713,7 +721,7 @@ fun AggiornaStaticScreen(
                     MediaRow(
                         title = title,
                         subtitle = stringResource(R.string.importa_riga_meta, loc.ifBlank { "—" }),
-                        checked = id in state.selectedIds,
+                        selection = state.selectionOf(id),
                         showMenu = true,
                         menuExpanded = menuForId == id,
                         onMenuExpandedChange = { open ->
@@ -721,7 +729,7 @@ fun AggiornaStaticScreen(
                         },
                         previewCopy = entry.previewCopy,
                         kind = entry.mediaItem.kind,
-                        onCheckedChange = { onToggleSelection(id) },
+                        onCycleSelection = { cycleCatalogRow(entry) },
                         onEdit = {
                             menuForId = null
                             onEdit(id)
@@ -730,10 +738,6 @@ fun AggiornaStaticScreen(
                             menuForId = null
                             renameTarget = entry
                             renameText = title
-                        },
-                        onTrash = {
-                            menuForId = null
-                            trashTarget = entry
                         },
                         onCopyToDevice = {
                             menuForId = null
@@ -781,7 +785,10 @@ fun AggiornaStaticScreen(
 
     trashTarget?.let { target ->
         AlertDialog(
-            onDismissRequest = { trashTarget = null },
+            onDismissRequest = {
+                onSetSelection(target.mediaItem.id, SourceCensusSelection.NOT_SELECTED)
+                trashTarget = null
+            },
             title = { Text(stringResource(R.string.aggiorna_trash_confirm_title)) },
             text = {
                 Text(stringResource(R.string.aggiorna_trash_confirm_body))
@@ -797,7 +804,12 @@ fun AggiornaStaticScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { trashTarget = null }) {
+                TextButton(
+                    onClick = {
+                        onSetSelection(target.mediaItem.id, SourceCensusSelection.NOT_SELECTED)
+                        trashTarget = null
+                    },
+                ) {
                     Text(stringResource(R.string.dialog_no))
                 }
             },
@@ -883,7 +895,7 @@ fun ComponiLandingStaticScreen(modifier: Modifier = Modifier) {
                 MediaRow(
                     title = name,
                     subtitle = meta,
-                    checked = false,
+                    selection = SourceCensusSelection.NOT_SELECTED,
                     showMenu = true,
                 )
             }
@@ -941,16 +953,15 @@ private fun KindFilters(
 private fun MediaRow(
     title: String,
     subtitle: String,
-    checked: Boolean,
+    selection: SourceCensusSelection,
     showMenu: Boolean = false,
     menuExpanded: Boolean = false,
     onMenuExpandedChange: (Boolean) -> Unit = {},
     previewCopy: com.renatizzi.photovideomanager.domain.model.MediaCopy? = null,
     kind: MediaKind = MediaKind.PHOTO,
-    onCheckedChange: (() -> Unit)? = null,
+    onCycleSelection: (() -> Unit)? = null,
     onEdit: () -> Unit = {},
     onRename: () -> Unit = {},
-    onTrash: () -> Unit = {},
     onCopyToDevice: () -> Unit = {},
     onMenu: () -> Unit = {},
 ) {
@@ -961,13 +972,10 @@ private fun MediaRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Checkbox(
-            checked = checked,
-            onCheckedChange = if (onCheckedChange != null) {
-                { onCheckedChange() }
-            } else {
-                null
-            },
+        SourceSelectionBox(
+            selection = selection,
+            enabled = onCycleSelection != null,
+            onClick = { onCycleSelection?.invoke() },
         )
         if (previewCopy != null) {
             MediaThumbnail(copy = previewCopy, kind = kind)
@@ -1013,10 +1021,6 @@ private fun MediaRow(
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.aggiorna_menu_copy_device)) },
                         onClick = onCopyToDevice,
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.aggiorna_menu_trash)) },
-                        onClick = onTrash,
                     )
                 }
             }

@@ -8,6 +8,8 @@ import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.domain.model.CatalogSearchEntry
 import com.renatizzi.photovideomanager.domain.model.MediaKind
 import com.renatizzi.photovideomanager.domain.model.SearchKindFilter
+import com.renatizzi.photovideomanager.domain.model.SourceCensusSelection
+import com.renatizzi.photovideomanager.domain.model.cycleNextCatalog
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,13 +22,20 @@ data class SearchUiState(
     val query: String = "",
     val kindFilter: SearchKindFilter = SearchKindFilter.ALL,
     val entries: List<CatalogSearchEntry> = emptyList(),
-    val selectedIds: Set<String> = emptySet(),
+    /**
+     * Selezione riga Aggiorna (3 stati). Default assente = [SourceCensusSelection.NOT_SELECTED]
+     * così i filtri lavorano sull’elenco completo.
+     */
+    val selection: Map<String, SourceCensusSelection> = emptyMap(),
     val loading: Boolean = true,
     val message: String? = null,
 ) {
-    /** Elenco UI: solo selezionati; se nessuno → vuoto (coerente con Importa). */
+    /** Elenco UI Aggiorna: sempre tutte le voci del filtro corrente (non nasconde se deselezionate). */
     val listedEntries: List<CatalogSearchEntry>
-        get() = entries.filter { it.mediaItem.id in selectedIds }
+        get() = entries
+
+    fun selectionOf(mediaItemId: String): SourceCensusSelection =
+        selection[mediaItemId] ?: SourceCensusSelection.NOT_SELECTED
 }
 
 class SearchViewModel(
@@ -37,7 +46,7 @@ class SearchViewModel(
     private var searchJob: Job? = null
 
     init {
-        runSearch(cycleSelection = false)
+        runSearch()
     }
 
     fun onQueryChange(query: String) {
@@ -45,29 +54,32 @@ class SearchViewModel(
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
             delay(250)
-            runSearch(cycleSelection = false)
+            runSearch()
         }
     }
 
-    /**
-     * Chip Tutti / Foto / Video: filtra l’elenco e cicla i flag di selezione
-     * degli elementi risultanti (tutti on → tutti off → tutti on …).
-     */
+    /** Chip Tutti / Foto / Video: filtra l’elenco; non cambia le selezioni di riga. */
     fun onKindFilter(filter: SearchKindFilter) {
         _state.update { it.copy(kindFilter = filter) }
-        runSearch(cycleSelection = true)
+        runSearch()
     }
 
+    /** Ciclo Aggiorna: vuoto → ✓ → X → vuoto. */
     fun toggleSelection(mediaItemId: String) {
         _state.update { current ->
-            val next = current.selectedIds.toMutableSet()
-            if (!next.add(mediaItemId)) next.remove(mediaItemId)
-            current.copy(selectedIds = next)
+            val next = current.selectionOf(mediaItemId).cycleNextCatalog()
+            current.copy(selection = current.selection + (mediaItemId to next))
+        }
+    }
+
+    fun setSelection(mediaItemId: String, value: SourceCensusSelection) {
+        _state.update { current ->
+            current.copy(selection = current.selection + (mediaItemId to value))
         }
     }
 
     fun refresh() {
-        runSearch(cycleSelection = false)
+        runSearch()
     }
 
     fun renameMedia(mediaItemId: String, newTitle: String) {
@@ -75,7 +87,7 @@ class SearchViewModel(
             runCatching { catalogFacade.renameMediaTitle(mediaItemId, newTitle) }
                 .onSuccess {
                     _state.update { it.copy(message = "Rinominato") }
-                    runSearch(cycleSelection = false)
+                    runSearch()
                 }
                 .onFailure { error ->
                     _state.update {
@@ -90,9 +102,13 @@ class SearchViewModel(
             runCatching { catalogFacade.trashMediaItem(mediaItemId) }
                 .onSuccess { result ->
                     _state.update {
-                        it.copy(message = result.message ?: "Spostato nel Cestino")
+                        it.copy(
+                            message = result.message
+                                ?: "Spostato nel Cestino. Recupero: Utility → Ripristina.",
+                            selection = it.selection - mediaItemId,
+                        )
                     }
-                    runSearch(cycleSelection = false)
+                    runSearch()
                 }
                 .onFailure { error ->
                     _state.update {
@@ -136,7 +152,7 @@ class SearchViewModel(
         }
     }
 
-    private fun runSearch(cycleSelection: Boolean) {
+    private fun runSearch() {
         val query = _state.value.query
         val filter = _state.value.kindFilter
         viewModelScope.launch {
@@ -146,21 +162,19 @@ class SearchViewModel(
                 catalogFacade.searchCatalog(query = query, kindFilter = filter)
             }.onSuccess { entries ->
                 _state.update { current ->
-                    val ids = entries.map { it.mediaItem.id }
-                    val idSet = ids.toSet()
-                    val selectedIds = if (cycleSelection) {
-                        val allSelected = ids.isNotEmpty() &&
-                            ids.all { it in current.selectedIds }
-                        if (allSelected) emptySet() else idSet
-                    } else if (current.selectedIds.isEmpty()) {
-                        // Primo caricamento / refresh a selezione vuota: mostra tutto.
-                        idSet
-                    } else {
-                        current.selectedIds.intersect(idSet)
+                    // Default Aggiorna: deselezionato; conserva solo stati già scelti dall’utente.
+                    val selection = buildMap {
+                        for (entry in entries) {
+                            val id = entry.mediaItem.id
+                            put(
+                                id,
+                                current.selection[id] ?: SourceCensusSelection.NOT_SELECTED,
+                            )
+                        }
                     }
                     current.copy(
                         entries = entries,
-                        selectedIds = selectedIds,
+                        selection = selection,
                         loading = false,
                     )
                 }

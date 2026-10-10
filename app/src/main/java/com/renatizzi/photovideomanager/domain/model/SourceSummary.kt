@@ -16,25 +16,34 @@ data class SourceSummary(
 )
 
 /**
- * Stato selezione sorgente in Acquisisci (BL-03): riquadro a tre stati.
- * - [SELECTED]: ✓ nel riquadro → usata in Conferma/Importa
- * - [NOT_SELECTED]: riquadro vuoto → resta in elenco, non usata
- * - [EXCLUDED]: X nel riquadro → tolta dall’elenco (dopo conferma)
+ * Riquadro a tre stati (liste Acquisisci / Aggiorna).
+ * - [SELECTED]: ✓
+ * - [NOT_SELECTED]: vuoto
+ * - [EXCLUDED]: X (rimozione / Elimina → Cestino; niente icona cestino separata)
+ *
+ * Default: Acquisisci = [SELECTED]; Aggiorna = [NOT_SELECTED] (filtri utilizzabili).
  */
 enum class SourceCensusSelection {
     /** on / selezionato (✓) */
     SELECTED,
     /** off / non selezionato (vuoto) */
     NOT_SELECTED,
-    /** escluso / rimosso (X) — niente icona cestino separata */
+    /** escluso / rimosso (X) */
     EXCLUDED,
 }
 
-/** Ciclo BL-03: ✓ → vuoto → X → ✓ */
+/** Ciclo Acquisisci (default ✓): ✓ → vuoto → X → ✓ */
 fun SourceCensusSelection.cycleNext(): SourceCensusSelection = when (this) {
     SourceCensusSelection.SELECTED -> SourceCensusSelection.NOT_SELECTED
     SourceCensusSelection.NOT_SELECTED -> SourceCensusSelection.EXCLUDED
     SourceCensusSelection.EXCLUDED -> SourceCensusSelection.SELECTED
+}
+
+/** Ciclo Aggiorna (default vuoto): vuoto → ✓ → X → vuoto */
+fun SourceCensusSelection.cycleNextCatalog(): SourceCensusSelection = when (this) {
+    SourceCensusSelection.NOT_SELECTED -> SourceCensusSelection.SELECTED
+    SourceCensusSelection.SELECTED -> SourceCensusSelection.EXCLUDED
+    SourceCensusSelection.EXCLUDED -> SourceCensusSelection.NOT_SELECTED
 }
 
 enum class SourceSortMode {

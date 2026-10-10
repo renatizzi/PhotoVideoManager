@@ -206,7 +206,11 @@ Ambito: Catalogo logico.
 
 Niente chip/passi di navigazione «1. Fonti / 2. Importa» come livelli di menu.
 
-**Aggiorna** — gestione del Catalogo (modifica, spostamento, eliminazione di singoli elementi via menu contestuale). Include:
+**Aggiorna** — gestione del Catalogo. Elenco sempre visibile; **riquadro a 3 stati** (stesso criterio di Acquisisci, default diverso):
+- default **deselezionato** (riquadro vuoto) per consentire l’uso dei filtri Tutti/Foto/Video sull’elenco completo;
+- ciclo: vuoto → ✓ selezionata → **X** = Elimina dal Catalogo → Cestino (conferma SÌ/NO; file del dispositivo intatti);
+- menu contestuale ⋮: Modifica, Rinomina, Copia su dispositivo (**senza** voce Elimina — ridondante rispetto alla X).
+Include:
 - **Pulisci** — esclusivamente eliminazione duplicati;
 - **Allinea** — controllo/explore da app delle sorgenti.
 
@@ -237,7 +241,7 @@ Sostituisce in navigazione l’etichetta «Gestisci».
 **Distinzione obbligatoria:**
 - **Pulisci** = solo duplicati (Organizza → Aggiorna);
 - **Revisione/Elimina** = svecchiamento sorgenti (Utility);
-- **Cestino** = solo recupero di elementi eliminati involontariamente dal Catalogo e dall’Archivio Condiviso (ingresso via Utility → Ripristina).
+- **Cestino** = solo recupero di elementi eliminati involontariamente dal Catalogo e dall’Archivio Condiviso (**unico ingresso** via Utility → Ripristina; non da Pulisci né da scorciatoie in Aggiorna).
 
 «Salva» della v5.1 corrisponde a Backup / Ripristina / spazio in Utility (non è una quarta voce hub).
 
@@ -319,16 +323,14 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Per ogni macro-attività ChatGPT definisce requisiti, vincoli, decisioni progettuali, criteri di accettazione e punti da approfondire. Cursor, prima dello sviluppo, analizza le criticità tecniche indicate, evidenzia eventuali ulteriori criticità rilevanti e propone soluzioni tecniche compatibili con la specifica consolidata. Lo sviluppo inizia solo dopo la chiusura della fase di approfondimento della relativa macro-attività.
 - Come precisato, Cursor non può trasformare autonomamente una proposta tecnica in requisito consolidato.
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
-## 7.1 FASE CORRENTE: CORREZIONE DOPO VERIFICA KO → build 0.16.3 in verifica
+## 7.1 FASE CORRENTE: allineamento Aggiorna/Ripristina + verifica telefono
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)**.
-STATO ATTUALE (10/10/2026): HOLD KPI/Importa **chiuso**. Verifica telefono di **0.16.2 = KO** (Renato). Build correttiva **`0.16.3-preview`** (versionCode 44): **BL-03 implementato in codice** (riquadro ✓ / vuoto / X; icona cestino separata rimossa; Conferma/Importa solo fonti ✓; con X + conferma SÌ la cartella esce dall’elenco; file del dispositivo non cancellati). **Stato BL-03: IN VERIFICA telefono** — non chiuso finché Renato non convalida.
-Ordine operativo aggregato (post-KO):
-1. **P0 — BL-03**: ~~codice~~ → **prova telefono 0.16.3** (criteri in prompt continuità).
-2. **P0 — allineamento requisiti convalidati** (terminologia, messaggi BoxManager, Cestino una riga, menu Modifica, Ripristina landing) — da ri-verificare insieme al P0.
-3. **P1 — BL-10**: fonti Eraser/Facebook — dopo OK su BL-03 usare la X per ripulire; indagare causa.
-4. **P1 — BL-04**: multi-selezione / esclusione in Importa.
-5. **P2 — BL-07 / BL-09 / BL-01 / BL-02**: Sposta; scansione rete/tablet/SSD; Pulisci file indesiderati; estetica ombre.
-6. Feature stub Componi/Backup/CONFIGURA — solo con specifica (M11/M14/M15).
+STATO ATTUALE (10/10/2026): HOLD KPI/Importa **chiuso**. **0.16.2 = KO**. **0.16.3**: BL-03 Acquisisci in codice (IN VERIFICA). Decisione Renato 10/10/2026: Aggiorna adotta riquadro 3 stati con **default deselezionato**; X = Elimina→Cestino; menu senza Elimina; Cestino solo da Ripristina. Build **`0.16.4-preview`** (versionCode 45) — **IN VERIFICA telefono**.
+Ordine operativo:
+1. **P0 — BL-03 Acquisisci** + **Aggiorna 3 stati / Ripristina unico ingresso**: prova telefono 0.16.4.
+2. **P1 — BL-10 / BL-04** dopo OK telefono.
+3. **P2 — BL-07 / BL-09 / BL-01 / BL-02**.
+4. Feature stub Componi/Backup/CONFIGURA — solo con specifica (M11/M14/M15).
 Documenti di sessione: `docs/TERMINOLOGIA_UI.md`; prompt di continuità `docs/PROMPT_CONTINUITA_AGENTE.md`.
 Nota: Le dipendenze riportate per ciascuna macro-attività della Roadmap devono indicare esclusivamente le dipendenze dirette da macro-attività precedenti, ossia quelle il cui output costituisce un input necessario alla macro-attività corrente. Le dipendenze transitive non devono essere ripetute.
 Regola di aggiornamento della roadmap
@@ -344,7 +346,7 @@ Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consoli
 |---|---|---|---|
 | BL-01 | **Pulisci** (Organizza → Aggiorna) | Oltre ai duplicati esatti, Pulisci dovrà poter eliminare anche **file indesiderati** già importati/censiti che non sono foto/video utili (es. file con estensione anomala tipo `.12.jpg` non riconosciuti correttamente come foto, scarti, allegati spurî). Definire criteri di riconoscimento, conferma utente e rapporto con Cestino. | Renato 09/10/2026 |
 | BL-02 | Estetica Home | Affinare spessore ombre dei riquadri Accesso rapido / ricerca (layout già congelato). | Renato 09/10/2026 |
-| BL-03 | **Acquisisci — selezione fonti a 3 stati** | Riquadro a tre stati: selezionato (✓) · non selezionato (vuoto) · escluso/rimosso (**X** nello stesso riquadro; **niente icona cestino separata**). **0.16.2 = KO** (cestino separato). **0.16.3-preview**: fix in codice — ciclo ✓→vuoto→X; con X appare conferma SÌ/NO; SÌ toglie la cartella dall’elenco (file dispositivo intatti; voci Catalogo con altre copie restano); Conferma/Importa usano solo ✓. **IN VERIFICA** — chiudere solo dopo OK Renato sul telefono. | Renato 09–10/10/2026 |
+| BL-03 | **Acquisisci — selezione fonti a 3 stati** | Riquadro a tre stati: selezionato (✓) · non selezionato (vuoto) · escluso/rimosso (**X** nello stesso riquadro; **niente icona cestino separata**). **0.16.2 = KO** (cestino separato). **0.16.3**: ciclo ✓→vuoto→X in Acquisisci. **0.16.4**: stesso criterio in **Aggiorna** con **default deselezionato** (vuoto→✓→X); X = Elimina→Cestino; menu senza Elimina; Cestino solo da Ripristina. **IN VERIFICA** telefono. | Renato 09–10/10/2026 |
 | BL-04 | **Eliminazione multi-selezione** | Su Importa e sugli altri elenchi media: poter deselezionare/eliminare (o escludere dall’import) più elementi insieme, così da evitare di copiare in Catalogo file indesiderati. Riuso del pattern selezione già in UI. | Renato 09/10/2026 |
 | BL-05 | **Acquisisci — nascondere «Spazio interno app»** | ~~Pleonastica in elenco fonti~~ — *fatto 0.16.0* (già filtrata in Acquisisci; nascosta anche in CONFIGURA fonti). | Renato 09/10/2026 |
 | BL-06 | **Aggiorna — menu contestuale «Rinomina»** | ~~Aggiungere Rinomina~~ — *fatto 0.16.0* (insieme a Elimina→Cestino e Copia su dispositivo). | Renato 09/10/2026 |

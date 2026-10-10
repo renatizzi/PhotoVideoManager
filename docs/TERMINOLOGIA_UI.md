@@ -27,8 +27,19 @@ Stile comunicativo: semplice e chiaro, come in BoxManager.
 ### Elimina dal Catalogo (testo di riferimento)
 
 - Titolo: `Conferma eliminazione?`
-- Testo: `Il file del dispositivo non viene cancellato. Potrai ripristinarlo dal Cestino.`
+- Testo: `Il file del dispositivo non viene cancellato. Potrai ripristinarlo da Utility → Ripristina → Cestino.`
 - Pulsanti: `SÌ` · `NO`
+
+### Riquadro a 3 stati (liste)
+
+| Schermata | Default | Ciclo al tocco | Significato della X |
+|---|---|---|---|
+| **Acquisisci** (fonti) | ✓ selezionata | ✓ → vuoto → X → ✓ | Togli cartella dall’elenco fonti |
+| **Aggiorna** (Catalogo) | vuoto (deselezionata) | vuoto → ✓ → X → vuoto | Elimina dal Catalogo → Cestino |
+
+In Aggiorna l’elenco resta sempre visibile (i filtri Tutti/Foto/Video lavorano sull’elenco completo).  
+Con X in Aggiorna non serve la voce «Elimina» nel menu ⋮.  
+Ingresso al Cestino: solo **Utility → Ripristina** (non da Pulisci).
 
 ## Note
 

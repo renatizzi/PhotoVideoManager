@@ -9,6 +9,7 @@ REM ============================================
 
 REM Branch di lavoro da cui scaricare le build da provare sul telefono.
 REM (deve esistere su GitHub; lo script ci porta automaticamente)
+REM Branch di consegna per le prove telefono (allineato dopo ogni push).
 set "BRANCH_LAVORO=cursor/m02-architettura-applicativa-e02a"
 
 cd /d "%~dp0"

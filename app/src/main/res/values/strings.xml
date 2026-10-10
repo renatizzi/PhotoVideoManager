@@ -82,7 +82,7 @@
     <string name="componi_raccolta">RACCOLTA</string>
     <string name="componi_add_cd">Crea composizione</string>
     <string name="componi_menu_cd">Menu contestuale (modifica, pubblica, elimina)</string>
-    <string name="aggiorna_static_intro">Mantieni aggiornato il tuo Catalogo eliminando eventuali duplicati.</string>
+    <string name="aggiorna_static_intro">Mantieni aggiornato il tuo Catalogo. Tocca il riquadro: vuoto = non selezionata (default), ✓ = selezionata, X = elimina dal Catalogo (va nel Cestino). I filtri Tutti/Foto/Video lavorano sull\'elenco completo.</string>
     <string name="aggiorna_static_help"> </string>
     <string name="aggiorna_catalogo_title">Il tuo Catalogo</string>
     <string name="aggiorna_riepilogo_static">Riepilogo: file originali xxx · disponibili xxx · non importabili xxx · duplicati xxx</string>
@@ -97,7 +97,7 @@
     <string name="aggiorna_rename_title">Rinomina</string>
     <string name="aggiorna_rename_label">Nome visualizzato</string>
     <string name="aggiorna_trash_confirm_title">Conferma eliminazione?</string>
-    <string name="aggiorna_trash_confirm_body">Il file del dispositivo non viene cancellato. Potrai ripristinarlo dal Cestino.</string>
+    <string name="aggiorna_trash_confirm_body">Il file del dispositivo non viene cancellato. Potrai ripristinarlo da Utility → Ripristina → Cestino.</string>
     <string name="componi_static_help"> </string>
     <string name="componi_elenco_title">Elenco degli album e raccolte</string>
     <string name="componi_empty_static">Nessun album / raccolta: per crearne uno, clicca sul relativo bottone.</string>
@@ -219,6 +219,7 @@
     <string name="clean_suggested_keep">Consigliato da tenere</string>
     <string name="clean_trash_extras">Metti nel Cestino i duplicati</string>
     <string name="clean_open_trash">Apri Cestino</string>
+    <string name="clean_ripristina_hint">Per recuperare elementi dal Cestino usa Utility → Ripristina (non da questa pagina).</string>
     <string name="clean_confirm_title">Confermi?</string>
     <string name="clean_confirm_body">Sposterai nel Cestino %1$d elemento/i duplicati (tenendo quello consigliato). Gli originali sul telefono restano. Potrai ripristinare dal Cestino.</string>
     <string name="clean_confirm_yes">Sì, nel Cestino</string>
@@ -234,7 +235,7 @@
     <string name="trash_empty_confirm_title">Svuotare il Cestino?</string>
     <string name="trash_empty_confirm_body">Operazione definitiva. Le copie gestite dall’app verranno cancellate; i file del dispositivo restano.</string>
     <string name="trash_personal_note">Include copia gestita dall’app</string>
-    <string name="ripristina_landing_intro">Scegli se recuperare elementi dal Cestino oppure ripristinare da un Backup.</string>
+    <string name="ripristina_landing_intro">Da qui recuperi ciò che hai tolto dal Catalogo (Cestino) oppure, in seguito, da un Backup. È l\'unico ingresso al Cestino.</string>
     <string name="ripristina_open_trash">Apri Cestino</string>
     <string name="ripristina_open_backup">Ripristina da Backup</string>
     <string name="ripristina_backup_note">Il ripristino da Backup sarà disponibile quando la funzione Backup sarà pronta.</string>

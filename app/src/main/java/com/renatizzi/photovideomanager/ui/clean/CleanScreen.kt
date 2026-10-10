@@ -38,7 +38,6 @@ fun CleanScreen(
     onRequestTrash: (DuplicateGroup) -> Unit,
     onConfirmTrash: () -> Unit,
     onDismissTrash: () -> Unit,
-    onOpenTrash: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -84,13 +83,11 @@ fun CleanScreen(
             )
         }
 
-        OutlinedButton(
-            onClick = onOpenTrash,
-            enabled = !state.analyzing && !state.busy,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(stringResource(R.string.clean_open_trash))
-        }
+        Text(
+            text = stringResource(R.string.clean_ripristina_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+        )
 
         if (state.analyzing || state.busy) {
             Row(
