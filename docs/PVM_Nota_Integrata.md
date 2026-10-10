@@ -27,6 +27,7 @@ Proteggere i contenuti attraverso backup e meccanismi di recupero.
 - ChatGPT definisce analisi, requisiti, decisioni architetturali, criteri di accettazione e piano di lavoro.
 - Cursor viene coinvolto sulla base di una specifica consolidata e, quando richiesto, per approfondimenti tecnici separati dalla Nota Integrata.
 - Cursor non deve inventare requisiti, modificare decisioni vincolanti, introdurre backend/cloud obbligatori o modificare l'architettura senza una decisione esplicita.
+- **Comunicazione con Renato (vincolante, 10/10/2026):** linguaggio sempre comprensibile a un non addetto ai lavori; niente gergo tecnico. Per ogni prova dell’app sul telefono: istruzioni passo-passo dettagliate (cosa toccare, cosa deve apparire, cosa segnalare se non torna).
 - Il lavoro procede per macro-attività: obiettivi → input → decisioni → output → criteri di completamento.
 - Le idee che emergono fuori dal percorso corrente vengono registrate nel Backlog e non interrompono la macro-attività in corso.
 - Evitare divagazioni, fughe in avanti, assunzioni non autorizzate, duplicazioni e regressioni concettuali.
