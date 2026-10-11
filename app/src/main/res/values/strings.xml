@@ -208,7 +208,8 @@
     <string name="clean_intro_v2">Trova contenuti identici (stesso hash) su elementi distinti. Puoi tenere il consigliato e mandare gli altri nel Cestino (con conferma).</string>
     <string name="clean_inline_help">Suggerimento: se hai la stessa foto in due cartelle diverse, dopo Censisci appariranno come due elementi. Toccando Analizza l’app confronta il contenuto (hash SHA-256) e li raggruppa.</string>
     <string name="clean_inline_help_v2">I file del dispositivo non vengono cancellati: il Cestino toglie solo le voci dal Catalogo. Solo le copie gestite dall’app possono sparire del tutto con «Svuota Cestino».</string>
-    <string name="clean_analyze">Analizza duplicati esatti</string>
+    <string name="clean_subtitle_duplicates">Elimina, secondo i criteri selezionati, gli elementi del Catalogo duplicati che potrai comunque ripristinare con la funzione Cestino in Utility.</string>
+    <string name="clean_analyze">Analizza duplicati</string>
     <string name="clean_analyzing">Analisi in corso…</string>
     <string name="clean_stats">Gruppi: %1$d · copie esaminate: %2$d · nuovi hash: %3$d</string>
     <string name="clean_groups_title">Gruppi trovati</string>

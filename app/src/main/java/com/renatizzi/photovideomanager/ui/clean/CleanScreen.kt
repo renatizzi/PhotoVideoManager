@@ -16,7 +16,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -52,22 +51,12 @@ fun CleanScreen(
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold,
         )
+        // Un solo sottotitolo (niente box/messaggi contestuali sparsi) — convalida Renato 11/10/2026.
         Text(
-            text = stringResource(R.string.clean_intro_v2),
+            text = stringResource(R.string.clean_subtitle_duplicates),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
         )
-
-        Surface(
-            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(
-                text = stringResource(R.string.clean_inline_help_v2),
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(12.dp),
-            )
-        }
 
         Button(
             onClick = onAnalyze,
@@ -82,12 +71,6 @@ fun CleanScreen(
                 },
             )
         }
-
-        Text(
-            text = stringResource(R.string.clean_ripristina_hint),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
-        )
 
         if (state.analyzing || state.busy) {
             Row(

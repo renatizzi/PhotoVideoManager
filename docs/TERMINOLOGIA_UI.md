@@ -39,7 +39,14 @@ Stile comunicativo: semplice e chiaro, come in BoxManager.
 
 In Aggiorna l’elenco resta sempre visibile (i filtri Tutti/Foto/Video lavorano sull’elenco completo).  
 Con X in Aggiorna non serve la voce «Elimina» nel menu ⋮.  
+Menu ⋮ = **solo la riga** aperta; i ✓ multipli servono a **Pulisci** (non al menu).  
 Ingresso al Cestino: solo **Utility → Ripristina** (non da Pulisci).
+
+### Pulisci (duplicati) — testi UI
+
+- Sottotitolo unico (niente box di aiuto):  
+  `Elimina, secondo i criteri selezionati, gli elementi del Catalogo duplicati che potrai comunque ripristinare con la funzione Cestino in Utility.`
+- Bottone analisi: `Analizza duplicati`
 
 ## Note
 

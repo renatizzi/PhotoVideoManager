@@ -209,9 +209,10 @@ Niente chip/passi di navigazione «1. Fonti / 2. Importa» come livelli di menu.
 **Aggiorna** — gestione del Catalogo. Elenco sempre visibile; **riquadro a 3 stati** (stesso criterio di Acquisisci, default diverso):
 - default **deselezionato** (riquadro vuoto) per consentire l’uso dei filtri Tutti/Foto/Video sull’elenco completo;
 - ciclo: vuoto → ✓ selezionata → **X** = Elimina dal Catalogo → Cestino (conferma SÌ/NO; file del dispositivo intatti);
-- menu contestuale ⋮: Modifica, Rinomina, Copia su dispositivo (**senza** voce Elimina — ridondante rispetto alla X).
+- menu contestuale ⋮: Modifica, Rinomina, Copia su dispositivo (**senza** voce Elimina — ridondante rispetto alla X);
+- **regola multiselezione + menu (convalidata 11/10/2026, opzione A):** il menu ⋮ agisce **solo sulla riga** aperta; la selezione ✓ multipla serve a **Pulisci**, non al menu.
 Include:
-- **Pulisci** — esclusivamente eliminazione duplicati;
+- **Pulisci** — doppia funzione (convalidata 11/10/2026; implementazione a tranche): (1) eliminazione degli elementi **selezionati** (✓) in Aggiorna; (2) analisi/eliminazione **duplicati** secondo criteri (v1: esatti; estensioni in BL-11). UI duplicati: un solo sottotitolo, bottone **Analizza duplicati**, niente box di aiuto sparsi (*fatto testi 0.16.5*);
 - **Allinea** — controllo/explore da app delle sorgenti.
 
 **Mappatura ex-voci v5.1 sotto Organizza:**
@@ -239,7 +240,7 @@ Sostituisce in navigazione l’etichetta «Gestisci».
 - **Verifica spazio** — controllo spazio nel workflow.
 
 **Distinzione obbligatoria:**
-- **Pulisci** = solo duplicati (Organizza → Aggiorna);
+- **Pulisci** (Organizza → Aggiorna) = pulizia Catalogo: elementi selezionati (✓) **e** duplicati (criteri); non è svecchiamento sorgenti;
 - **Revisione/Elimina** = svecchiamento sorgenti (Utility);
 - **Cestino** = solo recupero di elementi eliminati involontariamente dal Catalogo e dall’Archivio Condiviso (**unico ingresso** via Utility → Ripristina; non da Pulisci né da scorciatoie in Aggiorna).
 
@@ -283,7 +284,7 @@ Le macrofunzioni di dominio (Censimento, Acquisizione, Archivio Condiviso, Dedup
 
 **Recepimento navigazione v5.2 (chiarimenti di collocazione, non nuovi requisiti di dominio):**
 - Censimento + acquisizione/importazione: percorso UI unico Organizza → Acquisisci (due fasi).
-- Deduplicazione (Pulisci): UI sotto Organizza → Aggiorna; non sotto Utility.
+- Pulisci (selezionati ✓ + duplicati): UI sotto Organizza → Aggiorna; non sotto Utility.
 - Cestino: recupero involontario; UI sotto Utility → Ripristina.
 - Condivisione familiare / accessi: CONFIGURA → Accessi all’Archivio (membri + amministratore); setup tecnico in Setup archivio condiviso.
 - Pubblicazione/social/produzione output: funzione Pubblica in Componi.
@@ -323,14 +324,14 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Per ogni macro-attività ChatGPT definisce requisiti, vincoli, decisioni progettuali, criteri di accettazione e punti da approfondire. Cursor, prima dello sviluppo, analizza le criticità tecniche indicate, evidenzia eventuali ulteriori criticità rilevanti e propone soluzioni tecniche compatibili con la specifica consolidata. Lo sviluppo inizia solo dopo la chiusura della fase di approfondimento della relativa macro-attività.
 - Come precisato, Cursor non può trasformare autonomamente una proposta tecnica in requisito consolidato.
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
-## 7.1 FASE CORRENTE: allineamento Aggiorna/Ripristina + verifica telefono
+## 7.1 FASE CORRENTE: verifica 0.16.4/0.16.5 + backlog Pulisci
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)**.
-STATO ATTUALE (10/10/2026): HOLD KPI/Importa **chiuso**. **0.16.2 = KO**. **0.16.3**: BL-03 Acquisisci in codice (IN VERIFICA). Decisione Renato 10/10/2026: Aggiorna adotta riquadro 3 stati con **default deselezionato**; X = Elimina→Cestino; menu senza Elimina; Cestino solo da Ripristina. Build **`0.16.4-preview`** (versionCode 45) — **IN VERIFICA telefono**.
+STATO ATTUALE (11/10/2026): HOLD KPI/Importa **chiuso**. **0.16.2 = KO**. **0.16.3–0.16.4**: BL-03 Acquisisci + Aggiorna 3 stati / Ripristina — **IN VERIFICA telefono**. **0.16.5-preview** (versionCode 46): testi Pulisci allineati (sottotitolo unico; bottone «Analizza duplicati»). Convalidate 11/10/2026: menu ⋮ = solo riga (A); Pulisci a doppia funzione (selezionati + duplicati) → **BL-12** da implementare; criteri tipo Krokiet → **BL-11**.
 Ordine operativo:
-1. **P0 — BL-03 Acquisisci** + **Aggiorna 3 stati / Ripristina unico ingresso**: prova telefono 0.16.4.
-2. **P1 — BL-10 / BL-04** dopo OK telefono.
-3. **P2 — BL-07 / BL-09 / BL-01 / BL-02**.
-4. Feature stub Componi/Backup/CONFIGURA — solo con specifica (M11/M14/M15).
+1. **P0** — prova telefono 0.16.4/0.16.5 (Acquisisci/Aggiorna/Ripristina/Pulisci testi).
+2. **P1** — **BL-12** (Pulisci elimina ✓ selezionati + duplicati v1) dopo OK telefono; poi BL-10 / BL-04.
+3. **P2** — BL-11 (criteri duplicati avanzati); BL-07 / BL-09 / BL-01 / BL-02.
+4. **Componi** — non riprendere sviluppo finché non chiusa specifica M11 vs landing congelata (vedi interlocuzione 11/10/2026).
 Documenti di sessione: `docs/TERMINOLOGIA_UI.md`; prompt di continuità `docs/PROMPT_CONTINUITA_AGENTE.md`.
 Nota: Le dipendenze riportate per ciascuna macro-attività della Roadmap devono indicare esclusivamente le dipendenze dirette da macro-attività precedenti, ossia quelle il cui output costituisce un input necessario alla macro-attività corrente. Le dipendenze transitive non devono essere ripetute.
 Regola di aggiornamento della roadmap
@@ -354,6 +355,8 @@ Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consoli
 | BL-08 | **Copia da Catalogo → dispositivo** | ~~Export esplicito SAF CreateDocument~~ — *fatto 0.16.0* (menu Aggiorna «Copia su dispositivo»; preferisce copia spazio app). Sposta resta BL-07. | Renato 09/10/2026 |
 | BL-09 | **Scansione rete / tablet / SSD router** | Oggi solo cartelle aggiunte a mano (+). Valutare individuazione dispositivi Wi‑Fi, tablet, PC e dischi sul router (es. SMB/NAS) senza inventare sync automatica. | Renato 10/10/2026 |
 | BL-10 | **Fonti apparire senza scelta utente** | Eraser/Facebook comparsi in Acquisisci senza selezione esplicita — verificare con prove; rimozione fonte ora in UI; evitare duplicati stessa cartella. | Renato 10/10/2026 |
+| BL-11 | **Pulisci — criteri duplicati avanzati (tipo Krokiet)** | Oltre ai duplicati esatti (hash), consentire eliminazione massiva scegliendo criteri (es. stesso contenuto, immagini simili con soglia, ecc. — riferimento ispirativo Krokiet/Czkawka). Serve specifica: quali criteri in v1, UI selezione criteri, conferme, rapporto con Cestino. **Non sviluppare ora.** | Renato 11/10/2026 |
+| BL-12 | **Pulisci — doppia funzione (selezionati + duplicati)** | Convalidato 11/10/2026: Pulisci deve (1) eliminare gli elementi con ✓ in Aggiorna; (2) gestire i duplicati (v1 esatti; avanzati in BL-11). X resta eliminazione singola. Menu ⋮ resta solo-riga (opzione A). Implementazione dopo OK telefono su 0.16.4/0.16.5. | Renato 11/10/2026 |
 
 Fine documento
 
