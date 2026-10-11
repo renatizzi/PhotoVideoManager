@@ -349,7 +349,22 @@ Ordine operativo:
 | 4 | BL-11 Simili | **A** — restano solo duplicati esatti | Non ora |
 | 5 | BL-02 Ombre | **A** — lasciare ora; poi stile BoxManager | Non ora |
 | 6 | BL-09 Rete | **A** — restare sul «+»; approfondimento subito | Vedi sotto |
-| 7 | PC in Wi‑Fi | **A** — cartella condivisa sul PC (no cloud obbligatorio); deve restare **facile per utenti poco esperti** | 11/10/2026 sera |
+| 7 | PC in Wi‑Fi | **A** — cartella condivisa sul PC… | **Riaperta 12/10:** troppo difficile in prova reale → §7.1sexies |
+
+### 7.1sexies Pivot — Catalogo/Archivio a monte (non condividere i dispositivi) — 12/10/2026
+
+**Problema emerso in prova Renato:** collegare il tablet al PC via SMB (Archivio Samsung → Unità di rete) è troppo ostico anche per un utente esperto del progetto. Non può essere il percorso per utenti di basso profilo.
+
+**Nuovo obiettivo (parole di Renato):** non far condividere i vari dispositivi (PC, dischi esterni, …) verso l’app; **definire a monte il Catalogo/Archivio** a cui **tutti i dispositivi dello stesso utente** si collegano facilmente.
+
+| Opzione | Idea | Pro | Contro |
+|---|---|---|---|
+| **C1 — Consigliata** | **Un Archivio personale unico** (una cartella scelta una tantum: es. NAS `SSD_SHARED` già ok, oppure Drive). PC e dischi esterni **versano** i file lì (Copia in Explorer / Drive). Telefono e tablet: **+** una volta su quell’archivio → Acquisisci/Importa. | Usa ciò che già funziona (NAS); niente SMB tablet→PC; adatto a utenti semplici; poco vincolo cloud se NAS | Le «schede» Catalogo restano per-dispositivo finché non c’è BL-16; il PC deve mettere i file nell’archivio |
+| **C2** | Come C1 **più** sync delle sole schede Catalogo (BL-16 A) tra dispositivi dello stesso account | Catalogo allineato su telefono/tablet anche offline | Serve provider + conflitti; un po’ più di complessità |
+
+**Cosa smette di essere il percorso principale:** condividere il PC Windows verso il tablet (BL-09 U1 resta solo aiuto opzionale / avanzato).
+
+**Ancora da decidere con Renato:** C1 subito vs C1+C2; dove vive l’archivio unico (NAS già in uso vs Drive vs altro).
 
 ### 7.1quinquies Approfondimento BL-09 — PC / NAS in rete (senza cloud obbligatorio)
 
@@ -424,7 +439,8 @@ Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consoli
 | BL-06 | **Aggiorna — menu contestuale «Rinomina»** | ~~Aggiungere Rinomina~~ — *fatto 0.16.0* (insieme a Elimina→Cestino e Copia su dispositivo). | Renato 09/10/2026 |
 | BL-07 | **Aggiorna — «Sposta» nel menu contestuale** | **CHIUSA (decisione A 11/10/2026):** non aggiungere Sposta. | Renato 09–11/10/2026 |
 | BL-08 | **Copia da Catalogo → dispositivo** | ~~Export esplicito SAF CreateDocument~~ — *fatto 0.16.0* (menu Aggiorna «Copia su dispositivo»; preferisce copia spazio app). Sposta resta BL-07. | Renato 09/10/2026 |
-| BL-09 | **PC / NAS in rete (no cloud obbligatorio)** | **U1 0.16.18–0.16.19:** guida + «Non vedo il PC» (PC va aggiunto una tantum in Disco di rete del tablet). No scan LAN; no cloud. | Renato 10–11/10/2026 |
+| BL-09 | **PC / NAS in rete** | U1 in app 0.16.18–19. **12/10:** SMB PC→tablet troppo difficile → **deprioritata**; pivot Archivio unico §7.1sexies. | Renato 10–12/10/2026 |
+| BL-17 | **Archivio personale unico (Catalogo a monte)** | Obiettivo: una sede unica a cui tutti i dispositivi si collegano; non condividere ogni dispositivo. Opzioni C1/C2 in §7.1sexies. | Renato 12/10/2026 |
 | BL-10 | **Fonti apparire senza scelta utente** | **OK** (diagnosi + dedupe SAF 0.16.10; prove 0.16.15). Fonti solo da «+»; residui togliibili con X. | Renato 10–11/10/2026 |
 | BL-11 | **Pulisci — criteri duplicati avanzati (tipo Krokiet)** | **Decisione A 11/10/2026:** restano solo duplicati esatti. Simili = versione successiva. | Renato 11/10/2026 |
 | BL-12 | **Pulisci — doppia funzione (selezionati + duplicati)** | Convalidato 11/10/2026. **0.16.6–0.16.7**: (1) ✓ da Aggiorna → Pulisci; (2) Analizza duplicati. Fix navigazione ✓ in 0.16.7. Prova Renato OK su selezione. | Renato 11/10/2026 |
