@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -19,6 +20,10 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -35,10 +40,10 @@ fun CleanScreen(
     state: CleanUiState,
     onAnalyze: () -> Unit,
     onRequestTrashSelected: () -> Unit,
-    onConfirmTrashSelected: () -> Unit,
+    onConfirmTrashSelected: (deleteSourceFiles: Boolean) -> Unit,
     onDismissTrashSelected: () -> Unit,
     onRequestTrash: (DuplicateGroup) -> Unit,
-    onConfirmTrash: () -> Unit,
+    onConfirmTrash: (deleteSourceFiles: Boolean) -> Unit,
     onDismissTrash: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -157,19 +162,29 @@ fun CleanScreen(
     }
 
     if (state.pendingTrashSelected) {
+        var deleteSource by remember { mutableStateOf(false) }
         AlertDialog(
             onDismissRequest = onDismissTrashSelected,
             title = { Text(stringResource(R.string.aggiorna_trash_confirm_title)) },
             text = {
-                Text(
-                    stringResource(
-                        R.string.clean_confirm_selected_body,
-                        state.selectedCount,
-                    ),
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        stringResource(
+                            R.string.clean_confirm_selected_body,
+                            state.selectedCount,
+                        ),
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(
+                            checked = deleteSource,
+                            onCheckedChange = { deleteSource = it },
+                        )
+                        Text(stringResource(R.string.trash_also_delete_source))
+                    }
+                }
             },
             confirmButton = {
-                TextButton(onClick = onConfirmTrashSelected) {
+                TextButton(onClick = { onConfirmTrashSelected(deleteSource) }) {
                     Text(stringResource(R.string.dialog_yes))
                 }
             },
@@ -183,19 +198,29 @@ fun CleanScreen(
 
     val pending = state.pendingTrashGroup
     if (pending != null) {
+        var deleteSource by remember { mutableStateOf(false) }
         AlertDialog(
             onDismissRequest = onDismissTrash,
             title = { Text(stringResource(R.string.aggiorna_trash_confirm_title)) },
             text = {
-                Text(
-                    stringResource(
-                        R.string.clean_confirm_body,
-                        pending.extraItemCount,
-                    ),
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        stringResource(
+                            R.string.clean_confirm_body,
+                            pending.extraItemCount,
+                        ),
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(
+                            checked = deleteSource,
+                            onCheckedChange = { deleteSource = it },
+                        )
+                        Text(stringResource(R.string.trash_also_delete_source))
+                    }
+                }
             },
             confirmButton = {
-                TextButton(onClick = onConfirmTrash) {
+                TextButton(onClick = { onConfirmTrash(deleteSource) }) {
                     Text(stringResource(R.string.dialog_yes))
                 }
             },

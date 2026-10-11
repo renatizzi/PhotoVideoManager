@@ -238,6 +238,30 @@ class RoomCatalogStore(
             )
         }
 
+    override suspend fun isExcludedLocator(
+        storageLocationId: String,
+        opaqueLocator: String,
+    ): Boolean = db.catalogExclusionDao().countByLocator(storageLocationId, opaqueLocator) > 0L
+
+    override suspend fun addExclusion(
+        storageLocationId: String,
+        opaqueLocator: String,
+        fingerprintSha256: String?,
+    ) {
+        db.catalogExclusionDao().upsert(
+            CatalogExclusionEntity(
+                storageLocationId = storageLocationId,
+                opaqueLocator = opaqueLocator,
+                fingerprintSha256 = fingerprintSha256,
+                createdAtEpochMs = System.currentTimeMillis(),
+            ),
+        )
+    }
+
+    override suspend fun removeExclusion(storageLocationId: String, opaqueLocator: String) {
+        db.catalogExclusionDao().deleteByLocator(storageLocationId, opaqueLocator)
+    }
+
     private fun ArchiveEntity.toDomain() = ArchiveRef(
         id = id,
         displayName = displayName,

@@ -607,7 +607,7 @@ fun AggiornaStaticScreen(
     onPulisci: () -> Unit,
     onEdit: (String) -> Unit = {},
     onRename: (String, String) -> Unit = { _, _ -> },
-    onTrash: (String) -> Unit = {},
+    onTrash: (mediaItemId: String, deleteSourceFiles: Boolean) -> Unit = { _, _ -> },
     onExportRequest: (mediaItemId: String, suggestedName: String, mime: String) -> Unit = { _, _, _ -> },
     suggestedFileName: (String) -> String = { "media" },
     exportMime: (String) -> String = { "*/*" },
@@ -780,6 +780,7 @@ fun AggiornaStaticScreen(
     }
 
     trashTarget?.let { target ->
+        var deleteSource by remember { mutableStateOf(false) }
         AlertDialog(
             onDismissRequest = {
                 onSetSelection(target.mediaItem.id, SourceCensusSelection.NOT_SELECTED)
@@ -787,12 +788,21 @@ fun AggiornaStaticScreen(
             },
             title = { Text(stringResource(R.string.aggiorna_trash_confirm_title)) },
             text = {
-                Text(stringResource(R.string.aggiorna_trash_confirm_body))
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(R.string.aggiorna_trash_confirm_body))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(
+                            checked = deleteSource,
+                            onCheckedChange = { deleteSource = it },
+                        )
+                        Text(stringResource(R.string.trash_also_delete_source))
+                    }
+                }
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        onTrash(target.mediaItem.id)
+                        onTrash(target.mediaItem.id, deleteSource)
                         trashTarget = null
                     },
                 ) {

@@ -333,10 +333,10 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
 ## 7.1 FASE CORRENTE: verifica BL-14 KPI Home + backlog
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)**.
-STATO ATTUALE (11/10/2026): **0.16.10-preview** (versionCode 51): **BL-10** (dedupe fonti SAF + policy solo «+») e **BL-04** (Importa: deselezionati restano in elenco). **BL-16** priorità alta (analisi). **IN VERIFICA** telefono.
+STATO ATTUALE (11/10/2026): **0.16.11-preview** (versionCode 52): messaggio «Sorgente già presente in elenco»; **BL-15** (esclusione anti re-import + checkbox elimina file sorgente); BL-10/BL-04 inclusi. **BL-16** priorità alta (analisi). **IN VERIFICA** telefono (unico elenco prove).
 Ordine operativo:
-1. **P0** — prova 0.16.10 (Importa multi-deselezione; fonti: niente doppioni; X toglie Eraser/Facebook residui).
-2. **P1** — **BL-15**; **BL-16** (specifica — non codice finché non consolidata).
+1. **P0** — prova unica 0.16.11 (vedi elenco in consegna agente).
+2. **P1** — **BL-16** specifica (non codice finché non consolidata).
 3. **P2** — BL-11; BL-01; BL-13; BL-07 / BL-09 / BL-02.
 4. **Componi** — non riprendere finché non chiusa specifica M11 vs landing congelata.
 
@@ -379,7 +379,7 @@ Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consoli
 | BL-12 | **Pulisci — doppia funzione (selezionati + duplicati)** | Convalidato 11/10/2026. **0.16.6–0.16.7**: (1) ✓ da Aggiorna → Pulisci; (2) Analizza duplicati. Fix navigazione ✓ in 0.16.7. Prova Renato OK su selezione. | Renato 11/10/2026 |
 | BL-13 | **Home — revisione KPI** | Tenere per ora il modello A (originali=dispositivi · di cui in Catalogo=Catalogo). **In seguito**, con feedback concreto sul *peso del gap* in uso reale, valutare revisione/sostituzione dei KPI Home (senza obbligo di mantenere il gap). Non fare ora. | Renato 11/10/2026 |
 | BL-14 | **Home — allineare KPI al modello A** | **0.16.8–0.16.9**: di cui in Catalogo = Aggiorna; originali = fonti ACTIVE (no Cestino app) e ≥ Catalogo; ingresso = **CONFERMA**. **OK** prova Renato 11/10/2026. | Renato 11/10/2026 |
-| BL-15 | **Pulisci — opzione elimina originali in sorgente + anti re-import** | Dopo pulizia Catalogo (indesiderati BL-01 / duplicati BL-11–12), dare scelta esplicita: (1) solo Catalogo (oggi); (2) anche file fisico sulla sorgente se capability DELETE e conferma SÌ/NO. Memorizzare esclusione (fingerprint/locator) così un nuovo Acquisisci **non** reimporta elementi già scartati. Mai automatico (§1 VINCOLI). | Renato 11/10/2026 |
+| BL-15 | **Pulisci — opzione elimina originali in sorgente + anti re-import** | **0.16.11**: checkbox «Elimina anche il file sulla sorgente» in Aggiorna/Pulisci; tabella `catalog_exclusions` + skip in censimento; ripristino dal Cestino toglie l’esclusione. Default = solo Catalogo. **IN VERIFICA**. | Renato 11/10/2026 |
 | BL-16 | **Sync Catalogo personale — evoluzione Archivio Condiviso** | **Priorità alta** (analisi; non sviluppare ora). Stesso Catalogo personale su più installazioni. Ipotesi: metadati Catalogo su area personale cloud; file fisici sulle fonti salvo Importa/Backup. **Inquadramento Renato:** considerarla un’**evoluzione dell’Archivio Condiviso** (non un silo parallelo): riuso concetti ArchiveRef/StorageLocation/capability; distinguere comunque dominio PERSONAL (Catalogo utente) vs FAMILY (condivisione famiglia) finché non consolidato in M04/M15. Local-first + `SyncPort`/`AuthPort` opt-in. Da decidere: provider, cifratura, conflitti, perimetro sync. | Renato 11/10/2026 |
 
 Fine documento

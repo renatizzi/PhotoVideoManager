@@ -206,7 +206,8 @@ class CensusViewModel(
         viewModelScope.launch {
             _state.update { it.copy(loading = true, message = null) }
             runCatching { catalogFacade.registerSafFolder(uri, displayName) }
-                .onSuccess { added ->
+                .onSuccess { result ->
+                    val added = result.source
                     val sources = catalogFacade.listSources(refresh = true)
                     _state.update { current ->
                         current.copy(
@@ -214,7 +215,11 @@ class CensusViewModel(
                             selection = current.selection +
                                 (added.locationId to SourceCensusSelection.SELECTED),
                             loading = false,
-                            message = "Sorgente aggiunta: ${added.displayName}",
+                            message = if (result.alreadyPresent) {
+                                "Sorgente già presente in elenco"
+                            } else {
+                                "Sorgente aggiunta: ${added.displayName}"
+                            },
                         )
                     }
                 }

@@ -97,7 +97,9 @@
     <string name="aggiorna_rename_title">Rinomina</string>
     <string name="aggiorna_rename_label">Nome visualizzato</string>
     <string name="aggiorna_trash_confirm_title">Conferma eliminazione?</string>
-    <string name="aggiorna_trash_confirm_body">Il file del dispositivo non viene cancellato. Potrai ripristinarlo da Utility → Ripristina → Cestino.</string>
+    <string name="aggiorna_trash_confirm_body">Di default il file del dispositivo non viene cancellato. Potrai ripristinarlo da Utility → Ripristina → Cestino. Un nuovo Acquisisci non lo reimporterà.</string>
+    <string name="trash_also_delete_source">Elimina anche il file sulla sorgente (irreversibile)</string>
+    <string name="source_already_listed">Sorgente già presente in elenco</string>
     <string name="componi_static_help"> </string>
     <string name="componi_elenco_title">Elenco degli album e raccolte</string>
     <string name="componi_empty_static">Nessun album / raccolta: per crearne uno, clicca sul relativo bottone.</string>

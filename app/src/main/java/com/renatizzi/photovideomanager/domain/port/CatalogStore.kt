@@ -45,4 +45,11 @@ interface CatalogStore {
     suspend fun getScanSession(id: String): ScanSession?
     suspend fun upsertImportSession(session: ImportSession)
     suspend fun getImportSession(id: String): ImportSession?
+    suspend fun isExcludedLocator(storageLocationId: String, opaqueLocator: String): Boolean
+    suspend fun addExclusion(
+        storageLocationId: String,
+        opaqueLocator: String,
+        fingerprintSha256: String? = null,
+    )
+    suspend fun removeExclusion(storageLocationId: String, opaqueLocator: String)
 }

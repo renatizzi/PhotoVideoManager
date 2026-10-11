@@ -106,6 +106,11 @@ class CensusService(
                         mediaSkipped++
                         continue
                     }
+                    // BL-15: esclusi dopo pulizia Catalogo → non reimportare.
+                    if (catalogStore.isExcludedLocator(locationId, child.opaqueLocator)) {
+                        mediaSkipped++
+                        continue
+                    }
 
                     val metadata = runCatching { adapter.readMetadata(child.opaqueLocator) }.getOrNull()
                     val resolvedKind =

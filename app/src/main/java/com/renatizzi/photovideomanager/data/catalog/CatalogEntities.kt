@@ -147,3 +147,19 @@ data class ImportSessionEntity(
     val itemsFailed: Int,
     val lastError: String?,
 )
+
+/**
+ * Elementi esclusi dal ri-censimento (BL-15): dopo pulizia Catalogo
+ * un nuovo Acquisisci non deve reimportare gli stessi locator.
+ */
+@Entity(
+    tableName = "catalog_exclusions",
+    primaryKeys = ["storageLocationId", "opaqueLocator"],
+    indices = [Index("fingerprintSha256")],
+)
+data class CatalogExclusionEntity(
+    val storageLocationId: String,
+    val opaqueLocator: String,
+    val fingerprintSha256: String? = null,
+    val createdAtEpochMs: Long,
+)

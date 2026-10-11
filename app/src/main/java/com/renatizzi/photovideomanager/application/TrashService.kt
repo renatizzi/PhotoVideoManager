@@ -2,6 +2,7 @@ package com.renatizzi.photovideomanager.application
 
 import com.renatizzi.photovideomanager.data.storage.StorageAdapterFactory
 import com.renatizzi.photovideomanager.domain.model.DomainScope
+import com.renatizzi.photovideomanager.domain.model.MediaCopy
 import com.renatizzi.photovideomanager.domain.model.MediaCopyState
 import com.renatizzi.photovideomanager.domain.model.StorageCapability
 import com.renatizzi.photovideomanager.domain.model.TrashActionResult
@@ -11,9 +12,9 @@ import com.renatizzi.photovideomanager.domain.port.PermissionGate
 
 /**
  * Cestino Catalogo.
- * - File del dispositivo: solo rimozione dal Catalogo (file fisico intatto).
- * - Copia gestita dall’app: in Cestino; allo svuota si cancella anche il file gestito dall’app.
- * Elenco e ripristino sono **per elemento di Catalogo** (una riga), non per ogni copia fisica.
+ * - Default: solo rimozione dal Catalogo (file del dispositivo intatto) + esclusione anti re-import (BL-15).
+ * - Opzione esplicita: cancellare anche il file sulla sorgente (capability DELETE).
+ * - Copia gestita dall’app: allo svuota si cancella anche il file gestito dall’app.
  */
 class TrashService(
     private val catalogStore: CatalogStore,
@@ -29,7 +30,6 @@ class TrashService(
             .groupBy { it.mediaItemId }
             .mapNotNull { (mediaItemId, copies) ->
                 val item = items[mediaItemId] ?: return@mapNotNull null
-                // Preferisci mostrare la posizione «file del dispositivo» se c’è.
                 val deviceCopy = copies.firstOrNull {
                     it.storageLocationId != CatalogFacade.PERSONAL_LOCATION_ID
                 }
@@ -54,41 +54,53 @@ class TrashService(
             .sortedByDescending { it.mediaCopy.createdAtEpochMs }
     }
 
-    /** Mette nel Cestino tutte le copie attive di un elemento di Catalogo. */
-    suspend fun trashMediaItem(mediaItemId: String): TrashActionResult {
+    /**
+     * @param deleteSourceFiles se true (scelta utente), tenta DELETE sulle copie sorgente.
+     */
+    suspend fun trashMediaItem(
+        mediaItemId: String,
+        deleteSourceFiles: Boolean = false,
+    ): TrashActionResult {
         val ids = catalogStore.listMediaCopiesForItem(mediaItemId)
             .filter { it.state == MediaCopyState.ACTIVE }
             .map { it.id }
-        return trashCopies(ids)
+        return trashCopies(ids, deleteSourceFiles = deleteSourceFiles)
     }
 
-    suspend fun trashCopies(copyIds: Collection<String>): TrashActionResult {
+    suspend fun trashCopies(
+        copyIds: Collection<String>,
+        deleteSourceFiles: Boolean = false,
+    ): TrashActionResult {
         require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
         var n = 0
+        var deletedSources = 0
         for (id in copyIds) {
             val copy = catalogStore.getMediaCopy(id) ?: continue
             if (copy.state == MediaCopyState.TRASHED) continue
+            rememberExclusion(copy)
+            if (deleteSourceFiles && copy.storageLocationId != CatalogFacade.PERSONAL_LOCATION_ID) {
+                if (tryDeletePhysical(copy)) deletedSources++
+            }
             catalogStore.upsertMediaCopy(copy.copy(state = MediaCopyState.TRASHED))
             n++
         }
         return TrashActionResult(
             affected = n,
-            message = if (n == 0) {
-                "Niente da eliminare"
-            } else {
-                "Spostato nel Cestino. Il file del dispositivo non è stato cancellato."
+            message = when {
+                n == 0 -> "Niente da eliminare"
+                deletedSources > 0 ->
+                    "Spostato nel Cestino. File eliminati sulla sorgente: $deletedSources."
+                else ->
+                    "Spostato nel Cestino. Il file del dispositivo non è stato cancellato."
             },
         )
     }
 
-    /**
-     * Per un gruppo di duplicati: tiene [keepMediaItemId], cestinale le altre copie ACTIVE
-     * degli altri MediaItem del gruppo (tutte le loro copie ACTIVE).
-     */
     suspend fun trashDuplicateExtras(
         fingerprintValue: String,
         keepMediaItemId: String,
         memberCopyIds: Collection<String>,
+        deleteSourceFiles: Boolean = false,
     ): TrashActionResult {
         require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
         val memberCopies = memberCopyIds.mapNotNull { catalogStore.getMediaCopy(it) }
@@ -102,7 +114,7 @@ class TrashService(
         val toTrash = catalogStore.listAllMediaCopies()
             .filter { it.state == MediaCopyState.ACTIVE && it.mediaItemId in extraItemIds }
             .map { it.id }
-        val result = trashCopies(toTrash)
+        val result = trashCopies(toTrash, deleteSourceFiles = deleteSourceFiles)
         return result.copy(
             message = result.message?.let {
                 "Gruppo ${fingerprintValue.take(8)}… — $it"
@@ -110,7 +122,6 @@ class TrashService(
         )
     }
 
-    /** Ripristina tutte le copie in Cestino dello stesso elemento di Catalogo. */
     suspend fun restoreMediaItem(mediaItemId: String): TrashActionResult {
         require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
         val trashed = catalogStore.listMediaCopiesForItem(mediaItemId)
@@ -119,6 +130,7 @@ class TrashService(
             return TrashActionResult(0, "Elemento non trovato nel Cestino")
         }
         for (copy in trashed) {
+            catalogStore.removeExclusion(copy.storageLocationId, copy.opaqueLocator)
             catalogStore.upsertMediaCopy(copy.copy(state = MediaCopyState.ACTIVE))
         }
         return TrashActionResult(trashed.size, "Ripristinato nel Catalogo")
@@ -131,7 +143,6 @@ class TrashService(
         return restoreMediaItem(copy.mediaItemId)
     }
 
-    /** Elimina definitivamente tutte le copie in Cestino dello stesso elemento. */
     suspend fun purgeMediaItem(mediaItemId: String): TrashActionResult {
         require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
         val trashed = catalogStore.listMediaCopiesForItem(mediaItemId)
@@ -142,6 +153,7 @@ class TrashService(
         var n = 0
         var removedManagedFile = false
         for (copy in trashed) {
+            rememberExclusion(copy)
             n += purgeOneCopy(copy.id).affected
             if (copy.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID) {
                 removedManagedFile = true
@@ -161,13 +173,12 @@ class TrashService(
     suspend fun purgeCopy(copyId: String): TrashActionResult {
         val copy = catalogStore.getMediaCopy(copyId)
             ?: return TrashActionResult(0, "Elemento non trovato")
-        // Se ci sono altre copie in Cestino dello stesso item, purga tutto l’item
-        // per evitare residui (es. riga «Eraser» rimasta dopo un ripristino parziale).
         val siblings = catalogStore.listMediaCopiesForItem(copy.mediaItemId)
             .filter { it.state == MediaCopyState.TRASHED }
         return if (siblings.size > 1) {
             purgeMediaItem(copy.mediaItemId)
         } else {
+            rememberExclusion(copy)
             purgeOneCopy(copyId)
         }
     }
@@ -214,11 +225,32 @@ class TrashService(
         return TrashActionResult(n, "Cestino svuotato")
     }
 
-    /** Conta elementi di Catalogo in Cestino (non le singole copie fisiche). */
     suspend fun trashCount(): Long =
         catalogStore.listMediaCopiesByState(MediaCopyState.TRASHED)
             .map { it.mediaItemId }
             .toSet()
             .size
             .toLong()
+
+    private suspend fun rememberExclusion(copy: MediaCopy) {
+        if (copy.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID) return
+        val sha = catalogStore.listFingerprintsForCopy(copy.id)
+            .firstOrNull { it.algorithm.contains("SHA", ignoreCase = true) }
+            ?.value
+        catalogStore.addExclusion(
+            storageLocationId = copy.storageLocationId,
+            opaqueLocator = copy.opaqueLocator,
+            fingerprintSha256 = sha,
+        )
+    }
+
+    private suspend fun tryDeletePhysical(copy: MediaCopy): Boolean {
+        val location = catalogStore.getStorageLocation(copy.storageLocationId) ?: return false
+        return runCatching {
+            val adapter = adapterFactory.create(location)
+            if (StorageCapability.DELETE !in adapter.capabilities()) return@runCatching false
+            adapter.delete(copy.opaqueLocator)
+            true
+        }.getOrDefault(false)
+    }
 }

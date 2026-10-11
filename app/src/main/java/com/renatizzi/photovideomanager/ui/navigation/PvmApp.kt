@@ -311,7 +311,9 @@ fun PvmApp(
                             scope.launch { snackbarHostState.showSnackbar(editSoon) }
                         },
                         onRename = aggiornaVm::renameMedia,
-                        onTrash = aggiornaVm::trashMedia,
+                        onTrash = { id, deleteSource ->
+                            aggiornaVm.trashMedia(id, deleteSourceFiles = deleteSource)
+                        },
                         onExportRequest = { mediaItemId, suggestedName, _ ->
                             pendingExportId = mediaItemId
                             createDocument.launch(suggestedName)

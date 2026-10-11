@@ -12,6 +12,7 @@ import com.renatizzi.photovideomanager.domain.model.ArchiveRef
 import com.renatizzi.photovideomanager.domain.model.Availability
 import com.renatizzi.photovideomanager.domain.model.DomainScope
 import com.renatizzi.photovideomanager.domain.model.MediaKind
+import com.renatizzi.photovideomanager.domain.model.RegisterSourceResult
 import com.renatizzi.photovideomanager.domain.model.SourceSummary
 import com.renatizzi.photovideomanager.domain.model.StorageAdapterKind
 import com.renatizzi.photovideomanager.domain.model.StorageLocation
@@ -108,7 +109,7 @@ class SourceRegistry(
         }
     }
 
-    suspend fun registerSafFolder(treeUri: Uri, displayName: String): SourceSummary {
+    suspend fun registerSafFolder(treeUri: Uri, displayName: String): RegisterSourceResult {
         require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
         val uriKey = treeUri.toString()
         val canonical = SafTreeIdentity.canonicalKey(treeUri)
@@ -123,8 +124,9 @@ class SourceRegistry(
                         )
             }
             ?.let { existing ->
-                return listSources(refreshAvailability = true)
+                val summary = listSources(refreshAvailability = true)
                     .first { it.locationId == existing.id }
+                return RegisterSourceResult(source = summary, alreadyPresent = true)
             }
 
         val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
@@ -169,16 +171,19 @@ class SourceRegistry(
         val saved = location.copy(availability = availability)
         catalogStore.upsertStorageLocation(saved)
 
-        return SourceSummary(
-            locationId = saved.id,
-            archiveId = saved.archiveId,
-            displayName = saved.displayName,
-            deviceLabel = deviceLabelFor(saved),
-            pathLabel = pathLabel ?: saved.displayName,
-            adapterKind = saved.adapterKind,
-            availability = saved.availability,
-            isSharedArchive = false,
-            isBuiltInPersonal = false,
+        return RegisterSourceResult(
+            source = SourceSummary(
+                locationId = saved.id,
+                archiveId = saved.archiveId,
+                displayName = saved.displayName,
+                deviceLabel = deviceLabelFor(saved),
+                pathLabel = pathLabel ?: saved.displayName,
+                adapterKind = saved.adapterKind,
+                availability = saved.availability,
+                isSharedArchive = false,
+                isBuiltInPersonal = false,
+            ),
+            alreadyPresent = false,
         )
     }
 

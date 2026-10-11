@@ -76,7 +76,7 @@ class CleanViewModel(
         _state.update { it.copy(pendingTrashSelected = false) }
     }
 
-    fun confirmTrashSelected() {
+    fun confirmTrashSelected(deleteSourceFiles: Boolean = false) {
         val ids = _state.value.selectedIds.toList()
         if (ids.isEmpty()) {
             _state.update { it.copy(pendingTrashSelected = false) }
@@ -89,7 +89,12 @@ class CleanViewModel(
             var ok = 0
             var fail = 0
             for (id in ids) {
-                runCatching { catalogFacade.trashMediaItem(id) }
+                runCatching {
+                    catalogFacade.trashMediaItem(
+                        mediaItemId = id,
+                        deleteSourceFiles = deleteSourceFiles,
+                    )
+                }
                     .onSuccess { ok++ }
                     .onFailure { fail++ }
             }
@@ -120,7 +125,7 @@ class CleanViewModel(
         _state.update { it.copy(pendingTrashGroup = null) }
     }
 
-    fun confirmTrashExtras() {
+    fun confirmTrashExtras(deleteSourceFiles: Boolean = false) {
         val group = _state.value.pendingTrashGroup ?: return
         val keepId = group.members.firstOrNull { it.isSuggestedKeep }?.mediaItem?.id
             ?: return
@@ -131,6 +136,7 @@ class CleanViewModel(
                     fingerprintValue = group.fingerprintValue,
                     keepMediaItemId = keepId,
                     memberCopyIds = group.members.map { it.mediaCopy.id },
+                    deleteSourceFiles = deleteSourceFiles,
                 )
             }.onSuccess { result ->
                 val refreshed = catalogFacade.analyzeExactDuplicates()

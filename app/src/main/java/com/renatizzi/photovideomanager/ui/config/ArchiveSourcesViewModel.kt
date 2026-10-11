@@ -61,13 +61,17 @@ class ArchiveSourcesViewModel(
         viewModelScope.launch {
             _state.update { it.copy(loading = true, message = null) }
             runCatching { catalogFacade.registerSafFolder(uri, displayName) }
-                .onSuccess { added ->
+                .onSuccess { result ->
                     val sources = catalogFacade.listSources(refresh = true)
                     _state.update {
                         it.copy(
                             sources = sources,
                             loading = false,
-                            message = "Cartella aggiunta: ${added.displayName}",
+                            message = if (result.alreadyPresent) {
+                                "Sorgente già presente in elenco"
+                            } else {
+                                "Sorgente aggiunta: ${result.source.displayName}"
+                            },
                         )
                     }
                 }

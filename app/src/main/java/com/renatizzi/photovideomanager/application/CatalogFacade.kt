@@ -10,6 +10,7 @@ import com.renatizzi.photovideomanager.domain.model.DashboardSnapshot
 import com.renatizzi.photovideomanager.domain.model.DedupAnalysisResult
 import com.renatizzi.photovideomanager.domain.model.MediaKind
 import com.renatizzi.photovideomanager.domain.model.SearchKindFilter
+import com.renatizzi.photovideomanager.domain.model.RegisterSourceResult
 import com.renatizzi.photovideomanager.domain.model.SourceSummary
 import com.renatizzi.photovideomanager.domain.model.TrashActionResult
 import com.renatizzi.photovideomanager.domain.model.TrashEntry
@@ -111,7 +112,7 @@ class CatalogFacade(
     suspend fun listSources(refresh: Boolean = true): List<SourceSummary> =
         sourceRegistry.listSources(refreshAvailability = refresh)
 
-    suspend fun registerSafFolder(treeUri: android.net.Uri, displayName: String): SourceSummary =
+    suspend fun registerSafFolder(treeUri: android.net.Uri, displayName: String): RegisterSourceResult =
         sourceRegistry.registerSafFolder(treeUri, displayName)
 
     suspend fun removeSource(locationId: String) = sourceRegistry.removeSource(locationId)
@@ -142,10 +143,12 @@ class CatalogFacade(
         fingerprintValue: String,
         keepMediaItemId: String,
         memberCopyIds: Collection<String>,
+        deleteSourceFiles: Boolean = false,
     ): TrashActionResult = trashService.trashDuplicateExtras(
         fingerprintValue = fingerprintValue,
         keepMediaItemId = keepMediaItemId,
         memberCopyIds = memberCopyIds,
+        deleteSourceFiles = deleteSourceFiles,
     )
 
     suspend fun listTrash(): List<TrashEntry> = trashService.listTrash()
@@ -172,8 +175,13 @@ class CatalogFacade(
     suspend fun renameMediaTitle(mediaItemId: String, newTitle: String) =
         archiveService.renameMediaTitle(mediaItemId, newTitle)
 
-    suspend fun trashMediaItem(mediaItemId: String): TrashActionResult =
-        trashService.trashMediaItem(mediaItemId)
+    suspend fun trashMediaItem(
+        mediaItemId: String,
+        deleteSourceFiles: Boolean = false,
+    ): TrashActionResult = trashService.trashMediaItem(
+        mediaItemId = mediaItemId,
+        deleteSourceFiles = deleteSourceFiles,
+    )
 
     suspend fun exportMediaItemToUri(
         mediaItemId: String,

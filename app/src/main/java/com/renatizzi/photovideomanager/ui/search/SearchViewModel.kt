@@ -101,9 +101,14 @@ class SearchViewModel(
         }
     }
 
-    fun trashMedia(mediaItemId: String) {
+    fun trashMedia(mediaItemId: String, deleteSourceFiles: Boolean = false) {
         viewModelScope.launch {
-            runCatching { catalogFacade.trashMediaItem(mediaItemId) }
+            runCatching {
+                catalogFacade.trashMediaItem(
+                    mediaItemId = mediaItemId,
+                    deleteSourceFiles = deleteSourceFiles,
+                )
+            }
                 .onSuccess { result ->
                     _state.update {
                         it.copy(

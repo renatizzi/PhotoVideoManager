@@ -176,3 +176,20 @@ interface ImportSessionDao {
     @Query("SELECT * FROM import_sessions WHERE id = :id LIMIT 1")
     suspend fun get(id: String): ImportSessionEntity?
 }
+
+@Dao
+interface CatalogExclusionDao {
+    @Upsert
+    suspend fun upsert(entity: CatalogExclusionEntity)
+
+    @Query(
+        """
+        SELECT COUNT(*) FROM catalog_exclusions
+        WHERE storageLocationId = :storageLocationId AND opaqueLocator = :opaqueLocator
+        """,
+    )
+    suspend fun countByLocator(storageLocationId: String, opaqueLocator: String): Long
+
+    @Query("DELETE FROM catalog_exclusions WHERE storageLocationId = :storageLocationId AND opaqueLocator = :opaqueLocator")
+    suspend fun deleteByLocator(storageLocationId: String, opaqueLocator: String)
+}
