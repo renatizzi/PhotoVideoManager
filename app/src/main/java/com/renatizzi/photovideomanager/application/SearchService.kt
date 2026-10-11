@@ -1,10 +1,15 @@
 package com.renatizzi.photovideomanager.application
 
+import android.content.Context
+import android.net.Uri
+import com.renatizzi.photovideomanager.data.storage.SafPathLabels
 import com.renatizzi.photovideomanager.domain.model.CatalogSearchEntry
 import com.renatizzi.photovideomanager.domain.model.DomainScope
 import com.renatizzi.photovideomanager.domain.model.MediaCopyState
 import com.renatizzi.photovideomanager.domain.model.MediaKind
 import com.renatizzi.photovideomanager.domain.model.SearchKindFilter
+import com.renatizzi.photovideomanager.domain.model.StorageAdapterKind
+import com.renatizzi.photovideomanager.domain.model.StorageLocation
 import com.renatizzi.photovideomanager.domain.port.CatalogStore
 import com.renatizzi.photovideomanager.domain.port.PermissionGate
 
@@ -16,6 +21,7 @@ import com.renatizzi.photovideomanager.domain.port.PermissionGate
  * l’intero Catalogo (censimenti tipici >1000 elementi).
  */
 class SearchService(
+    private val appContext: Context,
     private val catalogStore: CatalogStore,
     private val permissionGate: PermissionGate,
 ) {
@@ -53,9 +59,14 @@ class SearchService(
                     mediaItem = item,
                     previewCopy = preferred,
                     activeCopyCount = copies.size,
-                    locationNames = copies.mapNotNull { copy ->
-                        locations[copy.storageLocationId]?.displayName
-                    }.distinct(),
+                    locationNames = copies
+                        .sortedBy { copy ->
+                            if (copy.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID) 1 else 0
+                        }
+                        .mapNotNull { copy ->
+                            formatLocationLabel(locations[copy.storageLocationId])
+                        }
+                        .distinct(),
                     inPersonalArchive = copies.any {
                         it.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID
                     },
@@ -64,6 +75,30 @@ class SearchService(
             .sortedByDescending { it.mediaItem.updatedAtEpochMs }
             .take(limit)
             .toList()
+    }
+
+    /** Etichetta leggibile sorgente (anche per video nuovi). */
+    private fun formatLocationLabel(location: StorageLocation?): String? {
+        if (location == null) return null
+        if (location.id == CatalogFacade.PERSONAL_LOCATION_ID) return "Spazio app"
+        if (location.adapterKind != StorageAdapterKind.SAF_TREE || location.opaqueLocator.isBlank()) {
+            return location.displayName.takeIf { it.isNotBlank() }
+        }
+        return runCatching {
+            val uri = Uri.parse(location.opaqueLocator)
+            val path = SafPathLabels.storagePathLabel(appContext, uri)
+                .takeUnless { it.isBlank() || SafPathLabels.looksIllegible(it) }
+            val name = location.displayName.takeUnless { SafPathLabels.looksIllegible(it) || it.isBlank() }
+            when {
+                !path.isNullOrBlank() && !name.isNullOrBlank() &&
+                    !path.equals(name, ignoreCase = true) &&
+                    !name.equals(path.substringAfterLast('/'), ignoreCase = true) ->
+                    "$name · $path"
+                !path.isNullOrBlank() -> path
+                !name.isNullOrBlank() -> name
+                else -> null
+            }
+        }.getOrNull() ?: location.displayName.takeIf { it.isNotBlank() }
     }
 
     companion object {

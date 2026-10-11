@@ -1,5 +1,6 @@
 package com.renatizzi.photovideomanager.application
 
+import android.content.Context
 import android.net.Uri
 import com.renatizzi.photovideomanager.data.storage.SafPathLabels
 import com.renatizzi.photovideomanager.data.storage.StorageAdapterFactory
@@ -26,6 +27,7 @@ import java.util.UUID
  * Consolidamento Archivio Condiviso: tranche successiva.
  */
 class AcquisitionService(
+    private val appContext: Context,
     private val catalogStore: CatalogStore,
     private val adapterFactory: StorageAdapterFactory,
     private val permissionGate: PermissionGate,
@@ -57,9 +59,7 @@ class AcquisitionService(
                 AcquireCandidate(
                     mediaItem = item,
                     sourceCopy = sourceCopy,
-                    sourceLocationName = sourcePathLabel(sourceLocation)
-                        ?: sourceLocation?.displayName
-                        ?: sourceCopy.storageLocationId,
+                    sourceLocationName = sourceLocationLabel(sourceLocation, sourceCopy.storageLocationId),
                     alreadyInPersonalArchive = alreadyPersonal,
                 ),
             )
@@ -67,16 +67,34 @@ class AcquisitionService(
         return result
     }
 
-    /** Stesso formato percorso usato in Acquisisci (es. Memoria principale/Pictures). */
-    private fun sourcePathLabel(location: StorageLocation?): String? {
-        if (location == null) return null
-        if (location.adapterKind != StorageAdapterKind.SAF_TREE) return location.displayName
-        if (location.opaqueLocator.isBlank()) return location.displayName
+    /**
+     * Etichetta sorgente per Importa/elenco: percorso leggibile (foto e video).
+     * Non lasciare vuoto — fallback su displayName / id location.
+     */
+    private fun sourceLocationLabel(location: StorageLocation?, locationId: String): String {
+        if (location == null) return locationId
+        if (location.adapterKind != StorageAdapterKind.SAF_TREE) {
+            return location.displayName.ifBlank { locationId }
+        }
+        if (location.opaqueLocator.isBlank()) {
+            return location.displayName.ifBlank { locationId }
+        }
         return runCatching {
             val uri = Uri.parse(location.opaqueLocator)
-            SafPathLabels.humanPath(uri)
-                ?: location.displayName.takeUnless { SafPathLabels.looksIllegible(it) }
-        }.getOrNull()
+            val path = SafPathLabels.storagePathLabel(appContext, uri)
+                .takeUnless { it.isBlank() || SafPathLabels.looksIllegible(it) }
+            val name = location.displayName.takeUnless { SafPathLabels.looksIllegible(it) }
+            when {
+                !path.isNullOrBlank() && !name.isNullOrBlank() &&
+                    !path.equals(name, ignoreCase = true) &&
+                    !path.endsWith("/$name") &&
+                    !name.equals(path.substringAfterLast('/'), ignoreCase = true) ->
+                    "$name · $path"
+                !path.isNullOrBlank() -> path
+                !name.isNullOrBlank() -> name
+                else -> locationId
+            }
+        }.getOrDefault(location.displayName.ifBlank { locationId })
     }
 
     suspend fun acquireToPersonalArchive(mediaItemIds: Collection<String>): AcquireResult {

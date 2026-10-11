@@ -55,6 +55,24 @@ fun SourceBrowseScreen(
             Text(state.pathLabel, style = MaterialTheme.typography.bodyMedium)
         }
 
+        if (state.childFolders.isNotEmpty()) {
+            Text(
+                text = stringResource(R.string.browse_source_folders_title),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+            Text(
+                text = state.childFolders.joinToString(" · "),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            Text(
+                text = stringResource(R.string.browse_source_folders_hint),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+            )
+        }
+
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(
                 selected = state.sortMode == MediaBrowseSortMode.NEWEST,

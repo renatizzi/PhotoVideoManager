@@ -167,6 +167,10 @@ class CatalogFacade(
     suspend fun listMediaForLocation(locationId: String): List<ArchiveEntry> =
         archiveService.listMediaForLocation(locationId)
 
+    /** Sottocartelle immediate dell’albero SAF autorizzato (verifica es. «famiglia»). */
+    suspend fun listImmediateChildFolders(locationId: String): List<String> =
+        sourceRegistry.listImmediateChildFolders(locationId)
+
     suspend fun searchCatalog(
         query: String,
         kindFilter: SearchKindFilter = SearchKindFilter.ALL,

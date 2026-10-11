@@ -119,18 +119,63 @@ object SafPathLabels {
     }
 
     /**
-     * Percorso UI: locale humanizzato, cloud = «Google Drive/nomeCartella».
+     * Percorso UI **senza** ripetere il nome dispositivo (quello sta su [deviceLabelForTree]).
+     * Locale: es. `Memoria principale/Pictures/Camera`.
+     * Drive/NAS: percorso/cartella intera, non «Google Drive/…» duplicato.
      */
-    fun humanPathOrCloud(context: Context, treeUri: Uri): String {
-        humanPath(treeUri)?.let { return it }
-        val folder = folderTitle(context, treeUri, defaultFolderFallback(providerOf(treeUri)))
-        return when (providerOf(treeUri)) {
-            SafProvider.GOOGLE_DRIVE -> "$DEVICE_GOOGLE_DRIVE/$folder"
-            SafProvider.DOWNLOADS -> "$DEVICE_DOWNLOADS/$folder"
-            SafProvider.NETWORK_NAS -> "$DEVICE_NETWORK_NAS/$folder"
-            SafProvider.OTHER -> "$DEVICE_CLOUD_OTHER/$folder"
-            SafProvider.LOCAL_STORAGE -> folder
+    fun humanPathOrCloud(context: Context, treeUri: Uri): String = storagePathLabel(context, treeUri)
+
+    /** Percorso storage (riga «percorso» in Acquisisci), distinto dal dispositivo. */
+    fun storagePathLabel(context: Context, treeUri: Uri): String {
+        humanPath(treeUri)?.let { return stripDevicePrefix(it) }
+        val docId = runCatching { DocumentsContract.getTreeDocumentId(treeUri) }.getOrNull()
+        val decoded = docId?.let { decode(it) }.orEmpty()
+        // Alcuni provider rete/Drive usano id tipo share:path/to/folder
+        if (decoded.contains(':')) {
+            val after = decoded.substringAfter(':').trim('/').replace('\\', '/')
+            if (after.isNotBlank() && after.contains('/')) {
+                return stripDevicePrefix(after)
+            }
+            if (after.isNotBlank() && providerOf(treeUri) != SafProvider.LOCAL_STORAGE) {
+                val folder = folderTitle(context, treeUri, after)
+                // Preferisci percorso dopo ':' se leggibile; altrimenti titolo cartella.
+                val path = when {
+                    after.contains('/') -> after
+                    !folder.equals(after, ignoreCase = true) && !looksIllegible(folder) -> folder
+                    else -> after
+                }
+                return stripDevicePrefix(path)
+            }
+        } else if (decoded.contains('/') || decoded.contains('\\')) {
+            return stripDevicePrefix(decoded.trim('/').replace('\\', '/'))
         }
+        return stripDevicePrefix(
+            folderTitle(context, treeUri, defaultFolderFallback(providerOf(treeUri))),
+        )
+    }
+
+    /**
+     * Rimuove un eventuale prefisso «Google Drive/» (o altri device) dal percorso,
+     * così non si ripete sotto la riga dispositivo.
+     */
+    fun stripDevicePrefix(path: String): String {
+        val trimmed = path.trim().trimStart('/')
+        val prefixes = listOf(
+            DEVICE_GOOGLE_DRIVE,
+            DEVICE_DOWNLOADS,
+            DEVICE_NETWORK_NAS,
+            DEVICE_CLOUD_OTHER,
+            "Disco di Rete",
+            "Network Storage",
+        )
+        for (prefix in prefixes) {
+            if (trimmed.equals(prefix, ignoreCase = true)) return trimmed
+            val withSlash = "$prefix/"
+            if (trimmed.startsWith(withSlash, ignoreCase = true)) {
+                return trimmed.substring(withSlash.length).ifBlank { trimmed }
+            }
+        }
+        return trimmed
     }
 
     fun humanizeDocumentId(docId: String): String {

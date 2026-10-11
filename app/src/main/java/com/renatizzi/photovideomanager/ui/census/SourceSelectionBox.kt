@@ -2,12 +2,15 @@ package com.renatizzi.photovideomanager.ui.census
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,29 +57,41 @@ fun SourceSelectionBox(
         SourceCensusSelection.NOT_SELECTED -> MaterialTheme.colorScheme.onSurface
         SourceCensusSelection.EXCLUDED -> MaterialTheme.colorScheme.error
     }
+    val interaction = remember { MutableInteractionSource() }
     Box(
         modifier = modifier
-            .size(28.dp)
-            .clip(RoundedCornerShape(4.dp))
-            .border(2.dp, borderColor, RoundedCornerShape(4.dp))
+            .minimumInteractiveComponentSize()
             .semantics {
                 contentDescription = label
                 role = Role.Checkbox
             }
             .then(
                 if (enabled) {
-                    Modifier.clickable(onClick = onClick)
+                    Modifier.clickable(
+                        interactionSource = interaction,
+                        indication = null,
+                        role = Role.Checkbox,
+                        onClick = onClick,
+                    )
                 } else {
                     Modifier
                 },
             ),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = mark,
-            color = markColor,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-        )
+        Box(
+            modifier = Modifier
+                .size(28.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .border(2.dp, borderColor, RoundedCornerShape(4.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = mark,
+                color = markColor,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+            )
+        }
     }
 }

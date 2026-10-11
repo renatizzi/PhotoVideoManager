@@ -247,6 +247,24 @@ class SourceRegistry(
         personalRoot.walkTopDown().filter { it.isFile }.sumOf { it.length() }
     }
 
+    /**
+     * Sottocartelle immediate della sorgente SAF (per verificare in Dettaglio
+     * cosa è compreso nell’albero autorizzato con +, es. «famiglia»).
+     */
+    suspend fun listImmediateChildFolders(locationId: String): List<String> {
+        val location = catalogStore.getStorageLocation(locationId) ?: return emptyList()
+        if (location.adapterKind != StorageAdapterKind.SAF_TREE) return emptyList()
+        return runCatching {
+            val adapter = adapterFactory.create(location)
+            adapter.listChildren(location.opaqueLocator)
+                .filter { it.isDirectory }
+                .map { it.displayName.trim() }
+                .filter { it.isNotEmpty() }
+                .distinct()
+                .sortedBy { it.lowercase() }
+        }.getOrDefault(emptyList())
+    }
+
     private fun deviceLabelFor(location: StorageLocation): String = when (location.adapterKind) {
         StorageAdapterKind.LOCAL_FS -> "Catalogo"
         StorageAdapterKind.SAF_TREE -> {
@@ -273,7 +291,7 @@ class SourceRegistry(
         if (location.opaqueLocator.isBlank()) return location.displayName
         return runCatching {
             val uri = Uri.parse(location.opaqueLocator)
-            SafPathLabels.humanPathOrCloud(appContext, uri)
+            SafPathLabels.storagePathLabel(appContext, uri)
                 .takeUnless { SafPathLabels.looksIllegible(it) }
                 ?: location.displayName.takeUnless { looksIllegible(it) }
                 ?: "Cartella dispositivo"

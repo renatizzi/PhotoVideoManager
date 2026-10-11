@@ -178,6 +178,8 @@
     <string name="browse_source_media">Vedi media della sorgente</string>
     <string name="browse_source_title">Dettaglio di</string>
     <string name="browse_source_help"> </string>
+    <string name="browse_source_folders_title">Sottocartelle nell\'albero autorizzato</string>
+    <string name="browse_source_folders_hint">Se manca una cartella (es. famiglia), con + scegli il livello superiore più ampio o quella cartella specifica.</string>
     <string name="browse_source_count">Elementi: %1$d</string>
     <string name="browse_source_empty">Nessun media censito per questa sorgente. Torna a Censisci e avviane uno.</string>
     <string name="sort_name">Nome</string>

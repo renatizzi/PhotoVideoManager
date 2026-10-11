@@ -82,4 +82,20 @@ class SafPathLabelsTest {
         assertFalse(label.contains("Memoria principale"))
         assertNotEquals(SafPathLabels.ROOT_FOLDER_TITLE, label)
     }
+
+    @Test
+    fun stripDevicePrefix_removesGoogleDriveDuplicate() {
+        assertEquals(
+            "test2_mediamanager",
+            SafPathLabels.stripDevicePrefix("Google Drive/test2_mediamanager"),
+        )
+        assertEquals(
+            "share/famiglia",
+            SafPathLabels.stripDevicePrefix("Rete / NAS/share/famiglia"),
+        )
+        assertEquals(
+            "Cartella Drive",
+            SafPathLabels.stripDevicePrefix("Cartella Drive"),
+        )
+    }
 }

@@ -56,53 +56,123 @@ class SafTreeStorageAdapter(
         withContext(Dispatchers.IO) {
             requireCapability(StorageCapability.LIST)
             val parentDocId = documentIdOf(opaqueLocator) ?: return@withContext emptyList()
-            val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, parentDocId)
-            val result = mutableListOf<StorageEntry>()
-            runCatching {
-                context.contentResolver.query(
-                    childrenUri,
-                    arrayOf(
-                        DocumentsContract.Document.COLUMN_DOCUMENT_ID,
-                        DocumentsContract.Document.COLUMN_DISPLAY_NAME,
-                        DocumentsContract.Document.COLUMN_MIME_TYPE,
-                        DocumentsContract.Document.COLUMN_SIZE,
-                    ),
-                    null,
-                    null,
-                    null,
-                )?.use { cursor ->
-                    val idIdx = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
-                    val nameIdx = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
-                    val mimeIdx = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_MIME_TYPE)
-                    val sizeIdx = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_SIZE)
-                    while (cursor.moveToNext()) {
-                        val docId = cursor.getString(idIdx) ?: continue
-                        val name = cursor.getString(nameIdx) ?: docId
-                        val mime = cursor.getString(mimeIdx)
-                        val size = if (sizeIdx >= 0 && !cursor.isNull(sizeIdx)) {
-                            cursor.getLong(sizeIdx)
-                        } else {
-                            null
-                        }
-                        val childUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, docId)
-                        result.add(
-                            StorageEntry(
-                                opaqueLocator = childUri.toString(),
-                                displayName = name,
-                                isDirectory = mime == DocumentsContract.Document.MIME_TYPE_DIR,
-                                mimeType = mime,
-                                byteSize = size,
-                            ),
-                        )
+            val fromContract = queryChildrenViaContract(parentDocId)
+            // Sempre unire DocumentFile: su NAS il cursor può omettere cartelle (es. «famiglia»)
+            // anche se ne restituisce altre (es. «archivio condiviso»).
+            val fromDocFile = listChildrenViaDocumentFile(opaqueLocator, parentDocId)
+            mergeChildren(fromContract, fromDocFile)
+        }
+
+    private fun queryChildrenViaContract(parentDocId: String): List<StorageEntry> {
+        val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, parentDocId)
+        val projection = arrayOf(
+            DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+            DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+            DocumentsContract.Document.COLUMN_MIME_TYPE,
+            DocumentsContract.Document.COLUMN_SIZE,
+        )
+        val result = mutableListOf<StorageEntry>()
+        // Paginazione (API 26+): alcuni provider rete limitano la prima pagina.
+        if (android.os.Build.VERSION.SDK_INT >= 26) {
+            var offset = 0
+            val pageSize = 256
+            val seenKeys = LinkedHashSet<String>()
+            while (offset < 10_000) {
+                val extras = android.os.Bundle().apply {
+                    putInt(android.content.ContentResolver.QUERY_ARG_OFFSET, offset)
+                    putInt(android.content.ContentResolver.QUERY_ARG_LIMIT, pageSize)
+                }
+                val page = mutableListOf<StorageEntry>()
+                runCatching {
+                    context.contentResolver.query(childrenUri, projection, extras, null)?.use { cursor ->
+                        readChildrenCursor(cursor, page)
                     }
                 }
+                if (page.isEmpty()) break
+                var newInPage = 0
+                for (entry in page) {
+                    val key = entry.displayName.trim().lowercase() + "|" + entry.isDirectory + "|" +
+                        entry.opaqueLocator
+                    if (seenKeys.add(key)) {
+                        result.add(entry)
+                        newInPage++
+                    }
+                }
+                // Provider che ignorano OFFSET: stessa pagina ripetuta → stop.
+                if (newInPage == 0) break
+                if (page.size < pageSize) break
+                offset += pageSize
             }
-            // NAS/SMB: alcuni provider restituiscono cursor vuoto — fallback DocumentFile.
-            if (result.isEmpty()) {
-                result.addAll(listChildrenViaDocumentFile(opaqueLocator, parentDocId))
-            }
-            result
+            if (result.isNotEmpty()) return result
         }
+        runCatching {
+            context.contentResolver.query(childrenUri, projection, null, null, null)?.use { cursor ->
+                readChildrenCursor(cursor, result)
+            }
+        }
+        return result
+    }
+
+    private fun readChildrenCursor(
+        cursor: android.database.Cursor,
+        out: MutableList<StorageEntry>,
+    ) {
+        val idIdx = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
+        val nameIdx = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
+        val mimeIdx = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_MIME_TYPE)
+        val sizeIdx = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_SIZE)
+        while (cursor.moveToNext()) {
+            val docId = cursor.getString(idIdx) ?: continue
+            val name = cursor.getString(nameIdx) ?: docId
+            val mime = cursor.getString(mimeIdx)
+            val size = if (sizeIdx >= 0 && !cursor.isNull(sizeIdx)) cursor.getLong(sizeIdx) else null
+            val childUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, docId)
+            out.add(
+                StorageEntry(
+                    opaqueLocator = childUri.toString(),
+                    displayName = name,
+                    isDirectory = isDirectoryEntry(name, mime, size),
+                    mimeType = mime,
+                    byteSize = size,
+                ),
+            )
+        }
+    }
+
+    /**
+     * Alcuni provider NAS omettono MIME_TYPE_DIR sulle cartelle: senza questo
+     * indizio non si scende in sottocartelle (es. «famiglia»).
+     */
+    private fun isDirectoryEntry(displayName: String, mime: String?, byteSize: Long?): Boolean {
+        if (mime == DocumentsContract.Document.MIME_TYPE_DIR) return true
+        if (!mime.isNullOrBlank()) return false
+        val name = displayName.trim()
+        if (name.isEmpty() || name.startsWith('.')) return false
+        // Nome con estensione media tipica → file, non cartella.
+        val ext = name.substringAfterLast('.', missingDelimiterValue = "")
+        if (ext.isNotEmpty() && ext.length in 2..5 && ext.all { it.isLetterOrDigit() }) {
+            return false
+        }
+        // Cartella sospetta: niente MIME, niente size (o zero).
+        return byteSize == null || byteSize == 0L
+    }
+
+    private fun mergeChildren(
+        primary: List<StorageEntry>,
+        secondary: List<StorageEntry>,
+    ): List<StorageEntry> {
+        if (secondary.isEmpty()) return primary
+        if (primary.isEmpty()) return secondary
+        val byKey = LinkedHashMap<String, StorageEntry>()
+        fun keyOf(e: StorageEntry): String =
+            e.displayName.trim().lowercase() + "|" + e.isDirectory
+        primary.forEach { byKey[keyOf(it)] = it }
+        secondary.forEach { e ->
+            val k = keyOf(e)
+            if (!byKey.containsKey(k)) byKey[k] = e
+        }
+        return byKey.values.toList()
+    }
 
     /**
      * Fallback listing (utile su NAS/SMB se il cursor DocumentsContract è vuoto).
@@ -117,16 +187,20 @@ class SafTreeStorageAdapter(
             DocumentFile.fromTreeUri(context, treeUri)
         } else {
             val docUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, parentDocId)
+            // Nested: fromSingleUri può non supportare listFiles → lista vuota (ok, resta il contract).
             DocumentFile.fromSingleUri(context, docUri)
         } ?: return emptyList()
         return runCatching {
             parentFile.listFiles().map { child ->
+                val name = child.name ?: child.uri.lastPathSegment.orEmpty()
+                val mime = child.type
+                val size = if (child.isFile) child.length().takeIf { it >= 0 } else null
                 StorageEntry(
                     opaqueLocator = child.uri.toString(),
-                    displayName = child.name ?: child.uri.lastPathSegment.orEmpty(),
-                    isDirectory = child.isDirectory,
-                    mimeType = child.type,
-                    byteSize = if (child.isFile) child.length().takeIf { it >= 0 } else null,
+                    displayName = name,
+                    isDirectory = child.isDirectory || isDirectoryEntry(name, mime, size),
+                    mimeType = mime,
+                    byteSize = size,
                 )
             }
         }.getOrDefault(emptyList())

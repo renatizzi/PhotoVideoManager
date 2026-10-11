@@ -19,6 +19,8 @@ data class SourceBrowseUiState(
     val displayName: String = "",
     val deviceLabel: String = "",
     val pathLabel: String = "",
+    /** Sottocartelle immediate nell’albero autorizzato (es. famiglia, archivio condiviso). */
+    val childFolders: List<String> = emptyList(),
     val entries: List<ArchiveEntry> = emptyList(),
     val sortMode: MediaBrowseSortMode = MediaBrowseSortMode.NEWEST,
     val loading: Boolean = true,
@@ -58,13 +60,15 @@ class SourceBrowseViewModel(
                 val sources = catalogFacade.listSources(refresh = false)
                 val source = sources.firstOrNull { it.locationId == locationId }
                 val entries = catalogFacade.listMediaForLocation(locationId)
-                source to entries
-            }.onSuccess { (source, entries) ->
+                val folders = catalogFacade.listImmediateChildFolders(locationId)
+                Triple(source, entries, folders)
+            }.onSuccess { (source, entries, folders) ->
                 _state.update {
                     it.copy(
                         displayName = source?.displayName.orEmpty(),
                         deviceLabel = source?.deviceLabel.orEmpty(),
                         pathLabel = source?.pathLabel.orEmpty(),
+                        childFolders = folders,
                         entries = entries,
                         loading = false,
                     )

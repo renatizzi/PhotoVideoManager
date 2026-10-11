@@ -206,7 +206,7 @@ private fun CandidateRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Checkbox(
-            checked = selected || candidate.alreadyInPersonalArchive,
+            checked = selected,
             onCheckedChange = { if (enabled) onToggle() },
             enabled = enabled,
         )

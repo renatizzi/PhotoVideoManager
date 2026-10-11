@@ -388,9 +388,16 @@ private fun SourceRow(
                 ),
         ) {
             // Titolo cartella · dispositivo · percorso (senza «Tipo: …»)
-            Text(source.displayName, fontWeight = FontWeight.SemiBold)
-            Text(source.deviceLabel, style = MaterialTheme.typography.labelMedium)
-            Text(source.pathLabel, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                source.displayName.ifBlank { stringResource(R.string.external_source_default_name) },
+                fontWeight = FontWeight.SemiBold,
+            )
+            if (source.deviceLabel.isNotBlank()) {
+                Text(source.deviceLabel, style = MaterialTheme.typography.labelMedium)
+            }
+            if (source.pathLabel.isNotBlank()) {
+                Text(source.pathLabel, style = MaterialTheme.typography.bodyMedium)
+            }
             Text(
                 text = when (source.availability) {
                     Availability.AVAILABLE -> stringResource(R.string.status_available)
@@ -428,7 +435,10 @@ fun ImportaStaticScreen(
     modifier: Modifier = Modifier,
 ) {
     val pool = state.kindFiltered
-    val selected = pool.count { it.mediaItem.id in state.selectedIds }
+    // Conteggio = solo ✓ in selectedIds (non i già in Catalogo, lasciati deselezionati).
+    val selected = pool.count {
+        it.mediaItem.id in state.selectedIds && !it.alreadyInPersonalArchive
+    }
     val photos = pool.count { it.mediaItem.kind == MediaKind.PHOTO }
     val videos = pool.count { it.mediaItem.kind == MediaKind.VIDEO }
     val already = pool.count { it.alreadyInPersonalArchive }
@@ -540,8 +550,8 @@ fun ImportaStaticScreen(
                     HorizontalDivider()
                     ImportCandidateRow(
                         candidate = candidate,
-                        checked = candidate.mediaItem.id in state.selectedIds ||
-                            candidate.alreadyInPersonalArchive,
+                        // Solo ✓ effettivi in selectedIds; già in Catalogo restano deselezionati.
+                        checked = candidate.mediaItem.id in state.selectedIds,
                         enabled = !busy && !candidate.alreadyInPersonalArchive,
                         onToggle = { onToggle(candidate.mediaItem.id) },
                     )
@@ -569,6 +579,7 @@ private fun ImportCandidateRow(
     } else {
         SourceCensusSelection.NOT_SELECTED
     }
+    // Un solo clickable sulla riga: evitare doppio toggle (riquadro + Row) che annulla il tocco.
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -577,11 +588,11 @@ private fun ImportCandidateRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        // Stesso riquadro di Acquisisci/Aggiorna (✓ / vuoto), non Checkbox Material.
+        // Riquadro solo visuale: il tocco è gestito dalla Row.
         SourceSelectionBox(
             selection = selection,
-            enabled = enabled,
-            onClick = onToggle,
+            enabled = false,
+            onClick = {},
         )
         MediaThumbnail(
             copy = candidate.sourceCopy,
@@ -590,7 +601,10 @@ private fun ImportCandidateRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(title, fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyMedium)
             Text(
-                text = stringResource(R.string.importa_riga_meta, candidate.sourceLocationName),
+                text = stringResource(
+                    R.string.importa_riga_meta,
+                    candidate.sourceLocationName.ifBlank { "—" },
+                ),
                 style = MaterialTheme.typography.bodySmall,
             )
             if (candidate.alreadyInPersonalArchive) {
@@ -720,7 +734,11 @@ fun AggiornaStaticScreen(
                         ?: entry.previewCopy?.opaqueLocator?.substringAfterLast('/')
                             ?.substringAfterLast(':')
                         ?: entry.mediaItem.id
-                    val loc = entry.locationNames.firstOrNull().orEmpty()
+                    // Preferisci sorgente esterna; «Spazio app» solo se non c’è altro.
+                    val loc = entry.locationNames
+                        .firstOrNull { it != "Spazio app" }
+                        ?: entry.locationNames.firstOrNull()
+                        ?: ""
                     val id = entry.mediaItem.id
                     MediaRow(
                         title = title,

@@ -103,6 +103,9 @@ class AcquireViewModel(
 
     fun toggleSelection(mediaItemId: String) {
         _state.update { current ->
+            val candidate = current.candidates.find { it.mediaItem.id == mediaItemId }
+            // Già in Catalogo: non selezionabili (restano deselezionati e non contano).
+            if (candidate?.alreadyInPersonalArchive == true) return@update current
             val next = current.selectedIds.toMutableSet()
             if (!next.add(mediaItemId)) next.remove(mediaItemId)
             current.copy(selectedIds = next)

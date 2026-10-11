@@ -65,6 +65,7 @@ class AppContainer(context: Context) {
     )
 
     val acquisitionService: AcquisitionService = AcquisitionService(
+        appContext = appContext,
         catalogStore = catalogStore,
         adapterFactory = adapterFactory,
         permissionGate = permissionGate,
@@ -88,6 +89,7 @@ class AppContainer(context: Context) {
     )
 
     val searchService: SearchService = SearchService(
+        appContext = appContext,
         catalogStore = catalogStore,
         permissionGate = permissionGate,
     )
