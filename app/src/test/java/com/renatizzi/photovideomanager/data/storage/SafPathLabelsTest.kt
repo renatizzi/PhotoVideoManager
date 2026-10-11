@@ -98,4 +98,24 @@ class SafPathLabelsTest {
             SafPathLabels.stripDevicePrefix("Cartella Drive"),
         )
     }
+
+    @Test
+    fun pathUnderName_stripsDeviceAndLeafName() {
+        assertEquals(
+            "",
+            SafPathLabels.pathUnderName("Google Drive/FilmoraGo", "FilmoraGo", "Google Drive"),
+        )
+        assertEquals(
+            "Memoria principale/Pictures",
+            SafPathLabels.pathUnderName(
+                "Memoria principale/Pictures/MediaManager_test",
+                "MediaManager_test",
+                "Tab S9 di RENATO",
+            ),
+        )
+        assertEquals(
+            "",
+            SafPathLabels.pathUnderName("Rete / NAS/MediaManager", "MediaManager", "Rete / NAS"),
+        )
+    }
 }

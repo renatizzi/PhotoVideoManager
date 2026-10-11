@@ -55,11 +55,17 @@ class AcquisitionService(
             } ?: continue
             val sourceLocation = locations[sourceCopy.storageLocationId]
             val alreadyPersonal = copies.any { it.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID }
+            val device = sourceDeviceLabel(sourceLocation)
+            val path = sourcePathLabel(sourceLocation, device)
+            val combined = listOf(device, path).filter { it.isNotBlank() }.joinToString(" · ")
+                .ifBlank { sourceLocation?.displayName.orEmpty().ifBlank { sourceCopy.storageLocationId } }
             result.add(
                 AcquireCandidate(
                     mediaItem = item,
                     sourceCopy = sourceCopy,
-                    sourceLocationName = sourceLocationLabel(sourceLocation, sourceCopy.storageLocationId),
+                    sourceLocationName = combined,
+                    sourceDeviceLabel = device,
+                    sourcePathLabel = path,
                     alreadyInPersonalArchive = alreadyPersonal,
                 ),
             )
@@ -67,34 +73,55 @@ class AcquisitionService(
         return result
     }
 
-    /**
-     * Etichetta sorgente per Importa/elenco: percorso leggibile (foto e video).
-     * Non lasciare vuoto — fallback su displayName / id location.
-     */
-    private fun sourceLocationLabel(location: StorageLocation?, locationId: String): String {
-        if (location == null) return locationId
-        if (location.adapterKind != StorageAdapterKind.SAF_TREE) {
-            return location.displayName.ifBlank { locationId }
+    private fun sourceDeviceLabel(location: StorageLocation?): String {
+        if (location == null) return ""
+        return when (location.adapterKind) {
+            StorageAdapterKind.LOCAL_FS -> "Catalogo"
+            StorageAdapterKind.MEDIA_STORE -> "Galleria di sistema"
+            StorageAdapterKind.SMB -> SafPathLabels.DEVICE_NETWORK_NAS
+            StorageAdapterKind.SAF_TREE -> {
+                if (location.opaqueLocator.isBlank()) return location.displayName
+                runCatching {
+                    SafPathLabels.deviceLabelForTree(
+                        appContext,
+                        Uri.parse(location.opaqueLocator),
+                        SafPathLabels.deviceLabel(appContext),
+                    )
+                }.getOrDefault(location.displayName)
+            }
         }
-        if (location.opaqueLocator.isBlank()) {
-            return location.displayName.ifBlank { locationId }
+    }
+
+    /** Percorso cartella sorgente: senza device e senza ripetere il nome cartella (in grassetto sopra). */
+    private fun sourcePathLabel(location: StorageLocation?, deviceLabel: String): String {
+        if (location == null) return ""
+        if (location.adapterKind != StorageAdapterKind.SAF_TREE || location.opaqueLocator.isBlank()) {
+            return ""
         }
         return runCatching {
             val uri = Uri.parse(location.opaqueLocator)
-            val path = SafPathLabels.storagePathLabel(appContext, uri)
-                .takeUnless { it.isBlank() || SafPathLabels.looksIllegible(it) }
-            val name = location.displayName.takeUnless { SafPathLabels.looksIllegible(it) }
-            when {
-                !path.isNullOrBlank() && !name.isNullOrBlank() &&
-                    !path.equals(name, ignoreCase = true) &&
-                    !path.endsWith("/$name") &&
-                    !name.equals(path.substringAfterLast('/'), ignoreCase = true) ->
-                    "$name · $path"
-                !path.isNullOrBlank() -> path
-                !name.isNullOrBlank() -> name
-                else -> locationId
+            val raw = SafPathLabels.storagePathLabel(appContext, uri)
+            SafPathLabels.pathUnderName(raw, location.displayName, deviceLabel)
+        }.getOrDefault("")
+    }
+
+    /**
+     * Rimuove dal Catalogo i candidati deselezionati in Importa (solo se non hanno
+     * ancora copia nello spazio app). Così non restano in Aggiorna dopo CONFERMA.
+     */
+    suspend fun discardUnselectedCensusItems(mediaItemIds: Collection<String>): Int {
+        require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
+        var removed = 0
+        for (itemId in mediaItemIds.distinct()) {
+            val copies = catalogStore.listMediaCopiesForItem(itemId)
+            if (copies.any { it.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID }) continue
+            for (copy in copies) {
+                catalogStore.deleteMediaCopy(copy.id)
             }
-        }.getOrDefault(location.displayName.ifBlank { locationId })
+            catalogStore.deleteMediaItem(itemId)
+            removed++
+        }
+        return removed
     }
 
     suspend fun acquireToPersonalArchive(mediaItemIds: Collection<String>): AcquireResult {

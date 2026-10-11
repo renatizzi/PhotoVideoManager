@@ -26,10 +26,17 @@ class DedupService(
     ): DedupAnalysisResult {
         require(permissionGate.canView(DomainScope.PERSONAL))
         val items = catalogStore.listAllMediaItems().associateBy { it.id }
-        val copies = catalogStore.listAllMediaCopies()
+        val allActive = catalogStore.listAllMediaCopies()
             .filter { it.state == MediaCopyState.ACTIVE }
+        // Pulisci / Catalogo: esamina le copie nello spazio app (elementi Catalogo),
+        // non anche le copie sorgente (altrimenti ~2× rispetto agli elementi).
+        val personalCopies = allActive.filter {
+            it.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID
+        }
+        val copies = personalCopies.ifEmpty { allActive }
         val locations = catalogStore.listStorageLocations().associateBy { it.id }
         val locationNames = locations.mapValues { it.value.displayName }
+        val itemsExamined = copies.map { it.mediaItemId }.distinct().size
 
         var existing = catalogStore.listFingerprintsByAlgorithm(
             ExactDedupGrouping.SHA256,
@@ -96,7 +103,7 @@ class DedupService(
         }
         return DedupAnalysisResult(
             groups = groups,
-            copiesScanned = copies.size,
+            copiesScanned = itemsExamined,
             hashesComputed = hashesComputed,
             hashesFailed = hashesFailed,
             duplicatePhotoExtras = dupPhotos,
@@ -107,8 +114,12 @@ class DedupService(
 
     suspend fun currentExactDuplicateExtras(): Pair<Long, Long> {
         val items = catalogStore.listAllMediaItems().associateBy { it.id }
-        val copies = catalogStore.listAllMediaCopies()
+        val allActive = catalogStore.listAllMediaCopies()
             .filter { it.state == MediaCopyState.ACTIVE }
+        val personal = allActive.filter {
+            it.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID
+        }
+        val copies = personal.ifEmpty { allActive }
         val locationNames = catalogStore.listStorageLocations()
             .associate { it.id to it.displayName }
         val fps = catalogStore.listFingerprintsByAlgorithm(

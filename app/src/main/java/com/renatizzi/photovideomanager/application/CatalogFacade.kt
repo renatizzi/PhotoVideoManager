@@ -136,6 +136,10 @@ class CatalogFacade(
     suspend fun acquireToPersonalArchive(mediaItemIds: Collection<String>): AcquireResult =
         acquisitionService.acquireToPersonalArchive(mediaItemIds)
 
+    /** Scarta dal Catalogo i file deselezionati in Importa (non ancora acquisiti). */
+    suspend fun discardUnselectedCensusItems(mediaItemIds: Collection<String>): Int =
+        acquisitionService.discardUnselectedCensusItems(mediaItemIds)
+
     suspend fun analyzeExactDuplicates(): DedupAnalysisResult =
         dedupService.analyzeExactDuplicates()
 

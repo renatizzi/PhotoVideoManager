@@ -28,7 +28,12 @@ enum class ImportSessionState {
 data class AcquireCandidate(
     val mediaItem: MediaItem,
     val sourceCopy: MediaCopy,
+    /** Riga unica legacy / fallback (dispositivo · percorso). */
     val sourceLocationName: String,
+    /** Come in Acquisisci: dispositivo sotto il nome file. */
+    val sourceDeviceLabel: String = "",
+    /** Percorso completo senza ripetere il nome file. */
+    val sourcePathLabel: String = "",
     val alreadyInPersonalArchive: Boolean,
 )
 

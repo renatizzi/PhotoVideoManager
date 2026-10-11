@@ -32,11 +32,15 @@ enum class SourceCensusSelection {
     EXCLUDED,
 }
 
-/** Ciclo Acquisisci (default ✓): ✓ → vuoto → X → ✓ */
+/**
+ * Ciclo riquadro Acquisisci: solo vuoto ↔ X.
+ * Il ✓ si ottiene di nuovo solo con «Tutti» (non dal riquadro).
+ * Se si parte da ✓ (default / Tutti), il primo tocco va a vuoto.
+ */
 fun SourceCensusSelection.cycleNext(): SourceCensusSelection = when (this) {
     SourceCensusSelection.SELECTED -> SourceCensusSelection.NOT_SELECTED
     SourceCensusSelection.NOT_SELECTED -> SourceCensusSelection.EXCLUDED
-    SourceCensusSelection.EXCLUDED -> SourceCensusSelection.SELECTED
+    SourceCensusSelection.EXCLUDED -> SourceCensusSelection.NOT_SELECTED
 }
 
 /** Ciclo Aggiorna (default vuoto): vuoto → ✓ → X → vuoto */

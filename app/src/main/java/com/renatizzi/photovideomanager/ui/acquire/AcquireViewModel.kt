@@ -133,16 +133,27 @@ class AcquireViewModel(
     }
 
     fun acquireSelected() {
-        val ids = _state.value.selectedIds
+        // Snapshot immediato: solo i ✓ effettivi (mai i deselezionati).
+        val snapshot = _state.value
+        val ids = snapshot.selectedIds.filter { id ->
+            snapshot.candidates.any { c ->
+                c.mediaItem.id == id && !c.alreadyInPersonalArchive
+            }
+        }.toSet()
+        val discardIds = snapshot.candidates
+            .filter { !it.alreadyInPersonalArchive && it.mediaItem.id !in ids }
+            .map { it.mediaItem.id }
         if (ids.isEmpty()) {
             _state.update { it.copy(message = "Seleziona almeno un elemento") }
             return
         }
         viewModelScope.launch {
             _state.update { it.copy(acquiring = true, message = null) }
+            // Prima importa i selezionati; poi togli dal Catalogo i deselezionati.
             val acquireResult = runCatching { catalogFacade.acquireToPersonalArchive(ids) }
             acquireResult.fold(
                 onSuccess = { result ->
+                    runCatching { catalogFacade.discardUnselectedCensusItems(discardIds) }
                     // Refresh elenco: non deve bloccare la navigazione se fallisce.
                     runCatching {
                         val sources = _state.value.sourceLocationIds.takeIf { it.isNotEmpty() }

@@ -333,9 +333,9 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
 ## 7.1 FASE CORRENTE: verifica BL-14 KPI Home + backlog
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)**.
-STATO ATTUALE (11/10/2026): **0.16.14-preview** (versionCode 55): come 0.16.13 + `aggiorna-da-git.bat` sceglie da solo il branch `cursor/*` con **versionCode più alto** (non resta bloccato su m02 se la build è altrove). **IN VERIFICA**.
+STATO ATTUALE (11/10/2026): **0.16.15-preview** (versionCode 56): path Acquisisci/Importa senza ripetizioni; riquadro Acquisisci vuoto↔X (✓ con Tutti); Importa «già in Catalogo / nuovi selezionati» + scarta deselezionati; Pulisci conta elementi Catalogo non copie×2. Bat auto-versionCode. **IN VERIFICA**.
 Ordine operativo:
-1. **P0** — completa prove residue su 0.16.14 / 0.16.13.
+1. **P0** — completa prove residue su 0.16.15.
 2. **P1** — **BL-16** specifica (non codice finché non consolidata).
 3. **P2** — BL-11; BL-01; BL-13; BL-07 / BL-09 / BL-02.
 4. **Componi** — non riprendere finché non chiusa specifica M11 vs landing congelata.

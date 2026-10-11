@@ -89,17 +89,19 @@ class SourceRegistry(
                 location.availability
             }
             val archive = archives[location.archiveId]
-            val pathLabel = pathLabelFor(location)
-            val displayName = resolveDisplayName(location, pathLabel)
+            val rawPath = pathLabelFor(location)
+            val displayName = resolveDisplayName(location, rawPath)
+            val deviceLabel = deviceLabelFor(location)
             // Auto-ripara displayName in Catalogo se ancora un token SAF illegibile.
             if (displayName != location.displayName && looksIllegible(location.displayName)) {
                 catalogStore.upsertStorageLocation(location.copy(displayName = displayName))
             }
+            val pathLabel = SafPathLabels.pathUnderName(rawPath, displayName, deviceLabel)
             SourceSummary(
                 locationId = location.id,
                 archiveId = location.archiveId,
                 displayName = displayName,
-                deviceLabel = deviceLabelFor(location),
+                deviceLabel = deviceLabel,
                 pathLabel = pathLabel,
                 adapterKind = location.adapterKind,
                 availability = availability,
@@ -175,13 +177,15 @@ class SourceRegistry(
         val saved = location.copy(availability = availability)
         catalogStore.upsertStorageLocation(saved)
 
+        val device = deviceLabelFor(saved)
+        val rawPath = pathLabel ?: saved.displayName
         return RegisterSourceResult(
             source = SourceSummary(
                 locationId = saved.id,
                 archiveId = saved.archiveId,
                 displayName = saved.displayName,
-                deviceLabel = deviceLabelFor(saved),
-                pathLabel = pathLabel ?: saved.displayName,
+                deviceLabel = device,
+                pathLabel = SafPathLabels.pathUnderName(rawPath, saved.displayName, device),
                 adapterKind = saved.adapterKind,
                 availability = saved.availability,
                 isSharedArchive = false,

@@ -178,6 +178,35 @@ object SafPathLabels {
         return trimmed
     }
 
+    /**
+     * Percorso UI sotto il nome (come in Importa): niente prefisso dispositivo
+     * e niente foglia finale uguale al nome in grassetto (file/cartella).
+     * Esempio: nome `FilmoraGo`, path grezzo `Google Drive/FilmoraGo` → `""`
+     * (il dispositivo è già sulla riga sopra); nome `MediaManager_test`,
+     * path `Memoria principale/Pictures/MediaManager_test` → `Memoria principale/Pictures`.
+     */
+    fun pathUnderName(path: String, displayName: String, deviceLabel: String = ""): String {
+        var p = stripDevicePrefix(path)
+        if (deviceLabel.isNotBlank() && p.equals(deviceLabel, ignoreCase = true)) return ""
+        // Ripeti strip se il path inizia ancora col device (es. dopo alias).
+        if (deviceLabel.isNotBlank()) {
+            val withSlash = "${deviceLabel.trim()}/"
+            if (p.startsWith(withSlash, ignoreCase = true)) {
+                p = p.substring(withSlash.length)
+            }
+        }
+        val leaf = displayName.trim()
+        if (leaf.isEmpty()) return p
+        if (p.equals(leaf, ignoreCase = true)) return ""
+        val suffix = "/$leaf"
+        if (p.length > suffix.length &&
+            p.regionMatches(p.length - suffix.length, suffix, 0, suffix.length, ignoreCase = true)
+        ) {
+            p = p.substring(0, p.length - suffix.length)
+        }
+        return p.trim().trim('/')
+    }
+
     fun humanizeDocumentId(docId: String): String {
         val decoded = decode(docId)
         if (!decoded.contains(':')) {

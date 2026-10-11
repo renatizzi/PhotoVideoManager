@@ -119,7 +119,7 @@ class CensusViewModel(
         _state.update { it.copy(sortMode = mode) }
     }
 
-    /** Ciclo BL-03 sul riquadro: ✓ → vuoto → X → ✓. */
+    /** Ciclo riquadro Acquisisci: ✓/vuoto → X → vuoto (✓ solo con Tutti). */
     fun toggleSelection(locationId: String) {
         _state.update { current ->
             val next = current.selectionOf(locationId).cycleNext()

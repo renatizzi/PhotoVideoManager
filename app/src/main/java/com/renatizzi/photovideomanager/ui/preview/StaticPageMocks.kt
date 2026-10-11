@@ -599,14 +599,21 @@ private fun ImportCandidateRow(
             kind = candidate.mediaItem.kind,
         )
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyMedium)
-            Text(
-                text = stringResource(
-                    R.string.importa_riga_meta,
-                    candidate.sourceLocationName.ifBlank { "—" },
-                ),
-                style = MaterialTheme.typography.bodySmall,
-            )
+            // Come Acquisisci: nome (grassetto) · dispositivo · percorso senza ripetere il nome.
+            Text(title, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+            val device = candidate.sourceDeviceLabel
+            val path = candidate.sourcePathLabel
+            if (device.isNotBlank()) {
+                Text(device, style = MaterialTheme.typography.labelMedium)
+            }
+            if (path.isNotBlank()) {
+                Text(path, style = MaterialTheme.typography.bodySmall)
+            } else if (device.isBlank() && candidate.sourceLocationName.isNotBlank()) {
+                Text(
+                    candidate.sourceLocationName,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
             if (candidate.alreadyInPersonalArchive) {
                 Text(
                     text = stringResource(R.string.acquire_already_personal),
