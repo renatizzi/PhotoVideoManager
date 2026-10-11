@@ -41,13 +41,11 @@ data class AcquireUiState(
         get() = kindFiltered
 
     /**
-     * Elenco mostrato: solo elementi selezionati (o già in archivio).
-     * Se tutto deselezionato → lista vuota (coerente col filtro a zero risultati).
+     * Elenco Importa (BL-04): tutto il pool del filtro tipo, anche se deselezionato,
+     * così si possono togliere/rimettere ✓ su più elementi senza far sparire le righe.
      */
     val listedCandidates: List<AcquireCandidate>
-        get() = kindFiltered.filter {
-            it.mediaItem.id in selectedIds || it.alreadyInPersonalArchive
-        }
+        get() = kindFiltered
 }
 
 class AcquireViewModel(

@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import com.renatizzi.photovideomanager.data.SourceLabelStore
 import com.renatizzi.photovideomanager.data.storage.SafPathLabels
+import com.renatizzi.photovideomanager.data.storage.SafTreeIdentity
 import com.renatizzi.photovideomanager.data.storage.StorageAdapterFactory
 import com.renatizzi.photovideomanager.domain.model.ArchiveKind
 import com.renatizzi.photovideomanager.domain.model.ArchiveRef
@@ -20,6 +21,9 @@ import java.util.UUID
 
 /**
  * Registro sorgenti/archivi: bootstrap personale, aggiunta cartelle SAF, refresh disponibilità.
+ *
+ * BL-10: nessuna fonte viene creata da permessi SAF di sistema o da altre app.
+ * Solo [registerSafFolder] (UI «+» → OpenDocumentTree) aggiunge sorgenti esterne.
  */
 class SourceRegistry(
     private val appContext: Context,
@@ -107,10 +111,16 @@ class SourceRegistry(
     suspend fun registerSafFolder(treeUri: Uri, displayName: String): SourceSummary {
         require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
         val uriKey = treeUri.toString()
-        // Stessa cartella già presente: non crearne una seconda.
+        val canonical = SafTreeIdentity.canonicalKey(treeUri)
+        // Stessa cartella già presente (URI uguale o stessa identità albero): non duplicare.
         catalogStore.listStorageLocations()
             .firstOrNull {
-                it.adapterKind == StorageAdapterKind.SAF_TREE && it.opaqueLocator == uriKey
+                it.adapterKind == StorageAdapterKind.SAF_TREE &&
+                    (
+                        it.opaqueLocator == uriKey ||
+                            SafTreeIdentity.sameTree(it.opaqueLocator, uriKey) ||
+                            SafTreeIdentity.canonicalKeyFromUriString(it.opaqueLocator) == canonical
+                        )
             }
             ?.let { existing ->
                 return listSources(refreshAvailability = true)

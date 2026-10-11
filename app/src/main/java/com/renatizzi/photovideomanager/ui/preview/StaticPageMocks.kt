@@ -427,7 +427,6 @@ fun ImportaStaticScreen(
     modifier: Modifier = Modifier,
 ) {
     val pool = state.kindFiltered
-    val listed = state.listedCandidates
     val selected = pool.count { it.mediaItem.id in state.selectedIds }
     val photos = pool.count { it.mediaItem.kind == MediaKind.PHOTO }
     val videos = pool.count { it.mediaItem.kind == MediaKind.VIDEO }
@@ -527,19 +526,16 @@ fun ImportaStaticScreen(
                 ) {
                     CircularProgressIndicator()
                 }
-            } else if (listed.isEmpty()) {
+            } else if (pool.isEmpty()) {
                 Text(
-                    text = if (pool.isEmpty()) {
-                        stringResource(R.string.importa_empty)
-                    } else {
-                        stringResource(R.string.importa_empty_deselected)
-                    },
+                    text = stringResource(R.string.importa_empty),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
                     modifier = Modifier.padding(vertical = 12.dp),
                 )
             } else {
-                listed.forEach { candidate ->
+                // BL-04: mostra anche i deselezionati (✓ off) per multi-esclusione dall’import.
+                pool.forEach { candidate ->
                     HorizontalDivider()
                     ImportCandidateRow(
                         candidate = candidate,
