@@ -141,16 +141,22 @@ La disponibilità delle sorgenti deve essere verificata nell'ambito della sessio
 - Home, Top Bar e Bottom Bar restano componenti globali.
 - CONFIGURA resta distinta dalle macro operative.
 - Accesso rapido in Home: stesso modello già definito; può variare solo il numero di link. Non è un secondo sistema di navigazione.
-- Selezione elenchi (sorgenti, file, composizioni): solo **on / selezionato** e **off / non selezionato**.
+- Selezione elenchi: per **Acquisisci/Aggiorna** vale il riquadro a **3 stati** (BL-03 / decisione 10–11/10/2026); altri elenchi restano on/off salvo diversa specifica.
 
 ## 5.1 Home Page
 
 La Home Page è la pagina di atterraggio e il principale hub operativo.
 
 Contiene:
-- KPI di sintesi del Catalogo (due colonne Foto / Video, densità tipografica allineata a BoxManager; senza card separate per ogni metrica);
+- KPI di sintesi (due colonne Foto / Video, densità tipografica allineata a BoxManager; senza card separate per ogni metrica);
 - **Ricerca nel Catalogo** — motore unico, **un solo riquadro**, valido per foto/video e per album/raccolte; lo stesso motore è riusabile in tutte le pagine dove è prevista la ricerca;
 - **Accesso rapido** (congelato v5.3): **Acquisisci**, **Aggiorna**, **Crea**, **Edita**, **Backup**, **Ripristina**. Griglia 2×3 a tessere che riempiono lo spazio restante del viewport. Non duplica le macro già presenti in Bottom Bar. Non include Archivio Condiviso né scorciatoie a macro Bottom Bar.
+
+**Semantica KPI Home (requisito condiviso — modello A, confermato Renato 11/10/2026):**
+- **Foto/Video originali** = file presenti **sui dispositivi/fonti** (telefono, Drive, cartelle aggiunte, …), non il Catalogo;
+- **di cui in Catalogo** = quanti di quelli sono entrati nel **Catalogo** (gestiti in Aggiorna), così l’utente vede il *gap* e può intervenire (filtri Acquisisci/Importa/Pulisci) prima di “portare tutto dentro”.
+
+**Disallineamento attuale (da sanare — BL-14):** l’implementazione mostra come «originali» il conteggio Catalogo/Aggiorna e come «di cui in Catalogo» le sole copie dopo **Importa** (spazio gestito dall’app). La struttura UI Home resta congelata (§5.6); si correggono i *numeri* e le etichette dietro il layout. Eventuale *revisione* (sostituire/semplificare i KPI) solo con feedback sul peso del gap → **BL-13**.
 
 La navigazione mantiene la distinzione tra Home, macrofunzioni e CONFIGURA. Home **senza scrolling** sul viewport tipico.
 
@@ -327,11 +333,11 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
 ## 7.1 FASE CORRENTE: verifica 0.16.4/0.16.5 + backlog Pulisci
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)**.
-STATO ATTUALE (11/10/2026): HOLD KPI/Importa **chiuso**. Prove 0.16.4/0.16.5 **OK**. **0.16.6**: BL-12 con bug (✓ non arrivavano a Pulisci — race). **0.16.7-preview** (versionCode 48): fix passaggio ✓ via parametro di navigazione. **BL-12 IN VERIFICA**. Regola multi-agente in §1.2. BL-11 invariato.
+STATO ATTUALE (11/10/2026): Prove UI recenti **OK** (BL-12/selezione). Emerso **disallineamento KPI Home** rispetto al requisito A (§5.1): originali=dispositivi, di cui in Catalogo=Catalogo — oggi i numeri sono invertiti/semantica Importa. **BL-14** = allineare implementazione; **BL-13** = revisione KPI Home solo con feedback sul peso del gap (Renato tiene A per ora).
 Ordine operativo:
-1. **P0** — prova telefono 0.16.7 (BL-12: ✓ in Aggiorna → Pulisci → Elimina selezionati).
-2. **P1** — BL-10 / BL-04 dopo OK.
-3. **P2** — BL-11; BL-07 / BL-09 / BL-01 / BL-02.
+1. **P0** — **BL-14** allineamento KPI Home al modello A (senza riaprire layout).
+2. **P1** — BL-10 / BL-04.
+3. **P2** — BL-11; BL-13 (revisione KPI se feedback); BL-07 / BL-09 / BL-01 / BL-02.
 4. **Componi** — non riprendere finché non chiusa specifica M11 vs landing congelata.
 Documenti di sessione: `docs/TERMINOLOGIA_UI.md`; prompt di continuità `docs/PROMPT_CONTINUITA_AGENTE.md`.
 Nota: Le dipendenze riportate per ciascuna macro-attività della Roadmap devono indicare esclusivamente le dipendenze dirette da macro-attività precedenti, ossia quelle il cui output costituisce un input necessario alla macro-attività corrente. Le dipendenze transitive non devono essere ripetute.
@@ -357,7 +363,9 @@ Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consoli
 | BL-09 | **Scansione rete / tablet / SSD router** | Oggi solo cartelle aggiunte a mano (+). Valutare individuazione dispositivi Wi‑Fi, tablet, PC e dischi sul router (es. SMB/NAS) senza inventare sync automatica. | Renato 10/10/2026 |
 | BL-10 | **Fonti apparire senza scelta utente** | Eraser/Facebook comparsi in Acquisisci senza selezione esplicita — verificare con prove; rimozione fonte ora in UI; evitare duplicati stessa cartella. | Renato 10/10/2026 |
 | BL-11 | **Pulisci — criteri duplicati avanzati (tipo Krokiet)** | Oltre ai duplicati esatti (hash), consentire eliminazione massiva scegliendo criteri (es. stesso contenuto, immagini simili con soglia, ecc. — riferimento ispirativo Krokiet/Czkawka). Serve specifica: quali criteri in v1, UI selezione criteri, conferme, rapporto con Cestino. **Non sviluppare ora.** | Renato 11/10/2026 |
-| BL-12 | **Pulisci — doppia funzione (selezionati + duplicati)** | Convalidato 11/10/2026. **0.16.6**: (1) da Aggiorna → Pulisci porta i ✓; bottone «Elimina selezionati» + conferma; (2) sezione Duplicati con «Analizza duplicati». X singola e menu ⋮ solo-riga restano. **IN VERIFICA** telefono. | Renato 11/10/2026 |
+| BL-12 | **Pulisci — doppia funzione (selezionati + duplicati)** | Convalidato 11/10/2026. **0.16.6–0.16.7**: (1) ✓ da Aggiorna → Pulisci; (2) Analizza duplicati. Fix navigazione ✓ in 0.16.7. Prova Renato OK su selezione. | Renato 11/10/2026 |
+| BL-13 | **Home — revisione KPI** | Tenere per ora il modello A (originali=dispositivi · di cui in Catalogo=Catalogo). **In seguito**, con feedback concreto sul *peso del gap* in uso reale, valutare revisione/sostituzione dei KPI Home (senza obbligo di mantenere il gap). Non fare ora. | Renato 11/10/2026 |
+| BL-14 | **Home — allineare KPI al modello A** | Disallineamento Nota/revisione navigazione vs codice: oggi «Foto/Video originali» ≈ conteggio Catalogo/Aggiorna e «di cui in Catalogo» ≈ copie post-Importa. **Requisito:** originali = file sui dispositivi/fonti; di cui in Catalogo = elementi nel Catalogo. Correggere calcolo (e se serve etichette) senza cambiare la struttura layout Home. Chiarire nel fix il momento in cui un file “entra in Catalogo” rispetto a CONFERMA vs Importa. | Renato 11/10/2026 |
 
 Fine documento
 
