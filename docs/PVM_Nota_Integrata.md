@@ -333,12 +333,11 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
 ## 7.1 FASE CORRENTE: verifica BL-14 KPI Home + backlog
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)**.
-STATO ATTUALE (11/10/2026): **0.16.15-preview** (versionCode 56): path Acquisisci/Importa senza ripetizioni; riquadro Acquisisci vuoto↔X (✓ con Tutti); Importa «già in Catalogo / nuovi selezionati» + scarta deselezionati; Pulisci conta elementi Catalogo non copie×2. Bat auto-versionCode. **IN VERIFICA**.
+STATO ATTUALE (11/10/2026): **0.16.16-preview** (versionCode 57): convalida Renato su **0.16.15 OK**; test Importa selezione; analisi BL-16 in §7.1ter (no codice sync); BL-07 Sposta già assente dal menu. **In attesa specifica consolidata BL-16 / BL-01 / BL-11.**
 Ordine operativo:
-1. **P0** — completa prove residue su 0.16.15.
-2. **P1** — **BL-16** specifica (non codice finché non consolidata).
-3. **P2** — BL-11; BL-01; BL-13; BL-07 / BL-09 / BL-02.
-4. **Componi** — non riprendere finché non chiusa specifica M11 vs landing congelata.
+1. **P1** — **BL-16** → ChatGPT consolida requisiti (§7.1ter); **non sviluppare sync** finché non consolidata.
+2. **P2** — BL-01 / BL-11 (criteri); BL-07 (proposta: non aggiungere Sposta); BL-09 / BL-13 / BL-02.
+3. **Componi** — non riprendere finché non chiusa specifica M11 vs landing congelata.
 
 ### 7.1bis Checkpoint urgente — Catalogo unico utente vs dispositivi (11/10/2026)
 
@@ -352,6 +351,24 @@ Ordine operativo:
 | **Vincolo distruttività** | Eliminazione automatica degli originali **vietata** (§1 VINCOLI). Oggi Elimina/Cestino/Pulisci toccano solo il Catalogo (e copie nello spazio app). Cancellazione file in sorgente = solo con scelta esplicita → **BL-15**. |
 
 **Assicurazione onesta:** la struttura **è adatta** a un Catalogo unico per l’utente *di questa installazione*, alimentato da tutti i dispositivi/fonti che seleziona. Non posso assicurare oggi un Catalogo cloud unico che segua l’utente su più installazioni senza una futura tranche sync/account.
+
+### 7.1ter Analisi tecnica BL-16 — Sync Catalogo (evoluzione Archivio Condiviso) — 11/10/2026
+
+**Stato:** ANALISI (Cursor). **Non è specifica consolidata.** Nessuna implementazione sync finché ChatGPT/Renato non chiudono i punti aperti.
+
+| Tema | Proposta tecnica (da consolidare) |
+|---|---|
+| Inquadramento | Evoluzione dell’**Archivio Condiviso** (M04/M15), non un silo parallelo: riuso `ArchiveRef` / `StorageLocation` / capability; dominio **PERSONAL** (Catalogo utente) distinto da **FAMILY** finché M13/M15 non unificano. |
+| Cosa sincronizzare (ipotesi) | **Metadati Catalogo** (MediaItem, relazioni, fingerprint, esclusioni) su area personale cloud opt-in. **File fisici** restano sulle fonti; copie Importa/Backup restano locali salvo scelta esplicita. |
+| Porte già predisposte | `SyncPort` (oggi disabilitata), `AuthPort` (fiducia locale). Estendere solo dopo specifica; niente code/retry automatici (§3.1). |
+| Local-first | L’app resta usabile offline; sync opt-in e non blocca Acquisisci/Aggiorna/Pulisci. |
+| Conflitti | Da decidere: last-write-wins vs merge per campo vs «dispositivo di verità». |
+| Provider | Da decidere: Drive personale / altro; cifratura a riposo sì/no in v1. |
+| Perimetro v1 sync (proposta) | Solo metadati PERSONAL; niente FAMIGLIA; niente cancellazione remota automatica degli originali. |
+| Dipendenze macro | M03 (modello), M04 (storage), M13 (identità se FAMILY), M15 (backup), M17 (privacy). |
+
+**Decisioni richieste prima dello sviluppo:** provider, cifratura, modello conflitti, se i file Importa entrano nel sync, rapporto con Backup.
+
 Documenti di sessione: `docs/TERMINOLOGIA_UI.md`; prompt di continuità `docs/PROMPT_CONTINUITA_AGENTE.md`.
 Nota: Le dipendenze riportate per ciascuna macro-attività della Roadmap devono indicare esclusivamente le dipendenze dirette da macro-attività precedenti, ossia quelle il cui output costituisce un input necessario alla macro-attività corrente. Le dipendenze transitive non devono essere ripetute.
 Regola di aggiornamento della roadmap
@@ -367,20 +384,20 @@ Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consoli
 |---|---|---|---|
 | BL-01 | **Pulisci** (Organizza → Aggiorna) | Oltre ai duplicati esatti, Pulisci dovrà poter eliminare anche **file indesiderati** già importati/censiti che non sono foto/video utili (es. file con estensione anomala tipo `.12.jpg` non riconosciuti correttamente come foto, scarti, allegati spurî). Definire criteri di riconoscimento, conferma utente e rapporto con Cestino. **Non include** la cancellazione del file fisico in sorgente (→ BL-15). | Renato 09/10/2026 |
 | BL-02 | Estetica Home | Affinare spessore ombre dei riquadri Accesso rapido / ricerca (layout già congelato). | Renato 09/10/2026 |
-| BL-03 | **Acquisisci — selezione fonti a 3 stati** | Riquadro a tre stati: selezionato (✓) · non selezionato (vuoto) · escluso/rimosso (**X** nello stesso riquadro; **niente icona cestino separata**). **0.16.2 = KO** (cestino separato). **0.16.3**: ciclo ✓→vuoto→X in Acquisisci. **0.16.4**: stesso criterio in **Aggiorna** con **default deselezionato** (vuoto→✓→X); X = Elimina→Cestino; menu senza Elimina; Cestino solo da Ripristina. **IN VERIFICA** telefono. | Renato 09–10/10/2026 |
-| BL-04 | **Eliminazione multi-selezione** | Su Importa: deselezionare più elementi senza far sparire le righe (✓ off resta visibile). **0.16.10**: `listedCandidates` = pool filtro tipo. Elimina→Cestino multi resta via Pulisci (BL-12). **IN VERIFICA**. | Renato 09/10/2026 |
+| BL-03 | **Acquisisci — selezione fonti a 3 stati** | **OK** prova Renato 0.16.15. Acquisisci: riquadro **vuoto ↔ X** (✓ solo con Tutti); Aggiorna resta vuoto→✓→X; X = Elimina→Cestino; niente cestino separato. | Renato 09–11/10/2026 |
+| BL-04 | **Eliminazione multi-selezione** | **OK** 0.16.15: deselezione multi in Importa; deselezionati scartati dal Catalogo; conteggio «nuovi selezionati». | Renato 09–11/10/2026 |
 | BL-05 | **Acquisisci — nascondere «Spazio interno app»** | ~~Pleonastica in elenco fonti~~ — *fatto 0.16.0* (già filtrata in Acquisisci; nascosta anche in CONFIGURA fonti). | Renato 09/10/2026 |
 | BL-06 | **Aggiorna — menu contestuale «Rinomina»** | ~~Aggiungere Rinomina~~ — *fatto 0.16.0* (insieme a Elimina→Cestino e Copia su dispositivo). | Renato 09/10/2026 |
-| BL-07 | **Aggiorna — «Sposta» nel menu contestuale** | Con Catalogo logico unico, «Sposta» tra voci di Catalogo è ambiguo/fuorviante. Valutare: rimuovere Sposta; oppure reinterpretarlo come spostamento della **copia fisica** tra ubicazioni (sorgente ↔ spazio app ↔ futuro Archivio Condiviso), non come spostamento «nel» Catalogo. | Renato 09/10/2026 |
+| BL-07 | **Aggiorna — «Sposta» nel menu contestuale** | **Proposta Cursor (11/10/2026):** Sposta **non è nel menu** (solo Modifica / Rinomina / Copia su dispositivo; Elimina via X). **Non aggiungere** finché non c’è specifica su spostamento copia fisica. Da chiudere in specifica. | Renato 09/10/2026 |
 | BL-08 | **Copia da Catalogo → dispositivo** | ~~Export esplicito SAF CreateDocument~~ — *fatto 0.16.0* (menu Aggiorna «Copia su dispositivo»; preferisce copia spazio app). Sposta resta BL-07. | Renato 09/10/2026 |
 | BL-09 | **Scansione rete / tablet / SSD router** | Oggi solo cartelle aggiunte a mano (+). Valutare individuazione dispositivi Wi‑Fi, tablet, PC e dischi sul router (es. SMB/NAS) senza inventare sync automatica. | Renato 10/10/2026 |
-| BL-10 | **Fonti apparire senza scelta utente** | Diagnosi: il codice **non** importa permessi SAF di sistema; le fonti nascono solo da «+». Eraser/Facebook = cartelle già registrate (scelta passata / residui). **0.16.10**: dedupe per identità albero SAF (`SafTreeIdentity`); policy esplicita in `SourceRegistry`. Pulizia residui: X sul riquadro. **IN VERIFICA**. | Renato 10/10/2026 |
+| BL-10 | **Fonti apparire senza scelta utente** | **OK** (diagnosi + dedupe SAF 0.16.10; prove 0.16.15). Fonti solo da «+»; residui togliibili con X. | Renato 10–11/10/2026 |
 | BL-11 | **Pulisci — criteri duplicati avanzati (tipo Krokiet)** | Oltre ai duplicati esatti (hash), consentire eliminazione massiva scegliendo criteri (es. stesso contenuto, immagini simili con soglia, ecc. — riferimento ispirativo Krokiet/Czkawka). Serve specifica: quali criteri in v1, UI selezione criteri, conferme, rapporto con Cestino. **Non sviluppare ora.** | Renato 11/10/2026 |
 | BL-12 | **Pulisci — doppia funzione (selezionati + duplicati)** | Convalidato 11/10/2026. **0.16.6–0.16.7**: (1) ✓ da Aggiorna → Pulisci; (2) Analizza duplicati. Fix navigazione ✓ in 0.16.7. Prova Renato OK su selezione. | Renato 11/10/2026 |
 | BL-13 | **Home — revisione KPI** | Tenere per ora il modello A (originali=dispositivi · di cui in Catalogo=Catalogo). **In seguito**, con feedback concreto sul *peso del gap* in uso reale, valutare revisione/sostituzione dei KPI Home (senza obbligo di mantenere il gap). Non fare ora. | Renato 11/10/2026 |
 | BL-14 | **Home — allineare KPI al modello A** | **0.16.8–0.16.9**: di cui in Catalogo = Aggiorna; originali = fonti ACTIVE (no Cestino app) e ≥ Catalogo; ingresso = **CONFERMA**. **OK** prova Renato 11/10/2026. | Renato 11/10/2026 |
-| BL-15 | **Pulisci — opzione elimina originali in sorgente + anti re-import** | **0.16.11**: checkbox «Elimina anche il file sulla sorgente» in Aggiorna/Pulisci; tabella `catalog_exclusions` + skip in censimento; ripristino dal Cestino toglie l’esclusione. Default = solo Catalogo. **IN VERIFICA**. | Renato 11/10/2026 |
-| BL-16 | **Sync Catalogo personale — evoluzione Archivio Condiviso** | **Priorità alta** (analisi; non sviluppare ora). Stesso Catalogo personale su più installazioni. Ipotesi: metadati Catalogo su area personale cloud; file fisici sulle fonti salvo Importa/Backup. **Inquadramento Renato:** considerarla un’**evoluzione dell’Archivio Condiviso** (non un silo parallelo): riuso concetti ArchiveRef/StorageLocation/capability; distinguere comunque dominio PERSONAL (Catalogo utente) vs FAMILY (condivisione famiglia) finché non consolidato in M04/M15. Local-first + `SyncPort`/`AuthPort` opt-in. Da decidere: provider, cifratura, conflitti, perimetro sync. | Renato 11/10/2026 |
+| BL-15 | **Pulisci — opzione elimina originali in sorgente + anti re-import** | **OK** prove 0.16.11–0.16.15 (punti 5–9). Checkbox sorgente; esclusioni anti re-import; default solo Catalogo. | Renato 11/10/2026 |
+| BL-16 | **Sync Catalogo personale — evoluzione Archivio Condiviso** | **Priorità alta — ANALISI Cursor in §7.1ter** (11/10/2026). Non sviluppare finché ChatGPT non consolida: provider, cifratura, conflitti, perimetro. | Renato 11/10/2026 |
 
 Fine documento
 

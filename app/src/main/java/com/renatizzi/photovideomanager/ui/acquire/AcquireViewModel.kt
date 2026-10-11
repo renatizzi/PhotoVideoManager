@@ -135,14 +135,8 @@ class AcquireViewModel(
     fun acquireSelected() {
         // Snapshot immediato: solo i ✓ effettivi (mai i deselezionati).
         val snapshot = _state.value
-        val ids = snapshot.selectedIds.filter { id ->
-            snapshot.candidates.any { c ->
-                c.mediaItem.id == id && !c.alreadyInPersonalArchive
-            }
-        }.toSet()
-        val discardIds = snapshot.candidates
-            .filter { !it.alreadyInPersonalArchive && it.mediaItem.id !in ids }
-            .map { it.mediaItem.id }
+        val ids = AcquireSelectionLogic.idsToAcquire(snapshot.candidates, snapshot.selectedIds)
+        val discardIds = AcquireSelectionLogic.idsToDiscard(snapshot.candidates, snapshot.selectedIds)
         if (ids.isEmpty()) {
             _state.update { it.copy(message = "Seleziona almeno un elemento") }
             return
