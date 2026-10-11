@@ -333,10 +333,10 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
 ## 7.1 FASE CORRENTE: verifica BL-14 KPI Home + backlog
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)**.
-STATO ATTUALE (11/10/2026): **0.16.19-preview** (versionCode 60): BL-09 U1 + aiuto «Non vedo il PC» (PC va aggiunto una tantum in Disco di rete del tablet). Sync BL-16 ancora in attesa di provider/conflitti.
+STATO ATTUALE (11–12/10/2026): **0.16.19-preview** (versionCode 60). **Pivota prodotto:** abbandonare come percorso principale la condivisione PC→tablet (troppo difficile per utenti inesperti). Obiettivo: **Catalogo/Archivio definito a monte**, a cui i dispositivi si collegano. Vedi §7.1sexies. Decisione Renato in attesa (C1 vs C2).
 Ordine operativo:
-1. **P1** — BL-16: decisione «solo schede» OK; restano provider + conflitti (§7.1ter) prima del codice.
-2. **P2** — BL-09 U1 **SVILUPPO 0.16.18–0.16.19** (aiuto se PC assente); ombre Home stile BoxManager più avanti (BL-02); BL-11 restano solo duplicati esatti.
+1. **P1** — chiudere modello «Archivio personale unico» (§7.1sexies) + poi BL-16 provider/conflitti se serve roaming schede.
+2. **P2** — BL-09 SMB PC→tablet = **deprioritata** (resta guida opzionale avanzata); BL-02/BL-11 non ora.
 3. **Componi** — non riprendere finché non chiusa specifica M11 vs landing congelata.
 
 ### 7.1quater Decisioni Renato 11/10/2026 (questionario)
