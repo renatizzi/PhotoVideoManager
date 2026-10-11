@@ -41,6 +41,22 @@ if defined JAVA_HOME (
 )
 echo.
 
+REM Mostra versione che sta per essere compilata (evita APK “vecchio” silenzioso)
+set "VERSIONE="
+set "VCODE="
+for /f "tokens=2 delims==" %%V in ('findstr /C:"versionName" "app\build.gradle.kts" 2^>nul') do set "VERSIONE=%%V"
+for /f "tokens=2 delims==" %%V in ('findstr /C:"versionCode" "app\build.gradle.kts" 2^>nul') do set "VCODE=%%V"
+if defined VERSIONE (
+  set "VERSIONE=!VERSIONE: =!"
+  set "VERSIONE=!VERSIONE:"=!"
+  set "VCODE=!VCODE: =!"
+  set "VCODE=!VCODE:"=!"
+  echo === Versione in compilazione ===
+  echo !VERSIONE! ^(code !VCODE!^)
+  for /f "delims=" %%B in ('git branch --show-current 2^>nul') do echo Branch: %%B
+  echo.
+)
+
 echo === Compilazione APK debug ===
 echo (puo richiedere alcuni minuti la prima volta)
 echo.
