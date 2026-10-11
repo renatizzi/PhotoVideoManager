@@ -29,6 +29,7 @@ Proteggere i contenuti attraverso backup e meccanismi di recupero.
 - Cursor non deve inventare requisiti, modificare decisioni vincolanti, introdurre backend/cloud obbligatori o modificare l'architettura senza una decisione esplicita.
 - **Comunicazione con Renato (vincolante, 10/10/2026):** linguaggio sempre comprensibile a un non addetto ai lavori; niente gergo tecnico. Per ogni prova dell’app sul telefono: istruzioni passo-passo dettagliate (cosa toccare, cosa deve apparire, cosa segnalare se non torna).
 - **Terminologia UI (vincolante, 10/10/2026):** legenda in `docs/TERMINOLOGIA_UI.md` — usare **Catalogo** (non «spazio app»), **File del dispositivo** (non «file interno»); conferme stile BoxManager (`Conferma …?` + **SÌ** / **NO**).
+- **Metodo agenti (vincolante, 11/10/2026):** di norma **un solo agente operativo** per tranche di codice. Se durante lo sviluppo l’agente ritiene utile attivare **più agenti** (es. analisi / revisione / implementazione separati), deve **dirlo esplicitamente a Renato e attendere conferma** — non avviare multi-agente di propria iniziativa.
 - Il lavoro procede per macro-attività: obiettivi → input → decisioni → output → criteri di completamento.
 - Le idee che emergono fuori dal percorso corrente vengono registrate nel Backlog e non interrompono la macro-attività in corso.
 - Evitare divagazioni, fughe in avanti, assunzioni non autorizzate, duplicazioni e regressioni concettuali.
@@ -326,9 +327,9 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
 ## 7.1 FASE CORRENTE: verifica 0.16.4/0.16.5 + backlog Pulisci
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)**.
-STATO ATTUALE (11/10/2026): HOLD KPI/Importa **chiuso**. Prove 0.16.4/0.16.5 **OK** (Renato). **0.16.6-preview** (versionCode 47): **BL-12 in codice** — Pulisci a doppia funzione (Elimina selezionati da ✓ Aggiorna + Analizza duplicati); conferme SÌ/NO; recupero via Ripristina. **BL-12 IN VERIFICA telefono**. Criteri tipo Krokiet restano **BL-11**.
+STATO ATTUALE (11/10/2026): HOLD KPI/Importa **chiuso**. Prove 0.16.4/0.16.5 **OK**. **0.16.6**: BL-12 con bug (✓ non arrivavano a Pulisci — race). **0.16.7-preview** (versionCode 48): fix passaggio ✓ via parametro di navigazione. **BL-12 IN VERIFICA**. Regola multi-agente in §1.2. BL-11 invariato.
 Ordine operativo:
-1. **P0** — prova telefono 0.16.6 (BL-12).
+1. **P0** — prova telefono 0.16.7 (BL-12: ✓ in Aggiorna → Pulisci → Elimina selezionati).
 2. **P1** — BL-10 / BL-04 dopo OK.
 3. **P2** — BL-11; BL-07 / BL-09 / BL-01 / BL-02.
 4. **Componi** — non riprendere finché non chiusa specifica M11 vs landing congelata.

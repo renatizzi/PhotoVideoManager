@@ -12,7 +12,16 @@ sealed class PvmDestination(val route: String) {
     }
     data object Aggiorna : PvmDestination("organizza/aggiorna")
     data object Search : PvmDestination("organizza/search")
-    data object Clean : PvmDestination("organizza/clean")
+    /**
+     * Pulisci. [sel] = id selezionati in Aggiorna separati da virgola (BL-12).
+     * Passarli nella route evita di perdere i ✓ all’apertura della pagina.
+     */
+    data object Clean : PvmDestination("organizza/clean?sel={sel}") {
+        fun create(selectedIds: Set<String> = emptySet()): String {
+            val sel = selectedIds.joinToString(",")
+            return "organizza/clean?sel=$sel"
+        }
+    }
     data object Ripristina : PvmDestination("utility/ripristina")
     data object Trash : PvmDestination("utility/trash")
     data object FeatureStub : PvmDestination("feature/{featureId}") {

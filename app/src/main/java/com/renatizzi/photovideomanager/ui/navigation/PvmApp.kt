@@ -69,8 +69,6 @@ fun PvmApp(
     var helpOpen by remember { mutableStateOf(false) }
     var acquireStep by remember { mutableStateOf(AcquireFlowStep.CENSUS) }
     var acquireSourceIds by remember { mutableStateOf<Set<String>>(emptySet()) }
-    /** ✓ da Aggiorna da passare a Pulisci (BL-12). */
-    var pulisciSelectedIds by remember { mutableStateOf<Set<String>>(emptySet()) }
     var pendingSearchQuery by remember { mutableStateOf<String?>(null) }
     val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -115,11 +113,7 @@ fun PvmApp(
             }
             "aggiorna" -> navController.navigate(PvmDestination.Aggiorna.route)
             "ricerca" -> navController.navigate(PvmDestination.Search.route)
-            "pulisci" -> {
-                // Da hub senza passaggio da Aggiorna: nessun ✓ da eliminare in massa.
-                pulisciSelectedIds = emptySet()
-                navController.navigate(PvmDestination.Clean.route)
-            }
+            "pulisci" -> navController.navigate(PvmDestination.Clean.create())
             "ripristina" -> navController.navigate(PvmDestination.Ripristina.route)
             // Nota §5.4.3: ingresso Cestino solo via Ripristina.
             "cestino" -> navController.navigate(PvmDestination.Ripristina.route)
@@ -308,8 +302,9 @@ fun PvmApp(
                         onSetSelection = aggiornaVm::setSelection,
                         onRefresh = aggiornaVm::refresh,
                         onPulisci = {
-                            pulisciSelectedIds = aggiornaState.selectedMediaIds
-                            navController.navigate(PvmDestination.Clean.route)
+                            navController.navigate(
+                                PvmDestination.Clean.create(aggiornaState.selectedMediaIds),
+                            )
                         },
                         onEdit = { _ ->
                             // Voce menu presente; funzione di editing in preparazione.
@@ -333,26 +328,31 @@ fun PvmApp(
                         },
                     )
                 }
-                composable(PvmDestination.Clean.route) {
+                composable(
+                    route = PvmDestination.Clean.route,
+                    arguments = listOf(
+                        navArgument("sel") {
+                            type = NavType.StringType
+                            defaultValue = ""
+                        },
+                    ),
+                ) { entry ->
                     val cleanVm: CleanViewModel = viewModel(
                         factory = CleanViewModel.factory(catalogFacade),
                     )
                     val cleanState by cleanVm.state.collectAsStateWithLifecycle()
-                    LaunchedEffect(pulisciSelectedIds) {
-                        cleanVm.setSelectedFromAggiorna(pulisciSelectedIds)
+                    val selArg = entry.arguments?.getString("sel").orEmpty()
+                    val selectedFromNav = remember(selArg, entry.id) {
+                        selArg.split(',').map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+                    }
+                    // Applica i ✓ ad ogni ingresso in Pulisci (niente buffer esterno che si azzera).
+                    LaunchedEffect(entry.id, selectedFromNav) {
+                        cleanVm.setSelectedFromAggiorna(selectedFromNav)
                     }
                     LaunchedEffect(cleanState.message) {
                         cleanState.message?.let {
                             snackbarHostState.showSnackbar(it)
                             cleanVm.consumeMessage()
-                        }
-                    }
-                    // Se i selezionati sono stati eliminati, svuota anche il buffer di navigazione.
-                    LaunchedEffect(cleanState.selectedCount) {
-                        if (cleanState.selectedCount == 0 && pulisciSelectedIds.isNotEmpty() &&
-                            !cleanState.pendingTrashSelected && !cleanState.busy
-                        ) {
-                            pulisciSelectedIds = emptySet()
                         }
                     }
                     CleanScreen(
