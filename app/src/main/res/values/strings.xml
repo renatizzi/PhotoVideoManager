@@ -208,6 +208,12 @@
     <string name="clean_intro_v2">Trova contenuti identici (stesso hash) su elementi distinti. Puoi tenere il consigliato e mandare gli altri nel Cestino (con conferma).</string>
     <string name="clean_inline_help">Suggerimento: se hai la stessa foto in due cartelle diverse, dopo Censisci appariranno come due elementi. Toccando Analizza l’app confronta il contenuto (hash SHA-256) e li raggruppa.</string>
     <string name="clean_inline_help_v2">I file del dispositivo non vengono cancellati: il Cestino toglie solo le voci dal Catalogo. Solo le copie gestite dall’app possono sparire del tutto con «Svuota Cestino».</string>
+    <string name="clean_section_selected">Elementi selezionati</string>
+    <string name="clean_section_duplicates">Duplicati</string>
+    <string name="clean_selected_summary">Hai selezionato %1$d elemento/i in Aggiorna (riquadro ✓). Puoi spostarli nel Cestino; i file del dispositivo restano. Recupero: Utility → Ripristina.</string>
+    <string name="clean_selected_empty_hint">Nessun elemento con ✓. In Aggiorna tocca il riquadro fino a ✓, poi apri di nuovo Pulisci.</string>
+    <string name="clean_trash_selected">Elimina selezionati</string>
+    <string name="clean_confirm_selected_body">Sposterai nel Cestino %1$d elemento/i selezionati. Il file del dispositivo non viene cancellato. Potrai ripristinare da Utility → Ripristina → Cestino.</string>
     <string name="clean_subtitle_duplicates">Elimina, secondo i criteri selezionati, gli elementi del Catalogo duplicati che potrai comunque ripristinare con la funzione Cestino in Utility.</string>
     <string name="clean_analyze">Analizza duplicati</string>
     <string name="clean_analyzing">Analisi in corso…</string>
@@ -221,10 +227,10 @@
     <string name="clean_trash_extras">Metti nel Cestino i duplicati</string>
     <string name="clean_open_trash">Apri Cestino</string>
     <string name="clean_ripristina_hint">Per recuperare elementi dal Cestino usa Utility → Ripristina (non da questa pagina).</string>
-    <string name="clean_confirm_title">Confermi?</string>
-    <string name="clean_confirm_body">Sposterai nel Cestino %1$d elemento/i duplicati (tenendo quello consigliato). Gli originali sul telefono restano. Potrai ripristinare dal Cestino.</string>
-    <string name="clean_confirm_yes">Sì, nel Cestino</string>
-    <string name="clean_confirm_no">Annulla</string>
+    <string name="clean_confirm_title">Conferma eliminazione?</string>
+    <string name="clean_confirm_body">Sposterai nel Cestino %1$d elemento/i duplicati (tenendo quello consigliato). Il file del dispositivo non viene cancellato. Potrai ripristinare da Utility → Ripristina → Cestino.</string>
+    <string name="clean_confirm_yes">SÌ</string>
+    <string name="clean_confirm_no">NO</string>
     <string name="trash_title">Cestino</string>
     <string name="trash_intro">Elementi tolti dal Catalogo. Puoi ripristinarli o eliminarli definitivamente.</string>
     <string name="trash_inline_help">I file del dispositivo non vengono cancellati. «Elimina» qui toglie la voce dal Cestino; «Svuota Cestino» può cancellare anche le copie gestite dall’app.</string>

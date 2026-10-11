@@ -36,6 +36,10 @@ data class SearchUiState(
 
     fun selectionOf(mediaItemId: String): SourceCensusSelection =
         selection[mediaItemId] ?: SourceCensusSelection.NOT_SELECTED
+
+    /** Id con ✓ — da passare a Pulisci (BL-12). */
+    val selectedMediaIds: Set<String>
+        get() = selection.filterValues { it == SourceCensusSelection.SELECTED }.keys
 }
 
 class SearchViewModel(

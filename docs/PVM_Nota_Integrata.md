@@ -326,12 +326,12 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
 ## 7.1 FASE CORRENTE: verifica 0.16.4/0.16.5 + backlog Pulisci
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)**.
-STATO ATTUALE (11/10/2026): HOLD KPI/Importa **chiuso**. **0.16.2 = KO**. **0.16.3–0.16.4**: BL-03 Acquisisci + Aggiorna 3 stati / Ripristina — **IN VERIFICA telefono**. **0.16.5-preview** (versionCode 46): testi Pulisci allineati (sottotitolo unico; bottone «Analizza duplicati»). Convalidate 11/10/2026: menu ⋮ = solo riga (A); Pulisci a doppia funzione (selezionati + duplicati) → **BL-12** da implementare; criteri tipo Krokiet → **BL-11**.
+STATO ATTUALE (11/10/2026): HOLD KPI/Importa **chiuso**. Prove 0.16.4/0.16.5 **OK** (Renato). **0.16.6-preview** (versionCode 47): **BL-12 in codice** — Pulisci a doppia funzione (Elimina selezionati da ✓ Aggiorna + Analizza duplicati); conferme SÌ/NO; recupero via Ripristina. **BL-12 IN VERIFICA telefono**. Criteri tipo Krokiet restano **BL-11**.
 Ordine operativo:
-1. **P0** — prova telefono 0.16.4/0.16.5 (Acquisisci/Aggiorna/Ripristina/Pulisci testi).
-2. **P1** — **BL-12** (Pulisci elimina ✓ selezionati + duplicati v1) dopo OK telefono; poi BL-10 / BL-04.
-3. **P2** — BL-11 (criteri duplicati avanzati); BL-07 / BL-09 / BL-01 / BL-02.
-4. **Componi** — non riprendere sviluppo finché non chiusa specifica M11 vs landing congelata (vedi interlocuzione 11/10/2026).
+1. **P0** — prova telefono 0.16.6 (BL-12).
+2. **P1** — BL-10 / BL-04 dopo OK.
+3. **P2** — BL-11; BL-07 / BL-09 / BL-01 / BL-02.
+4. **Componi** — non riprendere finché non chiusa specifica M11 vs landing congelata.
 Documenti di sessione: `docs/TERMINOLOGIA_UI.md`; prompt di continuità `docs/PROMPT_CONTINUITA_AGENTE.md`.
 Nota: Le dipendenze riportate per ciascuna macro-attività della Roadmap devono indicare esclusivamente le dipendenze dirette da macro-attività precedenti, ossia quelle il cui output costituisce un input necessario alla macro-attività corrente. Le dipendenze transitive non devono essere ripetute.
 Regola di aggiornamento della roadmap
@@ -356,7 +356,7 @@ Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consoli
 | BL-09 | **Scansione rete / tablet / SSD router** | Oggi solo cartelle aggiunte a mano (+). Valutare individuazione dispositivi Wi‑Fi, tablet, PC e dischi sul router (es. SMB/NAS) senza inventare sync automatica. | Renato 10/10/2026 |
 | BL-10 | **Fonti apparire senza scelta utente** | Eraser/Facebook comparsi in Acquisisci senza selezione esplicita — verificare con prove; rimozione fonte ora in UI; evitare duplicati stessa cartella. | Renato 10/10/2026 |
 | BL-11 | **Pulisci — criteri duplicati avanzati (tipo Krokiet)** | Oltre ai duplicati esatti (hash), consentire eliminazione massiva scegliendo criteri (es. stesso contenuto, immagini simili con soglia, ecc. — riferimento ispirativo Krokiet/Czkawka). Serve specifica: quali criteri in v1, UI selezione criteri, conferme, rapporto con Cestino. **Non sviluppare ora.** | Renato 11/10/2026 |
-| BL-12 | **Pulisci — doppia funzione (selezionati + duplicati)** | Convalidato 11/10/2026: Pulisci deve (1) eliminare gli elementi con ✓ in Aggiorna; (2) gestire i duplicati (v1 esatti; avanzati in BL-11). X resta eliminazione singola. Menu ⋮ resta solo-riga (opzione A). Implementazione dopo OK telefono su 0.16.4/0.16.5. | Renato 11/10/2026 |
+| BL-12 | **Pulisci — doppia funzione (selezionati + duplicati)** | Convalidato 11/10/2026. **0.16.6**: (1) da Aggiorna → Pulisci porta i ✓; bottone «Elimina selezionati» + conferma; (2) sezione Duplicati con «Analizza duplicati». X singola e menu ⋮ solo-riga restano. **IN VERIFICA** telefono. | Renato 11/10/2026 |
 
 Fine documento
 

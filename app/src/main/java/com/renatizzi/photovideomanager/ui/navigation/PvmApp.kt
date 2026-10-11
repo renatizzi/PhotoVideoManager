@@ -69,6 +69,8 @@ fun PvmApp(
     var helpOpen by remember { mutableStateOf(false) }
     var acquireStep by remember { mutableStateOf(AcquireFlowStep.CENSUS) }
     var acquireSourceIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+    /** ✓ da Aggiorna da passare a Pulisci (BL-12). */
+    var pulisciSelectedIds by remember { mutableStateOf<Set<String>>(emptySet()) }
     var pendingSearchQuery by remember { mutableStateOf<String?>(null) }
     val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -113,7 +115,11 @@ fun PvmApp(
             }
             "aggiorna" -> navController.navigate(PvmDestination.Aggiorna.route)
             "ricerca" -> navController.navigate(PvmDestination.Search.route)
-            "pulisci" -> navController.navigate(PvmDestination.Clean.route)
+            "pulisci" -> {
+                // Da hub senza passaggio da Aggiorna: nessun ✓ da eliminare in massa.
+                pulisciSelectedIds = emptySet()
+                navController.navigate(PvmDestination.Clean.route)
+            }
             "ripristina" -> navController.navigate(PvmDestination.Ripristina.route)
             // Nota §5.4.3: ingresso Cestino solo via Ripristina.
             "cestino" -> navController.navigate(PvmDestination.Ripristina.route)
@@ -301,7 +307,10 @@ fun PvmApp(
                         onToggleSelection = aggiornaVm::toggleSelection,
                         onSetSelection = aggiornaVm::setSelection,
                         onRefresh = aggiornaVm::refresh,
-                        onPulisci = { navController.navigate(PvmDestination.Clean.route) },
+                        onPulisci = {
+                            pulisciSelectedIds = aggiornaState.selectedMediaIds
+                            navController.navigate(PvmDestination.Clean.route)
+                        },
                         onEdit = { _ ->
                             // Voce menu presente; funzione di editing in preparazione.
                             scope.launch { snackbarHostState.showSnackbar(editSoon) }
@@ -329,15 +338,29 @@ fun PvmApp(
                         factory = CleanViewModel.factory(catalogFacade),
                     )
                     val cleanState by cleanVm.state.collectAsStateWithLifecycle()
+                    LaunchedEffect(pulisciSelectedIds) {
+                        cleanVm.setSelectedFromAggiorna(pulisciSelectedIds)
+                    }
                     LaunchedEffect(cleanState.message) {
                         cleanState.message?.let {
                             snackbarHostState.showSnackbar(it)
                             cleanVm.consumeMessage()
                         }
                     }
+                    // Se i selezionati sono stati eliminati, svuota anche il buffer di navigazione.
+                    LaunchedEffect(cleanState.selectedCount) {
+                        if (cleanState.selectedCount == 0 && pulisciSelectedIds.isNotEmpty() &&
+                            !cleanState.pendingTrashSelected && !cleanState.busy
+                        ) {
+                            pulisciSelectedIds = emptySet()
+                        }
+                    }
                     CleanScreen(
                         state = cleanState,
                         onAnalyze = cleanVm::analyze,
+                        onRequestTrashSelected = cleanVm::requestTrashSelected,
+                        onConfirmTrashSelected = cleanVm::confirmTrashSelected,
+                        onDismissTrashSelected = cleanVm::dismissTrashSelected,
                         onRequestTrash = cleanVm::requestTrashExtras,
                         onConfirmTrash = cleanVm::confirmTrashExtras,
                         onDismissTrash = cleanVm::dismissTrashConfirm,

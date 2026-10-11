@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class CleanUiState(
+    /** Id selezionati (✓) portati da Aggiorna — BL-12. */
+    val selectedIds: Set<String> = emptySet(),
     val groups: List<DuplicateGroup> = emptyList(),
     val analyzing: Boolean = false,
     val busy: Boolean = false,
@@ -20,14 +22,22 @@ data class CleanUiState(
     val hashesFailed: Int = 0,
     val hasAnalyzed: Boolean = false,
     val pendingTrashGroup: DuplicateGroup? = null,
+    val pendingTrashSelected: Boolean = false,
     val message: String? = null,
-)
+) {
+    val selectedCount: Int get() = selectedIds.size
+}
 
 class CleanViewModel(
     private val catalogFacade: CatalogFacade,
 ) : ViewModel() {
     private val _state = MutableStateFlow(CleanUiState())
     val state: StateFlow<CleanUiState> = _state.asStateFlow()
+
+    /** Chiamato all’ingresso in Pulisci con i ✓ di Aggiorna. */
+    fun setSelectedFromAggiorna(ids: Set<String>) {
+        _state.update { it.copy(selectedIds = ids, pendingTrashSelected = false) }
+    }
 
     fun analyze() {
         viewModelScope.launch {
@@ -42,15 +52,7 @@ class CleanViewModel(
                             copiesScanned = result.copiesScanned,
                             hashesComputed = result.hashesComputed,
                             hashesFailed = result.hashesFailed,
-                            message = result.message ?: buildString {
-                                append("Analisi terminata: ${result.groups.size} gruppi")
-                                if (result.hashesComputed > 0) {
-                                    append(", ${result.hashesComputed} hash calcolati")
-                                }
-                                if (result.hashesFailed > 0) {
-                                    append(", ${result.hashesFailed} non leggibili")
-                                }
-                            },
+                            message = null,
                         )
                     }
                 }
@@ -65,8 +67,53 @@ class CleanViewModel(
         }
     }
 
+    fun requestTrashSelected() {
+        if (_state.value.selectedIds.isEmpty()) return
+        _state.update { it.copy(pendingTrashSelected = true, pendingTrashGroup = null) }
+    }
+
+    fun dismissTrashSelected() {
+        _state.update { it.copy(pendingTrashSelected = false) }
+    }
+
+    fun confirmTrashSelected() {
+        val ids = _state.value.selectedIds.toList()
+        if (ids.isEmpty()) {
+            _state.update { it.copy(pendingTrashSelected = false) }
+            return
+        }
+        viewModelScope.launch {
+            _state.update {
+                it.copy(busy = true, pendingTrashSelected = false, message = null)
+            }
+            var ok = 0
+            var fail = 0
+            for (id in ids) {
+                runCatching { catalogFacade.trashMediaItem(id) }
+                    .onSuccess { ok++ }
+                    .onFailure { fail++ }
+            }
+            _state.update {
+                it.copy(
+                    busy = false,
+                    selectedIds = emptySet(),
+                    message = when {
+                        ok > 0 && fail == 0 ->
+                            "Spostati nel Cestino: $ok. Recupero: Utility → Ripristina."
+                        ok > 0 ->
+                            "Spostati nel Cestino: $ok · non riusciti: $fail."
+                        else ->
+                            "Eliminazione selezionati non riuscita"
+                    },
+                )
+            }
+        }
+    }
+
     fun requestTrashExtras(group: DuplicateGroup) {
-        _state.update { it.copy(pendingTrashGroup = group) }
+        _state.update {
+            it.copy(pendingTrashGroup = group, pendingTrashSelected = false)
+        }
     }
 
     fun dismissTrashConfirm() {
@@ -95,7 +142,8 @@ class CleanViewModel(
                         hashesComputed = refreshed.hashesComputed,
                         hashesFailed = refreshed.hashesFailed,
                         hasAnalyzed = true,
-                        message = result.message,
+                        message = result.message
+                            ?: "Duplicati nel Cestino. Recupero: Utility → Ripristina.",
                     )
                 }
             }.onFailure { error ->

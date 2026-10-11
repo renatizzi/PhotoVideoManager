@@ -42,11 +42,13 @@ Con X in Aggiorna non serve la voce «Elimina» nel menu ⋮.
 Menu ⋮ = **solo la riga** aperta; i ✓ multipli servono a **Pulisci** (non al menu).  
 Ingresso al Cestino: solo **Utility → Ripristina** (non da Pulisci).
 
-### Pulisci (duplicati) — testi UI
+### Pulisci — doppia funzione (BL-12)
 
-- Sottotitolo unico (niente box di aiuto):  
-  `Elimina, secondo i criteri selezionati, gli elementi del Catalogo duplicati che potrai comunque ripristinare con la funzione Cestino in Utility.`
-- Bottone analisi: `Analizza duplicati`
+1. **Elementi selezionati** — ✓ portati da Aggiorna → bottone `Elimina selezionati`  
+2. **Duplicati** — sottotitolo unico + bottone `Analizza duplicati`  
+
+Conferme: `Conferma eliminazione?` + **SÌ** / **NO**.  
+Recupero: Utility → Ripristina → Cestino.
 
 ## Note
 

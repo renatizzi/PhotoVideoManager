@@ -34,6 +34,9 @@ import com.renatizzi.photovideomanager.ui.common.MediaThumbnail
 fun CleanScreen(
     state: CleanUiState,
     onAnalyze: () -> Unit,
+    onRequestTrashSelected: () -> Unit,
+    onConfirmTrashSelected: () -> Unit,
+    onDismissTrashSelected: () -> Unit,
     onRequestTrash: (DuplicateGroup) -> Unit,
     onConfirmTrash: () -> Unit,
     onDismissTrash: () -> Unit,
@@ -51,7 +54,38 @@ fun CleanScreen(
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold,
         )
-        // Un solo sottotitolo (niente box/messaggi contestuali sparsi) — convalida Renato 11/10/2026.
+
+        // —— Funzione 1: eliminazione elementi selezionati (✓ da Aggiorna) ——
+        Text(
+            text = stringResource(R.string.clean_section_selected),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Medium,
+        )
+        Text(
+            text = if (state.selectedCount > 0) {
+                stringResource(R.string.clean_selected_summary, state.selectedCount)
+            } else {
+                stringResource(R.string.clean_selected_empty_hint)
+            },
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+        )
+        Button(
+            onClick = onRequestTrashSelected,
+            enabled = state.selectedCount > 0 && !state.analyzing && !state.busy,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.clean_trash_selected))
+        }
+
+        HorizontalDivider()
+
+        // —— Funzione 2: duplicati ——
+        Text(
+            text = stringResource(R.string.clean_section_duplicates),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Medium,
+        )
         Text(
             text = stringResource(R.string.clean_subtitle_duplicates),
             style = MaterialTheme.typography.bodyMedium,
@@ -122,11 +156,36 @@ fun CleanScreen(
         Spacer(modifier = Modifier.height(8.dp))
     }
 
+    if (state.pendingTrashSelected) {
+        AlertDialog(
+            onDismissRequest = onDismissTrashSelected,
+            title = { Text(stringResource(R.string.aggiorna_trash_confirm_title)) },
+            text = {
+                Text(
+                    stringResource(
+                        R.string.clean_confirm_selected_body,
+                        state.selectedCount,
+                    ),
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = onConfirmTrashSelected) {
+                    Text(stringResource(R.string.dialog_yes))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismissTrashSelected) {
+                    Text(stringResource(R.string.dialog_no))
+                }
+            },
+        )
+    }
+
     val pending = state.pendingTrashGroup
     if (pending != null) {
         AlertDialog(
             onDismissRequest = onDismissTrash,
-            title = { Text(stringResource(R.string.clean_confirm_title)) },
+            title = { Text(stringResource(R.string.aggiorna_trash_confirm_title)) },
             text = {
                 Text(
                     stringResource(
@@ -137,12 +196,12 @@ fun CleanScreen(
             },
             confirmButton = {
                 TextButton(onClick = onConfirmTrash) {
-                    Text(stringResource(R.string.clean_confirm_yes))
+                    Text(stringResource(R.string.dialog_yes))
                 }
             },
             dismissButton = {
                 TextButton(onClick = onDismissTrash) {
-                    Text(stringResource(R.string.clean_confirm_no))
+                    Text(stringResource(R.string.dialog_no))
                 }
             },
         )
