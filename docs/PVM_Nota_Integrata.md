@@ -333,10 +333,10 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
 ## 7.1 FASE CORRENTE: verifica BL-14 KPI Home + backlog
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)**.
-STATO ATTUALE (11/10/2026): **0.16.17-preview** (versionCode 58): decisioni Renato 1–6 recepite; BL-01 «Possibili scarti» in Pulisci; BL-09 approfondimento §7.1quater. Sync BL-16 ancora in attesa di provider/conflitti.
+STATO ATTUALE (11/10/2026): **0.16.18-preview** (versionCode 59): BL-09 U1 «Da PC o rete» in Acquisisci (guida + selettore cartelle); no cloud obbligatorio. Sync BL-16 ancora in attesa di provider/conflitti.
 Ordine operativo:
 1. **P1** — BL-16: decisione «solo schede» OK; restano provider + conflitti (§7.1ter) prima del codice.
-2. **P2** — BL-09 resta su «+» (A); ombre Home stile BoxManager più avanti (BL-02); BL-11 restano solo duplicati esatti.
+2. **P2** — BL-09 U1 **SVILUPPO 0.16.18**; ombre Home stile BoxManager più avanti (BL-02); BL-11 restano solo duplicati esatti.
 3. **Componi** — non riprendere finché non chiusa specifica M11 vs landing congelata.
 
 ### 7.1quater Decisioni Renato 11/10/2026 (questionario)

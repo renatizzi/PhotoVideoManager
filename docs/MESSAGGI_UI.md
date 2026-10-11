@@ -8,7 +8,14 @@ Generato da `strings.xml` + messaggi runtime Kotlin usati in snackbar/stato.
 |---|---|---|
 | Acquisisci | `acquisisci_conferma` | CONFERMA |
 | Acquisisci | `acquisisci_elenco_fonti` | Elenco fonti del Catalogo |
-| Acquisisci | `acquisisci_empty_sources` | Nessuna fonte esterna. Tocca + per aggiungere una cartella (SAF). |
+| Acquisisci | `acquisisci_da_pc_choose` | Scegli cartella |
+| Acquisisci | `acquisisci_da_pc_note` | Non serve il cloud. Vale anche per un NAS già in rete. Se non vedi il PC, sul tablet può servire (una tantum) un’app di archiviazione di rete, es. Samba Documents. |
+| Acquisisci | `acquisisci_da_pc_rete` | Da PC o rete |
+| Acquisisci | `acquisisci_da_pc_step1` | 1. Sul PC: condividi la cartella delle foto. Tasto destro sulla cartella → Proprietà → Condivisione → Condividi. Usa un nome semplice, es. Foto. |
+| Acquisisci | `acquisisci_da_pc_step2` | 2. Metti tablet e PC sulla stessa Wi‑Fi. Il PC resta acceso. |
+| Acquisisci | `acquisisci_da_pc_step3` | 3. Tocca «Scegli cartella». Nel selettore apri Disco di rete (o il nome del PC) e scegli quella cartella. Conferma con Usa questa cartella. |
+| Acquisisci | `acquisisci_da_pc_title` | Aggiungere foto dal PC |
+| Acquisisci | `acquisisci_empty_sources` | Nessuna fonte esterna. Tocca + oppure «Da PC o rete». |
 | Acquisisci | `acquisisci_remove_confirm_body` | «%1$s» sparirà dall'elenco fonti. I file del dispositivo restano dove sono. Le voci già nel Catalogo da altre copie restano; non si cancellano file dal telefono. |
 | Acquisisci | `acquisisci_remove_confirm_title` | Togliere questa cartella dall'elenco? |
 | Acquisisci | `acquisisci_remove_source_cd` | Togli fonte dall'elenco (usa la X nel riquadro) |

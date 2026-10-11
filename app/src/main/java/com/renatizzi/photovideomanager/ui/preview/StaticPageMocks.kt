@@ -119,6 +119,7 @@ fun AcquisisciStaticScreen(
     var renameTarget by remember { mutableStateOf<SourceSummary?>(null) }
     var removeTarget by remember { mutableStateOf<SourceSummary?>(null) }
     var renameDeviceOpen by remember { mutableStateOf(false) }
+    var pcGuideOpen by remember { mutableStateOf(false) }
     var renameText by remember { mutableStateOf("") }
 
     fun cycleSourceSelection(source: SourceSummary) {
@@ -212,6 +213,12 @@ fun AcquisisciStaticScreen(
                 }
             }
         }
+        TextButton(
+            onClick = { pcGuideOpen = true },
+            enabled = !busy,
+        ) {
+            Text(stringResource(R.string.acquisisci_da_pc_rete))
+        }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Checkbox(
@@ -265,6 +272,39 @@ fun AcquisisciStaticScreen(
         }
     }
 
+    if (pcGuideOpen) {
+        AlertDialog(
+            onDismissRequest = { pcGuideOpen = false },
+            title = { Text(stringResource(R.string.acquisisci_da_pc_title)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(stringResource(R.string.acquisisci_da_pc_step1))
+                    Text(stringResource(R.string.acquisisci_da_pc_step2))
+                    Text(stringResource(R.string.acquisisci_da_pc_step3))
+                    Text(
+                        text = stringResource(R.string.acquisisci_da_pc_note),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        pcGuideOpen = false
+                        openTree.launch(null)
+                    },
+                ) {
+                    Text(stringResource(R.string.acquisisci_da_pc_choose))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pcGuideOpen = false }) {
+                    Text(stringResource(R.string.importa_annulla))
+                }
+            },
+        )
+    }
     renameTarget?.let { target ->
         AlertDialog(
             onDismissRequest = { renameTarget = null },
