@@ -225,8 +225,9 @@ class CensusService(
     }
 
     companion object {
-        const val DEFAULT_MAX_FILES = 5_000
-        const val DEFAULT_MAX_DIRS = 1_000
+        const val DEFAULT_MAX_FILES = 10_000
+        /** Più alto per NAS/SMB con molte sottocartelle (es. «famiglia»). */
+        const val DEFAULT_MAX_DIRS = 5_000
         private val PHOTO_EXT = setOf(
             "jpg", "jpeg", "jpe", "jfif", "png", "webp", "heic", "heif",
             "gif", "bmp", "dng", "tif", "tiff", "raw", "cr2", "nef", "arw",

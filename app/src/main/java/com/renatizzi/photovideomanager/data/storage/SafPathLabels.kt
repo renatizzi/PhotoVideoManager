@@ -16,6 +16,7 @@ object SafPathLabels {
     const val ROOT_FOLDER_TITLE = "Tutta la memoria"
     const val DEVICE_GOOGLE_DRIVE = "Google Drive"
     const val DEVICE_DOWNLOADS = "Download"
+    const val DEVICE_NETWORK_NAS = "Rete / NAS"
     const val DEVICE_CLOUD_OTHER = "Cloud / altro archivio"
 
     private const val AUTH_EXTERNAL = "com.android.externalstorage.documents"
@@ -30,27 +31,46 @@ object SafPathLabels {
         return Build.MODEL.ifBlank { "Questo dispositivo" }
     }
 
-    /** Dispositivo / provider per un albero SAF (telefono vs Drive vs altro). */
+    /** Dispositivo / provider per un albero SAF (telefono vs Drive vs rete vs altro). */
     fun deviceLabelForTree(context: Context, treeUri: Uri, localDeviceAlias: String): String =
         when (providerOf(treeUri)) {
             SafProvider.LOCAL_STORAGE -> localDeviceAlias
             SafProvider.GOOGLE_DRIVE -> DEVICE_GOOGLE_DRIVE
             SafProvider.DOWNLOADS -> DEVICE_DOWNLOADS
+            SafProvider.NETWORK_NAS -> DEVICE_NETWORK_NAS
             SafProvider.OTHER -> DEVICE_CLOUD_OTHER
         }
 
     fun providerOf(treeUri: Uri): SafProvider = providerOfAuthority(treeUri.authority)
 
     fun providerOfAuthority(authority: String?): SafProvider {
-        val auth = authority.orEmpty()
+        val auth = authority.orEmpty().lowercase()
         return when {
             auth == AUTH_EXTERNAL -> SafProvider.LOCAL_STORAGE
             auth.startsWith(AUTH_DRIVE_PREFIX) -> SafProvider.GOOGLE_DRIVE
-            auth == AUTH_DOWNLOADS || auth.contains("downloads", ignoreCase = true) ->
-                SafProvider.DOWNLOADS
+            auth == AUTH_DOWNLOADS || auth.contains("downloads") -> SafProvider.DOWNLOADS
+            isNetworkAuthority(auth) -> SafProvider.NETWORK_NAS
             auth.isBlank() -> SafProvider.LOCAL_STORAGE
             else -> SafProvider.OTHER
         }
+    }
+
+    /** Provider SAF tipici di SMB/NAS / storage di rete. */
+    fun isNetworkAuthority(authority: String): Boolean {
+        val a = authority.lowercase()
+        return a.contains("smb") ||
+            a.contains("samba") ||
+            a.contains("cif") ||
+            a.contains("nas") ||
+            a.contains("networkstorage") ||
+            a.contains("network_storage") ||
+            a.contains("sambadocuments") ||
+            a.contains("synology") ||
+            a.contains("qnap") ||
+            a.contains("webdav") ||
+            a.contains("share.") ||
+            a.endsWith(".share") ||
+            a.contains("lanstorage")
     }
 
     /**
@@ -107,6 +127,7 @@ object SafPathLabels {
         return when (providerOf(treeUri)) {
             SafProvider.GOOGLE_DRIVE -> "$DEVICE_GOOGLE_DRIVE/$folder"
             SafProvider.DOWNLOADS -> "$DEVICE_DOWNLOADS/$folder"
+            SafProvider.NETWORK_NAS -> "$DEVICE_NETWORK_NAS/$folder"
             SafProvider.OTHER -> "$DEVICE_CLOUD_OTHER/$folder"
             SafProvider.LOCAL_STORAGE -> folder
         }
@@ -175,6 +196,7 @@ object SafPathLabels {
     private fun defaultFolderFallback(provider: SafProvider): String = when (provider) {
         SafProvider.GOOGLE_DRIVE -> "Cartella Drive"
         SafProvider.DOWNLOADS -> "Download"
+        SafProvider.NETWORK_NAS -> "Cartella di rete"
         SafProvider.OTHER -> "Cartella cloud"
         SafProvider.LOCAL_STORAGE -> "Cartella"
     }
@@ -196,6 +218,7 @@ object SafPathLabels {
         LOCAL_STORAGE,
         GOOGLE_DRIVE,
         DOWNLOADS,
+        NETWORK_NAS,
         OTHER,
     }
 }

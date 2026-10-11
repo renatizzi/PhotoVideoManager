@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -563,17 +564,24 @@ private fun ImportCandidateRow(
         ?: candidate.sourceCopy.opaqueLocator.substringAfterLast('/')
             .substringAfterLast(':')
             .ifBlank { candidate.mediaItem.id }
+    val selection = if (checked) {
+        SourceCensusSelection.SELECTED
+    } else {
+        SourceCensusSelection.NOT_SELECTED
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(enabled = enabled, onClick = onToggle)
             .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Checkbox(
-            checked = checked,
-            onCheckedChange = { if (enabled) onToggle() },
+        // Stesso riquadro di Acquisisci/Aggiorna (✓ / vuoto), non Checkbox Material.
+        SourceSelectionBox(
+            selection = selection,
             enabled = enabled,
+            onClick = onToggle,
         )
         MediaThumbnail(
             copy = candidate.sourceCopy,

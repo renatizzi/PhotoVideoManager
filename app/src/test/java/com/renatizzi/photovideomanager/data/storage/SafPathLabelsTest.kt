@@ -60,6 +60,23 @@ class SafPathLabelsTest {
     }
 
     @Test
+    fun providerOfAuthority_smbIsNetworkNas_notCloud() {
+        assertEquals(
+            SafPathLabels.SafProvider.NETWORK_NAS,
+            SafPathLabels.providerOfAuthority("com.google.android.sambadocumentsprovider"),
+        )
+        assertEquals(
+            SafPathLabels.SafProvider.NETWORK_NAS,
+            SafPathLabels.providerOfAuthority("com.synology.dsfile.documents"),
+        )
+        assertEquals(
+            SafPathLabels.SafProvider.OTHER,
+            SafPathLabels.providerOfAuthority("com.example.unknown.cloud"),
+        )
+        assertEquals("Rete / NAS", SafPathLabels.DEVICE_NETWORK_NAS)
+    }
+
+    @Test
     fun humanizeDocumentId_opaqueWithoutColon_notMemoriaPrincipale() {
         val label = SafPathLabels.humanizeDocumentId("opaqueDriveDocId123")
         assertFalse(label.contains("Memoria principale"))

@@ -15,7 +15,10 @@ import kotlinx.coroutines.launch
 
 data class SourceBrowseUiState(
     val locationId: String = "",
-    val title: String = "",
+    /** Stesso contenuto della riga in Acquisisci. */
+    val displayName: String = "",
+    val deviceLabel: String = "",
+    val pathLabel: String = "",
     val entries: List<ArchiveEntry> = emptyList(),
     val sortMode: MediaBrowseSortMode = MediaBrowseSortMode.NEWEST,
     val loading: Boolean = true,
@@ -55,11 +58,13 @@ class SourceBrowseViewModel(
                 val sources = catalogFacade.listSources(refresh = false)
                 val source = sources.firstOrNull { it.locationId == locationId }
                 val entries = catalogFacade.listMediaForLocation(locationId)
-                Triple(source?.displayName ?: locationId, source?.pathLabel.orEmpty(), entries)
-            }.onSuccess { (title, path, entries) ->
+                source to entries
+            }.onSuccess { (source, entries) ->
                 _state.update {
                     it.copy(
-                        title = if (path.isBlank()) title else "$title · $path",
+                        displayName = source?.displayName.orEmpty(),
+                        deviceLabel = source?.deviceLabel.orEmpty(),
+                        pathLabel = source?.pathLabel.orEmpty(),
                         entries = entries,
                         loading = false,
                     )

@@ -109,23 +109,9 @@ class AcquireViewModel(
         }
     }
 
-    /**
-     * Chip Tutti / Foto / Video: applica il filtro e cicla la selezione dei
-     * candidati del pool (tutti flag → nessuno → tutti …).
-     * Con selezione vuota l’elenco risulta vuoto.
-     */
+    /** Chip Tutti / Foto / Video: solo filtro; non tocca i ✓ già scelti. */
     fun onKindFilter(filter: SearchKindFilter) {
-        _state.update { current ->
-            val next = current.copy(kindFilter = filter)
-            val selectableIds = next.kindFiltered
-                .filterNot { it.alreadyInPersonalArchive }
-                .map { it.mediaItem.id }
-            val allSelected = selectableIds.isNotEmpty() &&
-                selectableIds.all { it in current.selectedIds }
-            next.copy(
-                selectedIds = if (allSelected) emptySet() else selectableIds.toSet(),
-            )
-        }
+        _state.update { it.copy(kindFilter = filter) }
     }
 
     fun selectPendingOnly() {

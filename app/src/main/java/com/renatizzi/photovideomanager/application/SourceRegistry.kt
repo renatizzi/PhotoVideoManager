@@ -126,18 +126,22 @@ class SourceRegistry(
             ?.let { existing ->
                 val summary = listSources(refreshAvailability = true)
                     .first { it.locationId == existing.id }
+                // Già in elenco: non richiamare takePersistable (evita nuova richiesta Android).
                 return RegisterSourceResult(source = summary, alreadyPresent = true)
             }
 
-        val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-        runCatching {
-            appContext.contentResolver.takePersistableUriPermission(treeUri, flags)
-        }.recoverCatching {
-            appContext.contentResolver.takePersistableUriPermission(
-                treeUri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION,
-            )
-        }.getOrThrow()
+        // Se il permesso persistente c’è già (stesso albero), non richiederlo di nuovo.
+        if (!hasPersistableAccess(treeUri)) {
+            val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            runCatching {
+                appContext.contentResolver.takePersistableUriPermission(treeUri, flags)
+            }.recoverCatching {
+                appContext.contentResolver.takePersistableUriPermission(
+                    treeUri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                )
+            }.getOrThrow()
+        }
 
         val archiveId = "archive.external.${UUID.randomUUID()}"
         val locationId = "location.saf.${UUID.randomUUID()}"
@@ -304,6 +308,15 @@ class SourceRegistry(
     }
 
     private fun looksIllegible(name: String): Boolean = SafPathLabels.looksIllegible(name)
+
+    /** True se Android ha già un permesso persistente sullo stesso albero SAF. */
+    private fun hasPersistableAccess(treeUri: Uri): Boolean {
+        val wanted = SafTreeIdentity.canonicalKey(treeUri)
+        return appContext.contentResolver.persistedUriPermissions.any { perm ->
+            perm.isReadPermission &&
+                SafTreeIdentity.canonicalKey(perm.uri) == wanted
+        }
+    }
 
     companion object {
         const val PERSONAL_ARCHIVE_ID = CatalogFacade.PERSONAL_ARCHIVE_ID

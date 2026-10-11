@@ -333,9 +333,9 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
 ## 7.1 FASE CORRENTE: verifica BL-14 KPI Home + backlog
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)**.
-STATO ATTUALE (11/10/2026): **0.16.11-preview** (versionCode 52): messaggio «Sorgente già presente in elenco»; **BL-15** (esclusione anti re-import + checkbox elimina file sorgente); BL-10/BL-04 inclusi. **BL-16** priorità alta (analisi). **IN VERIFICA** telefono (unico elenco prove).
+STATO ATTUALE (11/10/2026): **0.16.12-preview** (versionCode 53): fix prove 0.16.11 — permesso SAF non ridondante; Dettaglio di; riquadri Importa; etichetta Rete/NAS; listing NAS. **IN VERIFICA** (prove residue utente).
 Ordine operativo:
-1. **P0** — prova unica 0.16.11 (vedi elenco in consegna agente).
+1. **P0** — completa prove residue su 0.16.12.
 2. **P1** — **BL-16** specifica (non codice finché non consolidata).
 3. **P2** — BL-11; BL-01; BL-13; BL-07 / BL-09 / BL-02.
 4. **Componi** — non riprendere finché non chiusa specifica M11 vs landing congelata.

@@ -97,8 +97,40 @@ class SafTreeStorageAdapter(
                     }
                 }
             }
+            // NAS/SMB: alcuni provider restituiscono cursor vuoto — fallback DocumentFile.
+            if (result.isEmpty()) {
+                result.addAll(listChildrenViaDocumentFile(opaqueLocator, parentDocId))
+            }
             result
         }
+
+    /**
+     * Fallback listing (utile su NAS/SMB se il cursor DocumentsContract è vuoto).
+     * Root: [DocumentFile.fromTreeUri]; sottocartelle: fromSingleUri (se supportato).
+     */
+    private fun listChildrenViaDocumentFile(
+        opaqueLocator: String,
+        parentDocId: String,
+    ): List<StorageEntry> {
+        val isRoot = opaqueLocator.isBlank() || opaqueLocator == treeUri.toString()
+        val parentFile = if (isRoot) {
+            DocumentFile.fromTreeUri(context, treeUri)
+        } else {
+            val docUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, parentDocId)
+            DocumentFile.fromSingleUri(context, docUri)
+        } ?: return emptyList()
+        return runCatching {
+            parentFile.listFiles().map { child ->
+                StorageEntry(
+                    opaqueLocator = child.uri.toString(),
+                    displayName = child.name ?: child.uri.lastPathSegment.orEmpty(),
+                    isDirectory = child.isDirectory,
+                    mimeType = child.type,
+                    byteSize = if (child.isFile) child.length().takeIf { it >= 0 } else null,
+                )
+            }
+        }.getOrDefault(emptyList())
+    }
 
     override suspend fun openRead(opaqueLocator: String): InputStream =
         withContext(Dispatchers.IO) {

@@ -176,8 +176,8 @@
     <string name="census_selected">Censisci selezionate</string>
     <string name="census_in_progress">Censimento in corso…</string>
     <string name="browse_source_media">Vedi media della sorgente</string>
-    <string name="browse_source_title">Media della sorgente</string>
-    <string name="browse_source_help">Consultazione in sola lettura: utile per confermare cosa è stato censito prima di copiare in Acquisisci → Copia.</string>
+    <string name="browse_source_title">Dettaglio di</string>
+    <string name="browse_source_help"> </string>
     <string name="browse_source_count">Elementi: %1$d</string>
     <string name="browse_source_empty">Nessun media censito per questa sorgente. Torna a Censisci e avviane uno.</string>
     <string name="sort_name">Nome</string>

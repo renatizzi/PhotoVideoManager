@@ -12,7 +12,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -45,20 +44,15 @@ fun SourceBrowseScreen(
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold,
         )
-        Text(
-            text = state.title,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-        )
-        Surface(
-            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(
-                text = stringResource(R.string.browse_source_help),
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(12.dp),
-            )
+        // Stesso blocco identità della riga in Acquisisci (cartella · dispositivo · percorso).
+        if (state.displayName.isNotBlank()) {
+            Text(state.displayName, fontWeight = FontWeight.SemiBold)
+        }
+        if (state.deviceLabel.isNotBlank()) {
+            Text(state.deviceLabel, style = MaterialTheme.typography.labelMedium)
+        }
+        if (state.pathLabel.isNotBlank()) {
+            Text(state.pathLabel, style = MaterialTheme.typography.bodyMedium)
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
