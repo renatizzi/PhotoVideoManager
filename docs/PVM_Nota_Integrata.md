@@ -333,10 +333,10 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
 ## 7.1 FASE CORRENTE: verifica BL-14 KPI Home + backlog
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)**.
-STATO ATTUALE (12/10/2026): **0.16.19-preview** (versionCode 60). **BL-17:** wizard sede Catalogo — **W1–W4 tutti obbligatori in v1** (decisione Renato). Target mobile/notebook in evidenza; cloud e NAS non vanno persi. Prossimo: testi/schermate → sviluppo.
+STATO ATTUALE (12/10/2026): **0.16.19-preview** (versionCode 60). **BL-17:** bozza wizard sede Catalogo (§7.1septies) — combo W1–W4; in attesa convalida Renato sui testi, poi sviluppo.
 Ordine operativo:
-1. **P1** — specifica testi + flusso schermate wizard BL-17 (W1–W4); poi sviluppo.
-2. **P2** — BL-09 = contenuto del ramo W2 (PC); BL-02/BL-11 non ora.
+1. **P1** — convalida bozza §7.1septies → sviluppo wizard.
+2. **P2** — BL-09 assorbito nel ramo W2; BL-02/BL-11 non ora.
 3. **Componi** — non riprendere finché non chiusa specifica M11 vs landing congelata.
 
 ### 7.1quater Decisioni Renato 11/10/2026 (questionario)
@@ -375,7 +375,102 @@ Ordine operativo:
 
 **Fuori percorso:** presupporre solo NAS o solo cloud; obbligare una sola sede; lasciare SMB PC senza guida wizard; nascondere W3/W4.
 
-**Prossimo passo:** specifica testi + schermate dei 4 rami → sviluppo.
+**Prossimo passo:** bozza testi/schermate in §7.1septies (combo); convalida Renato → sviluppo.
+
+### 7.1septies Bozza wizard «Dove tengo il Catalogo» (BL-17) — 12/10/2026
+
+**Stato:** BOZZA Cursor (testi + sequenza). **Non è ancora specifica consolidata ChatGPT.** Sviluppo dopo convalida Renato.
+
+**Ingresso UI (proposta):** Organizza → Acquisisci → voce **«Imposta Catalogo condiviso»** (anche al primo avvio se nessuna sede impostata). Può sostituire/assorbire «Da PC o rete».
+
+**Controllo di scelta (decisione Renato):** **combo box** (elenco a discesa) con le sole 4 soluzioni principali — così la casistica resta chiusa e leggibile.
+
+---
+
+#### Schermata S0 — Introduzione
+- **Titolo:** Dove vuoi tenere il Catalogo?
+- **Testo:** Il Catalogo è l’elenco delle tue foto e dei tuoi video. Scegli **un posto principale** dove tenerlo: gli altri dispositivi potranno collegarsi a quello. Non serve avere un NAS o il cloud: molti tengono tutto sul telefono o sul PC.
+- **Combo — etichetta:** Tengo il Catalogo…
+- **Voci combo (ordine):**
+  1. `Su questo telefono o tablet` → W1  
+  2. `Su un PC o notebook` → W2  
+  3. `Su Google Drive (o cloud)` → W3  
+  4. `Su un disco di rete o NAS` → W4  
+- **Default combo:** voce 1 (W1).  
+- **Pulsanti:** Annulla · **Avanti** (abilitato se c’è una voce selezionata)
+
+---
+
+#### Ramo W1 — Questo telefono o tablet
+
+**S1a — Conferma sede**
+- **Titolo:** Catalogo su questo dispositivo
+- **Testo:** Le foto e i video che acquisisci resteranno legati a questo telefono/tablet. Potrai aggiungere altre cartelle (galleria, SD) con +. In seguito potrai collegare un altro dispositivo allo stesso Catalogo quando avremo la sincronizzazione schede.
+- **Pulsanti:** Indietro · **Usa questo dispositivo**
+- **Azione:** marca sede = LOCAL_DEVICE; chiudi wizard; resta in Acquisisci (nessun OpenDocumentTree obbligatorio).
+
+---
+
+#### Ramo W2 — PC o notebook
+
+**S2a — Cosa fare sul PC**
+- **Titolo:** Prepara una cartella sul PC
+- **Testo (passi numerati):**  
+  1. Sul PC crea una cartella, es. `Foto Catalogo`.  
+  2. Tasto destro sulla cartella → Proprietà → Condivisione → Condividi.  
+  3. Annota il **nome del PC** oppure l’**indirizzo IP** (Impostazioni Windows → Rete → Wi‑Fi → proprietà → IPv4).  
+  4. PC e questo tablet/telefono sulla **stessa Wi‑Fi**; il PC resta acceso.
+- **Pulsanti:** Indietro · **Ho creato la cartella**
+
+**S2b — Collega dal tablet**
+- **Titolo:** Collega il PC da questo dispositivo
+- **Testo:** Apri l’app **Archivio** (o Gestione file) → Spazio di archiviazione di rete → Aggiungi → **Unità di rete (SMB)**. Host = IP o nome PC. Utente e password = **account Windows** (non la mail Google, salvo che sia proprio l’account Microsoft di accesso a Windows). Quando vedi la cartella `Foto Catalogo`, torna qui.
+- **Link testo:** Non riesco a collegarmi (apre S2d aiuto)
+- **Pulsanti:** Indietro · **Ho collegato il PC**
+
+**S2c — Scegli la cartella in MediaManager**
+- **Titolo:** Scegli la cartella del Catalogo
+- **Testo:** Tocca **Scegli cartella**. Nel selettore apri lo spazio di rete / il PC e seleziona `Foto Catalogo`. Conferma con Usa questa cartella.
+- **Pulsanti:** Indietro · **Scegli cartella** → `OpenDocumentTree` → sede = SAF tree scelto; fine wizard.
+
+**S2d — Aiuto collegamento (opzionale)**
+- **Titolo:** Se il PC non si collega
+- **Testo:** Prova utente `MicrosoftAccount\tua@email` oppure solo il nome corto da `whoami` sul PC. Rete Wi‑Fi del PC = Privata. In alternativa crea sul PC un utente locale semplice (es. `foto`) e condividigli la cartella. Oppure scegli un’altra sede dal combo (telefono, Drive, NAS).
+- **Pulsanti:** Torna al collegamento · Cambia sede (→ S0)
+
+---
+
+#### Ramo W3 — Google Drive (o cloud)
+
+**S3a — Guida Drive**
+- **Titolo:** Catalogo su Google Drive
+- **Testo:** Serve un account Google già sul dispositivo. Tocca **Scegli cartella**, apri **Google Drive**, crea o seleziona una cartella (es. `Foto Catalogo`) e conferma con Usa questa cartella. I file restano nel cloud; MediaManager li elenca nel Catalogo dopo Acquisisci/Importa.
+- **Nota piccola:** Non è obbligatorio usare il cloud: puoi tornare indietro e scegliere telefono o PC.
+- **Pulsanti:** Indietro · **Scegli cartella** → `OpenDocumentTree` → sede Drive; fine wizard.
+
+---
+
+#### Ramo W4 — Disco di rete / NAS
+
+**S4a — Guida NAS**
+- **Titolo:** Catalogo su disco di rete
+- **Testo:** Se il NAS (o disco di rete) è già visibile in Archivio come «Disco di rete», tocca **Scegli cartella**, aprilo e seleziona la cartella delle foto (es. quella condivisa in famiglia). Se non lo vedi ancora, aggiungilo prima in Archivio → Spazio di archiviazione di rete, poi torna qui.
+- **Pulsanti:** Indietro · **Scegli cartella** → `OpenDocumentTree` → sede NAS; fine wizard.
+
+---
+
+#### Schermata S5 — Fine comune (dopo scelta cartella W2/W3/W4)
+- **Titolo:** Catalogo impostato
+- **Testo:** Sede: «%1$s». Ora puoi usare **CONFERMA** in Acquisisci per censire le foto, poi Importa. Per cambiare sede: Imposta Catalogo condiviso.
+- **Pulsante:** OK → Acquisisci
+
+**Persistenza (proposta tecnica, da implementare):** preferenza `catalog_seat_kind` = LOCAL | PC_SMB | DRIVE | NAS + `catalog_seat_location_id` / tree URI se SAF. Non sincronizza ancora le schede tra dispositivi (BL-16).
+
+**Criteri di accettazione bozza (per convalida):**
+1. Combo mostra solo W1–W4, tutte raggiungibili in un tap+Avanti.  
+2. W2 non scarica l’utente su Windows/SMB senza i passi S2a–S2c.  
+3. W3 e W4 sono scelte di primo livello nel combo (non in sotto-menu nascosto).  
+4. Linguaggio senza gergo (no «SAF», no «SMB» in etichette principali; SMB solo dove serve nel passo tecnico W2).
 
 ### 7.1quinquies Approfondimento BL-09 — PC / NAS in rete (senza cloud obbligatorio)
 
@@ -451,7 +546,7 @@ Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consoli
 | BL-07 | **Aggiorna — «Sposta» nel menu contestuale** | **CHIUSA (decisione A 11/10/2026):** non aggiungere Sposta. | Renato 09–11/10/2026 |
 | BL-08 | **Copia da Catalogo → dispositivo** | ~~Export esplicito SAF CreateDocument~~ — *fatto 0.16.0* (menu Aggiorna «Copia su dispositivo»; preferisce copia spazio app). Sposta resta BL-07. | Renato 09/10/2026 |
 | BL-09 | **PC / NAS in rete** | U1 in app 0.16.18–19. **12/10:** SMB PC→tablet troppo difficile → **deprioritata**; pivot Archivio unico §7.1sexies. | Renato 10–12/10/2026 |
-| BL-17 | **Wizard sede Catalogo condiviso** | **W1–W4 obbligatori in v1** (telefono/tablet, PC/notebook, Drive/cloud, NAS). Se PC → guida condivisione nello stesso wizard. §7.1sexies. | Renato 12/10/2026 |
+| BL-17 | **Wizard sede Catalogo condiviso** | **W1–W4 obbligatori**; scelta a **combo**. Bozza testi/schermate §7.1septies — in convalida Renato. | Renato 12/10/2026 |
 | BL-10 | **Fonti apparire senza scelta utente** | **OK** (diagnosi + dedupe SAF 0.16.10; prove 0.16.15). Fonti solo da «+»; residui togliibili con X. | Renato 10–11/10/2026 |
 | BL-11 | **Pulisci — criteri duplicati avanzati (tipo Krokiet)** | **Decisione A 11/10/2026:** restano solo duplicati esatti. Simili = versione successiva. | Renato 11/10/2026 |
 | BL-12 | **Pulisci — doppia funzione (selezionati + duplicati)** | Convalidato 11/10/2026. **0.16.6–0.16.7**: (1) ✓ da Aggiorna → Pulisci; (2) Analizza duplicati. Fix navigazione ✓ in 0.16.7. Prova Renato OK su selezione. | Renato 11/10/2026 |
