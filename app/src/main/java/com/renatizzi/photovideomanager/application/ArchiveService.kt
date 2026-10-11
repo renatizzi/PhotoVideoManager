@@ -3,6 +3,8 @@ package com.renatizzi.photovideomanager.application
 import com.renatizzi.photovideomanager.domain.model.ArchiveEntry
 import com.renatizzi.photovideomanager.domain.model.DomainScope
 import com.renatizzi.photovideomanager.domain.model.MediaCopyState
+import com.renatizzi.photovideomanager.domain.model.ScrapCandidate
+import com.renatizzi.photovideomanager.domain.policy.ScrapHeuristics
 import com.renatizzi.photovideomanager.domain.port.CatalogStore
 import com.renatizzi.photovideomanager.domain.port.PermissionGate
 
@@ -52,5 +54,35 @@ class ArchiveService(
                 updatedAtEpochMs = System.currentTimeMillis(),
             ),
         )
+    }
+
+    /**
+     * BL-01: possibili scarti nel Catalogo (copie ACTIVE).
+     * Preferisce la copia nello spazio app per titolo/dimensione.
+     */
+    suspend fun listPossibleScraps(): List<ScrapCandidate> {
+        require(permissionGate.canView(DomainScope.PERSONAL))
+        val items = catalogStore.listAllMediaItems().associateBy { it.id }
+        val active = catalogStore.listMediaCopiesByState(MediaCopyState.ACTIVE)
+            .groupBy { it.mediaItemId }
+        val out = ArrayList<ScrapCandidate>()
+        for ((itemId, copies) in active) {
+            val item = items[itemId] ?: continue
+            val preferred = copies.firstOrNull {
+                it.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID
+            } ?: copies.first()
+            val title = item.displayTitle?.ifBlank { null }
+                ?: preferred.opaqueLocator.substringAfterLast('/')
+                    .substringAfterLast(':')
+            if (!ScrapHeuristics.isPossibleScrap(title, preferred.byteSize)) continue
+            out.add(
+                ScrapCandidate(
+                    mediaItem = item,
+                    previewCopy = preferred,
+                    reason = ScrapHeuristics.reasonLabel(title, preferred.byteSize),
+                ),
+            )
+        }
+        return out.sortedBy { it.mediaItem.displayTitle.orEmpty().lowercase() }
     }
 }

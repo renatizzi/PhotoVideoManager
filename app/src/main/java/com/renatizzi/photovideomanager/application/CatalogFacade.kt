@@ -11,6 +11,7 @@ import com.renatizzi.photovideomanager.domain.model.DedupAnalysisResult
 import com.renatizzi.photovideomanager.domain.model.MediaKind
 import com.renatizzi.photovideomanager.domain.model.SearchKindFilter
 import com.renatizzi.photovideomanager.domain.model.RegisterSourceResult
+import com.renatizzi.photovideomanager.domain.model.ScrapCandidate
 import com.renatizzi.photovideomanager.domain.model.SourceSummary
 import com.renatizzi.photovideomanager.domain.model.TrashActionResult
 import com.renatizzi.photovideomanager.domain.model.TrashEntry
@@ -142,6 +143,10 @@ class CatalogFacade(
 
     suspend fun analyzeExactDuplicates(): DedupAnalysisResult =
         dedupService.analyzeExactDuplicates()
+
+    /** BL-01: possibili scarti (proposta; conferma → Cestino). */
+    suspend fun listPossibleScraps(): List<ScrapCandidate> =
+        archiveService.listPossibleScraps()
 
     suspend fun trashDuplicateExtras(
         fingerprintValue: String,

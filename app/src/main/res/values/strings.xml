@@ -213,6 +213,11 @@
     <string name="clean_inline_help">Suggerimento: se hai la stessa foto in due cartelle diverse, dopo Censisci appariranno come due elementi. Toccando Analizza l’app confronta il contenuto (hash SHA-256) e li raggruppa.</string>
     <string name="clean_inline_help_v2">I file del dispositivo non vengono cancellati: il Cestino toglie solo le voci dal Catalogo. Solo le copie gestite dall’app possono sparire del tutto con «Svuota Cestino».</string>
     <string name="clean_section_selected">Elementi selezionati</string>
+    <string name="clean_section_scraps">Possibili scarti</string>
+    <string name="clean_scraps_intro">Proposte automatiche (nome tipico di scarto o file molto piccolo). Controlla e scegli cosa mandare nel Cestino: niente viene cancellato da solo.</string>
+    <string name="clean_scraps_empty">Nessun possibile scarto trovato con i criteri attuali.</string>
+    <string name="clean_trash_scraps">Elimina scarti selezionati</string>
+    <string name="clean_confirm_scraps_body">Sposterai nel Cestino %1$d possibile/i scarto/i. Il file del dispositivo non viene cancellato di default. Potrai ripristinare da Utility → Ripristina → Cestino.</string>
     <string name="clean_section_duplicates">Duplicati</string>
     <string name="clean_selected_summary">Hai selezionato %1$d elemento/i in Aggiorna (riquadro ✓). Puoi spostarli nel Cestino; i file del dispositivo restano. Recupero: Utility → Ripristina.</string>
     <string name="clean_selected_empty_hint">Nessun elemento con ✓. In Aggiorna tocca il riquadro fino a ✓, poi apri di nuovo Pulisci.</string>

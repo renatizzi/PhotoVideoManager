@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.domain.model.DuplicateGroup
+import com.renatizzi.photovideomanager.domain.model.ScrapCandidate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,6 +16,10 @@ data class CleanUiState(
     /** Id selezionati (✓) portati da Aggiorna — BL-12. */
     val selectedIds: Set<String> = emptySet(),
     val groups: List<DuplicateGroup> = emptyList(),
+    /** BL-01: possibili scarti proposti. */
+    val scraps: List<ScrapCandidate> = emptyList(),
+    val scrapSelectedIds: Set<String> = emptySet(),
+    val scrapsLoaded: Boolean = false,
     val analyzing: Boolean = false,
     val busy: Boolean = false,
     val copiesScanned: Int = 0,
@@ -23,9 +28,11 @@ data class CleanUiState(
     val hasAnalyzed: Boolean = false,
     val pendingTrashGroup: DuplicateGroup? = null,
     val pendingTrashSelected: Boolean = false,
+    val pendingTrashScraps: Boolean = false,
     val message: String? = null,
 ) {
     val selectedCount: Int get() = selectedIds.size
+    val scrapSelectedCount: Int get() = scrapSelectedIds.size
 }
 
 class CleanViewModel(
@@ -34,9 +41,111 @@ class CleanViewModel(
     private val _state = MutableStateFlow(CleanUiState())
     val state: StateFlow<CleanUiState> = _state.asStateFlow()
 
+    init {
+        refreshScraps()
+    }
+
     /** Chiamato all’ingresso in Pulisci con i ✓ di Aggiorna. */
     fun setSelectedFromAggiorna(ids: Set<String>) {
         _state.update { it.copy(selectedIds = ids, pendingTrashSelected = false) }
+        refreshScraps()
+    }
+
+    fun refreshScraps() {
+        viewModelScope.launch {
+            runCatching { catalogFacade.listPossibleScraps() }
+                .onSuccess { list ->
+                    _state.update { current ->
+                        val still = current.scrapSelectedIds.filter { id ->
+                            list.any { it.mediaItem.id == id }
+                        }.toSet()
+                        current.copy(
+                            scraps = list,
+                            scrapsLoaded = true,
+                            scrapSelectedIds = still,
+                        )
+                    }
+                }
+                .onFailure {
+                    _state.update { it.copy(scrapsLoaded = true, scraps = emptyList()) }
+                }
+        }
+    }
+
+    fun toggleScrap(mediaItemId: String) {
+        _state.update { current ->
+            val next = current.scrapSelectedIds.toMutableSet()
+            if (!next.add(mediaItemId)) next.remove(mediaItemId)
+            current.copy(scrapSelectedIds = next)
+        }
+    }
+
+    fun selectAllScraps(selected: Boolean) {
+        _state.update { current ->
+            current.copy(
+                scrapSelectedIds = if (selected) {
+                    current.scraps.map { it.mediaItem.id }.toSet()
+                } else {
+                    emptySet()
+                },
+            )
+        }
+    }
+
+    fun requestTrashScraps() {
+        if (_state.value.scrapSelectedIds.isEmpty()) return
+        _state.update {
+            it.copy(
+                pendingTrashScraps = true,
+                pendingTrashSelected = false,
+                pendingTrashGroup = null,
+            )
+        }
+    }
+
+    fun dismissTrashScraps() {
+        _state.update { it.copy(pendingTrashScraps = false) }
+    }
+
+    fun confirmTrashScraps(deleteSourceFiles: Boolean = false) {
+        val ids = _state.value.scrapSelectedIds.toList()
+        if (ids.isEmpty()) {
+            _state.update { it.copy(pendingTrashScraps = false) }
+            return
+        }
+        viewModelScope.launch {
+            _state.update {
+                it.copy(busy = true, pendingTrashScraps = false, message = null)
+            }
+            var ok = 0
+            var fail = 0
+            for (id in ids) {
+                runCatching {
+                    catalogFacade.trashMediaItem(
+                        mediaItemId = id,
+                        deleteSourceFiles = deleteSourceFiles,
+                    )
+                }
+                    .onSuccess { ok++ }
+                    .onFailure { fail++ }
+            }
+            val scraps = runCatching { catalogFacade.listPossibleScraps() }.getOrDefault(emptyList())
+            _state.update {
+                it.copy(
+                    busy = false,
+                    scraps = scraps,
+                    scrapSelectedIds = emptySet(),
+                    message = when {
+                        ok > 0 && fail == 0 ->
+                            "Scarti nel Cestino: $ok. Recupero: Utility → Ripristina."
+                        ok > 0 ->
+                            "Scarti nel Cestino: $ok · non riusciti: $fail."
+                        else ->
+                            "Eliminazione scarti non riuscita"
+                    },
+                )
+            }
+        }
     }
 
     fun analyze() {
@@ -69,7 +178,13 @@ class CleanViewModel(
 
     fun requestTrashSelected() {
         if (_state.value.selectedIds.isEmpty()) return
-        _state.update { it.copy(pendingTrashSelected = true, pendingTrashGroup = null) }
+        _state.update {
+            it.copy(
+                pendingTrashSelected = true,
+                pendingTrashGroup = null,
+                pendingTrashScraps = false,
+            )
+        }
     }
 
     fun dismissTrashSelected() {
@@ -98,10 +213,12 @@ class CleanViewModel(
                     .onSuccess { ok++ }
                     .onFailure { fail++ }
             }
+            val scraps = runCatching { catalogFacade.listPossibleScraps() }.getOrDefault(emptyList())
             _state.update {
                 it.copy(
                     busy = false,
                     selectedIds = emptySet(),
+                    scraps = scraps,
                     message = when {
                         ok > 0 && fail == 0 ->
                             "Spostati nel Cestino: $ok. Recupero: Utility → Ripristina."
@@ -117,7 +234,11 @@ class CleanViewModel(
 
     fun requestTrashExtras(group: DuplicateGroup) {
         _state.update {
-            it.copy(pendingTrashGroup = group, pendingTrashSelected = false)
+            it.copy(
+                pendingTrashGroup = group,
+                pendingTrashSelected = false,
+                pendingTrashScraps = false,
+            )
         }
     }
 
@@ -140,6 +261,7 @@ class CleanViewModel(
                 )
             }.onSuccess { result ->
                 val refreshed = catalogFacade.analyzeExactDuplicates()
+                val scraps = runCatching { catalogFacade.listPossibleScraps() }.getOrDefault(emptyList())
                 _state.update {
                     it.copy(
                         busy = false,
@@ -148,6 +270,7 @@ class CleanViewModel(
                         hashesComputed = refreshed.hashesComputed,
                         hashesFailed = refreshed.hashesFailed,
                         hasAnalyzed = true,
+                        scraps = scraps,
                         message = result.message
                             ?: "Duplicati nel Cestino. Recupero: Utility → Ripristina.",
                     )

@@ -29,3 +29,10 @@ data class DedupAnalysisResult(
     val duplicateVideoExtras: Long,
     val message: String? = null,
 )
+
+/** BL-01: candidato «Possibile scarto» proposto in Pulisci (conferma utente → Cestino). */
+data class ScrapCandidate(
+    val mediaItem: MediaItem,
+    val previewCopy: MediaCopy?,
+    val reason: String,
+)

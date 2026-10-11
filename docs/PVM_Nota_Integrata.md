@@ -333,11 +333,37 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
 ## 7.1 FASE CORRENTE: verifica BL-14 KPI Home + backlog
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)**.
-STATO ATTUALE (11/10/2026): **0.16.16-preview** (versionCode 57): convalida Renato su **0.16.15 OK**; test Importa selezione; analisi BL-16 in §7.1ter (no codice sync); BL-07 Sposta già assente dal menu. **In attesa specifica consolidata BL-16 / BL-01 / BL-11.**
+STATO ATTUALE (11/10/2026): **0.16.17-preview** (versionCode 58): decisioni Renato 1–6 recepite; BL-01 «Possibili scarti» in Pulisci; BL-09 approfondimento §7.1quater. Sync BL-16 ancora in attesa di provider/conflitti.
 Ordine operativo:
-1. **P1** — **BL-16** → ChatGPT consolida requisiti (§7.1ter); **non sviluppare sync** finché non consolidata.
-2. **P2** — BL-01 / BL-11 (criteri); BL-07 (proposta: non aggiungere Sposta); BL-09 / BL-13 / BL-02.
+1. **P1** — BL-16: decisione «solo schede» OK; restano provider + conflitti (§7.1ter) prima del codice.
+2. **P2** — BL-09 resta su «+» (A); ombre Home stile BoxManager più avanti (BL-02); BL-11 restano solo duplicati esatti.
 3. **Componi** — non riprendere finché non chiusa specifica M11 vs landing congelata.
+
+### 7.1quater Decisioni Renato 11/10/2026 (questionario)
+
+| # | Tema | Decisione | Note |
+|---|---|---|---|
+| 1 | BL-16 Sync | **A** — solo schede Catalogo (metadati), non i file | Provider e conflitti ancora da chiudere |
+| 2 | BL-07 Sposta | **A** — non aggiungere | Chiuso |
+| 3 | BL-01 Scarti | **A** — sezione «Possibili scarti» in Pulisci | **SVILUPPO 0.16.17** |
+| 4 | BL-11 Simili | **A** — restano solo duplicati esatti | Non ora |
+| 5 | BL-02 Ombre | **A** — lasciare ora; poi stile BoxManager | Non ora |
+| 6 | BL-09 Rete | **A** — restare sul «+»; approfondimento subito | Vedi sotto |
+
+### 7.1quinquies Approfondimento BL-09 — trovare NAS / tablet in rete (senza attivarlo ora)
+
+**Decisione:** restiamo sul **+** (tu scegli la cartella). Qui l’analisi per quando vorrai la ricerca in rete.
+
+**Problema in parole semplici:** Android non dà un elenco ufficiale «tutti i NAS di casa». Ogni produttore (Synology, QNAP, app Samba Documents, …) espone le cartelle in modo diverso. L’app può solo **proporre** ciò che il sistema o altre app espongono, e tu autorizzi con il selettore cartelle (come oggi).
+
+| Opzione futura | Cosa fa | Pro | Contro |
+|---|---|---|---|
+| **R1 — Consigliata quando si attiverà** | Pulsante «Cerca in rete» che apre il selettore Android già filtrato / con scorciatoie verso provider di rete installati (Samba Documents, file manager del NAS). Tu confermi la cartella. | Semplice; niente scansione aggressiva della Wi‑Fi; rispetto privacy/permessi | Dipende da app/provider installati sul tablet |
+| **R2** | Scansione attiva della LAN (porta SMB, elenco host) dentro MediaManager | Trova più dispositivi anche senza app terze | Complessa, fragile (firewall, versioni SMB), permessi di rete, rischio di sembrare “invasiva”; manutenzione alta |
+
+**Consiglio tecnico:** quando vorrai la funzione, partire da **R1** (aiuto a scegliere, non scanner di rete). **R2** solo se R1 non basta dopo prove reali a casa tua.
+
+**Cosa non fare:** sync automatica, import silenzioso da ogni disco trovato, password NAS salvate senza AuthPort consolidato.
 
 ### 7.1bis Checkpoint urgente — Catalogo unico utente vs dispositivi (11/10/2026)
 
@@ -367,7 +393,9 @@ Ordine operativo:
 | Perimetro v1 sync (proposta) | Solo metadati PERSONAL; niente FAMIGLIA; niente cancellazione remota automatica degli originali. |
 | Dipendenze macro | M03 (modello), M04 (storage), M13 (identità se FAMILY), M15 (backup), M17 (privacy). |
 
-**Decisioni richieste prima dello sviluppo:** provider, cifratura, modello conflitti, se i file Importa entrano nel sync, rapporto con Backup.
+**Decisione Renato 11/10/2026:** sincronizzare **solo le schede** (opzione A), non i file delle copie Importa.
+
+**Ancora da chiudere prima dello sviluppo:** provider (es. Drive personale), cifratura sì/no, modello conflitti, rapporto con Backup.
 
 Documenti di sessione: `docs/TERMINOLOGIA_UI.md`; prompt di continuità `docs/PROMPT_CONTINUITA_AGENTE.md`.
 Nota: Le dipendenze riportate per ciascuna macro-attività della Roadmap devono indicare esclusivamente le dipendenze dirette da macro-attività precedenti, ossia quelle il cui output costituisce un input necessario alla macro-attività corrente. Le dipendenze transitive non devono essere ripetute.
@@ -382,22 +410,22 @@ Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consoli
 
 | ID | Area | Nota | Origine |
 |---|---|---|---|
-| BL-01 | **Pulisci** (Organizza → Aggiorna) | Oltre ai duplicati esatti, Pulisci dovrà poter eliminare anche **file indesiderati** già importati/censiti che non sono foto/video utili (es. file con estensione anomala tipo `.12.jpg` non riconosciuti correttamente come foto, scarti, allegati spurî). Definire criteri di riconoscimento, conferma utente e rapporto con Cestino. **Non include** la cancellazione del file fisico in sorgente (→ BL-15). | Renato 09/10/2026 |
-| BL-02 | Estetica Home | Affinare spessore ombre dei riquadri Accesso rapido / ricerca (layout già congelato). | Renato 09/10/2026 |
+| BL-01 | **Pulisci — possibili scarti** | **Decisione A + SVILUPPO 0.16.17:** sezione in Pulisci; criteri v1 = nome tipico di scarto (thumbs/albumart/folder…) o file &lt; 2 KB; conferma → Cestino; default non tocca il file del dispositivo (BL-15). | Renato 09–11/10/2026 |
+| BL-02 | Estetica Home | **Decisione A:** lasciare ora; in seguito ombre stile BoxManager (senza riaprire layout). | Renato 09–11/10/2026 |
 | BL-03 | **Acquisisci — selezione fonti a 3 stati** | **OK** prova Renato 0.16.15. Acquisisci: riquadro **vuoto ↔ X** (✓ solo con Tutti); Aggiorna resta vuoto→✓→X; X = Elimina→Cestino; niente cestino separato. | Renato 09–11/10/2026 |
 | BL-04 | **Eliminazione multi-selezione** | **OK** 0.16.15: deselezione multi in Importa; deselezionati scartati dal Catalogo; conteggio «nuovi selezionati». | Renato 09–11/10/2026 |
 | BL-05 | **Acquisisci — nascondere «Spazio interno app»** | ~~Pleonastica in elenco fonti~~ — *fatto 0.16.0* (già filtrata in Acquisisci; nascosta anche in CONFIGURA fonti). | Renato 09/10/2026 |
 | BL-06 | **Aggiorna — menu contestuale «Rinomina»** | ~~Aggiungere Rinomina~~ — *fatto 0.16.0* (insieme a Elimina→Cestino e Copia su dispositivo). | Renato 09/10/2026 |
-| BL-07 | **Aggiorna — «Sposta» nel menu contestuale** | **Proposta Cursor (11/10/2026):** Sposta **non è nel menu** (solo Modifica / Rinomina / Copia su dispositivo; Elimina via X). **Non aggiungere** finché non c’è specifica su spostamento copia fisica. Da chiudere in specifica. | Renato 09/10/2026 |
+| BL-07 | **Aggiorna — «Sposta» nel menu contestuale** | **CHIUSA (decisione A 11/10/2026):** non aggiungere Sposta. | Renato 09–11/10/2026 |
 | BL-08 | **Copia da Catalogo → dispositivo** | ~~Export esplicito SAF CreateDocument~~ — *fatto 0.16.0* (menu Aggiorna «Copia su dispositivo»; preferisce copia spazio app). Sposta resta BL-07. | Renato 09/10/2026 |
-| BL-09 | **Scansione rete / tablet / SSD router** | Oggi solo cartelle aggiunte a mano (+). Valutare individuazione dispositivi Wi‑Fi, tablet, PC e dischi sul router (es. SMB/NAS) senza inventare sync automatica. | Renato 10/10/2026 |
+| BL-09 | **Scansione rete / tablet / SSD router** | **Decisione A:** restare sul «+». Approfondimento §7.1quinquies (quando si farà: **R1** selettore aiutato, non scan LAN). | Renato 10–11/10/2026 |
 | BL-10 | **Fonti apparire senza scelta utente** | **OK** (diagnosi + dedupe SAF 0.16.10; prove 0.16.15). Fonti solo da «+»; residui togliibili con X. | Renato 10–11/10/2026 |
-| BL-11 | **Pulisci — criteri duplicati avanzati (tipo Krokiet)** | Oltre ai duplicati esatti (hash), consentire eliminazione massiva scegliendo criteri (es. stesso contenuto, immagini simili con soglia, ecc. — riferimento ispirativo Krokiet/Czkawka). Serve specifica: quali criteri in v1, UI selezione criteri, conferme, rapporto con Cestino. **Non sviluppare ora.** | Renato 11/10/2026 |
+| BL-11 | **Pulisci — criteri duplicati avanzati (tipo Krokiet)** | **Decisione A 11/10/2026:** restano solo duplicati esatti. Simili = versione successiva. | Renato 11/10/2026 |
 | BL-12 | **Pulisci — doppia funzione (selezionati + duplicati)** | Convalidato 11/10/2026. **0.16.6–0.16.7**: (1) ✓ da Aggiorna → Pulisci; (2) Analizza duplicati. Fix navigazione ✓ in 0.16.7. Prova Renato OK su selezione. | Renato 11/10/2026 |
 | BL-13 | **Home — revisione KPI** | Tenere per ora il modello A (originali=dispositivi · di cui in Catalogo=Catalogo). **In seguito**, con feedback concreto sul *peso del gap* in uso reale, valutare revisione/sostituzione dei KPI Home (senza obbligo di mantenere il gap). Non fare ora. | Renato 11/10/2026 |
 | BL-14 | **Home — allineare KPI al modello A** | **0.16.8–0.16.9**: di cui in Catalogo = Aggiorna; originali = fonti ACTIVE (no Cestino app) e ≥ Catalogo; ingresso = **CONFERMA**. **OK** prova Renato 11/10/2026. | Renato 11/10/2026 |
 | BL-15 | **Pulisci — opzione elimina originali in sorgente + anti re-import** | **OK** prove 0.16.11–0.16.15 (punti 5–9). Checkbox sorgente; esclusioni anti re-import; default solo Catalogo. | Renato 11/10/2026 |
-| BL-16 | **Sync Catalogo personale — evoluzione Archivio Condiviso** | **Priorità alta — ANALISI Cursor in §7.1ter** (11/10/2026). Non sviluppare finché ChatGPT non consolida: provider, cifratura, conflitti, perimetro. | Renato 11/10/2026 |
+| BL-16 | **Sync Catalogo personale — evoluzione Archivio Condiviso** | **Decisione A:** solo schede/metadati. Analisi §7.1ter. **Manca ancora:** provider, cifratura, conflitti, Backup. No codice sync. | Renato 11/10/2026 |
 
 Fine documento
 
