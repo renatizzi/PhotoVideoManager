@@ -8,10 +8,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Contratto KPI Home modello A (BL-14):
- * - originali = file sui dispositivi/fonti
- * - di cui in Catalogo = elementi ACTIVE in Aggiorna
- * - TRASHED sulle fonti resta negli originali (file fisico intatto)
+ * Contratto KPI Home modello A (BL-14 / 0.16.9):
+ * - originali ≥ di cui in Catalogo
+ * - Cestino app (TRASHED) non gonfia gli originali
+ * - caso 9 fonti + 1 solo spazio app → originali = 10 = Catalogo
  */
 class CatalogCountSemanticsTest {
     @Test
@@ -22,22 +22,29 @@ class CatalogCountSemanticsTest {
     }
 
     @Test
-    fun dashboardSnapshot_separatesDeviceOriginalsFromCatalog() {
+    fun dashboardSnapshot_originaliNeverBelowCatalog() {
+        // Simula max(device=9, catalog=10) già applicato in CatalogFacade.
         val snap = DashboardSnapshot(
-            photoCount = 466L,
-            videoCount = 10L,
-            catalogPhotoCount = 400L,
-            catalogVideoCount = 8L,
+            photoCount = 10L,
+            videoCount = 2L,
+            catalogPhotoCount = 10L,
+            catalogVideoCount = 2L,
             acquiredPhotoCount = 0L,
             acquiredVideoCount = 0L,
             personalUsedBytes = 0L,
             lastUpdatedEpochMs = null,
             localAvailability = Availability.AVAILABLE,
         )
-        // Gap: originali ≥ Catalogo; Importa non definisce «in Catalogo».
         assertTrue(snap.photoCount >= snap.catalogPhotoCount)
-        assertTrue(snap.videoCount >= snap.catalogVideoCount)
+        assertEquals(10L, snap.photoCount)
+        assertEquals(10L, snap.catalogPhotoCount)
         assertEquals(0L, snap.acquiredPhotoCount)
-        assertEquals(400L, snap.catalogPhotoCount)
+    }
+
+    @Test
+    fun maxDeviceAndCatalog_matchesReportedCase() {
+        val devicePhotos = 9L
+        val catalogPhotos = 10L
+        assertEquals(10L, maxOf(devicePhotos, catalogPhotos))
     }
 }

@@ -1,13 +1,12 @@
 package com.renatizzi.photovideomanager.domain.model
 
 /**
- * Snapshot KPI per la dashboard Home (modello A — BL-14).
+ * Snapshot KPI per la dashboard Home (modello A — BL-14 / 0.16.9).
  *
- * - [photoCount] / [videoCount] = **originali sui dispositivi/fonti**
- *   (copie non-personali conosciute, ACTIVE o TRASHED: il file fisico resta).
- * - [catalogPhotoCount] / [catalogVideoCount] = **di cui in Catalogo**
- *   (MediaItem con almeno una copia ACTIVE = elenco Aggiorna).
- * - Entra in Catalogo con **CONFERMA** (censimento), non con Importa.
+ * - [photoCount] / [videoCount] = **originali** (≥ Catalogo): fonti dispositivo ACTIVE,
+ *   oppure elementi già in Catalogo (es. solo copia spazio app). **Cestino app escluso.**
+ * - [catalogPhotoCount] / [catalogVideoCount] = **di cui in Catalogo** (ACTIVE = Aggiorna).
+ * - Entra in Catalogo con **CONFERMA**, non con Importa.
  * - [acquiredPhotoCount] = copie nello spazio app dopo **Importa** (riepilogo Acquisisci).
  */
 data class DashboardSnapshot(

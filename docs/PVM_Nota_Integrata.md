@@ -152,11 +152,11 @@ Contiene:
 - **Ricerca nel Catalogo** — motore unico, **un solo riquadro**, valido per foto/video e per album/raccolte; lo stesso motore è riusabile in tutte le pagine dove è prevista la ricerca;
 - **Accesso rapido** (congelato v5.3): **Acquisisci**, **Aggiorna**, **Crea**, **Edita**, **Backup**, **Ripristina**. Griglia 2×3 a tessere che riempiono lo spazio restante del viewport. Non duplica le macro già presenti in Bottom Bar. Non include Archivio Condiviso né scorciatoie a macro Bottom Bar.
 
-**Semantica KPI Home (requisito condiviso — modello A, confermato Renato 11/10/2026; implementato 0.16.8 — BL-14):**
-- **Foto/Video originali** = file conosciuti **sui dispositivi/fonti** (copie non-personali ACTIVE o TRASHED: il file fisico resta anche se tolto dal Catalogo);
+**Semantica KPI Home (requisito condiviso — modello A; BL-14 in 0.16.8, ritocco Renato 0.16.9):**
+- **Foto/Video originali** = file conosciuti sulle **fonti dispositivo** (copie non-personali **ACTIVE**), e comunque **≥ Catalogo** (se un elemento è solo nello spazio app resta contato). **Il Cestino app non conta** (non è la cartella Cestino del telefono).
 - **di cui in Catalogo** = elementi con almeno una copia **ACTIVE** (= elenco **Aggiorna**);
-- **Momento di ingresso in Catalogo:** **CONFERMA** (censimento), non Importa. Importa crea la copia nello spazio gestito dall’app.
-- Gap tipico: dopo Elimina→Cestino, originali restano, «di cui in Catalogo» scende. Revisione futura dei KPI → **BL-13**.
+- **Momento di ingresso in Catalogo:** **CONFERMA**, non Importa.
+- Con ingresso alla CONFERMA e Cestino escluso, dopo un censimento completo i due numeri tendono a coincidere; un gap utile richiederebbe censimento senza catalogazione immediata (valutare in **BL-13**).
 
 La navigazione mantiene la distinzione tra Home, macrofunzioni e CONFIGURA. Home **senza scrolling** sul viewport tipico.
 
@@ -333,9 +333,9 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
 ## 7.1 FASE CORRENTE: verifica BL-14 KPI Home + backlog
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)**.
-STATO ATTUALE (11/10/2026): **0.16.8-preview** (versionCode 49): **BL-14** KPI Home modello A — originali=dispositivi, di cui in Catalogo=Catalogo (ingresso con CONFERMA). **IN VERIFICA** telefono. BL-13 resta per revisione futura con feedback sul gap.
+STATO ATTUALE (11/10/2026): **0.16.9-preview** (versionCode 50): ritocco BL-14 — Cestino app escluso dagli originali; originali ≥ Catalogo (fix caso 9 vs 10). **IN VERIFICA**. BL-13 invariato.
 Ordine operativo:
-1. **P0** — prova telefono 0.16.8 (Home: dopo CONFERMA «di cui in Catalogo» ≈ Aggiorna; dopo Cestino gap originali > Catalogo).
+1. **P0** — prova telefono 0.16.9 (Home foto: originali e di cui in Catalogo = 10 nello scenario segnalato).
 2. **P1** — BL-10 / BL-04.
 3. **P2** — BL-11; BL-13 (revisione KPI se feedback); BL-07 / BL-09 / BL-01 / BL-02.
 4. **Componi** — non riprendere finché non chiusa specifica M11 vs landing congelata.
@@ -365,7 +365,7 @@ Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consoli
 | BL-11 | **Pulisci — criteri duplicati avanzati (tipo Krokiet)** | Oltre ai duplicati esatti (hash), consentire eliminazione massiva scegliendo criteri (es. stesso contenuto, immagini simili con soglia, ecc. — riferimento ispirativo Krokiet/Czkawka). Serve specifica: quali criteri in v1, UI selezione criteri, conferme, rapporto con Cestino. **Non sviluppare ora.** | Renato 11/10/2026 |
 | BL-12 | **Pulisci — doppia funzione (selezionati + duplicati)** | Convalidato 11/10/2026. **0.16.6–0.16.7**: (1) ✓ da Aggiorna → Pulisci; (2) Analizza duplicati. Fix navigazione ✓ in 0.16.7. Prova Renato OK su selezione. | Renato 11/10/2026 |
 | BL-13 | **Home — revisione KPI** | Tenere per ora il modello A (originali=dispositivi · di cui in Catalogo=Catalogo). **In seguito**, con feedback concreto sul *peso del gap* in uso reale, valutare revisione/sostituzione dei KPI Home (senza obbligo di mantenere il gap). Non fare ora. | Renato 11/10/2026 |
-| BL-14 | **Home — allineare KPI al modello A** | **0.16.8**: originali = copie non-personali ACTIVE\|TRASHED; di cui in Catalogo = MediaItem ACTIVE (Aggiorna); ingresso Catalogo = **CONFERMA**. Layout Home invariato. **IN VERIFICA**. | Renato 11/10/2026 |
+| BL-14 | **Home — allineare KPI al modello A** | **0.16.8–0.16.9**: di cui in Catalogo = Aggiorna; originali = fonti ACTIVE (no Cestino app) e ≥ Catalogo; ingresso = **CONFERMA**. **IN VERIFICA** 0.16.9. | Renato 11/10/2026 |
 
 Fine documento
 

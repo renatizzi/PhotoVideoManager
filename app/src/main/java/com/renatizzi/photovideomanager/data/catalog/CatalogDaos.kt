@@ -67,16 +67,16 @@ interface MediaItemDao {
 
     /**
      * File originali conosciuti **sui dispositivi/fonti** (non spazio app):
-     * copie con location ≠ personale e stato ACTIVE o TRASHED
-     * (TRASHED = tolto dal Catalogo ma file fisico ancora lì).
+     * MediaItem distinti con almeno una copia ACTIVE su location ≠ personale.
+     * Il Cestino app (TRASHED) **non** conta — non è la cartella Cestino del telefono.
      */
     @Query(
         """
-        SELECT COUNT(*) FROM media_copies mc
-        INNER JOIN media_items mi ON mi.id = mc.mediaItemId
+        SELECT COUNT(DISTINCT mi.id) FROM media_items mi
+        INNER JOIN media_copies mc ON mc.mediaItemId = mi.id
         WHERE mi.kind = :kind
           AND mc.storageLocationId != :personalLocationId
-          AND mc.state IN ('ACTIVE', 'TRASHED')
+          AND mc.state = 'ACTIVE'
         """,
     )
     suspend fun countDeviceOriginalsByKind(kind: String, personalLocationId: String): Long

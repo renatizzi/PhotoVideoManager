@@ -8,7 +8,7 @@ Stile comunicativo: semplice e chiaro, come in BoxManager.
 | Usa sempre | Non usare (evitare) | Significato |
 |---|---|---|
 | **Catalogo** | Spazio app, spazio interno, archivio personale app, file interno | L’elenco gestito dall’app: foto/video conosciuti e organizzabili. Non è una cartella del telefono. |
-| **File del dispositivo** / **originali** (KPI Home) | File interno, «originali» come sinonimo di Catalogo | Il file fisico sulle fonti (telefono, Drive, cartelle…). In Home: **Foto/Video originali** = sui dispositivi; **di cui in Catalogo** = quanti sono nel Catalogo (BL-14). |
+| **File del dispositivo** / **originali** (KPI Home) | File interno, «originali» come sinonimo di Catalogo; Cestino app contati come originali | File fisico sulle fonti. KPI: originali ≥ Catalogo; **Cestino app escluso** (≠ cartella Cestino del telefono). |
 | **Cestino** | Soft-delete, trash | Elementi tolti dal Catalogo; si possono ripristinare. |
 | **Dispositivo** | Device, sorgente tecnica | Telefono, tablet, PC, Drive, disco di rete… come li vede l’utente. |
 | **Cartella / Fonte** | StorageLocation, albero SAF | Una cartella o archivio aggiunto in Acquisisci. |

@@ -36,13 +36,13 @@ class CatalogFacade(
     suspend fun mediaItemCount(): Long = sourceRegistry.mediaItemCount()
 
     /**
-     * KPI Dashboard — modello A (BL-14):
-     * - `photoCount` / `videoCount` = file **sui dispositivi/fonti** (copie non-personali ACTIVE|TRASHED).
+     * KPI Dashboard — modello A (BL-14, ritocco 0.16.9):
+     * - `photoCount` / `videoCount` = originali conosciuti (≥ Catalogo): fonti dispositivo ACTIVE
+     *   **oppure** elementi già in Catalogo (copre il caso «solo copia spazio app»).
+     *   Il Cestino **app** (TRASHED) non conta — non è la cartella Cestino del telefono.
      * - `catalogPhotoCount` / `catalogVideoCount` = elementi **in Catalogo** (ACTIVE = Aggiorna).
-     *   Un file entra in Catalogo con **CONFERMA** (censimento), non con Importa.
-     * - `acquired*Count` / `acquired*Bytes` = copie nello spazio app (dopo IMPORTA; riepilogo Acquisisci).
-     * - `photoUsedBytes` / `videoUsedBytes` = spazio elementi in Catalogo (copia preferita).
-     * - `personalUsedBytes` = byte su disco nello spazio app.
+     *   Ingresso in Catalogo = **CONFERMA**, non Importa.
+     * - `acquired*` = copie nello spazio app (dopo IMPORTA).
      */
     suspend fun dashboardSnapshot(): DashboardSnapshot {
         bootstrapPersonalArchiveIfNeeded()
@@ -77,11 +77,16 @@ class CatalogFacade(
         val videoCatalogBytes = catalogEntries
             .filter { it.mediaItem.kind == MediaKind.VIDEO }
             .sumOf { it.previewCopy?.byteSize ?: 0L }
+        val devicePhotos = sourceRegistry.countDeviceOriginalsByKind(MediaKind.PHOTO)
+        val deviceVideos = sourceRegistry.countDeviceOriginalsByKind(MediaKind.VIDEO)
+        val catalogPhotos = sourceRegistry.countByKind(MediaKind.PHOTO)
+        val catalogVideos = sourceRegistry.countByKind(MediaKind.VIDEO)
+        // «di cui» ≤ originali: se un elemento è solo nello spazio app, resta negli originali.
         return DashboardSnapshot(
-            photoCount = sourceRegistry.countDeviceOriginalsByKind(MediaKind.PHOTO),
-            videoCount = sourceRegistry.countDeviceOriginalsByKind(MediaKind.VIDEO),
-            catalogPhotoCount = sourceRegistry.countByKind(MediaKind.PHOTO),
-            catalogVideoCount = sourceRegistry.countByKind(MediaKind.VIDEO),
+            photoCount = maxOf(devicePhotos, catalogPhotos),
+            videoCount = maxOf(deviceVideos, catalogVideos),
+            catalogPhotoCount = catalogPhotos,
+            catalogVideoCount = catalogVideos,
             acquiredPhotoCount = acquiredPhotos,
             acquiredVideoCount = acquiredVideos,
             photoUsedBytes = photoCatalogBytes,
