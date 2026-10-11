@@ -349,21 +349,27 @@ Ordine operativo:
 | 4 | BL-11 Simili | **A** — restano solo duplicati esatti | Non ora |
 | 5 | BL-02 Ombre | **A** — lasciare ora; poi stile BoxManager | Non ora |
 | 6 | BL-09 Rete | **A** — restare sul «+»; approfondimento subito | Vedi sotto |
+| 7 | PC in Wi‑Fi | **A** — cartella condivisa sul PC (no cloud obbligatorio); deve restare **facile per utenti poco esperti** | 11/10/2026 sera |
 
-### 7.1quinquies Approfondimento BL-09 — trovare NAS / tablet in rete (senza attivarlo ora)
+### 7.1quinquies Approfondimento BL-09 — PC / NAS in rete (senza cloud obbligatorio)
 
-**Decisione:** restiamo sul **+** (tu scegli la cartella). Qui l’analisi per quando vorrai la ricerca in rete.
+**Decisione Renato (11/10/2026):** acquisire dal **PC in Wi‑Fi** tramite **cartella condivisa** (soluzione A), **senza vincolarsi al cloud**. Requisito: percorso operativo **comprensibile anche a utenti di basso profilo**.
 
-**Problema in parole semplici:** Android non dà un elenco ufficiale «tutti i NAS di casa». Ogni produttore (Synology, QNAP, app Samba Documents, …) espone le cartelle in modo diverso. L’app può solo **proporre** ciò che il sistema o altre app espongono, e tu autorizzi con il selettore cartelle (come oggi).
+**Perché non “magia Wi‑Fi”:** il tablet non apre da solo il disco del PC. Il PC deve **mostrare una cartella** in rete; il tablet la sceglie una volta con **+** (come per il NAS).
 
-| Opzione futura | Cosa fa | Pro | Contro |
+**Modello operativo da progettare (facile):**
+1. **Una tantum sul PC** — condividere *una* cartella foto (es. «Foto famiglia»), con passi minimi e linguaggio semplice (guida in Guida / dialog in Acquisisci).
+2. **Una tantum sul tablet** — stessa Wi‑Fi → in Acquisisci un ingresso chiaro tipo «Da PC o rete» che spiega in 3 righe e apre il selettore cartelle (stesso meccanismo del **+**).
+3. **Uso quotidiano** — CONFERMA / Importa come oggi; PC acceso e in rete solo quando acquisisci da lì.
+
+| Opzione UX in app | Cosa fa | Pro | Contro |
 |---|---|---|---|
-| **R1 — Consigliata quando si attiverà** | Pulsante «Cerca in rete» che apre il selettore Android già filtrato / con scorciatoie verso provider di rete installati (Samba Documents, file manager del NAS). Tu confermi la cartella. | Semplice; niente scansione aggressiva della Wi‑Fi; rispetto privacy/permessi | Dipende da app/provider installati sul tablet |
-| **R2** | Scansione attiva della LAN (porta SMB, elenco host) dentro MediaManager | Trova più dispositivi anche senza app terze | Complessa, fragile (firewall, versioni SMB), permessi di rete, rischio di sembrare “invasiva”; manutenzione alta |
+| **U1 — Consigliata** | Pulsante/voce «Da PC o rete» + **guida passo-passo** (PC poi tablet), poi apre il selettore cartelle. Niente scan LAN. | Adatto a utenti poco esperti; niente terze parti cloud; riusa il **+** già collaudato | Serve ancora una condivisione Windows (o NAS) fatta una volta |
+| **U2** | Solo testo lungo in Guida, senza ingresso dedicato in Acquisisci | Zero UI nuova | Più facile da ignorare; meno “guidato” |
 
-**Consiglio tecnico:** quando vorrai la funzione, partire da **R1** (aiuto a scegliere, non scanner di rete). **R2** solo se R1 non basta dopo prove reali a casa tua.
+**Quando si attiverà l’aiuto in rete (R1 vs R2):** preferire **R1** (aiuto al selettore / provider già presenti), non scanner LAN (**R2**).
 
-**Cosa non fare:** sync automatica, import silenzioso da ogni disco trovato, password NAS salvate senza AuthPort consolidato.
+**Cosa non fare:** obbligo cloud; sync automatica dal PC; salvataggio password di rete senza specifica AuthPort; scansione aggressiva della Wi‑Fi.
 
 ### 7.1bis Checkpoint urgente — Catalogo unico utente vs dispositivi (11/10/2026)
 
@@ -418,7 +424,7 @@ Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consoli
 | BL-06 | **Aggiorna — menu contestuale «Rinomina»** | ~~Aggiungere Rinomina~~ — *fatto 0.16.0* (insieme a Elimina→Cestino e Copia su dispositivo). | Renato 09/10/2026 |
 | BL-07 | **Aggiorna — «Sposta» nel menu contestuale** | **CHIUSA (decisione A 11/10/2026):** non aggiungere Sposta. | Renato 09–11/10/2026 |
 | BL-08 | **Copia da Catalogo → dispositivo** | ~~Export esplicito SAF CreateDocument~~ — *fatto 0.16.0* (menu Aggiorna «Copia su dispositivo»; preferisce copia spazio app). Sposta resta BL-07. | Renato 09/10/2026 |
-| BL-09 | **Scansione rete / tablet / SSD router** | **Decisione A:** restare sul «+». Approfondimento §7.1quinquies (quando si farà: **R1** selettore aiutato, non scan LAN). | Renato 10–11/10/2026 |
+| BL-09 | **PC / NAS in rete (no cloud obbligatorio)** | **Decisione:** cartella condivisa sul PC + **+** / guida «Da PC o rete» (facile per utenti poco esperti). §7.1quinquies. No scan LAN; no cloud obbligatorio. | Renato 10–11/10/2026 |
 | BL-10 | **Fonti apparire senza scelta utente** | **OK** (diagnosi + dedupe SAF 0.16.10; prove 0.16.15). Fonti solo da «+»; residui togliibili con X. | Renato 10–11/10/2026 |
 | BL-11 | **Pulisci — criteri duplicati avanzati (tipo Krokiet)** | **Decisione A 11/10/2026:** restano solo duplicati esatti. Simili = versione successiva. | Renato 11/10/2026 |
 | BL-12 | **Pulisci — doppia funzione (selezionati + duplicati)** | Convalidato 11/10/2026. **0.16.6–0.16.7**: (1) ✓ da Aggiorna → Pulisci; (2) Analizza duplicati. Fix navigazione ✓ in 0.16.7. Prova Renato OK su selezione. | Renato 11/10/2026 |
