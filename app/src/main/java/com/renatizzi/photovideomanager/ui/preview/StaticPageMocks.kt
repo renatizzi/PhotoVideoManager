@@ -120,6 +120,7 @@ fun AcquisisciStaticScreen(
     var removeTarget by remember { mutableStateOf<SourceSummary?>(null) }
     var renameDeviceOpen by remember { mutableStateOf(false) }
     var pcGuideOpen by remember { mutableStateOf(false) }
+    var pcHelpOpen by remember { mutableStateOf(false) }
     var renameText by remember { mutableStateOf("") }
 
     fun cycleSourceSelection(source: SourceSummary) {
@@ -277,7 +278,10 @@ fun AcquisisciStaticScreen(
             onDismissRequest = { pcGuideOpen = false },
             title = { Text(stringResource(R.string.acquisisci_da_pc_title)) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
                     Text(stringResource(R.string.acquisisci_da_pc_step1))
                     Text(stringResource(R.string.acquisisci_da_pc_step2))
                     Text(stringResource(R.string.acquisisci_da_pc_step3))
@@ -286,6 +290,14 @@ fun AcquisisciStaticScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     )
+                    TextButton(
+                        onClick = {
+                            pcGuideOpen = false
+                            pcHelpOpen = true
+                        },
+                    ) {
+                        Text(stringResource(R.string.acquisisci_da_pc_help_link))
+                    }
                 }
             },
             confirmButton = {
@@ -301,6 +313,38 @@ fun AcquisisciStaticScreen(
             dismissButton = {
                 TextButton(onClick = { pcGuideOpen = false }) {
                     Text(stringResource(R.string.importa_annulla))
+                }
+            },
+        )
+    }
+    if (pcHelpOpen) {
+        AlertDialog(
+            onDismissRequest = { pcHelpOpen = false },
+            title = { Text(stringResource(R.string.acquisisci_da_pc_help_title)) },
+            text = {
+                Text(
+                    text = stringResource(R.string.acquisisci_da_pc_help_body),
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        pcHelpOpen = false
+                        openTree.launch(null)
+                    },
+                ) {
+                    Text(stringResource(R.string.acquisisci_da_pc_choose))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        pcHelpOpen = false
+                        pcGuideOpen = true
+                    },
+                ) {
+                    Text(stringResource(R.string.acquisisci_da_pc_help_back))
                 }
             },
         )

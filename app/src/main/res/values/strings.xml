@@ -52,10 +52,14 @@
     <string name="acquisisci_da_pc_rete">Da PC o rete</string>
     <string name="acquisisci_da_pc_title">Aggiungere foto dal PC</string>
     <string name="acquisisci_da_pc_step1">1. Sul PC: condividi la cartella delle foto. Tasto destro sulla cartella → Proprietà → Condivisione → Condividi. Usa un nome semplice, es. Foto.</string>
-    <string name="acquisisci_da_pc_step2">2. Metti tablet e PC sulla stessa Wi‑Fi. Il PC resta acceso.</string>
-    <string name="acquisisci_da_pc_step3">3. Tocca «Scegli cartella». Nel selettore apri Disco di rete (o il nome del PC) e scegli quella cartella. Conferma con Usa questa cartella.</string>
-    <string name="acquisisci_da_pc_note">Non serve il cloud. Vale anche per un NAS già in rete. Se non vedi il PC, sul tablet può servire (una tantum) un’app di archiviazione di rete, es. Samba Documents.</string>
+    <string name="acquisisci_da_pc_step2">2. Tablet e PC sulla stessa Wi‑Fi. Il PC resta acceso.</string>
+    <string name="acquisisci_da_pc_step3">3. Tocca «Scegli cartella». Nel selettore apri «Disco di rete» (dove già vedi il NAS) e cerca il PC o la cartella Foto. Conferma con Usa questa cartella.</string>
+    <string name="acquisisci_da_pc_note">MediaManager non elenca da solo i PC: mostra solo ciò che il tablet ha già in Disco di rete. Non serve il cloud.</string>
     <string name="acquisisci_da_pc_choose">Scegli cartella</string>
+    <string name="acquisisci_da_pc_help_link">Non vedo il PC</string>
+    <string name="acquisisci_da_pc_help_title">Se non vedi il PC</string>
+    <string name="acquisisci_da_pc_help_body">Di solito il PC non compare finché non lo aggiungi una volta nell’app di rete del tablet (la stessa che ti mostra «Disco di rete» / il NAS).\n\n1. Esci da MediaManager e apri Gestione file (o Samba Documents / Archiviazione di rete).\n2. Aggiungi un server / PC: indirizzo = nome del PC oppure l’IP (es. 192.168.1.20). Utente e password = quelli Windows.\n3. Controlla che si aprano le cartelle condivise.\n4. Torna qui → Da PC o rete → Scegli cartella → Disco di rete → cartella Foto.\n\nSe il NAS lo vedi e il PC no: sul PC attiva «Condivisione file e stampanti» e, in Windows, «Rilevamento rete».</string>
+    <string name="acquisisci_da_pc_help_back">Torna alla guida</string>
     <string name="acquisisci_rename_device">Dispositivo: %1$s (tocca per rinominare)</string>
     <string name="acquisisci_rename_device_title">Nome dispositivo</string>
     <string name="acquisisci_rename_device_label">Es. Telefono Renato</string>

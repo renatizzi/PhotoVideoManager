@@ -9,11 +9,15 @@ Generato da `strings.xml` + messaggi runtime Kotlin usati in snackbar/stato.
 | Acquisisci | `acquisisci_conferma` | CONFERMA |
 | Acquisisci | `acquisisci_elenco_fonti` | Elenco fonti del Catalogo |
 | Acquisisci | `acquisisci_da_pc_choose` | Scegli cartella |
-| Acquisisci | `acquisisci_da_pc_note` | Non serve il cloud. Vale anche per un NAS già in rete. Se non vedi il PC, sul tablet può servire (una tantum) un’app di archiviazione di rete, es. Samba Documents. |
+| Acquisisci | `acquisisci_da_pc_help_back` | Torna alla guida |
+| Acquisisci | `acquisisci_da_pc_help_body` | (passi: aggiungi PC in Gestione file / Samba, poi Disco di rete) |
+| Acquisisci | `acquisisci_da_pc_help_link` | Non vedo il PC |
+| Acquisisci | `acquisisci_da_pc_help_title` | Se non vedi il PC |
+| Acquisisci | `acquisisci_da_pc_note` | MediaManager non elenca da solo i PC: mostra solo ciò che il tablet ha già in Disco di rete. Non serve il cloud. |
 | Acquisisci | `acquisisci_da_pc_rete` | Da PC o rete |
-| Acquisisci | `acquisisci_da_pc_step1` | 1. Sul PC: condividi la cartella delle foto. Tasto destro sulla cartella → Proprietà → Condivisione → Condividi. Usa un nome semplice, es. Foto. |
-| Acquisisci | `acquisisci_da_pc_step2` | 2. Metti tablet e PC sulla stessa Wi‑Fi. Il PC resta acceso. |
-| Acquisisci | `acquisisci_da_pc_step3` | 3. Tocca «Scegli cartella». Nel selettore apri Disco di rete (o il nome del PC) e scegli quella cartella. Conferma con Usa questa cartella. |
+| Acquisisci | `acquisisci_da_pc_step1` | 1. Sul PC: condividi la cartella delle foto. … |
+| Acquisisci | `acquisisci_da_pc_step2` | 2. Tablet e PC sulla stessa Wi‑Fi. Il PC resta acceso. |
+| Acquisisci | `acquisisci_da_pc_step3` | 3. … apri «Disco di rete» (dove già vedi il NAS) … |
 | Acquisisci | `acquisisci_da_pc_title` | Aggiungere foto dal PC |
 | Acquisisci | `acquisisci_empty_sources` | Nessuna fonte esterna. Tocca + oppure «Da PC o rete». |
 | Acquisisci | `acquisisci_remove_confirm_body` | «%1$s» sparirà dall'elenco fonti. I file del dispositivo restano dove sono. Le voci già nel Catalogo da altre copie restano; non si cancellano file dal telefono. |

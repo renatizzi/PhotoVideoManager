@@ -333,10 +333,10 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
 ## 7.1 FASE CORRENTE: verifica BL-14 KPI Home + backlog
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)**.
-STATO ATTUALE (11/10/2026): **0.16.18-preview** (versionCode 59): BL-09 U1 «Da PC o rete» in Acquisisci (guida + selettore cartelle); no cloud obbligatorio. Sync BL-16 ancora in attesa di provider/conflitti.
+STATO ATTUALE (11/10/2026): **0.16.19-preview** (versionCode 60): BL-09 U1 + aiuto «Non vedo il PC» (PC va aggiunto una tantum in Disco di rete del tablet). Sync BL-16 ancora in attesa di provider/conflitti.
 Ordine operativo:
 1. **P1** — BL-16: decisione «solo schede» OK; restano provider + conflitti (§7.1ter) prima del codice.
-2. **P2** — BL-09 U1 **SVILUPPO 0.16.18**; ombre Home stile BoxManager più avanti (BL-02); BL-11 restano solo duplicati esatti.
+2. **P2** — BL-09 U1 **SVILUPPO 0.16.18–0.16.19** (aiuto se PC assente); ombre Home stile BoxManager più avanti (BL-02); BL-11 restano solo duplicati esatti.
 3. **Componi** — non riprendere finché non chiusa specifica M11 vs landing congelata.
 
 ### 7.1quater Decisioni Renato 11/10/2026 (questionario)
@@ -364,8 +364,8 @@ Ordine operativo:
 
 | Opzione UX in app | Cosa fa | Pro | Contro |
 |---|---|---|---|
-| **U1 — Consigliata** | Pulsante/voce «Da PC o rete» + **guida passo-passo** (PC poi tablet), poi apre il selettore cartelle. Niente scan LAN. | Adatto a utenti poco esperti; niente terze parti cloud; riusa il **+** già collaudato | Serve ancora una condivisione Windows (o NAS) fatta una volta |
-| **U2** | Solo testo lungo in Guida, senza ingresso dedicato in Acquisisci | Zero UI nuova | Più facile da ignorare; meno “guidato” |
+| **U1 — Decisione Renato + SVILUPPO 0.16.18** | Pulsante «Da PC o rete» + dialog 3 passi, poi «Scegli cartella» = stesso OpenDocumentTree del **+**. | Adatto a utenti poco esperti; niente cloud; riusa il **+** | Serve ancora condivisione Windows/NAS una tantum |
+| **U2** | Solo testo in Guida | Zero UI nuova | Non scelta |
 
 **Quando si attiverà l’aiuto in rete (R1 vs R2):** preferire **R1** (aiuto al selettore / provider già presenti), non scanner LAN (**R2**).
 
@@ -424,7 +424,7 @@ Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consoli
 | BL-06 | **Aggiorna — menu contestuale «Rinomina»** | ~~Aggiungere Rinomina~~ — *fatto 0.16.0* (insieme a Elimina→Cestino e Copia su dispositivo). | Renato 09/10/2026 |
 | BL-07 | **Aggiorna — «Sposta» nel menu contestuale** | **CHIUSA (decisione A 11/10/2026):** non aggiungere Sposta. | Renato 09–11/10/2026 |
 | BL-08 | **Copia da Catalogo → dispositivo** | ~~Export esplicito SAF CreateDocument~~ — *fatto 0.16.0* (menu Aggiorna «Copia su dispositivo»; preferisce copia spazio app). Sposta resta BL-07. | Renato 09/10/2026 |
-| BL-09 | **PC / NAS in rete (no cloud obbligatorio)** | **Decisione:** cartella condivisa sul PC + **+** / guida «Da PC o rete» (facile per utenti poco esperti). §7.1quinquies. No scan LAN; no cloud obbligatorio. | Renato 10–11/10/2026 |
+| BL-09 | **PC / NAS in rete (no cloud obbligatorio)** | **U1 0.16.18–0.16.19:** guida + «Non vedo il PC» (PC va aggiunto una tantum in Disco di rete del tablet). No scan LAN; no cloud. | Renato 10–11/10/2026 |
 | BL-10 | **Fonti apparire senza scelta utente** | **OK** (diagnosi + dedupe SAF 0.16.10; prove 0.16.15). Fonti solo da «+»; residui togliibili con X. | Renato 10–11/10/2026 |
 | BL-11 | **Pulisci — criteri duplicati avanzati (tipo Krokiet)** | **Decisione A 11/10/2026:** restano solo duplicati esatti. Simili = versione successiva. | Renato 11/10/2026 |
 | BL-12 | **Pulisci — doppia funzione (selezionati + duplicati)** | Convalidato 11/10/2026. **0.16.6–0.16.7**: (1) ✓ da Aggiorna → Pulisci; (2) Analizza duplicati. Fix navigazione ✓ in 0.16.7. Prova Renato OK su selezione. | Renato 11/10/2026 |
