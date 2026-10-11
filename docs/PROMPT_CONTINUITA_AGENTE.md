@@ -78,7 +78,7 @@ Facade: `CatalogFacade`. Flusso Acquisisci → Importa → Aggiorna.
 ## 3. Stato di avanzamento del progetto (verifica 0.16.2 = KO)
 
 ### 3.1 Cosa funzionava già (HOLD chiuso, convalida Renato su 0.15.x)
-- KPI Dashboard / «di cui in Catalogo» allineati ad Aggiorna
+- KPI Dashboard modello A (BL-14 / 0.16.8): originali = dispositivi; «di cui in Catalogo» = Aggiorna (ingresso con CONFERMA, non Importa)
 - Acquisisci → Importa → navigazione ad Aggiorna; CONTINUA se già in Catalogo
 - Nascondere «Spazio interno app» dall’elenco fonti (BL-05)
 - Pulisci duplicati esatti + Cestino di base

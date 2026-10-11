@@ -77,7 +77,7 @@ class CensusViewModel(
                     current.copy(
                         sources = sources,
                         selection = selection,
-                        catalogCount = snap.photoCount + snap.videoCount,
+                        catalogCount = snap.catalogPhotoCount + snap.catalogVideoCount,
                         acquiredCount = snap.acquiredPhotoCount + snap.acquiredVideoCount,
                         acquiredUsedBytes = snap.acquiredPhotoBytes + snap.acquiredVideoBytes,
                         deviceAlias = deviceAlias,
@@ -188,14 +188,14 @@ class CensusViewModel(
             val snap = runCatching { catalogFacade.dashboardSnapshot() }.getOrNull()
             _state.update {
                 it.copy(
-                    catalogCount = snap?.let { s -> s.photoCount + s.videoCount }
+                    catalogCount = snap?.let { s -> s.catalogPhotoCount + s.catalogVideoCount }
                         ?: catalogFacade.mediaItemCount(),
                     acquiredCount = snap?.let { s -> s.acquiredPhotoCount + s.acquiredVideoCount }
                         ?: it.acquiredCount,
                     acquiredUsedBytes = snap?.let { s -> s.acquiredPhotoBytes + s.acquiredVideoBytes }
                         ?: it.acquiredUsedBytes,
-                    message = "Censimento ok ($totalFound trovati, $totalAdded nuovi). " +
-                        "Premi IMPORTA per registrarli in Catalogo.",
+                    message = "Censimento ok ($totalFound trovati, $totalAdded nuovi in Catalogo). " +
+                        "Premi IMPORTA per copiarli nello spazio gestito dall'app.",
                 )
             }
             onDone(true, ids.toSet())

@@ -152,11 +152,11 @@ Contiene:
 - **Ricerca nel Catalogo** — motore unico, **un solo riquadro**, valido per foto/video e per album/raccolte; lo stesso motore è riusabile in tutte le pagine dove è prevista la ricerca;
 - **Accesso rapido** (congelato v5.3): **Acquisisci**, **Aggiorna**, **Crea**, **Edita**, **Backup**, **Ripristina**. Griglia 2×3 a tessere che riempiono lo spazio restante del viewport. Non duplica le macro già presenti in Bottom Bar. Non include Archivio Condiviso né scorciatoie a macro Bottom Bar.
 
-**Semantica KPI Home (requisito condiviso — modello A, confermato Renato 11/10/2026):**
-- **Foto/Video originali** = file presenti **sui dispositivi/fonti** (telefono, Drive, cartelle aggiunte, …), non il Catalogo;
-- **di cui in Catalogo** = quanti di quelli sono entrati nel **Catalogo** (gestiti in Aggiorna), così l’utente vede il *gap* e può intervenire (filtri Acquisisci/Importa/Pulisci) prima di “portare tutto dentro”.
-
-**Disallineamento attuale (da sanare — BL-14):** l’implementazione mostra come «originali» il conteggio Catalogo/Aggiorna e come «di cui in Catalogo» le sole copie dopo **Importa** (spazio gestito dall’app). La struttura UI Home resta congelata (§5.6); si correggono i *numeri* e le etichette dietro il layout. Eventuale *revisione* (sostituire/semplificare i KPI) solo con feedback sul peso del gap → **BL-13**.
+**Semantica KPI Home (requisito condiviso — modello A, confermato Renato 11/10/2026; implementato 0.16.8 — BL-14):**
+- **Foto/Video originali** = file conosciuti **sui dispositivi/fonti** (copie non-personali ACTIVE o TRASHED: il file fisico resta anche se tolto dal Catalogo);
+- **di cui in Catalogo** = elementi con almeno una copia **ACTIVE** (= elenco **Aggiorna**);
+- **Momento di ingresso in Catalogo:** **CONFERMA** (censimento), non Importa. Importa crea la copia nello spazio gestito dall’app.
+- Gap tipico: dopo Elimina→Cestino, originali restano, «di cui in Catalogo» scende. Revisione futura dei KPI → **BL-13**.
 
 La navigazione mantiene la distinzione tra Home, macrofunzioni e CONFIGURA. Home **senza scrolling** sul viewport tipico.
 
@@ -331,11 +331,11 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Per ogni macro-attività ChatGPT definisce requisiti, vincoli, decisioni progettuali, criteri di accettazione e punti da approfondire. Cursor, prima dello sviluppo, analizza le criticità tecniche indicate, evidenzia eventuali ulteriori criticità rilevanti e propone soluzioni tecniche compatibili con la specifica consolidata. Lo sviluppo inizia solo dopo la chiusura della fase di approfondimento della relativa macro-attività.
 - Come precisato, Cursor non può trasformare autonomamente una proposta tecnica in requisito consolidato.
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
-## 7.1 FASE CORRENTE: verifica 0.16.4/0.16.5 + backlog Pulisci
+## 7.1 FASE CORRENTE: verifica BL-14 KPI Home + backlog
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)**.
-STATO ATTUALE (11/10/2026): Prove UI recenti **OK** (BL-12/selezione). Emerso **disallineamento KPI Home** rispetto al requisito A (§5.1): originali=dispositivi, di cui in Catalogo=Catalogo — oggi i numeri sono invertiti/semantica Importa. **BL-14** = allineare implementazione; **BL-13** = revisione KPI Home solo con feedback sul peso del gap (Renato tiene A per ora).
+STATO ATTUALE (11/10/2026): **0.16.8-preview** (versionCode 49): **BL-14** KPI Home modello A — originali=dispositivi, di cui in Catalogo=Catalogo (ingresso con CONFERMA). **IN VERIFICA** telefono. BL-13 resta per revisione futura con feedback sul gap.
 Ordine operativo:
-1. **P0** — **BL-14** allineamento KPI Home al modello A (senza riaprire layout).
+1. **P0** — prova telefono 0.16.8 (Home: dopo CONFERMA «di cui in Catalogo» ≈ Aggiorna; dopo Cestino gap originali > Catalogo).
 2. **P1** — BL-10 / BL-04.
 3. **P2** — BL-11; BL-13 (revisione KPI se feedback); BL-07 / BL-09 / BL-01 / BL-02.
 4. **Componi** — non riprendere finché non chiusa specifica M11 vs landing congelata.
@@ -365,7 +365,7 @@ Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consoli
 | BL-11 | **Pulisci — criteri duplicati avanzati (tipo Krokiet)** | Oltre ai duplicati esatti (hash), consentire eliminazione massiva scegliendo criteri (es. stesso contenuto, immagini simili con soglia, ecc. — riferimento ispirativo Krokiet/Czkawka). Serve specifica: quali criteri in v1, UI selezione criteri, conferme, rapporto con Cestino. **Non sviluppare ora.** | Renato 11/10/2026 |
 | BL-12 | **Pulisci — doppia funzione (selezionati + duplicati)** | Convalidato 11/10/2026. **0.16.6–0.16.7**: (1) ✓ da Aggiorna → Pulisci; (2) Analizza duplicati. Fix navigazione ✓ in 0.16.7. Prova Renato OK su selezione. | Renato 11/10/2026 |
 | BL-13 | **Home — revisione KPI** | Tenere per ora il modello A (originali=dispositivi · di cui in Catalogo=Catalogo). **In seguito**, con feedback concreto sul *peso del gap* in uso reale, valutare revisione/sostituzione dei KPI Home (senza obbligo di mantenere il gap). Non fare ora. | Renato 11/10/2026 |
-| BL-14 | **Home — allineare KPI al modello A** | Disallineamento Nota/revisione navigazione vs codice: oggi «Foto/Video originali» ≈ conteggio Catalogo/Aggiorna e «di cui in Catalogo» ≈ copie post-Importa. **Requisito:** originali = file sui dispositivi/fonti; di cui in Catalogo = elementi nel Catalogo. Correggere calcolo (e se serve etichette) senza cambiare la struttura layout Home. Chiarire nel fix il momento in cui un file “entra in Catalogo” rispetto a CONFERMA vs Importa. | Renato 11/10/2026 |
+| BL-14 | **Home — allineare KPI al modello A** | **0.16.8**: originali = copie non-personali ACTIVE\|TRASHED; di cui in Catalogo = MediaItem ACTIVE (Aggiorna); ingresso Catalogo = **CONFERMA**. Layout Home invariato. **IN VERIFICA**. | Renato 11/10/2026 |
 
 Fine documento
 

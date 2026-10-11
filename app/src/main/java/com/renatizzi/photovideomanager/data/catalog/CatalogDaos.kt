@@ -65,6 +65,22 @@ interface MediaItemDao {
     )
     suspend fun countByKind(kind: String): Long
 
+    /**
+     * File originali conosciuti **sui dispositivi/fonti** (non spazio app):
+     * copie con location ≠ personale e stato ACTIVE o TRASHED
+     * (TRASHED = tolto dal Catalogo ma file fisico ancora lì).
+     */
+    @Query(
+        """
+        SELECT COUNT(*) FROM media_copies mc
+        INNER JOIN media_items mi ON mi.id = mc.mediaItemId
+        WHERE mi.kind = :kind
+          AND mc.storageLocationId != :personalLocationId
+          AND mc.state IN ('ACTIVE', 'TRASHED')
+        """,
+    )
+    suspend fun countDeviceOriginalsByKind(kind: String, personalLocationId: String): Long
+
     /** MediaItem senza alcuna copia (es. dopo CASCADE su sorgente rimossa). */
     @Query(
         """

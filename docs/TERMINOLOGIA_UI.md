@@ -12,7 +12,7 @@ Stile comunicativo: semplice e chiaro, come in BoxManager.
 | **Cestino** | Soft-delete, trash | Elementi tolti dal Catalogo; si possono ripristinare. |
 | **Dispositivo** | Device, sorgente tecnica | Telefono, tablet, PC, Drive, disco di rete… come li vede l’utente. |
 | **Cartella / Fonte** | StorageLocation, albero SAF | Una cartella o archivio aggiunto in Acquisisci. |
-| **Importa** | Acquisisci copia, sync | Copia nel Catalogo (gli originali restano dove sono). |
+| **Importa** | Acquisisci copia, sync | Copia nello **spazio gestito dall’app** (gli originali restano sulle fonti). L’ingresso in **Catalogo** avviene con **CONFERMA** (censimento). |
 | **Elimina** (dal Catalogo) | Cancella file | Toglie dal Catalogo → Cestino; **non** cancella il file del dispositivo. |
 | **Modifica** | Edit, editing | Modifica di una singola foto/video (funzione in preparazione). |
 | **Ripristina** | Restore | Tornare indietro: dal Cestino e (in seguito) da Backup. |

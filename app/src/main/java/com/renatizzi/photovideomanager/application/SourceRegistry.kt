@@ -216,6 +216,9 @@ class SourceRegistry(
 
     suspend fun countByKind(kind: MediaKind): Long = catalogStore.countMediaItemsByKind(kind)
 
+    suspend fun countDeviceOriginalsByKind(kind: MediaKind): Long =
+        catalogStore.countDeviceOriginalsByKind(kind, PERSONAL_LOCATION_ID)
+
     suspend fun purgeOrphanMediaItems(): Int = catalogStore.purgeOrphanMediaItems()
 
     suspend fun latestMediaUpdatedAtEpochMs(): Long? = catalogStore.latestMediaUpdatedAtEpochMs()

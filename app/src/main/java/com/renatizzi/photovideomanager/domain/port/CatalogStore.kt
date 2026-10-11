@@ -13,6 +13,8 @@ import com.renatizzi.photovideomanager.domain.model.StorageLocation
 interface CatalogStore {
     suspend fun countMediaItems(): Long
     suspend fun countMediaItemsByKind(kind: MediaKind): Long
+    /** Copie originali sui dispositivi/fonti (non spazio app), ACTIVE o TRASHED. */
+    suspend fun countDeviceOriginalsByKind(kind: MediaKind, personalLocationId: String): Long
     /** Elimina MediaItem senza copie residue (orfani post-rimozione sorgente). */
     suspend fun purgeOrphanMediaItems(): Int
     suspend fun latestMediaUpdatedAtEpochMs(): Long?

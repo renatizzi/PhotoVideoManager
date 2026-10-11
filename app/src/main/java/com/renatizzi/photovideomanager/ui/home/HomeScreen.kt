@@ -73,8 +73,8 @@ fun HomeScreen(
     val focusManager = LocalFocusManager.current
     val photos = snapshot?.photoCount?.toString() ?: "0"
     val videos = snapshot?.videoCount?.toString() ?: "0"
-    val acquiredPhotos = (snapshot?.acquiredPhotoCount ?: 0L).toString()
-    val acquiredVideos = (snapshot?.acquiredVideoCount ?: 0L).toString()
+    val catalogPhotos = (snapshot?.catalogPhotoCount ?: 0L).toString()
+    val catalogVideos = (snapshot?.catalogVideoCount ?: 0L).toString()
     val photoSpace = formatBytes(snapshot?.photoUsedBytes ?: 0L)
     val videoSpace = formatBytes(snapshot?.videoUsedBytes ?: 0L)
     val dupPhotos = (snapshot?.duplicatePhotoCount ?: 0L).toString()
@@ -121,7 +121,7 @@ fun HomeScreen(
                 KpiMetric(
                     label = stringResource(R.string.kpi_foto_originali),
                     value = photos,
-                    detail = stringResource(R.string.kpi_di_cui_acquisite, acquiredPhotos),
+                    detail = stringResource(R.string.kpi_di_cui_acquisite, catalogPhotos),
                     labelColor = labelColor,
                     onClick = { onOpenFeature("ricerca") },
                 )
@@ -145,7 +145,7 @@ fun HomeScreen(
                 KpiMetric(
                     label = stringResource(R.string.kpi_video_originali),
                     value = videos,
-                    detail = stringResource(R.string.kpi_di_cui_acquisiti, acquiredVideos),
+                    detail = stringResource(R.string.kpi_di_cui_acquisiti, catalogVideos),
                     labelColor = labelColor,
                     onClick = { onOpenFeature("ricerca") },
                 )
