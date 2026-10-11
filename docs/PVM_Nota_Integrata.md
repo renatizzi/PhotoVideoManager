@@ -333,10 +333,10 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
 ## 7.1 FASE CORRENTE: verifica BL-14 KPI Home + backlog
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)**.
-STATO ATTUALE (12/10/2026): **0.16.19-preview** (versionCode 60). **BL-17:** Catalogo condiviso scelto a monte tramite **wizard** (non presupporre NAS/cloud; target = foto su telefono/tablet/notebook). Se sede = PC, stesso wizard guida la condivisione. Vedi §7.1sexies. In attesa convalida struttura wizard.
+STATO ATTUALE (12/10/2026): **0.16.19-preview** (versionCode 60). **BL-17:** wizard sede Catalogo — **W1–W4 tutti obbligatori in v1** (decisione Renato). Target mobile/notebook in evidenza; cloud e NAS non vanno persi. Prossimo: testi/schermate → sviluppo.
 Ordine operativo:
-1. **P1** — consolidare wizard BL-17 (§7.1sexies) con Renato/ChatGPT; poi specifica + sviluppo.
-2. **P2** — BL-09 resta ramo del wizard «PC», non percorso unico; BL-02/BL-11 non ora.
+1. **P1** — specifica testi + flusso schermate wizard BL-17 (W1–W4); poi sviluppo.
+2. **P2** — BL-09 = contenuto del ramo W2 (PC); BL-02/BL-11 non ora.
 3. **Componi** — non riprendere finché non chiusa specifica M11 vs landing congelata.
 
 ### 7.1quater Decisioni Renato 11/10/2026 (questionario)
@@ -369,13 +369,13 @@ Ordine operativo:
 | **W3 — Google Drive (o simile)** | Chi già usa il cloud foto | Guida a scegliere la cartella Drive con **+** (opt-in, non obbligatorio) |
 | **W4 — Disco di rete / NAS** | Chi ce l’ha già | Guida breve al selettore «Disco di rete» (ramo avanzato, non default) |
 
-**Default consigliato in UI (da convalidare):** evidenziare **W1** o **W2** come tipici del target; W3/W4 secondari («Altre opzioni»).
+**Decisione Renato (12/10/2026):** i **quattro rami W1–W4 sono obbligatori in v1**. Non ridurli a solo telefono/PC: altrimenti si perdono gli utenti che già usano cloud e/o NAS. In UI si possono comunque **evidenziare** W1/W2 come tipici del target basso profilo, ma W3 e W4 restano scelte di primo livello (non nascoste in un menu “avanzato” che nessuno apre).
 
 **Rapporto con C1/C2:** la sede scelta dal wizard = Archivio/Catalogo a monte (C1). Sync schede tra dispositivi (C2 / BL-16) resta evoluzione successiva, non bloccante il wizard v1.
 
-**Fuori percorso:** assumere che tutti abbiano NAS; obbligare il cloud; lasciare SMB senza guida wizard.
+**Fuori percorso:** presupporre solo NAS o solo cloud; obbligare una sola sede; lasciare SMB PC senza guida wizard; nascondere W3/W4.
 
-**Prossimo passo:** Renato convalida i rami W1–W4 (o li riduce); poi specifica testi + schermate → sviluppo.
+**Prossimo passo:** specifica testi + schermate dei 4 rami → sviluppo.
 
 ### 7.1quinquies Approfondimento BL-09 — PC / NAS in rete (senza cloud obbligatorio)
 
@@ -451,7 +451,7 @@ Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consoli
 | BL-07 | **Aggiorna — «Sposta» nel menu contestuale** | **CHIUSA (decisione A 11/10/2026):** non aggiungere Sposta. | Renato 09–11/10/2026 |
 | BL-08 | **Copia da Catalogo → dispositivo** | ~~Export esplicito SAF CreateDocument~~ — *fatto 0.16.0* (menu Aggiorna «Copia su dispositivo»; preferisce copia spazio app). Sposta resta BL-07. | Renato 09/10/2026 |
 | BL-09 | **PC / NAS in rete** | U1 in app 0.16.18–19. **12/10:** SMB PC→tablet troppo difficile → **deprioritata**; pivot Archivio unico §7.1sexies. | Renato 10–12/10/2026 |
-| BL-17 | **Wizard sede Catalogo condiviso** | Target basso profilo (foto su telefono/tablet/notebook). Wizard decide dove vive il Catalogo; se PC → guida condivisione nello stesso flusso. §7.1sexies (W1–W4). Non presupporre NAS/cloud. | Renato 12/10/2026 |
+| BL-17 | **Wizard sede Catalogo condiviso** | **W1–W4 obbligatori in v1** (telefono/tablet, PC/notebook, Drive/cloud, NAS). Se PC → guida condivisione nello stesso wizard. §7.1sexies. | Renato 12/10/2026 |
 | BL-10 | **Fonti apparire senza scelta utente** | **OK** (diagnosi + dedupe SAF 0.16.10; prove 0.16.15). Fonti solo da «+»; residui togliibili con X. | Renato 10–11/10/2026 |
 | BL-11 | **Pulisci — criteri duplicati avanzati (tipo Krokiet)** | **Decisione A 11/10/2026:** restano solo duplicati esatti. Simili = versione successiva. | Renato 11/10/2026 |
 | BL-12 | **Pulisci — doppia funzione (selezionati + duplicati)** | Convalidato 11/10/2026. **0.16.6–0.16.7**: (1) ✓ da Aggiorna → Pulisci; (2) Analizza duplicati. Fix navigazione ✓ in 0.16.7. Prova Renato OK su selezione. | Renato 11/10/2026 |
