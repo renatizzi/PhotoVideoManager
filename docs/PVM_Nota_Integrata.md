@@ -333,12 +333,24 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
 ## 7.1 FASE CORRENTE: verifica BL-14 KPI Home + backlog
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)**.
-STATO ATTUALE (11/10/2026): **0.16.9-preview** (versionCode 50): ritocco BL-14 — Cestino app escluso dagli originali; originali ≥ Catalogo (fix caso 9 vs 10). **IN VERIFICA**. BL-13 invariato.
+STATO ATTUALE (11/10/2026): **0.16.9-preview** OK (BL-14). Emerso **BL-15** (opzione elimina originali in sorgente dopo pulizia Catalogo + anti re-import). **Checkpoint Catalogo utente/multi-dispositivo** annotato sotto (§7.1bis).
 Ordine operativo:
-1. **P0** — prova telefono 0.16.9 (Home foto: originali e di cui in Catalogo = 10 nello scenario segnalato).
-2. **P1** — BL-10 / BL-04.
-3. **P2** — BL-11; BL-13 (revisione KPI se feedback); BL-07 / BL-09 / BL-01 / BL-02.
-4. **Componi** — non riprendere finché non chiusa specifica M11 vs landing congelata.
+1. **P1** — BL-10 / BL-04; valutare priorità **BL-15** (sicurezza: solo esplicito, mai automatico).
+2. **P2** — BL-11; BL-01; BL-13; BL-07 / BL-09 / BL-02.
+3. **Componi** — non riprendere finché non chiusa specifica M11 vs landing congelata.
+
+### 7.1bis Checkpoint urgente — Catalogo unico utente vs dispositivi (11/10/2026)
+
+**Domanda Renato:** il Catalogo è unico per utente (non per dispositivo); la struttura regge un unico Catalogo alimentato dai dispositivi/fonti selezionati?
+
+| Aspetto | Stato |
+|---|---|
+| **Modello di dominio** | **Sì.** `MediaItem` = identità logica unica; `MediaCopy` + `StorageLocation`/`ArchiveRef` = copie su fonti/dispositivi diversi. Un solo Catalogo raccoglie più sorgenti scelte dall’utente (§2 / §3.2). |
+| **Implementazione attuale (v1 local-first)** | **Sì, sul dispositivo che esegue l’app.** Room persiste un Catalogo locale; Acquisisci aggiunge cartelle SAF da telefoni/Drive/disco; Aggiorna elenca l’universo unico. Alias dispositivo e path distinguono le fonti in UI. |
+| **Catalogo “roaming” tra più telefoni dello stesso account** | **Non ancora.** Nota §3.1: nessuna sync proprietaria obbligatoria; ogni installazione ha il proprio Catalogo locale. Porte `AuthPort` / `SyncPort` predisposte ma non operative. «Utente locale» in Top Bar ≠ account cloud. |
+| **Vincolo distruttività** | Eliminazione automatica degli originali **vietata** (§1 VINCOLI). Oggi Elimina/Cestino/Pulisci toccano solo il Catalogo (e copie nello spazio app). Cancellazione file in sorgente = solo con scelta esplicita → **BL-15**. |
+
+**Assicurazione onesta:** la struttura **è adatta** a un Catalogo unico per l’utente *di questa installazione*, alimentato da tutti i dispositivi/fonti che seleziona. Non posso assicurare oggi un Catalogo cloud unico che segua l’utente su più installazioni senza una futura tranche sync/account.
 Documenti di sessione: `docs/TERMINOLOGIA_UI.md`; prompt di continuità `docs/PROMPT_CONTINUITA_AGENTE.md`.
 Nota: Le dipendenze riportate per ciascuna macro-attività della Roadmap devono indicare esclusivamente le dipendenze dirette da macro-attività precedenti, ossia quelle il cui output costituisce un input necessario alla macro-attività corrente. Le dipendenze transitive non devono essere ripetute.
 Regola di aggiornamento della roadmap
