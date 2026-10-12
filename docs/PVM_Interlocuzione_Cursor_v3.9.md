@@ -8,7 +8,7 @@ Data: 01/10/2026
 
 Baseline di riferimento: Nota Integrata v5.1 (01/10/2026); richiesta corrente §7.18
 
-Richiesta corrente elaborata: §7.18 Configurazione guidata del Catalogo logico personale — richiesta a Cursor
+Richiesta corrente elaborata: §7.18 + riallineamento 12/10 — risposte Cursor §7.20 e **§7.21** (Catalogo unico / BL-17 / H1). In valutazione Renato/ChatGPT.
 
 \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
@@ -2624,3 +2624,111 @@ Se ChatGPT sceglie **A2** (sync schede): TBD provider, conflitti, cifratura — 
 Pronto per definizione UI dettagliata **solo** se ChatGPT conferma il perimetro **A1** (o un altro perimetro esplicito post-decisione).
 
 Fine risposta Cursor — §7.20 — PVM_Interlocuzione_Cursor_v3.9
+
+# 7.21 Riallineamento — Catalogo personale unico e Wizard BL-17
+
+**12 ottobre 2026 — Risposta Cursor alla richiesta di riallineamento. Nessuno sviluppo. Nessuna modifica autonoma alla Nota Integrata.**
+
+**In sintesi:** riprendo BL-17 / W1–W4 come percorso UI; ritiro A1 come «soluzione accettata». Il requisito corretto è un **Catalogo personale logico unico per utente**, con **sede scelta dall’utente**. Il divario col codice è da colmare, non da elevare a requisito. Raccomandazione: **hub a cartella (pacchetto schede) sulla sede Wizard**, non SQLite live su SMB/cloud; Archivio familiare resta distinto.
+
+---
+
+## 7.21.1 Punto già raggiunto (da recuperare)
+
+Concordato in interlocuzione operativa (prima del freeze ChatGPT), riflesso in bozza Nota di lavoro §7.1sexies / §7.1septies (**non consolidata**):
+
+| Elemento | Decisione / bozza |
+|---|---|
+| ID | **BL-17** — Wizard sede Catalogo |
+| Domanda centrale | «Dove vuoi tenere il Catalogo?» / «Tengo il Catalogo…» |
+| Scelta UI | **Combo** con 4 sole voci di primo livello |
+| **W1** | Questo telefono o tablet |
+| **W2** | PC o notebook — guida cartella → condivisione → collegamento rete → Scegli cartella (assorbe «Da PC o rete») |
+| **W3** | Google Drive / cloud (opt-in, non obbligatorio) |
+| **W4** | Disco di rete / NAS |
+| Sequenza | S0 combo → guida ramo → collegamento/config → verifica → S5 «Catalogo impostato» → Acquisisci |
+| Ingresso | «Imposta Catalogo condiviso» |
+| Vincolo prodotto | W1–W4 **tutti in v1**; non nascondere Drive/NAS |
+| Distinzione | ≠ Archivio condiviso familiare |
+
+La §7.20 resta valida come **fotografia del codice** e come rifiuto di SQLite concurrente su share; **non** come chiusura del requisito sul Catalogo-per-installazione.
+
+---
+
+## 7.21.2 Divario (obiettivo ↔ implementazione)
+
+| Obiettivo (esigenza Renato) | Stato codice oggi |
+|---|---|
+| Un Catalogo personale logico per **utente** | Un Catalogo Room per **installazione Android** (`pvm_catalog.db`) |
+| Sede di riferimento scelta (W1–W4) | Nessuna sede configurabile; sync `DisabledSyncPort` |
+| Altri dispositivi della stessa persona si collegano | Non previsto |
+| PC/notebook come sede o client | Nessun client Windows; PC solo raggiungibile come sorgente SAF se l’OS espone la share |
+| Foto ≠ schede Catalogo | Già separati nel modello (MediaItem / MediaCopy); manca il **collegamento multi-installazione delle schede** |
+
+Il divario è architetturale sul **roaming delle schede**, non sul Wizard UI (riutilizzabile).
+
+---
+
+## 7.21.3 Alternative tecniche realistiche
+
+Distinguere: **requisito logico** (un Catalogo) ≠ **mettere il file `.db` sulla share**.
+
+| Alt. | Meccanismo | Pro | Contro / rischi |
+|---|---|---|---|
+| **H1 — Hub a cartella (raccomandata)** | Ogni installazione tiene Room locale (local-first). La **sede** (W1–W4) è una cartella/tree dove vive un **pacchetto schede** (export/merge metadati). I dispositivi «si collegano» leggendo/scrivendo quel pacchetto quando la sede è raggiungibile. Azione esplicita utente, niente coda automatica. | Niente backend obbligatorio; sede = scelta utente (telefono, PC, Drive, NAS); riusa SAF/+ e guide BL-17; no SQLite multi-writer su rete; allinea BL-16 «solo schede» | Serve protocollo pacchetto + conflitti semplici; PC senza app = solo **contenitore** della sede finché non esiste client Windows; W1 come hub verso altri device è più scomodo (l’altro device deve raggiungere il telefono) |
+| **H2 — Account + sync schede in cloud gestito** | SyncPort verso un provider account | Roaming anche fuori casa | Cloud di fatto obbligatorio per multi-device; vincolo terze parti; fuori «local-first» come default |
+| **H3 — SQLite/DB live sulla share/cloud** | DB remoto concurrente | — | **Scartata per v1**: lock, corruzione, latenza, sicurezza credenziali; vietata dal vincolo di non assumerla senza valutazione (e la valutazione la sconsiglia) |
+| **H4 — Solo sorgenti comuni, Cataloghi separati** | ex-A1 | Già quasi vero oggi | **Non soddisfa** l’esigenza; ritirata come soluzione accettata |
+
+**Archivio familiare:** resta canale **FAMILY** / condivisione tra persone; non sostituisce H1/H2 per il Catalogo **PERSONAL** multi-dispositivo della stessa persona.
+
+---
+
+## 7.21.4 Raccomandazione
+
+**Adottare H1 (hub a cartella + pacchetto schede)** come direzione da consolidare in requisiti, e **mantenere il Wizard BL-17 W1–W4** come UI per scegliere e configurare la sede.
+
+Motivazione: è la via più semplice coerente con local-first, non obbliga cloud/NAS/backend, lascia la sede all’utente, riusa SAF e le guide già abbozzate, evita H3, e rende concreto «collegarsi alla sede» senza fingere che il `.db` Room viva già in rete.
+
+**Ruolo del Wizard (corretto):** non «spostare SQLite», ma *«Scegli la sede di riferimento del tuo Catalogo personale; ti guido a prepararla e a collegare questo dispositivo.»* Dopo il collegamento, le schede possono allinearsi tramite il pacchetto sulla sede (specifica tecnica successiva, post-decisione).
+
+---
+
+## 7.21.5 Wizard W1–W4 — cosa in v1, cosa dopo, cosa dire all’utente
+
+| Ramo | UI Wizard (BL-17) in prima versione | Collegamento multi-dispositivo reale (H1) | Limite da comunicare |
+|---|---|---|---|
+| **W1** Telefono/tablet | Sì — sede = questo dispositivo | Parziale: questo device è hub; un **secondo** device può collegarsi solo se raggiunge la sede (es. export/condivisione della cartella hub, o più avanti spostamento sede su W2–W4) | «Per ora il Catalogo di riferimento è questo dispositivo. Per usarlo anche da un altro telefono/tablet conviene una sede PC, Drive o NAS.» |
+| **W2** PC/notebook | Sì — guida già prevista (riuso «Da PC o rete») | Sì tra **app Android** che vedono la stessa cartella via rete; **non** app Windows in v1 | «Il PC tiene la sede; apri MediaManager sul telefono/tablet collegato a quella cartella. L’app sul PC arriverà dopo.» |
+| **W3** Drive/cloud | Sì — Scegli cartella Drive | Sì tra Android con stesso account/cartella, quando il pacchetto schede è in quella cartella | Opt-in; non obbligatorio |
+| **W4** NAS | Sì — Disco di rete | Come W2 via SAF rete | Come W2 |
+
+**Lavoro architetturale necessario (dopo consolidamento, non ora):** formato pacchetto schede; join/merge su azione utente; persistenza `sede` (kind + locator); attivazione `SyncPort` verso hub cartella; conflitti minimi (es. last-write-wins o «scegli versione»).  
+**Non necessario per chiudere la direzione:** client Windows, scan LAN, backend proprietario, H3.
+
+**Cosa si può definire subito (solo carta):** testi Wizard BL-17 ricalibrati («sede di riferimento del Catalogo personale», non «il database sta qui»).  
+**Sviluppo:** solo dopo consolidamento requisiti + specifica breve H1.
+
+---
+
+## 7.21.6 Decisioni che richiedono il tuo intervento
+
+Solo queste tre:
+
+1. **Requisito:** confermi che il Catalogo personale è **unico per utente** (non per installazione), distinto dall’Archivio familiare? *(atteso: sì — già espresso; serve il sì formale per ChatGPT → Nota)*
+
+2. **Meccanismo:** accetti **H1 — hub a cartella / pacchetto schede** come direzione (scartando H3 e non imponendo H2)?
+
+3. **W1:** in v1, con sede «questo dispositivo», accetti il limite onesto *multi-device completo soprattutto via W2/W3/W4*, oppure chiedi già in v1 un modo per far agganciarsi un secondo telefono al telefono-hub?
+
+Nient’altro è necessario per sbloccare il percorso (Wizard + poi specifica H1).
+
+---
+
+## 7.21.7 Stato
+
+**RISPOSTA_RICEVUTA — in valutazione Renato / ChatGPT.**  
+Nessuno sviluppo. Nota non modificata.  
+Prossimo passo dopo le 3 decisioni: definizione finale Wizard (testi BL-17 allineati a H1) → poi specifica tecnica breve → sviluppo.
+
+Fine risposta Cursor — §7.21 — PVM_Interlocuzione_Cursor_v3.9
