@@ -8,7 +8,7 @@ Data: 01/10/2026
 
 Baseline di riferimento: Nota Integrata v5.1 (01/10/2026); richiesta corrente §7.18
 
-Richiesta corrente elaborata: §7.18 + riallineamento 12/10 — risposte Cursor §7.20–§7.22 (chiarimento funzionale H1). In valutazione Renato su H1.
+Richiesta corrente elaborata: §7.18 + riallineamento 12/10 — H1 **confermata** (§7.23) con precisazioni conflitti e Aggiorna Catalogo. Prossimo: Wizard conclusivo.
 
 \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
@@ -2874,3 +2874,83 @@ Dopo questo chiarimento, serve solo il tuo **sì / no / modifica** su H1 così d
 Le decisioni 1 e 2 (Catalogo per utente; limite W1) risultano già confermate.
 
 Fine chiarimento Cursor — §7.22 — PVM_Interlocuzione_Cursor_v3.9
+
+# 7.23 H1 confermata — precisazioni conflitti e «Aggiorna Catalogo»
+
+**12 ottobre 2026 — Risposta Cursor. Nessuno sviluppo. Nessuna modifica alla Nota Integrata.**
+
+## 7.23.1 Decisioni recepite
+
+| # | Decisione Renato | Stato in interlocuzione |
+|---|---|---|
+| D1 | Catalogo personale unico logico, riferito all’utente | Confermata |
+| D2 | Sede scelta dall’utente; no obbligo NAS/cloud/backend nostro | Confermata |
+| D3 | Copie di lavoro locali per offline | Confermata |
+| D4 | Allineamento solo su azione esplicita | Confermata |
+| D5 | Distinto dall’Archivio condiviso familiare | Confermata |
+| D6 | Limite W1 in v1 (hub telefono/tablet; multi-device preferibile via W2–W4) | Confermata |
+| D7 | **H1** = direzione di progetto | **Confermata** |
+| D8 | Conflitti: **niente sovrascrittura silenziosa**; segnale + gestione esplicita | **Nuova precisazione** |
+| D9 | «Aggiorna Catalogo»: anteprima chiara uscite/entrate; **protegge** modifiche locali non pubblicate | **Nuova precisazione** |
+
+---
+
+## 7.23.2 Modifiche rispetto a §7.22
+
+Sì: le precisazioni **modificano** la descrizione funzionale di H1 e i criteri di accettazione. Non cambiano l’architettura di fondo (sede + fascicolo + copie di lavoro + azione esplicita).
+
+| Tema | In §7.22 | Ora (v1 funzionale) |
+|---|---|---|
+| Conflitto stessa scheda | «Prevale chi pubblica per ultimo» | **Rilevamento conflitto** → messaggio chiaro → **scelta esplicita** dell’utente prima di applicare una versione sulla sede / sulla copia di lavoro. Nessuna perdita silenziosa. |
+| Aggiorna Catalogo | Pulsante che allinea in entrambe le direzioni | **Passo di riepilogo obbligatorio** prima di applicare: elenco (o conteggio+dettaglio) di *cosa pubblicherei* e *cosa recepire dalla sede*; le modifiche locali non ancora pubblicate **non vengono scartate** senza conferma esplicita. |
+
+---
+
+## 7.23.3 Descrizione funzionale aggiornata di H1 (v1)
+
+Invariato: sede utente (W1–W4); fascicolo schede in sede = Catalogo di riferimento; copia di lavoro per device; foto separate dalle schede; Archivio familiare distinto; niente sync automatica in background.
+
+**Flusso «Aggiorna Catalogo» (obbligatorio in v1)**
+
+1. L’utente avvia «Aggiorna Catalogo» (sede raggiungibile).
+2. L’app confronta copia di lavoro e fascicolo in sede **senza ancora scrivere**.
+3. Mostra un **riepilogo** in linguaggio semplice, ad esempio:
+   - «Da questo dispositivo verso la sede: N schede nuove o modificate» (elenco consultabile);
+   - «Dalla sede verso questo dispositivo: M schede nuove o modificate»;
+   - «In conflitto (modificate qui e nella sede): K schede» — da risolvere una per una o con scelta guidata.
+4. Solo dopo conferma esplicita si applicano le parti non in conflitto.
+5. Per ogni conflitto: l’utente sceglie (es. «Tieni la mia versione» / «Prendi quella della sede» / «Decide dopo» lasciando la scheda in stato conflitto visibile). Finché non sceglie, **nessuna delle due versioni viene scartata in silenzio**.
+
+**Protezione modifiche locali**
+
+- Una modifica locale non pubblicata resta sulla copia di lavoro finché l’utente non conferma di pubblicarla o di sostituirla consapevolmente in un conflitto.
+- Chiudere il riepilogo con Annulla = nessun cambiamento a sede né perdita delle modifiche locali.
+
+---
+
+## 7.23.4 Criteri di accettazione funzionali H1 (v1) — aggiornati
+
+1. Esiste una sede di riferimento scelta dall’utente (Wizard BL-17 W1–W4).
+2. Telefono e tablet collegati alla stessa sede, dopo «Aggiorna Catalogo» completato, condividono le stesse schede (Catalogo logico unico).
+3. Offline: uso sulla copia di lavoro; sede irraggiungibile segnalata; nessuna perdita automatica delle modifiche locali.
+4. «Aggiorna Catalogo» mostra **sempre** il riepilogo publicherò / recepirò / in conflitto **prima** di scrivere.
+5. **Nessuna** applicazione di versione in conflitto senza scelta esplicita dell’utente.
+6. Annulla sul riepilogo non altera sede né cancella modifiche locali non pubblicate.
+7. Nessun allineamento automatico in background / retry silenzioso.
+8. UI e copy non confondono Catalogo personale e Archivio familiare.
+9. W1: limite multi-device comunicato come già concordato.
+
+---
+
+## 7.23.5 Impatto sul percorso successivo
+
+- **H1 resta la direzione**; solo regole di conflitto e UX di Aggiorna Catalogo sono più rigorose (e corrette per il target).
+- Complessità v1: un po’ più di UI (riepilogo + gestione conflitti), non un cambio di meccanismo.
+- Prossimo passo concordato: **definizione conclusiva del Wizard** e perimetro di sviluppo — ancora **senza** sviluppare e **senza** modificare la Nota finché ChatGPT/Renato non consolidano.
+
+## 7.23.6 Stato
+
+**H1 CONFERMATA** con precisazioni D8–D9 recepite in interlocuzione.  
+In attesa avvio definizione conclusiva Wizard / perimetro.
+
+Fine risposta Cursor — §7.23 — PVM_Interlocuzione_Cursor_v3.9
