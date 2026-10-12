@@ -3017,6 +3017,8 @@ Sul telefono/tablet successivo: stesso Wizard → stessa voce combo → stessa c
 
 **Criterio «stessa sede» tra dispositivi:** stesso tipo + stesso riferimento cartella (stessa cartella autorizzata), non «stesso nome a caso».
 
+**W2 e memorie di massa sul PC:** non serve un ramo Wizard separato «USB sul PC». Rientra in W2: l’utente crea/sceglie la cartella sul volume desiderato (C:, D:, USB, …), la condivide, poi Scegli cartella da Android. Distinto da un USB collegato **direttamente** al telefono/tablet (quello, se usato come sede, sarebbe percorso locale sul device — fuori da W2).
+
 ---
 
 ## 3. Utilizzo multi-dispositivo e offline
@@ -3075,7 +3077,7 @@ Le modifiche locali non pubblicate restano finché l’utente non conferma pubbl
 | Copia di lavoro | Room locale esistente resta il lavoro quotidiano |
 | Aggiorna Catalogo | Confronto + riepilogo + applica + conflitti espliciti |
 | Offline | Uso locale + indicatore sede |
-| Limiti dichiarati in UI | W1 multi-device; PC senza app Windows; allineamento non istantaneo |
+| Limiti dichiarati in UI | W1 multi-device; PC senza app Windows; allineamento non istantaneo; sede su memoria esterna del PC solo se quella memoria è collegata e condivisa |
 | Distinzione | Nessuna confusione con Archivio familiare |
 
 ### Rinviabile (fuori v1 H1)
@@ -3103,18 +3105,20 @@ Le modifiche locali non pubblicate restano finché l’utente non conferma pubbl
 8. Interruzione Aggiorna: ripresa esplicita, niente «tutto ok» falso.
 9. UI non presenta il Catalogo personale come Archivio familiare.
 10. W1: limite multi-device comunicato in S1a e in S5.
+11. W2: sede ammissibile su cartella del PC anche se fisicamente su disco esterno/chiavetta/microSD collegata al PC e condivisa; se quella memoria è assente, sede = non raggiungibile (comportamento già previsto).
 
 ### Limiti dichiarati all’utente (copy v1)
 
 - L’allineamento tra dispositivi avviene quando usi **Aggiorna Catalogo** e la sede è raggiungibile.
 - Il PC in v1 ospita la sede; l’app MediaManager sul PC arriverà dopo.
 - Con sede su questo telefono/tablet, collegare un secondo dispositivo è limitato: meglio PC, Drive o NAS.
+- Sul PC puoi mettere la cartella sede anche su un disco USB o altra memoria collegata al computer: tienila collegata quando aggiorni il Catalogo.
 
 ---
 
 ## 7.24.7 Stato e prossimo passo documentale
 
-**Definizione funzionale Wizard + perimetro v1: PRONTA PER CONVALIDA.**
+**Definizione funzionale Wizard + perimetro v1: AGGIORNATA** con portata W2 (memorie di massa sul PC) — **pronta per convalida finale**.
 
 Dopo il tuo OK (e eventuale passaggio ChatGPT):
 1. aggiornamento **Nota Integrata** + Roadmap (BL-17 / H1 / criteri);
