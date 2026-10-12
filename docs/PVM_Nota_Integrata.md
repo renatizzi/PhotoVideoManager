@@ -83,7 +83,7 @@ Il cloud è opzionale e deve essere trattato come categoria generica di sorgenti
 Non è previsto un backend proprietario obbligatorio.
 I dati personali, le fotografie e i video non devono essere inviati a terze parti per riconoscimento o classificazione; privilegiare elaborazioni locali/on-device.
 Archivio Condiviso e Backup sono concetti distinti.
-Nessuna sincronizzazione proprietaria obbligatoria tra dispositivi: ogni dispositivo mantiene autonomamente il proprio archivio personale/Catalogo locale. Photo&VideoManager facilita il confronto, la pulizia e l’acquisizione/consolidamento di contenuti scelti dall’utente. La condivisione nell'Archivio Condiviso avviene solo per scelta esplicita dell’utente; eventuali sincronizzazioni native del sistema operativo o di altre app possono produrre copie che Photo&VideoManager dovrà saper riconoscere e gestire.
+Il **Catalogo personale** è unico sul piano logico e riferito all’**utente**, non al singolo dispositivo (**H1**, convalida Renato 12/10/2026 — §7.1octies). Ogni installazione mantiene una **copia di lavoro locale** (local-first, uso offline). La **sede di riferimento** è scelta dall’utente (Wizard BL-17); l’allineamento delle schede verso/da la sede avviene solo su **azione esplicita** («Aggiorna Catalogo»), senza code né retry automatici. Non è obbligatorio backend, cloud o NAS. L’**Archivio Condiviso familiare** resta distinto e opzionale. Photo&VideoManager facilita il confronto, la pulizia e l’acquisizione/consolidamento di contenuti scelti dall’utente. Eventuali sincronizzazioni native del sistema operativo o di altre app possono produrre copie che Photo&VideoManager dovrà saper riconoscere e gestire.
 L'indisponibilità temporanea di un archivio o di una sorgente non costituisce di per sé un errore funzionale dell'applicazione. Le funzioni che non dipendono dalla risorsa indisponibile devono rimanere utilizzabili; le operazioni che la richiedono devono essere bloccate o non avviate con un'indicazione esplicita dello stato della risorsa.
 Non introdurre code automatiche di operazioni differite.
 Prima di ogni funzione complessa devono essere valutati privacy, sicurezza, integrità, offline, conflitti, performance, storage, compatibilità, manutenzione, recuperabilità e scalabilità.
@@ -331,19 +331,19 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Per ogni macro-attività ChatGPT definisce requisiti, vincoli, decisioni progettuali, criteri di accettazione e punti da approfondire. Cursor, prima dello sviluppo, analizza le criticità tecniche indicate, evidenzia eventuali ulteriori criticità rilevanti e propone soluzioni tecniche compatibili con la specifica consolidata. Lo sviluppo inizia solo dopo la chiusura della fase di approfondimento della relativa macro-attività.
 - Come precisato, Cursor non può trasformare autonomamente una proposta tecnica in requisito consolidato.
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
-## 7.1 FASE CORRENTE: verifica BL-14 KPI Home + backlog
-MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)**.
-STATO ATTUALE (12/10/2026): **0.16.19-preview** (versionCode 60). **BL-17:** bozza wizard sede Catalogo (§7.1septies) — combo W1–W4; in attesa convalida Renato sui testi, poi sviluppo.
+## 7.1 FASE CORRENTE: BL-17 / H1 Catalogo personale unico + Wizard sede
+MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)** + **BL-17 / H1**.
+STATO ATTUALE (12/10/2026): **0.16.19-preview** (versionCode 60). **H1 + Wizard BL-17 CONSOLIDATI** (convalida Renato su interlocuzione §7.24). Prossimo: specifica tecnica breve di implementazione → **SVILUPPO** Wizard + sede + Aggiorna Catalogo.
 Ordine operativo:
-1. **P1** — convalida bozza §7.1septies → sviluppo wizard.
-2. **P2** — BL-09 assorbito nel ramo W2; BL-02/BL-11 non ora.
+1. **P1** — specifica tecnica implementativa H1 (fascicolo schede, persistenza sede) → sviluppo BL-17 / Aggiorna Catalogo.
+2. **P2** — BL-09 assorbito in W2; BL-02/BL-11 non ora.
 3. **Componi** — non riprendere finché non chiusa specifica M11 vs landing congelata.
 
 ### 7.1quater Decisioni Renato 11/10/2026 (questionario)
 
 | # | Tema | Decisione | Note |
 |---|---|---|---|
-| 1 | BL-16 Sync | **A** — solo schede Catalogo (metadati), non i file | Provider e conflitti ancora da chiudere |
+| 1 | BL-16 Sync | **A** — solo schede; **superata/assorbita da H1** (12/10): hub a cartella, non sync cloud obbligatoria | Vedi §7.1octies |
 | 2 | BL-07 Sposta | **A** — non aggiungere | Chiuso |
 | 3 | BL-01 Scarti | **A** — sezione «Possibili scarti» in Pulisci | **SVILUPPO 0.16.17** |
 | 4 | BL-11 Simili | **A** — restano solo duplicati esatti | Non ora |
@@ -371,15 +371,29 @@ Ordine operativo:
 
 **Decisione Renato (12/10/2026):** i **quattro rami W1–W4 sono obbligatori in v1**. Non ridurli a solo telefono/PC: altrimenti si perdono gli utenti che già usano cloud e/o NAS. In UI si possono comunque **evidenziare** W1/W2 come tipici del target basso profilo, ma W3 e W4 restano scelte di primo livello (non nascoste in un menu “avanzato” che nessuno apre).
 
-**Rapporto con C1/C2:** la sede scelta dal wizard = Archivio/Catalogo a monte (C1). Sync schede tra dispositivi (C2 / BL-16) resta evoluzione successiva, non bloccante il wizard v1.
+**Stato:** assorbito e **consolidato** in §7.1octies (H1 + Wizard §7.24 convalida Renato 12/10/2026).
 
-**Fuori percorso:** presupporre solo NAS o solo cloud; obbligare una sola sede; lasciare SMB PC senza guida wizard; nascondere W3/W4.
+### 7.1octies CONSOLIDATO — Catalogo personale unico (H1) + Wizard BL-17 — 12/10/2026
 
-**Prossimo passo:** bozza testi/schermate in §7.1septies (combo); convalida Renato → sviluppo.
+**Fonte di dettaglio funzionale:** `docs/PVM_Interlocuzione_Cursor_v3.9.md` §7.21–§7.24 (convalida Renato). Qui i requisiti recepiti in Nota.
 
-### 7.1septies Bozza wizard «Dove tengo il Catalogo» (BL-17) — 12/10/2026
+**Requisiti consolidati**
+1. Catalogo personale **unico sul piano logico**, riferito all’**utente** (non all’installazione).
+2. Distinto dall’**Archivio Condiviso familiare**.
+3. Meccanismo **H1**: sede di riferimento scelta dall’utente + **fascicolo schede** in sede + **copie di lavoro** locali; allineamento solo con azione esplicita **«Aggiorna Catalogo»**.
+4. Niente sovrascrittura silenziosa in conflitto: segnale + scelta esplicita. Riepilogo preventivo pubblicherò / recepirò / conflitti; Annulla senza perdita delle modifiche locali non pubblicate.
+5. Wizard **BL-17** con combo **W1–W4** tutti obbligatori in v1; ingresso «Imposta Catalogo personale».
+6. **W2:** cartella sul PC/notebook anche su dischi esterni USB/SATA, chiavette, microSD o altre memorie di massa **collegate al PC** e condivise (non solo C:).
+7. Limite W1 in v1: telefono/tablet-sede = riferimento principale; multi-dispositivo pieno preferibile via W2/W3/W4.
+8. Fuori v1 H1: client Windows, sync automatica/background, merge campo-per-campo, scan LAN, H2/H3.
 
-**Stato:** BOZZA Cursor (testi + sequenza). **Non è ancora specifica consolidata ChatGPT.** Sviluppo dopo convalida Renato.
+**Criteri di accettazione v1:** checklist interlocuzione §7.24 §6 (10+1 punti, incl. portata W2 memorie di massa).
+
+**Stato roadmap:** SPECIFICA FUNZIONALE CONSOLIDATA → approfondimento tecnico implementativo Cursor → SVILUPPO.
+
+### 7.1septies Bozza wizard «Dove tengo il Catalogo» (BL-17) — 12/10/2026 *(storico; sostituita da §7.1octies / interlocuzione §7.24)*
+
+**Stato:** **SUPERATA** dalla definizione conclusiva §7.24 (convalida Renato). Conservata sotto come bozza storica dei testi.
 
 **Ingresso UI (proposta):** Organizza → Acquisisci → voce **«Imposta Catalogo condiviso»** (anche al primo avvio se nessuna sede impostata). Può sostituire/assorbire «Da PC o rete».
 
@@ -522,7 +536,7 @@ Ordine operativo:
 
 **Decisione Renato 11/10/2026:** sincronizzare **solo le schede** (opzione A), non i file delle copie Importa.
 
-**Ancora da chiudere prima dello sviluppo:** provider (es. Drive personale), cifratura sì/no, modello conflitti, rapporto con Backup.
+**Aggiornamento 12/10/2026:** il «provider» per le schede in v1 è la **sede H1** scelta dall’utente (cartella W1–W4), non un backend obbligatorio. Conflitti: gestione esplicita (§7.1octies). Cifratura a riposo e rapporto con Backup restano TBD non bloccanti l’avvio Wizard/H1.
 
 Documenti di sessione: `docs/TERMINOLOGIA_UI.md`; prompt di continuità `docs/PROMPT_CONTINUITA_AGENTE.md`.
 Nota: Le dipendenze riportate per ciascuna macro-attività della Roadmap devono indicare esclusivamente le dipendenze dirette da macro-attività precedenti, ossia quelle il cui output costituisce un input necessario alla macro-attività corrente. Le dipendenze transitive non devono essere ripetute.
@@ -545,15 +559,15 @@ Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consoli
 | BL-06 | **Aggiorna — menu contestuale «Rinomina»** | ~~Aggiungere Rinomina~~ — *fatto 0.16.0* (insieme a Elimina→Cestino e Copia su dispositivo). | Renato 09/10/2026 |
 | BL-07 | **Aggiorna — «Sposta» nel menu contestuale** | **CHIUSA (decisione A 11/10/2026):** non aggiungere Sposta. | Renato 09–11/10/2026 |
 | BL-08 | **Copia da Catalogo → dispositivo** | ~~Export esplicito SAF CreateDocument~~ — *fatto 0.16.0* (menu Aggiorna «Copia su dispositivo»; preferisce copia spazio app). Sposta resta BL-07. | Renato 09/10/2026 |
-| BL-09 | **PC / NAS in rete** | U1 in app 0.16.18–19. **12/10:** SMB PC→tablet troppo difficile → **deprioritata**; pivot Archivio unico §7.1sexies. | Renato 10–12/10/2026 |
-| BL-17 | **Wizard sede Catalogo condiviso** | **W1–W4 obbligatori**; scelta a **combo**. Bozza testi/schermate §7.1septies — in convalida Renato. | Renato 12/10/2026 |
+| BL-09 | **PC / NAS in rete** | Guida «Da PC o rete» in 0.16.18–19. **Assorbita in BL-17 W2** (sede PC, anche memorie di massa sul PC). | Renato 10–12/10/2026 |
+| BL-17 | **Wizard sede Catalogo personale (H1)** | **CONSOLIDATO** §7.1octies + interlocuzione §7.24. W1–W4; Aggiorna Catalogo; conflitti espliciti. Prossimo: SVILUPPO. | Renato 12/10/2026 |
 | BL-10 | **Fonti apparire senza scelta utente** | **OK** (diagnosi + dedupe SAF 0.16.10; prove 0.16.15). Fonti solo da «+»; residui togliibili con X. | Renato 10–11/10/2026 |
 | BL-11 | **Pulisci — criteri duplicati avanzati (tipo Krokiet)** | **Decisione A 11/10/2026:** restano solo duplicati esatti. Simili = versione successiva. | Renato 11/10/2026 |
 | BL-12 | **Pulisci — doppia funzione (selezionati + duplicati)** | Convalidato 11/10/2026. **0.16.6–0.16.7**: (1) ✓ da Aggiorna → Pulisci; (2) Analizza duplicati. Fix navigazione ✓ in 0.16.7. Prova Renato OK su selezione. | Renato 11/10/2026 |
 | BL-13 | **Home — revisione KPI** | Tenere per ora il modello A (originali=dispositivi · di cui in Catalogo=Catalogo). **In seguito**, con feedback concreto sul *peso del gap* in uso reale, valutare revisione/sostituzione dei KPI Home (senza obbligo di mantenere il gap). Non fare ora. | Renato 11/10/2026 |
 | BL-14 | **Home — allineare KPI al modello A** | **0.16.8–0.16.9**: di cui in Catalogo = Aggiorna; originali = fonti ACTIVE (no Cestino app) e ≥ Catalogo; ingresso = **CONFERMA**. **OK** prova Renato 11/10/2026. | Renato 11/10/2026 |
 | BL-15 | **Pulisci — opzione elimina originali in sorgente + anti re-import** | **OK** prove 0.16.11–0.16.15 (punti 5–9). Checkbox sorgente; esclusioni anti re-import; default solo Catalogo. | Renato 11/10/2026 |
-| BL-16 | **Sync Catalogo personale — evoluzione Archivio Condiviso** | **Decisione A:** solo schede/metadati. Analisi §7.1ter. **Manca ancora:** provider, cifratura, conflitti, Backup. No codice sync. | Renato 11/10/2026 |
+| BL-16 | **Sync Catalogo personale** | **Assorbita/precisata da H1** (§7.1octies): solo schede; trasporto = sede utente (cartella), non cloud obbligatorio; conflitti espliciti. Implementazione nel perimetro BL-17 / Aggiorna Catalogo. | Renato 11–12/10/2026 |
 
 Fine documento
 
