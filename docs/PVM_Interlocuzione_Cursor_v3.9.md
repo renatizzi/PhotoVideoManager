@@ -8,7 +8,7 @@ Data: 01/10/2026
 
 Baseline di riferimento: Nota Integrata v5.1 (01/10/2026); richiesta corrente §7.18
 
-Richiesta corrente elaborata: §7.18 + riallineamento 12/10 — risposte Cursor §7.20 e **§7.21** (Catalogo unico / BL-17 / H1). In valutazione Renato/ChatGPT.
+Richiesta corrente elaborata: §7.18 + riallineamento 12/10 — risposte Cursor §7.20–§7.22 (chiarimento funzionale H1). In valutazione Renato su H1.
 
 \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
@@ -2732,3 +2732,145 @@ Nessuno sviluppo. Nota non modificata.
 Prossimo passo dopo le 3 decisioni: definizione finale Wizard (testi BL-17 allineati a H1) → poi specifica tecnica breve → sviluppo.
 
 Fine risposta Cursor — §7.21 — PVM_Interlocuzione_Cursor_v3.9
+
+# 7.22 Chiarimento funzionale H1 — «pacchetto schede» / hub a cartella
+
+**12 ottobre 2026 — Risposta Cursor (solo spiegazione). Nessuno sviluppo. Nessuna modifica alla Nota Integrata.**
+
+**Decisioni già confermate da Renato (recepite qui, non ancora in Nota):**
+1. Catalogo personale unico sul piano logico, riferito all’utente.
+2. W1 in v1: telefono/tablet-sede = riferimento principale; per altri dispositivi si preferiscono W2/W3/W4.
+
+---
+
+## 7.22.1 H1 in parole semplici
+
+Immagina il Catalogo come un **rubrica delle tue foto** (le «schede»: nome, dove si trova la copia, se è nel Cestino, ecc.), **non** come le foto stesse.
+
+Con H1:
+
+- Scegli una **cartella sede** (PC, Drive, NAS, o — con i limiti W1 — questo dispositivo).
+- Quella cartella tiene il **Catalogo di riferimento** sotto forma di un **fascicolo aggiornabile** (il «pacchetto schede»): è il punto comune su cui telefono e tablet si mettono d’accordo.
+- Su ogni telefono/tablet resta anche una **copia di lavoro** del Catalogo, così puoi usarlo anche senza rete.
+- Quando la sede è raggiungibile, i dispositivi **allineano** la copia di lavoro con il fascicolo nella cartella sede (pubblicano le novità e scaricano quelle degli altri).
+
+Non è «ogni dispositivo un Catalogo a sé che non si parla».  
+Non è «il database aperto in contemporanea da tutti sulla rete» (quella via la scartiamo).  
+È «un solo Catalogo di riferimento nella sede + copie di lavoro sui dispositivi, allineate quando si può».
+
+Le **foto** restano dove sono (galleria, cartella PC, Drive, NAS). Il fascicolo parla *di* loro; non le sposta da solo. L’**Archivio familiare** resta un altro discorso.
+
+---
+
+## 7.22.2 Risposte alle domande
+
+### Dove risiede il Catalogo di riferimento?
+
+| Cosa | Dove |
+|---|---|
+| **Catalogo di riferimento** | Nella **cartella sede** scelta col Wizard (il fascicolo/pacchetto schede). Quella è la sede «ufficiale». |
+| **Copia di lavoro** | Su ogni telefono/tablet che si è collegato a quella sede. Serve per lavorare subito e offline. |
+
+La cartella sede **non** è «solo un export usa-e-getta»: è il **posto di riferimento** che i dispositivi aggiornano. La copia sul telefono non è un Catalogo diverso per sempre: è la stessa rubrica, in versione locale, da riallineare.
+
+### Due dispositivi: aggiungo una scheda dal telefono, la vedo sul tablet?
+
+Esempio: sede = cartella sul PC.
+
+1. Dal **telefono** acquisisci/importi o modifichi una scheda → la modifica è prima nella **copia di lavoro** del telefono.
+2. Quando il telefono «pubblica» verso la sede (vedi sotto: azione esplicita), il fascicolo sul PC si aggiorna.
+3. Sul **tablet**, quando «aggiorna dal Catalogo di riferimento», legge il fascicolo sul PC e la scheda compare anche lì.
+
+Finché uno dei due non ha pubblicato / aggiornato, l’altro può ancora vedere la situazione precedente. Non è magia istantanea silenziosa su tutti i device.
+
+### Offline / sede non raggiungibile?
+
+- **Sì, puoi continuare** a usare il Catalogo sulla **copia di lavoro** del dispositivo (consultare, organizzare, decisioni locali consentite dall’app).
+- Le modifiche restano sul dispositivo come **non ancora pubblicate** sulla sede.
+- Quando la sede torna raggiungibile, con un’azione esplicita pubblichi e/o scarichi gli aggiornamenti.
+- Nessuna coda nascosta che riprova da sola in background (coerente con le regole già fissate: niente retry automatici silenziosi).
+
+### Conflitti (stessa scheda toccata da due dispositivi)?
+
+Caso: telefono e tablet modificano la stessa scheda mentre sono entrambi offline, poi entrambi pubblicano.
+
+Per la v1 la regola semplice proposta è:
+
+- **Prevale l’ultima pubblicazione sulla sede** (chi pubblica dopo aggiorna il riferimento).
+- L’altro dispositivo, al successivo aggiornamento, riceve quella versione.
+- Se utile in UI: avviso breve «Il Catalogo di riferimento aveva una versione più recente; è stata applicata.»
+
+Non si apre un editor di merge campo-per-campo in v1 (troppo complesso per il target).
+
+### Automatico vs azione esplicita?
+
+| Momento | Proposta v1 |
+|---|---|
+| Lavoro quotidiano sul dispositivo | Sulla copia di lavoro — normale uso app |
+| Pubblicare le mie novità sulla sede | **Azione esplicita** (es. «Aggiorna Catalogo» / «Pubblica sulla sede») quando la sede è raggiungibile |
+| Scaricare novità degli altri | Stessa azione esplicita (un pulsante che fa entrambe le direzioni, o due passi chiari) |
+| Retry se la sede è spenta | **No** automatico; l’utente riprova quando vuole |
+
+---
+
+## 7.22.3 Scenario completo (sede = PC)
+
+**A. Configurazione iniziale**  
+Sul tablet apri «Imposta Catalogo condiviso» → scegli **Su un PC o notebook (W2)** → segui la guida (cartella sul PC, condivisione, collegamento da Archivio) → **Scegli cartella** in MediaManager.  
+Esito: quella cartella diventa la **sede**; sul tablet c’è la copia di lavoro collegata; nella cartella PC compare/si aggiorna il fascicolo schede.  
+(Sul PC non serve ancora MediaManager: il PC «ospita» la sede.)
+
+**B. Uso dal telefono**  
+Stesso Wizard sul telefono → stessa cartella PC come sede → collegamento.  
+Ora telefono e tablet puntano allo **stesso** Catalogo di riferimento.
+
+**C. Lavoro normale**  
+Dal telefono aggiungi foto al Catalogo (Acquisisci/Importa) o rinomini una scheda.  
+Tocchi **Aggiorna Catalogo** (sede raggiungibile) → il fascicolo sul PC si aggiorna.  
+Sul tablet tocchi **Aggiorna Catalogo** → vedi le stesse schede/modifiche.
+
+**D. Sede non raggiungibile** (PC spento / Wi‑Fi assente)  
+Tablet e telefono usano ciascuno la propria copia di lavoro. Puoi consultare e fare modifiche locali. L’app indica che la sede non è raggiungibile e che le novità non sono ancora sul Catalogo di riferimento.
+
+**E. Riconnessione**  
+PC acceso, stessa Wi‑Fi. Su ogni dispositivo: **Aggiorna Catalogo**.  
+Chi pubblica/allinea per ultimo sulle parti in conflitto fa valere la regola «ultima pubblicazione». Entrambi finiscono allineati al fascicolo in sede.
+
+---
+
+## 7.22.4 Cosa consentirebbe H1 in v1, limiti, perché preferirla
+
+**Consentirebbe davvero**
+- Un **solo Catalogo personale di riferimento** scelto dall’utente (W2/W3/W4 in modo pieno; W1 con il limite già accettato).
+- Telefono e tablet **collegati alla stessa sede** vedono le **stesse schede** dopo aggiornamento esplicito.
+- Uso **offline** sulla copia di lavoro.
+- Niente cloud/NAS obbligatori; niente Archivio familiare al posto del Catalogo personale.
+- Niente database «aperto in contemporanea» sulla rete.
+
+**Limiti v1**
+- L’allineamento non è istantaneo: serve **Aggiorna Catalogo** (o equivalente) a sede raggiungibile.
+- Sul **PC** in v1 la sede è un contenitore; non usi ancora MediaManager come app Windows.
+- Conflitti risolti in modo semplice (ultima pubblicazione), non merge raffinato.
+- W1 resta scomodo come hub verso altri device (come già concordato).
+
+**Perché preferibile**
+- È la via **minima** che rende vero «un Catalogo per utente» senza backend e senza obbligo cloud.
+- L’alternativa «solo Cataloghi separati per installazione» **non** raggiunge l’obiettivo.
+- L’alternativa «account cloud obbligatorio» lo raggiunge ma vincola tutti al cloud.
+- L’alternativa «database unico live sulla share» è fragile e sconsigliata.
+
+**H1 garantisce l’obiettivo?**  
+Sì, sul piano funzionale del **Catalogo logico unico**, a patto di accettare allineamento esplicito e PC come sede-contenitore in v1.  
+Senza un mezzo condiviso (cartella sede o cloud), l’obiettivo è **impossibile**: due telefoni isolati non possono avere la stessa rubrica.
+
+Non serve una soluzione «più minima» di H1 per conseguire l’obiettivo; serve proprio questo tipo di sede comune + allineamento schede. H2 (cloud account) sarebbe un’altra sede possibile, non più semplice per chi vuole restare local-first.
+
+---
+
+## 7.22.5 Decisione rimasta aperta
+
+Dopo questo chiarimento, serve solo il tuo **sì / no / modifica** su H1 così descritta (fascicolo in sede + copie di lavoro + aggiornamento esplicito + ultima pubblicazione in caso di conflitto).
+
+Le decisioni 1 e 2 (Catalogo per utente; limite W1) risultano già confermate.
+
+Fine chiarimento Cursor — §7.22 — PVM_Interlocuzione_Cursor_v3.9
