@@ -3118,10 +3118,14 @@ Le modifiche locali non pubblicate restano finché l’utente non conferma pubbl
 
 ## 7.24.7 Stato e prossimo passo documentale
 
-**Definizione funzionale Wizard + perimetro v1: AGGIORNATA** con portata W2 (memorie di massa sul PC) — **pronta per convalida finale**.
+**Definizione funzionale Wizard + perimetro v1: CONVALIDATA da Renato (12/10/2026).**
 
-Dopo il tuo OK (e eventuale passaggio ChatGPT):
-1. aggiornamento **Nota Integrata** + Roadmap (BL-17 / H1 / criteri);
-2. solo allora avvio sviluppo per fasi.
+**Recezione in Nota Integrata:** §3.1 aggiornato; nuovo §7.1octies; backlog BL-09/16/17 aggiornati; fase corrente → specifica tecnica implementativa poi SVILUPPO.
 
 Fine definizione Cursor — §7.24 — PVM_Interlocuzione_Cursor_v3.9
+
+# 7.25 Recezione convalida §7.24 in Nota Integrata
+
+**12 ottobre 2026 — Cursor.** Convalida Renato su §7.24 recepita in `docs/PVM_Nota_Integrata.md` (§3.1, §7.1octies, backlog). Nessuno sviluppo applicativo in questo passo. Prossimo: approfondimento tecnico implementativo (formato fascicolo, persistenza sede) su richiesta, poi sviluppo.
+
+Fine — §7.25
