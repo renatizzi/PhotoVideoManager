@@ -91,6 +91,8 @@ fun AcquisisciStaticScreen(
     onRenameSource: (String, String) -> Unit = { _, _ -> },
     onRenameDevice: (String) -> Unit = {},
     onRemoveSource: (String) -> Unit = {},
+    onOpenCatalogSeatWizard: () -> Unit = {},
+    onOpenCatalogUpdate: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -213,6 +215,18 @@ fun AcquisisciStaticScreen(
                     Text(stringResource(R.string.acquisisci_conferma))
                 }
             }
+        }
+        TextButton(
+            onClick = onOpenCatalogSeatWizard,
+            enabled = !busy,
+        ) {
+            Text(stringResource(R.string.hub_wizard_entry))
+        }
+        TextButton(
+            onClick = onOpenCatalogUpdate,
+            enabled = !busy,
+        ) {
+            Text(stringResource(R.string.hub_update_title))
         }
         TextButton(
             onClick = { pcGuideOpen = true },

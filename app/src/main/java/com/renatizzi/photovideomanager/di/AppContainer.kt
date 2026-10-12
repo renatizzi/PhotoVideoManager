@@ -4,6 +4,7 @@ import android.content.Context
 import com.renatizzi.photovideomanager.application.AcquisitionService
 import com.renatizzi.photovideomanager.application.ArchiveService
 import com.renatizzi.photovideomanager.application.CatalogFacade
+import com.renatizzi.photovideomanager.application.CatalogHubService
 import com.renatizzi.photovideomanager.application.CensusService
 import com.renatizzi.photovideomanager.application.DedupService
 import com.renatizzi.photovideomanager.application.ExportService
@@ -13,6 +14,8 @@ import com.renatizzi.photovideomanager.application.TrashService
 import com.renatizzi.photovideomanager.data.SourceLabelStore
 import com.renatizzi.photovideomanager.data.catalog.CatalogDatabase
 import com.renatizzi.photovideomanager.data.catalog.RoomCatalogStore
+import com.renatizzi.photovideomanager.data.hub.CatalogSeatStore
+import com.renatizzi.photovideomanager.data.hub.HubPackageIo
 import com.renatizzi.photovideomanager.data.storage.LocalFilesystemStorageAdapter
 import com.renatizzi.photovideomanager.data.storage.StorageAdapterFactory
 import com.renatizzi.photovideomanager.domain.policy.DisabledSyncPort
@@ -30,9 +33,12 @@ import java.io.File
 class AppContainer(context: Context) {
     private val appContext = context.applicationContext
     private val personalRoot = File(appContext.filesDir, "personal_archive")
+    private val catalogHubRoot = File(appContext.filesDir, "catalog_hub")
 
     val database: CatalogDatabase = CatalogDatabase.create(appContext)
     val catalogStore: CatalogStore = RoomCatalogStore(database)
+    val catalogSeatStore: CatalogSeatStore = CatalogSeatStore(appContext)
+    val hubPackageIo: HubPackageIo = HubPackageIo(appContext, catalogHubRoot)
     val adapterFactory: StorageAdapterFactory = StorageAdapterFactory(
         context = appContext,
         personalRoot = personalRoot,
@@ -101,6 +107,14 @@ class AppContainer(context: Context) {
         permissionGate = permissionGate,
     )
 
+    val catalogHubService: CatalogHubService = CatalogHubService(
+        appContext = appContext,
+        catalogStore = catalogStore,
+        seatStore = catalogSeatStore,
+        packageIo = hubPackageIo,
+        permissionGate = permissionGate,
+    )
+
     val themePreferences: ThemePreferences = ThemePreferences(appContext)
 
     val catalogFacade: CatalogFacade = CatalogFacade(
@@ -112,5 +126,6 @@ class AppContainer(context: Context) {
         archiveService = archiveService,
         searchService = searchService,
         exportService = exportService,
+        catalogHubService = catalogHubService,
     )
 }

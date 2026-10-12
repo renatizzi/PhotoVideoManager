@@ -56,6 +56,47 @@
     <string name="acquisisci_da_pc_step3">3. Tocca «Scegli cartella». Nel selettore apri «Disco di rete» (dove già vedi il NAS) e cerca il PC o la cartella Foto. Conferma con Usa questa cartella.</string>
     <string name="acquisisci_da_pc_note">MediaManager non elenca da solo i PC: mostra solo ciò che il tablet ha già in Disco di rete. Non serve il cloud.</string>
     <string name="acquisisci_da_pc_choose">Scegli cartella</string>
+    <string name="hub_wizard_title">Imposta Catalogo personale</string>
+    <string name="hub_wizard_entry">Imposta Catalogo personale</string>
+    <string name="hub_intro_body">Il Catalogo è la rubrica delle tue foto e dei tuoi video (le schede). Scegli un posto di riferimento: gli altri tuoi dispositivi potranno collegarsi allo stesso Catalogo. Non è obbligatorio avere un NAS o il cloud.</string>
+    <string name="hub_combo_label">Tengo il Catalogo…</string>
+    <string name="hub_kind_local">Su questo telefono o tablet</string>
+    <string name="hub_kind_pc">Su un PC o notebook</string>
+    <string name="hub_kind_drive">Su Google Drive (o cloud)</string>
+    <string name="hub_kind_nas">Su un disco di rete o NAS</string>
+    <string name="hub_avanti">Avanti</string>
+    <string name="hub_indietro">Indietro</string>
+    <string name="hub_choose_folder">Scegli cartella</string>
+    <string name="hub_seat_folder_fallback">Cartella Catalogo</string>
+    <string name="hub_w1_body">Questo dispositivo diventa la sede di riferimento del Catalogo personale. Un secondo telefono o tablet, in questa versione, si collega più facilmente se usi una sede su PC, Drive o NAS.</string>
+    <string name="hub_w1_confirm">Usa questo dispositivo</string>
+    <string name="hub_w2_prepare">1. Sul PC crea o scegli una cartella (anche su disco USB, chiavetta o microSD collegata al PC).\n2. Tasto destro → Proprietà → Condivisione → Condividi.\n3. Annota nome PC o indirizzo IP.\n4. Stessa Wi‑Fi; se usi una memoria esterna, tienila collegata al PC.</string>
+    <string name="hub_w2_prepared">Ho creato la cartella</string>
+    <string name="hub_w2_connect">Apri Archivio / Gestione file → Spazio di archiviazione di rete → Aggiungi → Unità di rete (SMB). Host = IP o nome PC. Utente e password = account Windows. Quando vedi la cartella, torna qui.</string>
+    <string name="hub_w2_connected">Ho collegato il PC</string>
+    <string name="hub_w2_help_link">Non riesco a collegarmi</string>
+    <string name="hub_w2_help_body">Prova utente MicrosoftAccount\\tua@email oppure il nome da whoami sul PC. Rete del PC = Privata. Oppure crea un utente locale semplice sul PC e condividigli la cartella. Puoi anche tornare indietro e scegliere un\'altra sede.</string>
+    <string name="hub_w2_help_back">Torna al collegamento</string>
+    <string name="hub_w2_pick">Tocca Scegli cartella. Nel selettore apri lo spazio di rete / il PC e seleziona la cartella del Catalogo. Conferma con Usa questa cartella.</string>
+    <string name="hub_w3_body">Serve un account Google sul dispositivo. Tocca Scegli cartella, apri Google Drive, crea o seleziona una cartella (es. Foto Catalogo) e conferma. Non è obbligatorio usare il cloud.</string>
+    <string name="hub_w4_body">Se il NAS è già in Disco di rete, tocca Scegli cartella e seleziona la cartella delle foto. Altrimenti aggiungilo prima in Archivio → Spazio di archiviazione di rete, poi torna qui.</string>
+    <string name="hub_done_title">Catalogo impostato</string>
+    <string name="hub_done_body">Sede: %1$s. Usa Acquisisci per le foto. Per allineare le schede tra i tuoi dispositivi: Aggiorna Catalogo. Per cambiare sede: Imposta Catalogo personale.</string>
+    <string name="hub_update_title">Aggiorna Catalogo</string>
+    <string name="hub_update_action">Confronta con la sede</string>
+    <string name="hub_update_no_seat">Nessuna sede configurata. Imposta prima il Catalogo personale.</string>
+    <string name="hub_update_seat_line">Sede: %1$s</string>
+    <string name="hub_update_reachable">Sede raggiungibile.</string>
+    <string name="hub_update_unreachable">Sede non raggiungibile — puoi usare la copia di lavoro locale; le novità non sono sul Catalogo di riferimento.</string>
+    <string name="hub_update_checking">Verifica sede…</string>
+    <string name="hub_preview_title">Riepilogo (nessuna modifica finché non confermi)</string>
+    <string name="hub_preview_publish">Pubblicherò sulla sede: %1$d</string>
+    <string name="hub_preview_receive">Recepirò dalla sede: %1$d</string>
+    <string name="hub_preview_conflicts">In conflitto: %1$d — scegli cosa tenere</string>
+    <string name="hub_preview_empty">Nessuna differenza: Catalogo già allineato.</string>
+    <string name="hub_preview_confirm">Conferma aggiornamento</string>
+    <string name="hub_conflict_keep_local">Tieni la mia</string>
+    <string name="hub_conflict_take_remote">Prendi dalla sede</string>
     <string name="acquisisci_da_pc_help_link">Non vedo il PC</string>
     <string name="acquisisci_da_pc_help_title">Se non vedi il PC</string>
     <string name="acquisisci_da_pc_help_body">Di solito il PC non compare finché non lo aggiungi una volta nell’app di rete del tablet (la stessa che ti mostra «Disco di rete» / il NAS).\n\n1. Esci da MediaManager e apri Gestione file (o Samba Documents / Archiviazione di rete).\n2. Aggiungi un server / PC: indirizzo = nome del PC oppure l’IP (es. 192.168.1.20). Utente e password = quelli Windows.\n3. Controlla che si aprano le cartelle condivise.\n4. Torna qui → Da PC o rete → Scegli cartella → Disco di rete → cartella Foto.\n\nSe il NAS lo vedi e il PC no: sul PC attiva «Condivisione file e stampanti» e, in Windows, «Rilevamento rete».</string>

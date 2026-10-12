@@ -42,6 +42,10 @@ import com.renatizzi.photovideomanager.ui.home.HomeScreen
 import com.renatizzi.photovideomanager.ui.home.HomeViewModel
 import com.renatizzi.photovideomanager.ui.home.MacroHubScreen
 import com.renatizzi.photovideomanager.ui.home.MacroNavigation
+import com.renatizzi.photovideomanager.ui.hub.CatalogSeatWizardScreen
+import com.renatizzi.photovideomanager.ui.hub.CatalogSeatWizardViewModel
+import com.renatizzi.photovideomanager.ui.hub.CatalogUpdateScreen
+import com.renatizzi.photovideomanager.ui.hub.CatalogUpdateViewModel
 import com.renatizzi.photovideomanager.ui.preview.AcquisisciStaticScreen
 import com.renatizzi.photovideomanager.ui.preview.AggiornaStaticScreen
 import com.renatizzi.photovideomanager.ui.preview.ComponiLandingStaticScreen
@@ -236,6 +240,12 @@ fun PvmApp(
                             onRenameSource = censusVm::renameSource,
                             onRenameDevice = censusVm::setDeviceAlias,
                             onRemoveSource = censusVm::removeSource,
+                            onOpenCatalogSeatWizard = {
+                                navController.navigate(PvmDestination.CatalogSeatWizard.route)
+                            },
+                            onOpenCatalogUpdate = {
+                                navController.navigate(PvmDestination.CatalogUpdate.route)
+                            },
                         )
                         AcquireFlowStep.COPY -> ImportaStaticScreen(
                             state = acquireState,
@@ -249,6 +259,40 @@ fun PvmApp(
                             onBackToAcquisisci = { acquireStep = AcquireFlowStep.CENSUS },
                         )
                     }
+                }
+                composable(PvmDestination.CatalogSeatWizard.route) {
+                    val wizardVm: CatalogSeatWizardViewModel = viewModel(
+                        factory = CatalogSeatWizardViewModel.factory(catalogFacade),
+                    )
+                    val wizardState by wizardVm.state.collectAsStateWithLifecycle()
+                    CatalogSeatWizardScreen(
+                        state = wizardState,
+                        onSelectKind = wizardVm::selectKind,
+                        onAvanti = wizardVm::avantiFromIntro,
+                        onBackIntro = wizardVm::goIntro,
+                        onGoStep = wizardVm::goStep,
+                        onConfirmLocal = wizardVm::confirmLocalSeat,
+                        onFolderPicked = wizardVm::onFolderPicked,
+                        onDone = { navController.popBackStack() },
+                        onCancel = { navController.popBackStack() },
+                    )
+                }
+                composable(PvmDestination.CatalogUpdate.route) {
+                    val updateVm: CatalogUpdateViewModel = viewModel(
+                        factory = CatalogUpdateViewModel.factory(catalogFacade),
+                    )
+                    val updateState by updateVm.state.collectAsStateWithLifecycle()
+                    CatalogUpdateScreen(
+                        state = updateState,
+                        onRefresh = updateVm::refreshSeat,
+                        onLoadPreview = updateVm::loadPreview,
+                        onCancelPreview = updateVm::cancelPreview,
+                        onApply = updateVm::apply,
+                        onResolve = updateVm::setResolution,
+                        onOpenWizard = {
+                            navController.navigate(PvmDestination.CatalogSeatWizard.route)
+                        },
+                    )
                 }
                 composable(
                     route = PvmDestination.SourceBrowse.route,

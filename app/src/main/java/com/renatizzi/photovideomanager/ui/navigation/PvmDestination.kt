@@ -7,6 +7,8 @@ sealed class PvmDestination(val route: String) {
     data object Utility : PvmDestination("utility")
     data object Config : PvmDestination("config")
     data object Acquire : PvmDestination("organizza/acquire")
+    data object CatalogSeatWizard : PvmDestination("organizza/acquire/catalog-seat")
+    data object CatalogUpdate : PvmDestination("organizza/acquire/catalog-update")
     data object SourceBrowse : PvmDestination("organizza/acquire/browse/{locationId}") {
         fun create(locationId: String) = "organizza/acquire/browse/$locationId"
     }

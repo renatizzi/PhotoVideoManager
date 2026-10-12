@@ -28,7 +28,21 @@ class CatalogFacade(
     private val archiveService: ArchiveService,
     private val searchService: SearchService,
     private val exportService: ExportService,
+    private val catalogHubService: CatalogHubService,
 ) {
+    fun catalogSeat() = catalogHubService.currentSeat()
+
+    suspend fun configureCatalogSeat(seat: com.renatizzi.photovideomanager.domain.hub.CatalogSeat) =
+        catalogHubService.configureSeat(seat)
+
+    suspend fun catalogSeatReachable(): Boolean = catalogHubService.seatReachable()
+
+    suspend fun catalogHubPreview() = catalogHubService.buildPreview()
+
+    suspend fun applyCatalogHubUpdate(
+        preview: com.renatizzi.photovideomanager.domain.hub.HubDiffPreview,
+        resolutions: Map<String, com.renatizzi.photovideomanager.domain.hub.ConflictResolution>,
+    ) = catalogHubService.applyUpdate(preview, resolutions)
     suspend fun bootstrapPersonalArchiveIfNeeded() {
         sourceRegistry.bootstrapPersonalArchiveIfNeeded()
         // Orfani: MediaItem rimasti dopo CASCADE su sorgente rimossa (senza copie).
