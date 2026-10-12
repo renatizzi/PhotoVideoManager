@@ -8,7 +8,7 @@ Data: 01/10/2026
 
 Baseline di riferimento: Nota Integrata v5.1 (01/10/2026); richiesta corrente §7.18
 
-Richiesta corrente elaborata: §7.18 + riallineamento 12/10 — H1 **confermata** (§7.23) con precisazioni conflitti e Aggiorna Catalogo. Prossimo: Wizard conclusivo.
+Richiesta corrente elaborata: §7.18 + riallineamento 12/10 — §7.24 definizione conclusiva Wizard + perimetro v1 H1 — in convalida Renato; Nota/Roadmap dopo OK.
 
 \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
@@ -2954,3 +2954,168 @@ Invariato: sede utente (W1–W4); fascicolo schede in sede = Catalogo di riferim
 In attesa avvio definizione conclusiva Wizard / perimetro.
 
 Fine risposta Cursor — §7.23 — PVM_Interlocuzione_Cursor_v3.9
+
+# 7.24 Definizione conclusiva — Wizard sede Catalogo + perimetro v1 (H1)
+
+**12 ottobre 2026 — Definizione funzionale Cursor. Nessuno sviluppo. Nessuna modifica alla Nota Integrata** (aggiornamento Nota/Roadmap solo dopo convalida di questo §7.24).
+
+**Baseline confermata:** H1 (§7.22–7.23); Catalogo personale unico per utente; W1–W4; limite W1; Aggiorna con riepilogo; conflitti espliciti; ≠ Archivio familiare.
+
+---
+
+## 1. Percorso utente — schermate, domande, diramazioni W1–W4
+
+**Ingresso:** Organizza → Acquisisci → **«Imposta Catalogo personale»** (assicura «Da PC o rete» dove il testo W2 lo richiede). Anche al primo avvio se nessuna sede è ancora impostata.
+
+### S0 — Scelta sede
+- **Titolo:** Dove vuoi tenere il Catalogo personale?
+- **Testo:** Il Catalogo è la rubrica delle tue foto e dei tuoi video (le schede). Scegli **un posto di riferimento**: gli altri tuoi dispositivi potranno collegarsi allo stesso Catalogo. Non è obbligatorio avere un NAS o il cloud.
+- **Combo — «Tengo il Catalogo…»** (scelta singola, tutte di primo livello):
+  1. Su questo telefono o tablet → **W1**
+  2. Su un PC o notebook → **W2**
+  3. Su Google Drive (o cloud) → **W3**
+  4. Su un disco di rete o NAS → **W4**
+- Default: W1. Pulsanti: **Annulla** | **Avanti**.
+
+### W1 — Questo telefono o tablet
+- **S1a Conferma:** spiega che questo dispositivo diventa la sede di riferimento; un secondo telefono/tablet in v1 si collega più facilmente se in seguito si usa una sede W2/W3/W4.
+- Pulsanti: Indietro | **Usa questo dispositivo** → verifica locale (Sede OK) → **S5**.
+
+### W2 — PC o notebook
+- **S2a** Prepara cartella sul PC (passi numerati: crea cartella, condividi, IP/nome, stessa Wi‑Fi) — riuso guida già abbozzata.
+- **S2b** Collega da Archivio/Gestione file (SMB) — link «Non riesco» → **S2d** aiuto.
+- **S2c** In MediaManager: **Scegli cartella** → selettore sistema → verifica sede → **S5**.
+- **S2d** Aiuto credenziali/rete; Torna | Cambia sede (→ S0).
+
+### W3 — Google Drive / cloud
+- **S3a** Breve guida + nota «non obbligatorio» → **Scegli cartella** → verifica → **S5**.
+
+### W4 — Disco di rete / NAS
+- **S4a** Guida Disco di rete → **Scegli cartella** → verifica → **S5**.
+
+### S5 — Catalogo impostato (comune)
+- Mostra: tipo sede; nome/percorso leggibile; stato verifica (OK / Da completare).
+- Testo: puoi usare Acquisisci; per allineare altri dispositivi usa di nuovo «Imposta Catalogo personale» sullo stesso posto; per allineare le schede usa **Aggiorna Catalogo**.
+- OK → Acquisisci.
+
+### Secondo dispositivo (stesso percorso)
+Sul telefono/tablet successivo: stesso Wizard → stessa voce combo → stessa cartella (W2–W4) oppure, se W1, messaggio di limite e invito a W2–W4. Esito: **associazione alla stessa sede**, non un secondo Catalogo.
+
+---
+
+## 2. Configurazione della sede — scelta, collegamento, verifica
+
+| Fase | Cosa fa l’utente | Cosa fa l’app |
+|---|---|---|
+| Scelta | Combo W1–W4 | Memorizza solo dopo completamento riuscito (niente sede «mezza») |
+| Collegamento W1 | Conferma | Verifica spazio locale / cartella hub scrivibile sul dispositivo |
+| Collegamento W2–W4 | Guida esterna se serve + Scegli cartella | Ottiene permesso sulla cartella; prova lettura/scrittura **non distruttiva** del fascicolo schede (crea se assente; non tocca le foto) |
+| Verifica OK | — | Sede attiva; copia di lavoro collegata; S5 |
+| Verifica KO | Corregge / riprova / cambia sede | Messaggio chiaro; **nessuna** sede attiva parziale |
+
+**Criterio «stessa sede» tra dispositivi:** stesso tipo + stesso riferimento cartella (stessa cartella autorizzata), non «stesso nome a caso».
+
+---
+
+## 3. Utilizzo multi-dispositivo e offline
+
+**Associazione:** ogni installazione Android completa il Wizard sulla **stessa** sede W2/W3/W4 (o W1 con limite dichiarato).
+
+**Offline / sede irraggiungibile:**
+- L’app resta usabile sulla **copia di lavoro** (consultazione e modifiche locali consentite dalle funzioni già presenti).
+- Indicatore chiaro: «Sede non raggiungibile — le novità non sono ancora sul Catalogo di riferimento».
+- Nessun allineamento automatico in background.
+
+**Quando la sede torna disponibile:** l’utente avvia **Aggiorna Catalogo** (§4).
+
+---
+
+## 4. Aggiorna Catalogo — riepilogo preventivo
+
+**Ingresso UI (v1):** da Acquisisci e/o Utility / area Catalogo — voce **«Aggiorna Catalogo»** (sempre azione esplicita).
+
+**Flusso:**
+1. Se sede irraggiungibile → messaggio + Riprova / Chiudi (nessuna scrittura).
+2. Confronto copia di lavoro ↔ fascicolo in sede **senza scrivere**.
+3. Schermata riepilogo:
+   - **Pubblicherò sulla sede:** elenco/conteggio schede nuove o modificate qui;
+   - **Recepirò dalla sede:** elenco/conteggio novità dalla sede;
+   - **In conflitto:** schede modificate sia in locale sia in sede.
+4. Azioni: **Annulla** | **Continua** (solo parti senza conflitto) | risoluzione conflitti (§5).
+5. Esito finale: riepilogo applicato / saltato / ancora in conflitto.
+
+Le modifiche locali non pubblicate restano finché l’utente non conferma pubblicazione o non sceglie esplicitamente in un conflitto.
+
+---
+
+## 5. Protezione dei dati
+
+| Situazione | Comportamento v1 |
+|---|---|
+| Conflitto stessa scheda | Segnale obbligatorio; scelta esplicita (tieni la mia / prendi quella della sede / decide dopo). Niente sovrascrittura silenziosa. |
+| Annulla sul riepilogo Aggiorna | Nessuna scrittura su sede; nessuna perdita modifiche locali. |
+| Annulla / kill durante Wizard | Nessuna sede attiva se il completamento non è riuscito. |
+| Interruzione durante Aggiorna (dopo conferma) | Stato recuperabile: al riavvio, «Aggiornamento incompleto — Riprova» senza inventare esiti; non marcare tutto come sincronizzato. |
+| Sede indisponibile | Uso copia di lavoro; niente retry automatici. |
+| Cambio sede | Solo tramite Wizard; avviso che i dispositivi devono ricollegarsi alla nuova sede. |
+
+---
+
+## 6. Perimetro v1 — necessario H1 vs rinviabile
+
+### Incluso in v1 (necessario a H1)
+
+| Area | Contenuto |
+|---|---|
+| Wizard S0 + W1–W4 + S5 | Testi allineati a «sede Catalogo personale»; guide W2; Scegli cartella W2–W4 |
+| Persistenza sede | Sede attiva solo se verificata; distinguibile per tipo |
+| Fascicolo schede in sede | Creazione/lettura/scrittura del pacchetto metadati (non le foto) |
+| Copia di lavoro | Room locale esistente resta il lavoro quotidiano |
+| Aggiorna Catalogo | Confronto + riepilogo + applica + conflitti espliciti |
+| Offline | Uso locale + indicatore sede |
+| Limiti dichiarati in UI | W1 multi-device; PC senza app Windows; allineamento non istantaneo |
+| Distinzione | Nessuna confusione con Archivio familiare |
+
+### Rinviabile (fuori v1 H1)
+
+| Elemento | Motivo |
+|---|---|
+| Client Windows / MediaManager su PC | PC = contenitore sede |
+| Sync automatica / background / retry code | Vietata dalle regole già fissate; non serve a H1 |
+| Merge campo-per-campo dei conflitti | Basta scelta esplicita versione intera scheda |
+| Spostamento automatico sede W1 → W2 | L’utente rifà il Wizard |
+| Scan LAN / discovery host | Resta guida + selettore |
+| Cloud account SyncPort obbligatorio (H2) | Non direzione scelta |
+| SQLite live su share (H3) | Scartata |
+| Funzioni Acquisisci/Pulisci/Componi nuove | Fuori perimetro Wizard/H1 |
+
+### Criteri di accettazione v1 (checklist)
+
+1. Wizard espone W1–W4 in combo; tutti raggiungibili.
+2. Completamento Wizard → sede verificata; Annulla a metà → nessuna sede attiva.
+3. Due Android sulla stessa sede W2/W3/W4, dopo Aggiorna completato, vedono le stesse schede pubblicate.
+4. Offline: uso copia di lavoro; sede down segnalata.
+5. Aggiorna mostra sempre pubblicherò / recepirò / conflitti prima di scrivere.
+6. Conflitto: nessuna sovrascrittura senza scelta utente.
+7. Annulla su riepilogo: zero perdite locali non pubblicate.
+8. Interruzione Aggiorna: ripresa esplicita, niente «tutto ok» falso.
+9. UI non presenta il Catalogo personale come Archivio familiare.
+10. W1: limite multi-device comunicato in S1a e in S5.
+
+### Limiti dichiarati all’utente (copy v1)
+
+- L’allineamento tra dispositivi avviene quando usi **Aggiorna Catalogo** e la sede è raggiungibile.
+- Il PC in v1 ospita la sede; l’app MediaManager sul PC arriverà dopo.
+- Con sede su questo telefono/tablet, collegare un secondo dispositivo è limitato: meglio PC, Drive o NAS.
+
+---
+
+## 7.24.7 Stato e prossimo passo documentale
+
+**Definizione funzionale Wizard + perimetro v1: PRONTA PER CONVALIDA.**
+
+Dopo il tuo OK (e eventuale passaggio ChatGPT):
+1. aggiornamento **Nota Integrata** + Roadmap (BL-17 / H1 / criteri);
+2. solo allora avvio sviluppo per fasi.
+
+Fine definizione Cursor — §7.24 — PVM_Interlocuzione_Cursor_v3.9
