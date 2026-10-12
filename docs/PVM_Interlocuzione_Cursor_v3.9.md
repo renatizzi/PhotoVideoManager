@@ -2982,10 +2982,12 @@ Fine risposta Cursor — §7.23 — PVM_Interlocuzione_Cursor_v3.9
 - Pulsanti: Indietro | **Usa questo dispositivo** → verifica locale (Sede OK) → **S5**.
 
 ### W2 — PC o notebook
-- **S2a** Prepara cartella sul PC (passi numerati: crea cartella, condividi, IP/nome, stessa Wi‑Fi) — riuso guida già abbozzata.
+- **Portata della sede (precisazione Renato 12/10):** «PC/notebook Windows» significa una **cartella resa disponibile da quel computer**, non solo il disco C:. Sono ammesse cartelle sul disco interno **e** su **dischi esterni USB/SATA, chiavette, microSD e ogni altra memoria di massa collegata al PC/notebook**, purché Windows le veda e l’utente le **condivida** (o le esponga in rete) come fa per una cartella su C:. Per MediaManager la sede è quella cartella condivisa; il volume fisico dietro Windows è indifferente.
+- **S2a** Prepara cartella sul PC (passi numerati: crea/scegli cartella su C: **oppure** su disco esterno/chiavetta/microSD collegata al PC → Condividi → IP/nome → stessa Wi‑Fi; se la memoria è esterna, deve restare collegata quando usi la sede).
 - **S2b** Collega da Archivio/Gestione file (SMB) — link «Non riesco» → **S2d** aiuto.
 - **S2c** In MediaManager: **Scegli cartella** → selettore sistema → verifica sede → **S5**.
 - **S2d** Aiuto credenziali/rete; Torna | Cambia sede (→ S0).
+- **Limite operativo da dichiarare in guida W2:** se la sede sta su una memoria esterna e quella viene scollegata dal PC, la sede risulta non raggiungibile (come PC spento); la copia di lavoro sui telefoni/tablet resta usabile offline.
 
 ### W3 — Google Drive / cloud
 - **S3a** Breve guida + nota «non obbligatorio» → **Scegli cartella** → verifica → **S5**.
