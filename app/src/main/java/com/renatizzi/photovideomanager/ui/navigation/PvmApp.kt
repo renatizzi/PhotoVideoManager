@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.launch
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -262,7 +263,10 @@ fun PvmApp(
                 }
                 composable(PvmDestination.CatalogSeatWizard.route) {
                     val wizardVm: CatalogSeatWizardViewModel = viewModel(
-                        factory = CatalogSeatWizardViewModel.factory(catalogFacade),
+                        factory = CatalogSeatWizardViewModel.factory(
+                            catalogFacade,
+                            LocalContext.current.applicationContext,
+                        ),
                     )
                     val wizardState by wizardVm.state.collectAsStateWithLifecycle()
                     CatalogSeatWizardScreen(
@@ -272,6 +276,11 @@ fun PvmApp(
                         onBackIntro = wizardVm::goIntro,
                         onGoStep = wizardVm::goStep,
                         onConfirmLocal = wizardVm::confirmLocalSeat,
+                        onFolderPathChange = wizardVm::updateFolderPath,
+                        onShareNameChange = wizardVm::updateShareName,
+                        onPrepareScript = { wizardVm.prepareWindowsScript() },
+                        onShareScript = wizardVm::shareScriptIntent,
+                        onCredentialsText = wizardVm::credentialsClipboardText,
                         onFolderPicked = wizardVm::onFolderPicked,
                         onDone = { navController.popBackStack() },
                         onCancel = { navController.popBackStack() },
