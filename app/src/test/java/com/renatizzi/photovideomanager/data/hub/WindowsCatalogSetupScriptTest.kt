@@ -51,4 +51,15 @@ class WindowsCatalogSetupScriptTest {
         val pwd = WindowsCatalogSetupScript.generatePassword(14)
         assertTrue(pwd.length == 14)
     }
+
+    @Test
+    fun package_fileNamesHaveCmdAndPs1Extensions() {
+        val pkg = WindowsCatalogSetupScript.build(
+            WindowsCatalogSetupScript.Params(temporaryPassword = "TempPass!23456"),
+        )
+        assertTrue(pkg.cmdFileName.endsWith(".cmd"))
+        assertTrue(pkg.ps1FileName.endsWith(".ps1"))
+        assertFalse(pkg.cmdFileName.endsWith(".txt"))
+        assertFalse(pkg.ps1FileName.endsWith(".txt"))
+    }
 }

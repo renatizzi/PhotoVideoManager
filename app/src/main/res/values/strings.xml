@@ -78,7 +78,7 @@
     <string name="hub_w2_share_name_label">Nome condivisione SMB</string>
     <string name="hub_w2_routine_params_note">Utente Windows dedicato: MediaManager (senza privilegi di amministratore). Password provvisoria generata dall\'app.</string>
     <string name="hub_w2_prepare_script">Prepara script</string>
-    <string name="hub_w2_routine_ready_body">Script pronto. Sul PC fai doppio clic su MediaManager_Setup_Catalogo.cmd e conferma Amministratore. Lo script crea cartella, utente e condivisione in modo ripetibile.</string>
+    <string name="hub_w2_routine_ready_body">Script pronto (due file in Download: MediaManager_Setup_Catalogo.cmd e .ps1 — senza .txt in coda). Sul PC: cavo USB → Trasferimento file → apri il telefono → Download → copia entrambi sul Desktop → doppio clic sul .cmd e conferma Amministratore.</string>
     <string name="hub_w2_credentials_title">Credenziali da usare in Archivio</string>
     <string name="hub_w2_credentials_lines">Utente: %1$s\nPassword: %2$s\nCondivisione: \\\\%3$s (oppure \\\\IP-del-PC\\%3$s)</string>
     <string name="hub_w2_share_script">Invia script al PC</string>

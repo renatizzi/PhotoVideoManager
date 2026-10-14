@@ -55,7 +55,8 @@ class WindowsSetupScriptExporter(
 
     fun shareIntent(export: WindowsSetupExportResult): Intent {
         val intent = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
-            type = "text/plain"
+            // Avoid text/plain: some receivers append ".txt" to .cmd/.ps1 names.
+            type = "*/*"
             putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(export.shareUris))
             putExtra(
                 Intent.EXTRA_SUBJECT,
@@ -74,6 +75,7 @@ class WindowsSetupScriptExporter(
     private fun saveToDownloads(ps1: File, cmd: File): Boolean {
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                purgePreviousDownloads()
                 writeMediaStore(ps1) && writeMediaStore(cmd)
             } else {
                 @Suppress("DEPRECATION")
@@ -81,6 +83,7 @@ class WindowsSetupScriptExporter(
                     Environment.DIRECTORY_DOWNLOADS,
                 )
                 if (!downloads.exists()) downloads.mkdirs()
+                purgeLegacyDownloadFiles(downloads)
                 ps1.copyTo(File(downloads, ps1.name), overwrite = true)
                 cmd.copyTo(File(downloads, cmd.name), overwrite = true)
                 true
@@ -90,28 +93,55 @@ class WindowsSetupScriptExporter(
         }
     }
 
+    private fun mimeFor(fileName: String): String = when {
+        fileName.endsWith(".cmd", ignoreCase = true) -> "application/x-bat"
+        fileName.endsWith(".ps1", ignoreCase = true) -> "application/x-powershell"
+        else -> "application/octet-stream"
+    }
+
+    private fun purgePreviousDownloads() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
+        val resolver = context.contentResolver
+        val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        // Exact names and Samsung-renamed "*.cmd.txt" / "*.ps1 (n).txt" leftovers.
+        resolver.delete(
+            collection,
+            "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
+            arrayOf("MediaManager_Setup_Catalogo%"),
+        )
+    }
+
+    private fun purgeLegacyDownloadFiles(downloads: File) {
+        downloads.listFiles()
+            ?.filter { it.name.startsWith("MediaManager_Setup_Catalogo") }
+            ?.forEach { it.delete() }
+    }
+
     private fun writeMediaStore(file: File): Boolean {
         val resolver = context.contentResolver
         val values = ContentValues().apply {
             put(MediaStore.Downloads.DISPLAY_NAME, file.name)
-            put(MediaStore.Downloads.MIME_TYPE, "text/plain")
+            put(MediaStore.Downloads.MIME_TYPE, mimeFor(file.name))
+            put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/")
             put(MediaStore.Downloads.IS_PENDING, 1)
         }
         val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-        // Replace previous pending/completed entry with same name when possible.
-        resolver.delete(
-            collection,
-            "${MediaStore.Downloads.DISPLAY_NAME}=?",
-            arrayOf(file.name),
-        )
         val uri = resolver.insert(collection, values) ?: return false
-        resolver.openOutputStream(uri)?.use { out ->
-            file.inputStream().use { input -> input.copyTo(out) }
-        } ?: return false
-        values.clear()
-        values.put(MediaStore.Downloads.IS_PENDING, 0)
-        resolver.update(uri, values, null, null)
-        return true
+        try {
+            resolver.openOutputStream(uri)?.use { out ->
+                file.inputStream().use { input -> input.copyTo(out) }
+            } ?: run {
+                resolver.delete(uri, null, null)
+                return false
+            }
+            values.clear()
+            values.put(MediaStore.Downloads.IS_PENDING, 0)
+            resolver.update(uri, values, null, null)
+            return true
+        } catch (_: Exception) {
+            resolver.delete(uri, null, null)
+            return false
+        }
     }
 
     private fun copyToRemovableUsb(ps1: File, cmd: File): String? {
