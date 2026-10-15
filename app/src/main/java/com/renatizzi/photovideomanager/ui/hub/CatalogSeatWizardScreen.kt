@@ -55,6 +55,7 @@ fun CatalogSeatWizardScreen(
     onPrepareScript: () -> Unit,
     onShareScript: () -> Intent?,
     onCredentialsText: () -> String,
+    onConfirmScriptRan: () -> Unit,
     onFolderPicked: (uri: String, label: String) -> Unit,
     onDone: () -> Unit,
     onCancel: () -> Unit,
@@ -131,7 +132,7 @@ fun CatalogSeatWizardScreen(
             WizardStep.W2_ROUTINE_CONFIRM -> SimpleGuide(
                 body = stringResource(R.string.hub_w2_routine_confirm_body),
                 primary = stringResource(R.string.hub_w2_routine_confirm_primary),
-                onPrimary = { onGoStep(WizardStep.W2_CONNECT) },
+                onPrimary = onConfirmScriptRan,
                 onBack = { onGoStep(WizardStep.W2_ROUTINE_READY) },
             )
             WizardStep.W2_PREPARE -> SimpleGuide(

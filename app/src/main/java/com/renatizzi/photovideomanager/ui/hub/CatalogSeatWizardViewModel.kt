@@ -90,6 +90,24 @@ class CatalogSeatWizardViewModel(
         _state.update { it.copy(step = step, errorMessage = null, statusMessage = null) }
     }
 
+    /** Call when the user confirms the PC script finished successfully. */
+    fun confirmScriptRanOnPc() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val n = runCatching { exporter.scrubDownloadsScripts() }.getOrDefault(0)
+            _state.update {
+                it.copy(
+                    step = WizardStep.W2_CONNECT,
+                    statusMessage = if (n > 0) {
+                        "Script rimosso da Download sul telefono (conteneva la password)."
+                    } else {
+                        "Se in Download resta ancora .ps1, eliminalo: contiene la password."
+                    },
+                    errorMessage = null,
+                )
+            }
+        }
+    }
+
     fun updateFolderPath(value: String) {
         _state.update { it.copy(folderPath = value, errorMessage = null, scriptPrepared = false) }
     }

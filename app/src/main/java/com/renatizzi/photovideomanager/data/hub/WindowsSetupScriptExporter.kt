@@ -36,7 +36,8 @@ class WindowsSetupScriptExporter(
             it.writeBytes(WindowsCatalogSetupScript.utf8BomBytes(pkg.ps1Content))
         }
         val cmd = File(dir, pkg.cmdFileName).also {
-            it.writeBytes(WindowsCatalogSetupScript.utf8BomBytes(pkg.cmdContent))
+            // CMD: ASCII + CRLF, no BOM (BOM breaks "@echo off").
+            it.writeBytes(WindowsCatalogSetupScript.asciiCrlfNoBomBytes(pkg.cmdContent))
         }
 
         val downloadsOk = saveToDownloads(ps1, cmd)
@@ -55,6 +56,43 @@ class WindowsSetupScriptExporter(
             usbCopiedTo = usbLabel,
             shareUris = uris,
         )
+    }
+
+    /**
+     * Removes generated setup scripts from public Downloads after successful PC setup.
+     * The .ps1 still contains the temporary password until deleted.
+     */
+    fun scrubDownloadsScripts(): Int {
+        var removed = 0
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val resolver = context.contentResolver
+                val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+                removed = resolver.delete(
+                    collection,
+                    "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
+                    arrayOf("MediaManager_Setup_Catalogo%"),
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                val downloads = Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_DOWNLOADS,
+                )
+                downloads.listFiles()
+                    ?.filter { it.name.startsWith("MediaManager_Setup_Catalogo") }
+                    ?.forEach {
+                        if (it.delete()) removed++
+                    }
+            }
+        } catch (_: Exception) {
+            // best-effort
+        }
+        // Also clear app cache copy.
+        try {
+            File(context.cacheDir, "windows_setup").deleteRecursively()
+        } catch (_: Exception) {
+        }
+        return removed
     }
 
     fun shareIntent(export: WindowsSetupExportResult): Intent {

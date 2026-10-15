@@ -73,30 +73,30 @@
     <string name="hub_w2_choice_body">Per il PC Windows puoi far preparare cartella, utente dedicato e condivisione da uno script (consigliato), oppure usare una condivisione che hai già.</string>
     <string name="hub_w2_choice_routine">Configura il PC con lo script MediaManager</string>
     <string name="hub_w2_choice_already">Ho già la cartella condivisa</string>
-    <string name="hub_w2_routine_params_body">Indica dove creare il Catalogo sul PC. L\'app prepara da sola lo script, lo salva in Download e — se c\'è una chiavetta USB collegata al telefono — lo copia anche lì. Poi lo puoi inviare al PC con un tocco.</string>
+    <string name="hub_w2_routine_params_body">Indica dove creare il Catalogo sul PC. L\'app prepara lo script e lo salva in Download. Poi servono quattro passi manuali (nessun ritorno automatico all\'app).</string>
     <string name="hub_w2_folder_path_label">Percorso cartella sul PC</string>
     <string name="hub_w2_share_name_label">Nome condivisione SMB</string>
     <string name="hub_w2_routine_params_note">Utente Windows dedicato: MediaManager (senza privilegi di amministratore). Password provvisoria generata dall\'app.</string>
     <string name="hub_w2_prepare_script">Prepara script</string>
-    <string name="hub_w2_routine_ready_body">Script pronto (due file in Download: MediaManager_Setup_Catalogo.cmd e .ps1 — senza .txt in coda). Sul PC: cavo USB → Trasferimento file → apri il telefono → Download → copia entrambi sul Desktop → doppio clic sul .cmd e conferma Amministratore.</string>
+    <string name="hub_w2_routine_ready_body">Script pronto in Download (nomi esatti .cmd e .ps1, senza .txt).\n\nPasso 1/4 — Copia: cavo USB → Trasferimento file → sul PC apri il telefono → Download → copia entrambi i file sul Desktop.\nIl file .ps1 contiene la password: non lasciarlo in giro sul telefono dopo l\'uso.</string>
     <string name="hub_w2_credentials_title">Credenziali da usare in Archivio</string>
     <string name="hub_w2_credentials_lines">Utente: %1$s\nPassword: %2$s\nCondivisione: \\\\%3$s (oppure \\\\IP-del-PC\\%3$s)</string>
     <string name="hub_w2_share_script">Invia script al PC</string>
     <string name="hub_w2_copy_credentials">Copia credenziali</string>
     <string name="hub_w2_reprepare_script">Rigenera script e password</string>
-    <string name="hub_w2_routine_confirm_body">Quando lo script sul PC ha mostrato «CONFIGURAZIONE COMPLETATA», continua. L\'app non considera ancora valida la sede: serve il collegamento dal tablet.</string>
-    <string name="hub_w2_routine_confirm_primary">Ho eseguito lo script sul PC</string>
+    <string name="hub_w2_routine_confirm_body">Passo 2/4 — Sul PC: doppio clic su MediaManager_Setup_Catalogo.cmd, conferma Sì all\'UAC, attendi «Tutto pronto».\nPoi torna qui. L\'app rimuoverà lo .ps1 da Download (contiene la password).</string>
+    <string name="hub_w2_routine_confirm_primary">Ho visto Tutto pronto sul PC</string>
     <string name="hub_w2_prepare">1. Sul PC crea o scegli una cartella (anche su disco USB, chiavetta o microSD collegata al PC).\n2. Tasto destro → Proprietà → Condivisione → Condividi.\n3. Preferisci un utente Windows locale dedicato (es. MediaManager), non l\'account Microsoft/Gmail.\n4. Annota nome PC o indirizzo IP. Stessa Wi‑Fi.</string>
     <string name="hub_w2_prepared">Ho creato la cartella</string>
     <string name="hub_w2_connect">Apri Archivio / Gestione file → Spazio di archiviazione di rete → Aggiungi → Unità di rete (SMB). Host = IP o nome PC. Utente e password = account Windows dedicato. Quando vedi la cartella, torna qui.</string>
-    <string name="hub_w2_connect_dedicated">Apri Archivio / Gestione file → Spazio di archiviazione di rete → Aggiungi → Unità di rete (SMB).\n\nHost = nome PC o IP.\nUtente = %1$s (oppure NOME-PC\\%1$s).\nPassword = %2$s\nCartella/condivisione = %3$s\n\nQuando vedi la cartella, torna qui.</string>
+    <string name="hub_w2_connect_dedicated">Passo 3/4 — Sul tablet configura l\'accesso SMB (una volta), ad es. con CIFS Documents Provider o Archivio → rete:\n\nHost = nome PC o IP.\nUtente = %1$s (oppure NOME-PC\\%1$s).\nPassword = %2$s\nCondivisione = %3$s\n\nQuando la cartella si apre, torna qui.</string>
     <string name="hub_w2_connected">Ho collegato il PC</string>
     <string name="hub_w2_help_link">Non riesco a collegarmi</string>
     <string name="hub_w2_help_body">Usa l\'utente locale MediaManager creato dallo script (non Microsoft/Gmail). Formato: NOME-PC\\MediaManager. Rete del PC = Privata. Stessa Wi‑Fi. Se hai cambiato la password sul PC, aggiorna le credenziali in Archivio. Puoi anche tornare indietro e scegliere un\'altra sede.</string>
     <string name="hub_w2_help_back">Torna al collegamento</string>
     <string name="hub_w2_password_help_link">Ho cambiato la password</string>
     <string name="hub_w2_password_help_body">1. Sul PC cambia la password dell\'utente MediaManager (Impostazioni → Account oppure net user).\n2. In Archivio / Gestione file aggiorna o ricrea la connessione SMB con la nuova password.\n3. Torna qui e riprova Scegli cartella. Il riferimento alla sede in MediaManager non si perde.</string>
-    <string name="hub_w2_pick">Tocca Scegli cartella. Nel selettore apri lo spazio di rete / il PC e seleziona la cartella del Catalogo (o MediaManagerCatalog). Conferma con Usa questa cartella. L\'app verifica lettura e scrittura prima di registrare la sede.</string>
+    <string name="hub_w2_pick">Passo 4/4 — Tocca Scegli cartella. Nel selettore apri il provider di rete (CIFS Documents Provider / Disco di rete) e seleziona la cartella del Catalogo. Conferma con Usa questa cartella. Solo allora MediaManager registra la sede (dopo prova di lettura/scrittura).</string>
     <string name="hub_w2_done_password_reminder">Ricorda: la password SMB è provvisoria. Cambiala sul PC e aggiorna Archivio quando puoi.</string>
     <string name="hub_w3_body">Serve un account Google sul dispositivo. Tocca Scegli cartella, apri Google Drive, crea o seleziona una cartella (es. Foto Catalogo) e conferma. Non è obbligatorio usare il cloud.</string>
     <string name="hub_w4_body">Se il NAS è già in Disco di rete, tocca Scegli cartella e seleziona la cartella delle foto. Altrimenti aggiungilo prima in Archivio → Spazio di archiviazione di rete, poi torna qui.</string>

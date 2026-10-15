@@ -107,14 +107,26 @@ object WindowsCatalogSetupScript {
         }
     }
 
-    /** Bytes ready for disk: UTF-8 with BOM + ASCII body. */
+    /** Bytes for .ps1: UTF-8 with BOM + ASCII body (CRLF). */
     fun utf8BomBytes(content: String): ByteArray {
         assertAsciiDeliverable(content, "utf8Bom")
         val bom = byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte())
-        return bom + content.toByteArray(Charsets.UTF_8)
+        return bom + crlf(content).toByteArray(Charsets.UTF_8)
     }
 
-    private fun buildCmd(): String = """
+    /** Bytes for .cmd: ASCII only, no BOM, CRLF (BOM breaks @echo off). */
+    fun asciiCrlfNoBomBytes(content: String): ByteArray {
+        assertAsciiDeliverable(content, "cmdBytes")
+        return crlf(content).toByteArray(Charsets.US_ASCII)
+    }
+
+    private fun crlf(content: String): String =
+        content.replace("\r\n", "\n").replace("\n", "\r\n").let {
+            if (it.endsWith("\r\n")) it else it + "\r\n"
+        }
+
+    private fun buildCmd(): String = crlf(
+        """
         @echo off
         setlocal
         title MediaManager - configurazione Catalogo
@@ -140,7 +152,8 @@ object WindowsCatalogSetupScript {
         echo.
         pause
         exit /b %ERR%
-    """.trimIndent() + "\r\n"
+        """.trimIndent(),
+    )
 
     private fun psQuote(value: String): String =
         "'" + value.replace("'", "''") + "'"
@@ -320,11 +333,14 @@ try {
       Write-Step "Nessun gateway predefinito trovato: profilo di rete non modificato."
     }
 
-    Enable-NetFirewallRule -Group ${d}FirewallGroup -ErrorAction Stop
+    # Enable File and Printer Sharing only on Domain/Private (not Public).
+    Get-NetFirewallRule -Group ${d}FirewallGroup -ErrorAction Stop | ForEach-Object {
+      Set-NetFirewallRule -Name ${d}_.Name -Enabled True -Profile Domain,Private -ErrorAction Stop
+    }
     Set-Service -Name LanmanServer -StartupType Automatic -ErrorAction Stop
     Start-Service LanmanServer -ErrorAction Stop
     Record 'firewall' ${d}true 'verificato'
-    Write-Step "Firewall (gruppo condivisione file) e servizio Server attivi."
+    Write-Step "Firewall (condivisione file, profili Dominio/Privato) e servizio Server attivi."
   } catch {
     Fail-Step 50 ("Rete/firewall non riusciti: " + ${d}_.Exception.Message)
   }
@@ -351,7 +367,11 @@ try {
   if (-not ${d}portOk) { ${d}problemi += 'porta 445' }
   ${d}fwOk = ${d}false
   try {
-    ${d}fwOk = [bool](Get-NetFirewallRule -Group ${d}FirewallGroup -ErrorAction SilentlyContinue | Where-Object { ${d}_.Enabled })
+    # Enabled may be enum Enabled/Disabled (both truthy!) or True/False.
+    ${d}fwOk = [bool](Get-NetFirewallRule -Group ${d}FirewallGroup -ErrorAction SilentlyContinue |
+      Where-Object {
+        ${d}_.Enabled -eq 'True' -or ${d}_.Enabled -eq 'Enabled' -or ${d}_.Enabled -eq ${d}true
+      })
   } catch {}
   if (-not ${d}fwOk) { ${d}problemi += 'firewall' }
   if (${d}problemi.Count -gt 0) {
@@ -383,7 +403,8 @@ try {
   Write-Host "Tutto pronto" -ForegroundColor Green
   Write-Host ("PC:            {0}" -f ${d}pc)
   Write-Host ("Cartella:      {0}" -f ${d}FolderPath)
-  Write-Host ("Condivisione:  \\\\{0}\\{1}" -f ${d}pc, ${d}ShareName)
+  # Build UNC with [char]92 so backslashes are never doubled by escaping.
+  Write-Host ("Condivisione:  " + [string][char]92 + [char]92 + ${d}pc + [char]92 + ${d}ShareName)
   if (${d}primaryIp) { Write-Host ("IP:            {0}" -f ${d}primaryIp) }
   Write-Host ("Utente SMB:    {0}" -f ${d}userHint)
   Write-Host ("Password:      {0}" -f ${d}PlainPassword) -ForegroundColor Yellow

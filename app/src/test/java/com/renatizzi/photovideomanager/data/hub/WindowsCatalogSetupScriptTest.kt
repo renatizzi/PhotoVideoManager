@@ -126,4 +126,37 @@ class WindowsCatalogSetupScriptTest {
         val logLines = ps1.lines().filter { it.contains("Write-Log") || it.contains("Write-Step") }
         assertTrue(logLines.none { it.contains("PlainPassword") && !it.contains("ConvertTo-SecureString") })
     }
+
+    @Test
+    fun cmdBytes_asciiCrlfNoBom_ps1HasBom() {
+        val pkg = samplePkg()
+        val cmd = WindowsCatalogSetupScript.asciiCrlfNoBomBytes(pkg.cmdContent)
+        val ps1 = WindowsCatalogSetupScript.utf8BomBytes(pkg.ps1Content)
+        assertTrue(cmd.isNotEmpty() && cmd[0] == '@'.code.toByte())
+        assertFalse(cmd.size >= 3 && cmd[0] == 0xEF.toByte() && cmd[1] == 0xBB.toByte())
+        assertTrue(String(cmd, Charsets.US_ASCII).contains("\r\n"))
+        assertTrue(ps1[0] == 0xEF.toByte() && ps1[1] == 0xBB.toByte() && ps1[2] == 0xBF.toByte())
+    }
+
+    @Test
+    fun build_uncLineUsesChar92NotStackedEscapes() {
+        val ps1 = samplePkg().ps1Content
+        assertTrue(ps1.contains("[char]92"))
+        assertFalse(ps1.contains("Condivisione:  \\\\{0}"))
+    }
+
+    @Test
+    fun emitScriptsForCi() {
+        val pkg = samplePkg()
+        val out = java.io.File("build/windows_setup_ci").apply {
+            deleteRecursively()
+            mkdirs()
+        }
+        java.io.File(out, pkg.ps1FileName)
+            .writeBytes(WindowsCatalogSetupScript.utf8BomBytes(pkg.ps1Content))
+        java.io.File(out, pkg.cmdFileName)
+            .writeBytes(WindowsCatalogSetupScript.asciiCrlfNoBomBytes(pkg.cmdContent))
+        assertTrue(java.io.File(out, pkg.ps1FileName).exists())
+        assertTrue(java.io.File(out, pkg.cmdFileName).exists())
+    }
 }

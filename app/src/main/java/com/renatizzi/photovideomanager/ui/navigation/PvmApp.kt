@@ -281,6 +281,7 @@ fun PvmApp(
                         onPrepareScript = { wizardVm.prepareWindowsScript() },
                         onShareScript = wizardVm::shareScriptIntent,
                         onCredentialsText = wizardVm::credentialsClipboardText,
+                        onConfirmScriptRan = wizardVm::confirmScriptRanOnPc,
                         onFolderPicked = wizardVm::onFolderPicked,
                         onDone = { navController.popBackStack() },
                         onCancel = { navController.popBackStack() },
