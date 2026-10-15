@@ -32,8 +32,12 @@ class WindowsSetupScriptExporter(
             if (exists()) deleteRecursively()
             mkdirs()
         }
-        val ps1 = File(dir, pkg.ps1FileName).also { it.writeText(pkg.ps1Content, Charsets.UTF_8) }
-        val cmd = File(dir, pkg.cmdFileName).also { it.writeText(pkg.cmdContent, Charsets.UTF_8) }
+        val ps1 = File(dir, pkg.ps1FileName).also {
+            it.writeBytes(WindowsCatalogSetupScript.utf8BomBytes(pkg.ps1Content))
+        }
+        val cmd = File(dir, pkg.cmdFileName).also {
+            it.writeBytes(WindowsCatalogSetupScript.utf8BomBytes(pkg.cmdContent))
+        }
 
         val downloadsOk = saveToDownloads(ps1, cmd)
         val usbLabel = copyToRemovableUsb(ps1, cmd)

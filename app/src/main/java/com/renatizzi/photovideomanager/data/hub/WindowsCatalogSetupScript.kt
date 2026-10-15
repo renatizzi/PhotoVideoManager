@@ -74,11 +74,44 @@ object WindowsCatalogSetupScript {
         validateUserName(params.userName)?.let { error(it) }
         require(params.temporaryPassword.length >= 8) { "Password troppo corta" }
 
-        return Package(
+        val pkg = Package(
             params = params,
             ps1Content = buildPs1(params),
             cmdContent = buildCmd(),
         )
+        assertAsciiDeliverable(pkg.ps1Content, "ps1")
+        assertAsciiDeliverable(pkg.cmdContent, "cmd")
+        assertPs1QuoteBalance(pkg.ps1Content)
+        return pkg
+    }
+
+    /**
+     * Windows PowerShell 5.1 may mis-parse UTF-8 without BOM if non-ASCII is present.
+     * Deliverables must be ASCII-only; exporter still writes UTF-8 with BOM.
+     */
+    fun assertAsciiDeliverable(content: String, label: String) {
+        val offenders = content.withIndex()
+            .filter { it.value.code > 127 }
+            .take(8)
+            .map { "U+${it.value.code.toString(16).uppercase()}@${it.index}" }
+        require(offenders.isEmpty()) {
+            "Script $label contiene caratteri non ASCII (romperebbero PowerShell 5.1): $offenders"
+        }
+    }
+
+    /** Lightweight guard: odd double-quote count usually means a broken string (as in the 0.16.23 failure). */
+    fun assertPs1QuoteBalance(ps1: String) {
+        val doubleQuotes = ps1.count { it == '"' }
+        require(doubleQuotes % 2 == 0) {
+            "Script ps1: numero dispari di virgolette doppie ($doubleQuotes) - possibile stringa spezzata"
+        }
+    }
+
+    /** Bytes ready for disk: UTF-8 with BOM + ASCII body. */
+    fun utf8BomBytes(content: String): ByteArray {
+        assertAsciiDeliverable(content, "utf8Bom")
+        val bom = byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte())
+        return bom + content.toByteArray(Charsets.UTF_8)
     }
 
     private fun buildCmd(): String = """
@@ -178,17 +211,17 @@ function Record(${d}name, ${d}ok, ${d}detail) {
 try {
   Write-Host ""
   Write-Host "=== MediaManager: configurazione Catalogo ===" -ForegroundColor Cyan
-  Write-Host "Passo 1 di 6 — Controlli preliminari" -ForegroundColor Cyan
+  Write-Host "Passo 1 di 6 - Controlli preliminari" -ForegroundColor Cyan
   Write-Host ""
 
   ${d}identity = [Security.Principal.WindowsIdentity]::GetCurrent()
   ${d}principal = New-Object Security.Principal.WindowsPrincipal(${d}identity)
   if (-not ${d}principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Fail-Step 50 'Esecuzione non elevata. Avvia il file .cmd e conferma Sì al Controllo account utente.'
+    Fail-Step 50 'Esecuzione non elevata. Avvia il file .cmd e conferma Si al Controllo account utente.'
   }
   Write-Step ("Windows {0}" -f [Environment]::OSVersion.Version.ToString())
 
-  Write-Host "Passo 2 di 6 — Cartella Catalogo" -ForegroundColor Cyan
+  Write-Host "Passo 2 di 6 - Cartella Catalogo" -ForegroundColor Cyan
   Write-Step "Cartella Catalogo: ${d}FolderPath"
   try {
     if (-not (Test-Path -LiteralPath ${d}FolderPath)) {
@@ -203,7 +236,7 @@ try {
     Fail-Step 10 ("Creazione cartella non riuscita: " + ${d}_.Exception.Message)
   }
 
-  Write-Host "Passo 3 di 6 — Account dedicato" -ForegroundColor Cyan
+  Write-Host "Passo 3 di 6 - Account dedicato" -ForegroundColor Cyan
   Write-Step "Account locale: ${d}UserName"
   try {
     ${d}secure = ConvertTo-SecureString ${d}PlainPassword -AsPlainText -Force
@@ -225,7 +258,7 @@ try {
     Fail-Step 20 ("Account dedicato non riuscito: " + ${d}_.Exception.Message)
   }
 
-  Write-Host "Passo 4 di 6 — Condivisione SMB" -ForegroundColor Cyan
+  Write-Host "Passo 4 di 6 - Condivisione SMB" -ForegroundColor Cyan
   Write-Step "Condivisione SMB: ${d}ShareName"
   try {
     ${d}shareObj = Get-SmbShare -Name ${d}ShareName -ErrorAction SilentlyContinue
@@ -248,7 +281,7 @@ try {
     Fail-Step 30 ("Condivisione SMB non riuscita: " + ${d}_.Exception.Message)
   }
 
-  Write-Host "Passo 5 di 6 — Permessi NTFS" -ForegroundColor Cyan
+  Write-Host "Passo 5 di 6 - Permessi NTFS" -ForegroundColor Cyan
   Write-Step "Permessi NTFS sulla cartella"
   try {
     ${d}acl = Get-Acl -LiteralPath ${d}FolderPath
@@ -269,7 +302,7 @@ try {
     Fail-Step 40 ("Permessi NTFS non riusciti: " + ${d}_.Exception.Message)
   }
 
-  Write-Host "Passo 6 di 6 — Rete, firewall e verifica" -ForegroundColor Cyan
+  Write-Host "Passo 6 di 6 - Rete, firewall e verifica" -ForegroundColor Cyan
   Write-Step "Rete e firewall (solo connessione con gateway predefinito)"
   try {
     ${d}defaultRoute = Get-NetRoute -DestinationPrefix '0.0.0.0/0' -ErrorAction SilentlyContinue |
@@ -358,6 +391,7 @@ try {
   Write-Host "Password PROVVISORIA: cambiala in Windows e aggiorna Archivio sul tablet."
   Write-Host ("Esito (fuori dalla condivisione): {0}" -f ${d}ResultPath)
   Write-Host ("Log: {0}" -f ${d}LogPath)
+  Write-Host "AVVISO: se il PC va in sospensione, la cartella sparisce dalla rete."
   Write-Host "Torna all'app MediaManager e continua il Wizard."
   Write-Host ""
 

@@ -93,4 +93,37 @@ class WindowsCatalogSetupScriptTest {
         assertFalse(pkg.cmdFileName.endsWith(".txt"))
         assertFalse(pkg.ps1FileName.endsWith(".txt"))
     }
+
+    @Test
+    fun build_deliverablesAreAsciiOnly() {
+        val pkg = samplePkg()
+        assertTrue(pkg.ps1Content.all { it.code <= 127 })
+        assertTrue(pkg.cmdContent.all { it.code <= 127 })
+    }
+
+    @Test
+    fun utf8BomBytes_startsWithBomAndAsciiBody() {
+        val pkg = samplePkg()
+        val bytes = WindowsCatalogSetupScript.utf8BomBytes(pkg.ps1Content)
+        assertTrue(bytes.size >= 3)
+        assertTrue(bytes[0] == 0xEF.toByte() && bytes[1] == 0xBB.toByte() && bytes[2] == 0xBF.toByte())
+        val body = bytes.copyOfRange(3, bytes.size).toString(Charsets.UTF_8)
+        assertTrue(body.all { it.code <= 127 })
+        assertTrue(body.contains("Tutto pronto"))
+    }
+
+    @Test
+    fun build_userFormatHintHasSingleBackslashInFormatString() {
+        val ps1 = samplePkg().ps1Content
+        // PowerShell does not escape backslash; format must be "{0}\{1}" not "{0}\\{1}".
+        assertTrue(ps1.contains("(\"{0}\\{1}\" -f"))
+        assertFalse(ps1.contains("(\"{0}\\\\{1}\" -f"))
+    }
+
+    @Test
+    fun build_passwordNotWrittenViaWriteLogTemplates() {
+        val ps1 = samplePkg().ps1Content
+        val logLines = ps1.lines().filter { it.contains("Write-Log") || it.contains("Write-Step") }
+        assertTrue(logLines.none { it.contains("PlainPassword") && !it.contains("ConvertTo-SecureString") })
+    }
 }
