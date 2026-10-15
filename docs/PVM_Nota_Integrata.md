@@ -333,7 +333,7 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
 ## 7.1 FASE CORRENTE: BL-17 / H1 Catalogo personale unico + Wizard sede
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)** + **BL-17 / H1**.
-STATO ATTUALE (15/10/2026): **0.16.25-preview** (versionCode 66). **H1 + Wizard BL-17**: W2 script PC (CMD senza BOM/CRLF; PS1 BOM; firewall solo Privato/Dominio; scrub password da Download; testi 4 passi manuali). Job CI ParseFile Windows.
+STATO ATTUALE (15/10/2026): **0.16.26-preview** (versionCode 67). Wizard sede: (1) scelta dispositivo (2) PC→script+CIFS Documents Provider+SAF (3) ripresa Catalogo. Stesso modello BoxManager `NetworkDriveAssistant`.
 Ordine operativo:
 1. **P1** — verifica Renato su telefono/tablet (Wizard + Aggiorna Catalogo multi-dispositivo).
 2. **P2** — BL-09 assorbito in W2; BL-02/BL-11 non ora.

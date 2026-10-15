@@ -58,7 +58,7 @@
     <string name="acquisisci_da_pc_choose">Scegli cartella</string>
     <string name="hub_wizard_title">Imposta Catalogo personale</string>
     <string name="hub_wizard_entry">Imposta Catalogo personale</string>
-    <string name="hub_intro_body">Il Catalogo è la rubrica delle tue foto e dei tuoi video (le schede). Scegli un posto di riferimento: gli altri tuoi dispositivi potranno collegarsi allo stesso Catalogo. Non è obbligatorio avere un NAS o il cloud.</string>
+    <string name="hub_intro_body">Passo 1 — Scegli dove tenere il Catalogo personale (telefono, PC, Drive o NAS). Poi l\'app ti guida a rendere quella cartella visibile e a riprendere la gestione in MediaManager.</string>
     <string name="hub_combo_label">Tengo il Catalogo…</string>
     <string name="hub_kind_local">Su questo telefono o tablet</string>
     <string name="hub_kind_pc">Su un PC o notebook</string>
@@ -88,20 +88,28 @@
     <string name="hub_w2_routine_confirm_primary">Ho visto Tutto pronto sul PC</string>
     <string name="hub_w2_prepare">1. Sul PC crea o scegli una cartella (anche su disco USB, chiavetta o microSD collegata al PC).\n2. Tasto destro → Proprietà → Condivisione → Condividi.\n3. Preferisci un utente Windows locale dedicato (es. MediaManager), non l\'account Microsoft/Gmail.\n4. Annota nome PC o indirizzo IP. Stessa Wi‑Fi.</string>
     <string name="hub_w2_prepared">Ho creato la cartella</string>
-    <string name="hub_w2_connect">Apri Archivio / Gestione file → Spazio di archiviazione di rete → Aggiungi → Unità di rete (SMB). Host = IP o nome PC. Utente e password = account Windows dedicato. Quando vedi la cartella, torna qui.</string>
-    <string name="hub_w2_connect_dedicated">Passo 3/4 — Sul tablet configura l\'accesso SMB (una volta), ad es. con CIFS Documents Provider o Archivio → rete:\n\nHost = nome PC o IP.\nUtente = %1$s (oppure NOME-PC\\%1$s).\nPassword = %2$s\nCondivisione = %3$s\n\nQuando la cartella si apre, torna qui.</string>
-    <string name="hub_w2_connected">Ho collegato il PC</string>
+    <string name="hub_w2_cifs_body">Passo 3 — Rendi la cartella del PC visibile sul telefono con l\'app gratuita CIFS Documents Provider (stessa di BoxManager).\n\nIn CIFS crea una connessione con i dati sotto (Storage = SMB2,3 jCIFS NG; Porta = 445). Poi torna qui.</string>
+    <string name="hub_w2_cifs_fields">Host = IP o nome PC\nUtente = %1$s\nPassword = %2$s\nFolder/condivisione = %3$s\nPorta = 445</string>
+    <string name="hub_w2_cifs_done">Ho configurato CIFS</string>
+    <string name="hub_cifs_install">Installa CIFS Documents Provider</string>
+    <string name="hub_cifs_open">Apri CIFS Documents Provider</string>
+    <string name="hub_cifs_refresh">Ho installato / aggiornato: ricontrolla</string>
+    <string name="hub_cifs_status_ready">CIFS risulta installata su questo dispositivo.</string>
+    <string name="hub_cifs_status_missing">CIFS non risulta installata: tocca Installa (Play Store).</string>
     <string name="hub_w2_help_link">Non riesco a collegarmi</string>
-    <string name="hub_w2_help_body">Usa l\'utente locale MediaManager creato dallo script (non Microsoft/Gmail). Formato: NOME-PC\\MediaManager. Rete del PC = Privata. Stessa Wi‑Fi. Se hai cambiato la password sul PC, aggiorna le credenziali in Archivio. Puoi anche tornare indietro e scegliere un\'altra sede.</string>
+    <string name="hub_w2_help_body">Usa l\'utente locale MediaManager dello script (non Microsoft/Gmail). In CIFS: Storage SMB2,3 (jCIFS NG), porta 445, stessa Wi‑Fi, PC non in sospensione. Se hai cambiato la password sul PC, aggiornala in CIFS.</string>
     <string name="hub_w2_help_back">Torna al collegamento</string>
     <string name="hub_w2_password_help_link">Ho cambiato la password</string>
     <string name="hub_w2_password_help_body">1. Sul PC cambia la password dell\'utente MediaManager (Impostazioni → Account oppure net user).\n2. In Archivio / Gestione file aggiorna o ricrea la connessione SMB con la nuova password.\n3. Torna qui e riprova Scegli cartella. Il riferimento alla sede in MediaManager non si perde.</string>
-    <string name="hub_w2_pick">Passo 4/4 — Tocca Scegli cartella. Nel selettore apri il provider di rete (CIFS Documents Provider / Disco di rete) e seleziona la cartella del Catalogo. Conferma con Usa questa cartella. Solo allora MediaManager registra la sede (dopo prova di lettura/scrittura).</string>
+    <string name="hub_w2_pick">Passo 4 — Tocca Scegli cartella. Nel selettore apri CIFS Documents Provider (o Tutte le cartelle → menu → CIFS) e seleziona la cartella del Catalogo. Conferma con Usa questa cartella. MediaManager verifica lettura/scrittura e registra la sede.</string>
     <string name="hub_w2_done_password_reminder">Ricorda: la password SMB è provvisoria. Cambiala sul PC e aggiorna Archivio quando puoi.</string>
     <string name="hub_w3_body">Serve un account Google sul dispositivo. Tocca Scegli cartella, apri Google Drive, crea o seleziona una cartella (es. Foto Catalogo) e conferma. Non è obbligatorio usare il cloud.</string>
-    <string name="hub_w4_body">Se il NAS è già in Disco di rete, tocca Scegli cartella e seleziona la cartella delle foto. Altrimenti aggiungilo prima in Archivio → Spazio di archiviazione di rete, poi torna qui.</string>
+    <string name="hub_w4_body">Passo 2 — Collega il NAS/disco di rete con CIFS Documents Provider (Host, porta 445, utente, cartella).</string>
+    <string name="hub_w4_cifs_note">Come in BoxManager: le credenziali restano in CIFS; MediaManager sceglie solo la cartella.</string>
+    <string name="hub_w4_pick_hint">Passo 3 — Quando CIFS mostra la cartella, tocca Scegli cartella qui sotto.</string>
     <string name="hub_done_title">Catalogo impostato</string>
-    <string name="hub_done_body">Sede: %1$s. Usa Acquisisci per le foto. Per allineare le schede tra i tuoi dispositivi: Aggiorna Catalogo. Per cambiare sede: Imposta Catalogo personale.</string>
+    <string name="hub_done_body">Sede: %1$s.</string>
+    <string name="hub_done_resume_catalog">Passo finale — Riprendi la gestione in MediaManager: Acquisisci per le foto; Aggiorna Catalogo per allineare le schede con la sede. Per cambiare sede: Imposta Catalogo personale.</string>
     <string name="hub_update_title">Aggiorna Catalogo</string>
     <string name="hub_update_action">Confronta con la sede</string>
     <string name="hub_update_no_seat">Nessuna sede configurata. Imposta prima il Catalogo personale.</string>

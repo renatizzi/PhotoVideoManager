@@ -9,6 +9,7 @@ import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.data.hub.WindowsCatalogSetupScript
 import com.renatizzi.photovideomanager.data.hub.WindowsSetupExportResult
 import com.renatizzi.photovideomanager.data.hub.WindowsSetupScriptExporter
+import com.renatizzi.photovideomanager.data.storage.NetworkDriveAssistant
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeat
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +36,7 @@ data class CatalogSeatWizardUiState(
     val downloadsSaved: Boolean = false,
     val usbCopiedTo: String? = null,
     val statusMessage: String? = null,
+    val cifsInstalled: Boolean = false,
 )
 
 enum class WizardStep {
@@ -45,7 +47,7 @@ enum class WizardStep {
     W2_ROUTINE_READY,
     W2_ROUTINE_CONFIRM,
     W2_PREPARE,
-    W2_CONNECT,
+    W2_CIFS,
     W2_HELP,
     W2_PICK,
     W2_PASSWORD_HELP,
@@ -63,6 +65,10 @@ class CatalogSeatWizardViewModel(
     val state: StateFlow<CatalogSeatWizardUiState> = _state.asStateFlow()
 
     private var lastExport: WindowsSetupExportResult? = null
+
+    init {
+        refreshCifsInstalled()
+    }
 
     fun selectKind(kind: CatalogSeatKind) {
         _state.update { it.copy(selectedKind = kind, errorMessage = null) }
@@ -87,16 +93,26 @@ class CatalogSeatWizardViewModel(
     }
 
     fun goStep(step: WizardStep) {
+        if (step == WizardStep.W2_CIFS || step == WizardStep.W2_PICK || step == WizardStep.W4_GUIDE) {
+            refreshCifsInstalled()
+        }
         _state.update { it.copy(step = step, errorMessage = null, statusMessage = null) }
     }
 
-    /** Call when the user confirms the PC script finished successfully. */
+    fun refreshCifsInstalled() {
+        val installed = NetworkDriveAssistant.isHelperInstalled(appContext)
+        _state.update { it.copy(cifsInstalled = installed) }
+    }
+
+    /** After PC script success: scrub password file and open CIFS step. */
     fun confirmScriptRanOnPc() {
         viewModelScope.launch(Dispatchers.IO) {
             val n = runCatching { exporter.scrubDownloadsScripts() }.getOrDefault(0)
+            val installed = NetworkDriveAssistant.isHelperInstalled(appContext)
             _state.update {
                 it.copy(
-                    step = WizardStep.W2_CONNECT,
+                    step = WizardStep.W2_CIFS,
+                    cifsInstalled = installed,
                     statusMessage = if (n > 0) {
                         "Script rimosso da Download sul telefono (conteneva la password)."
                     } else {
@@ -105,6 +121,14 @@ class CatalogSeatWizardViewModel(
                     errorMessage = null,
                 )
             }
+        }
+    }
+
+    /** Manual share path (no script): go to CIFS with whatever credentials known. */
+    fun continueToCifsFromManualPrepare() {
+        refreshCifsInstalled()
+        _state.update {
+            it.copy(step = WizardStep.W2_CIFS, errorMessage = null, statusMessage = null)
         }
     }
 
@@ -154,7 +178,7 @@ class CatalogSeatWizardViewModel(
                         if (export.usbCopiedTo != null) {
                             append("Copiato anche su USB («${export.usbCopiedTo}»). ")
                         } else {
-                            append("Nessuna USB scrivibile rilevata (puoi usare Condividi). ")
+                            append("Usa cavo USB (Trasferimento file) per copiare i due file sul PC. ")
                         }
                     }.trim()
                     _state.update {
@@ -188,7 +212,14 @@ class CatalogSeatWizardViewModel(
 
     fun credentialsClipboardText(): String {
         val s = _state.value
-        return "Utente: ${s.userName}\nPassword: ${s.temporaryPassword}\nCondivisione: \\\\PC\\${s.shareName}"
+        return buildString {
+            append("Host: IP-del-PC (o nome PC)\n")
+            append("Porta: 445\n")
+            append("Utente: ${s.userName}\n")
+            append("Password: ${s.temporaryPassword}\n")
+            append("Cartella/condivisione: ${s.shareName}\n")
+            append("Storage in CIFS: SMB2,3 (jCIFS NG)")
+        }
     }
 
     fun onFolderPicked(uri: String, label: String) {

@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,6 +38,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.renatizzi.photovideomanager.R
+import com.renatizzi.photovideomanager.data.storage.NetworkDriveAssistant
+import com.renatizzi.photovideomanager.data.storage.OpenDocumentTreeAdvanced
 import com.renatizzi.photovideomanager.data.storage.SafPathLabels
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind
 
@@ -56,6 +57,8 @@ fun CatalogSeatWizardScreen(
     onShareScript: () -> Intent?,
     onCredentialsText: () -> String,
     onConfirmScriptRan: () -> Unit,
+    onContinueToCifs: () -> Unit,
+    onRefreshCifs: () -> Unit,
     onFolderPicked: (uri: String, label: String) -> Unit,
     onDone: () -> Unit,
     onCancel: () -> Unit,
@@ -63,7 +66,7 @@ fun CatalogSeatWizardScreen(
 ) {
     val context = LocalContext.current
     val openTree = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocumentTree(),
+        contract = OpenDocumentTreeAdvanced(),
     ) { uri: Uri? ->
         if (uri != null) {
             val label = SafPathLabels.folderTitle(
@@ -138,18 +141,26 @@ fun CatalogSeatWizardScreen(
             WizardStep.W2_PREPARE -> SimpleGuide(
                 body = stringResource(R.string.hub_w2_prepare),
                 primary = stringResource(R.string.hub_w2_prepared),
-                onPrimary = { onGoStep(WizardStep.W2_CONNECT) },
+                onPrimary = onContinueToCifs,
                 onBack = { onGoStep(WizardStep.W2_CHOICE) },
             )
-            WizardStep.W2_CONNECT -> SimpleGuide(
-                body = stringResource(
-                    R.string.hub_w2_connect_dedicated,
-                    state.userName.ifBlank { "MediaManager" },
-                    state.temporaryPassword.ifBlank { "…" },
-                    state.shareName.ifBlank { "MediaManagerCatalog" },
-                ),
-                primary = stringResource(R.string.hub_w2_connected),
-                onPrimary = { onGoStep(WizardStep.W2_PICK) },
+            WizardStep.W2_CIFS -> W2CifsStep(
+                state = state,
+                onInstallOrOpen = {
+                    onRefreshCifs()
+                    if (NetworkDriveAssistant.isHelperInstalled(context)) {
+                        if (!NetworkDriveAssistant.openHelperApp(context)) {
+                            NetworkDriveAssistant.openHelperStore(context)
+                        }
+                    } else {
+                        NetworkDriveAssistant.openHelperStore(context)
+                    }
+                },
+                onCopyCredentials = {
+                    copyToClipboard(context, onCredentialsText())
+                },
+                onRefresh = onRefreshCifs,
+                onContinue = { onGoStep(WizardStep.W2_PICK) },
                 onBack = {
                     if (state.scriptPrepared) {
                         onGoStep(WizardStep.W2_ROUTINE_CONFIRM)
@@ -157,13 +168,12 @@ fun CatalogSeatWizardScreen(
                         onGoStep(WizardStep.W2_PREPARE)
                     }
                 },
-                secondary = stringResource(R.string.hub_w2_help_link),
-                onSecondary = { onGoStep(WizardStep.W2_HELP) },
+                onHelp = { onGoStep(WizardStep.W2_HELP) },
             )
             WizardStep.W2_HELP -> SimpleGuide(
                 body = stringResource(R.string.hub_w2_help_body),
                 primary = stringResource(R.string.hub_w2_help_back),
-                onPrimary = { onGoStep(WizardStep.W2_CONNECT) },
+                onPrimary = { onGoStep(WizardStep.W2_CIFS) },
                 onBack = onBackIntro,
                 secondary = stringResource(R.string.hub_w2_password_help_link),
                 onSecondary = { onGoStep(WizardStep.W2_PASSWORD_HELP) },
@@ -171,14 +181,14 @@ fun CatalogSeatWizardScreen(
             WizardStep.W2_PASSWORD_HELP -> SimpleGuide(
                 body = stringResource(R.string.hub_w2_password_help_body),
                 primary = stringResource(R.string.hub_w2_help_back),
-                onPrimary = { onGoStep(WizardStep.W2_CONNECT) },
+                onPrimary = { onGoStep(WizardStep.W2_CIFS) },
                 onBack = { onGoStep(WizardStep.W2_HELP) },
             )
             WizardStep.W2_PICK -> SimpleGuide(
                 body = stringResource(R.string.hub_w2_pick),
                 primary = stringResource(R.string.hub_choose_folder),
                 onPrimary = { if (!state.busy) openTree.launch(null) },
-                onBack = { onGoStep(WizardStep.W2_CONNECT) },
+                onBack = { onGoStep(WizardStep.W2_CIFS) },
                 busy = state.busy,
             )
             WizardStep.W3_GUIDE -> SimpleGuide(
@@ -188,13 +198,38 @@ fun CatalogSeatWizardScreen(
                 onBack = onBackIntro,
                 busy = state.busy,
             )
-            WizardStep.W4_GUIDE -> SimpleGuide(
-                body = stringResource(R.string.hub_w4_body),
-                primary = stringResource(R.string.hub_choose_folder),
-                onPrimary = { if (!state.busy) openTree.launch(null) },
-                onBack = onBackIntro,
-                busy = state.busy,
-            )
+            WizardStep.W4_GUIDE -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(stringResource(R.string.hub_w4_body))
+                Text(stringResource(R.string.hub_w4_cifs_note))
+                if (state.cifsInstalled) {
+                    Button(
+                        onClick = {
+                            onRefreshCifs()
+                            NetworkDriveAssistant.openHelperApp(context)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.hub_cifs_open))
+                    }
+                } else {
+                    Button(
+                        onClick = {
+                            NetworkDriveAssistant.openHelperStore(context)
+                            onRefreshCifs()
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.hub_cifs_install))
+                    }
+                }
+                SimpleGuide(
+                    body = stringResource(R.string.hub_w4_pick_hint),
+                    primary = stringResource(R.string.hub_choose_folder),
+                    onPrimary = { if (!state.busy) openTree.launch(null) },
+                    onBack = onBackIntro,
+                    busy = state.busy,
+                )
+            }
             WizardStep.DONE -> {
                 Text(stringResource(R.string.hub_done_title), fontWeight = FontWeight.Medium)
                 Text(
@@ -206,6 +241,7 @@ fun CatalogSeatWizardScreen(
                 if (state.scriptPrepared) {
                     Text(stringResource(R.string.hub_w2_done_password_reminder))
                 }
+                Text(stringResource(R.string.hub_done_resume_catalog))
                 Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.ok))
                 }
@@ -355,10 +391,18 @@ private fun W2RoutineReadyStep(
         ),
         fontFamily = FontFamily.Monospace,
     )
-    Button(onClick = onShareScript, enabled = !busy && state.scriptPrepared, modifier = Modifier.fillMaxWidth()) {
+    Button(
+        onClick = onShareScript,
+        enabled = !busy && state.scriptPrepared,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
         Text(stringResource(R.string.hub_w2_share_script))
     }
-    OutlinedButton(onClick = onCopyCredentials, enabled = !busy && state.scriptPrepared, modifier = Modifier.fillMaxWidth()) {
+    OutlinedButton(
+        onClick = onCopyCredentials,
+        enabled = !busy && state.scriptPrepared,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
         Text(stringResource(R.string.hub_w2_copy_credentials))
     }
     TextButton(onClick = onReprepare, enabled = !busy) {
@@ -370,6 +414,72 @@ private fun W2RoutineReadyStep(
         }
         Button(onClick = onContinue, enabled = !busy && state.scriptPrepared, modifier = Modifier.weight(1f)) {
             Text(stringResource(R.string.hub_avanti))
+        }
+    }
+}
+
+@Composable
+private fun W2CifsStep(
+    state: CatalogSeatWizardUiState,
+    onInstallOrOpen: () -> Unit,
+    onCopyCredentials: () -> Unit,
+    onRefresh: () -> Unit,
+    onContinue: () -> Unit,
+    onBack: () -> Unit,
+    onHelp: () -> Unit,
+) {
+    Text(stringResource(R.string.hub_w2_cifs_body))
+    Text(stringResource(R.string.hub_w2_credentials_title), fontWeight = FontWeight.Medium)
+    Text(
+        text = stringResource(
+            R.string.hub_w2_cifs_fields,
+            state.userName.ifBlank { "MediaManager" },
+            state.temporaryPassword.ifBlank { "(quella dello script o dell'account Windows)" },
+            state.shareName.ifBlank { "MediaManagerCatalog" },
+        ),
+        fontFamily = FontFamily.Monospace,
+    )
+    OutlinedButton(onClick = onCopyCredentials, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.hub_w2_copy_credentials))
+    }
+    Button(onClick = onInstallOrOpen, modifier = Modifier.fillMaxWidth()) {
+        Text(
+            if (state.cifsInstalled) {
+                stringResource(R.string.hub_cifs_open)
+            } else {
+                stringResource(R.string.hub_cifs_install)
+            },
+        )
+    }
+    TextButton(onClick = onRefresh) {
+        Text(stringResource(R.string.hub_cifs_refresh))
+    }
+    Text(
+        if (state.cifsInstalled) {
+            stringResource(R.string.hub_cifs_status_ready)
+        } else {
+            stringResource(R.string.hub_cifs_status_missing)
+        },
+        style = MaterialTheme.typography.bodySmall,
+        color = if (state.cifsInstalled) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.error
+        },
+    )
+    TextButton(onClick = onHelp) {
+        Text(stringResource(R.string.hub_w2_help_link))
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(onClick = onBack, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.hub_indietro))
+        }
+        Button(
+            onClick = onContinue,
+            enabled = state.cifsInstalled,
+            modifier = Modifier.weight(1f),
+        ) {
+            Text(stringResource(R.string.hub_w2_cifs_done))
         }
     }
 }

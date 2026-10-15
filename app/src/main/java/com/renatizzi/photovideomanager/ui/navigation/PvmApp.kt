@@ -282,6 +282,8 @@ fun PvmApp(
                         onShareScript = wizardVm::shareScriptIntent,
                         onCredentialsText = wizardVm::credentialsClipboardText,
                         onConfirmScriptRan = wizardVm::confirmScriptRanOnPc,
+                        onContinueToCifs = wizardVm::continueToCifsFromManualPrepare,
+                        onRefreshCifs = wizardVm::refreshCifsInstalled,
                         onFolderPicked = wizardVm::onFolderPicked,
                         onDone = { navController.popBackStack() },
                         onCancel = { navController.popBackStack() },

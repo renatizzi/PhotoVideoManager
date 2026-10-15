@@ -33,11 +33,11 @@ Codice chiave: `storage/NetworkDriveAssistant.kt`, `StorageFolderPicker.kt`, `St
 | Solo URI sede; password mai in MediaManager | Allineato a S6-A e a BM |
 | Script PC W2 (già in PVM) | BoxManager non ha l’equivalente; resta vantaggio PVM |
 
-## Prototipo S6-A (prima di costruire altro)
+## Implementato in MediaManager 0.16.26
 
-Sul tablet con **CIFS Documents Provider** (non Archivio Samsung come primario):
+- `NetworkDriveAssistant` + `<queries>` (stesso package BoxManager)
+- Wizard W2: script PC → passo CIFS (Installa/Apri) → `OpenDocumentTreeAdvanced` → sede
+- W4 NAS riusa Installa/Apri CIFS
+- Fine wizard: ripresa Catalogo (Acquisisci / Aggiorna Catalogo)
 
-1. Configura in CIFS la share `MediaManagerCatalog` (utente dedicato dallo script).
-2. In MediaManager: Scegli cartella → verifica che la root CIFS compaia e che `probeWritable` passi.
-
-Se il passo 2 fallisce, il problema è SAF/OEM, non lo script PC.
+Verifica telefono: dopo «Tutto pronto» sul PC, in CIFS Host/445/MediaManager/password/share, poi Scegli cartella in MediaManager.
