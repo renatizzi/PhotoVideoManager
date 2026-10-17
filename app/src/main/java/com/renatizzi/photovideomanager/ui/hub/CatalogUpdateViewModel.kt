@@ -1,5 +1,6 @@
 package com.renatizzi.photovideomanager.ui.hub
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -7,6 +8,7 @@ import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeat
 import com.renatizzi.photovideomanager.domain.hub.ConflictResolution
 import com.renatizzi.photovideomanager.domain.hub.HubDiffPreview
+import com.renatizzi.photovideomanager.domain.hub.HubSourceDescriptor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,6 +24,9 @@ data class CatalogUpdateUiState(
     val errorMessage: String? = null,
     val successMessage: String? = null,
     val applied: Boolean = false,
+    val unverified: Boolean = false,
+    val sources: List<HubSourceDescriptor> = emptyList(),
+    val linkedKeys: Set<String> = emptySet(),
 )
 
 class CatalogUpdateViewModel(
@@ -39,11 +44,22 @@ class CatalogUpdateViewModel(
             val seat = catalogFacade.catalogSeat()
             _state.update { it.copy(seat = seat, busy = true, errorMessage = null) }
             if (!seat.isConfigured) {
-                _state.update { it.copy(busy = false, reachable = false) }
+                _state.update {
+                    it.copy(busy = false, reachable = false, unverified = false, sources = emptyList())
+                }
                 return@launch
             }
             val ok = catalogFacade.catalogSeatReachable()
-            _state.update { it.copy(busy = false, reachable = ok) }
+            val sources = catalogFacade.portableHubSources()
+            _state.update {
+                it.copy(
+                    busy = false,
+                    reachable = ok,
+                    unverified = catalogFacade.hubUnverified(),
+                    sources = sources,
+                    linkedKeys = catalogFacade.linkedHubSourceKeys(),
+                )
+            }
         }
     }
 
@@ -55,13 +71,19 @@ class CatalogUpdateViewModel(
             val result = catalogFacade.catalogHubPreview()
             _state.update {
                 if (result.isSuccess) {
-                    it.copy(busy = false, preview = result.getOrNull(), resolutions = emptyMap())
+                    it.copy(
+                        busy = false,
+                        preview = result.getOrNull(),
+                        resolutions = emptyMap(),
+                        unverified = catalogFacade.hubUnverified(),
+                    )
                 } else {
                     it.copy(
                         busy = false,
                         errorMessage = result.exceptionOrNull()?.message
                             ?: "Impossibile confrontare il Catalogo",
                         preview = null,
+                        unverified = catalogFacade.hubUnverified(),
                     )
                 }
             }
@@ -80,35 +102,95 @@ class CatalogUpdateViewModel(
         }
     }
 
-    fun apply() {
+    fun apply() = applyUpdate(receiveOnly = false)
+
+    fun applyReceiveOnly() = applyUpdate(receiveOnly = true)
+
+    fun restoreBackup() {
+        viewModelScope.launch {
+            _state.update { it.copy(busy = true, errorMessage = null, successMessage = null) }
+            val result = catalogFacade.restoreHubBackup()
+            if (result.isFailure) {
+                _state.update {
+                    it.copy(
+                        busy = false,
+                        errorMessage = result.exceptionOrNull()?.message ?: "Ripristino non riuscito",
+                    )
+                }
+            } else {
+                _state.update {
+                    it.copy(
+                        preview = null,
+                        resolutions = emptyMap(),
+                        successMessage = "Copia verificata ripristinata",
+                    )
+                }
+                refreshSeat()
+            }
+        }
+    }
+
+    fun linkSource(sourceKey: String, treeUri: String, displayName: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(busy = true, errorMessage = null, successMessage = null) }
+            val result = catalogFacade.linkHubSource(sourceKey, Uri.parse(treeUri), displayName)
+            _state.update {
+                if (result.isSuccess) {
+                    it.copy(
+                        busy = false,
+                        linkedKeys = catalogFacade.linkedHubSourceKeys(),
+                        successMessage = "Cartella collegata su questo apparecchio. I file non sono stati copiati.",
+                    )
+                } else {
+                    it.copy(
+                        busy = false,
+                        errorMessage = result.exceptionOrNull()?.message ?: "Collegamento non riuscito",
+                    )
+                }
+            }
+        }
+    }
+
+    private fun applyUpdate(receiveOnly: Boolean) {
         val preview = _state.value.preview ?: return
         viewModelScope.launch {
-            _state.update { it.copy(busy = true, errorMessage = null) }
-            val result = catalogFacade.applyCatalogHubUpdate(preview, _state.value.resolutions)
+            _state.update { it.copy(busy = true, errorMessage = null, successMessage = null) }
+            val result = catalogFacade.applyCatalogHubUpdate(
+                preview,
+                _state.value.resolutions,
+                receiveOnly,
+            )
             _state.update {
                 if (result.isFailure) {
                     it.copy(
                         busy = false,
                         errorMessage = result.exceptionOrNull()?.message
                             ?: "Aggiornamento non riuscito",
+                        unverified = catalogFacade.hubUnverified(),
                     )
                 } else {
-                    val left = result.getOrNull()
-                    if (left != null && left.conflicts.isNotEmpty()) {
-                        it.copy(
-                            busy = false,
-                            preview = left,
-                            errorMessage = "Risolvi i conflitti prima di continuare",
-                        )
-                    } else {
-                        it.copy(
-                            busy = false,
-                            preview = null,
-                            resolutions = emptyMap(),
-                            applied = true,
-                            successMessage = "Catalogo aggiornato",
-                        )
+                    val remaining = result.getOrNull()?.conflicts.orEmpty()
+                    val message = when {
+                        receiveOnly && remaining.isNotEmpty() ->
+                            "Schede del fascicolo recepite, senza pubblicare quelle di questo apparecchio. I conflitti sono invariati."
+                        receiveOnly ->
+                            "Schede del fascicolo recepite. Nessuna scheda solo di questo apparecchio è stata pubblicata."
+                        remaining.isNotEmpty() ->
+                            "Aggiornate le schede senza conflitto. Quelle in conflitto sono rimaste invariate."
+                        else -> "Catalogo aggiornato"
                     }
+                    it.copy(
+                        busy = false,
+                        preview = if (remaining.isEmpty()) {
+                            null
+                        } else {
+                            HubDiffPreview(emptyList(), emptyList(), remaining)
+                        },
+                        resolutions = emptyMap(),
+                        applied = true,
+                        successMessage = message,
+                        unverified = catalogFacade.hubUnverified(),
+                    )
                 }
             }
         }

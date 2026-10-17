@@ -42,6 +42,9 @@ import com.renatizzi.photovideomanager.data.storage.NetworkDriveAssistant
 import com.renatizzi.photovideomanager.data.storage.OpenDocumentTreeAdvanced
 import com.renatizzi.photovideomanager.data.storage.SafPathLabels
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind
+import com.renatizzi.photovideomanager.domain.hub.IdentityAction
+import com.renatizzi.photovideomanager.domain.hub.IdentityAssessment
+import com.renatizzi.photovideomanager.domain.hub.OverlapHint
 
 @Composable
 fun CatalogSeatWizardScreen(
@@ -60,6 +63,9 @@ fun CatalogSeatWizardScreen(
     onContinueToCifs: () -> Unit,
     onRefreshCifs: () -> Unit,
     onFolderPicked: (uri: String, label: String) -> Unit,
+    onStartAdopt: () -> Unit,
+    onConfirmIdentity: (Boolean) -> Unit,
+    onCreateHere: () -> Unit,
     onDone: () -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
@@ -96,6 +102,7 @@ fun CatalogSeatWizardScreen(
                 selected = state.selectedKind,
                 onSelectKind = onSelectKind,
                 onAvanti = onAvanti,
+                onAdopt = onStartAdopt,
                 onCancel = onCancel,
             )
             WizardStep.W1_CONFIRM -> SimpleGuide(
@@ -230,6 +237,20 @@ fun CatalogSeatWizardScreen(
                     busy = state.busy,
                 )
             }
+            WizardStep.ADOPT_LOCAL_LIMIT -> SimpleGuide(
+                body = stringResource(R.string.hub_adopt_local_limit),
+                primary = stringResource(R.string.hub_indietro),
+                onPrimary = onBackIntro,
+                onBack = onBackIntro,
+            )
+            WizardStep.ADOPT_SUMMARY -> IdentitySummaryStep(
+                identity = state.identity,
+                onConfirmNew = { onConfirmIdentity(false) },
+                onStampExisting = { onConfirmIdentity(true) },
+                onCreateHere = onCreateHere,
+                onBack = onBackIntro,
+                busy = state.busy,
+            )
             WizardStep.DONE -> {
                 Text(stringResource(R.string.hub_done_title), fontWeight = FontWeight.Medium)
                 Text(
@@ -271,6 +292,7 @@ private fun IntroStep(
     selected: CatalogSeatKind,
     onSelectKind: (CatalogSeatKind) -> Unit,
     onAvanti: () -> Unit,
+    onAdopt: () -> Unit,
     onCancel: () -> Unit,
 ) {
     Text(stringResource(R.string.hub_intro_body))
@@ -306,8 +328,11 @@ private fun IntroStep(
             Text(stringResource(R.string.importa_annulla))
         }
         Button(onClick = onAvanti, modifier = Modifier.weight(1f)) {
-            Text(stringResource(R.string.hub_avanti))
+            Text(stringResource(R.string.hub_create_catalog))
         }
+    }
+    OutlinedButton(onClick = onAdopt, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.hub_adopt_existing))
     }
 }
 
@@ -505,6 +530,67 @@ private fun SimpleGuide(
         Button(onClick = onPrimary, enabled = !busy, modifier = Modifier.weight(1f)) {
             Text(primary)
         }
+    }
+}
+
+@Composable
+private fun IdentitySummaryStep(
+    identity: IdentityAssessment?,
+    onConfirmNew: () -> Unit,
+    onStampExisting: () -> Unit,
+    onCreateHere: () -> Unit,
+    onBack: () -> Unit,
+    busy: Boolean,
+) {
+    if (identity == null) {
+        Text(stringResource(R.string.hub_identity_missing))
+        return
+    }
+    Text(stringResource(R.string.hub_identity_counts, identity.fileCardCount, identity.sharedCardCount))
+    Text(stringResource(R.string.hub_identity_not_proof))
+    if (identity.hint == OverlapHint.PARTIAL || identity.hint == OverlapHint.FULL) {
+        Text(stringResource(R.string.hub_identity_related_hint))
+    }
+    if (identity.hint == OverlapHint.NONE && identity.action == IdentityAction.NEEDS_CONFIRM_STAMP) {
+        Text(stringResource(R.string.hub_identity_no_overlap))
+    }
+    when (identity.action) {
+        IdentityAction.ADOPT_FILE_ID, IdentityAction.SAME_ID -> {
+            Text(stringResource(R.string.hub_identity_defined))
+            Button(onClick = onConfirmNew, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.hub_identity_use))
+            }
+        }
+        IdentityAction.NEEDS_CONFIRM_NEW_ID -> {
+            Text(stringResource(R.string.hub_identity_assign_new))
+            Button(onClick = onConfirmNew, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.hub_identity_assign))
+            }
+        }
+        IdentityAction.NEEDS_CONFIRM_STAMP -> {
+            Text(stringResource(R.string.hub_identity_stamp))
+            Button(onClick = onStampExisting, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    if (identity.hint == OverlapHint.NONE) {
+                        stringResource(R.string.hub_identity_stamp_anyway)
+                    } else {
+                        stringResource(R.string.hub_identity_stamp_same)
+                    },
+                )
+            }
+        }
+        IdentityAction.BLOCK_DIFFERENT_IDS -> {
+            Text(stringResource(R.string.hub_identity_blocked))
+        }
+        IdentityAction.NOT_A_CATALOG -> {
+            Text(stringResource(R.string.hub_identity_empty))
+            Button(onClick = onCreateHere, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.hub_create_catalog))
+            }
+        }
+    }
+    TextButton(onClick = onBack, enabled = !busy) {
+        Text(stringResource(R.string.hub_identity_leave))
     }
 }
 

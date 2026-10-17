@@ -285,6 +285,9 @@ fun PvmApp(
                         onContinueToCifs = wizardVm::continueToCifsFromManualPrepare,
                         onRefreshCifs = wizardVm::refreshCifsInstalled,
                         onFolderPicked = wizardVm::onFolderPicked,
+                        onStartAdopt = wizardVm::startAdoptFromIntro,
+                        onConfirmIdentity = wizardVm::confirmIdentity,
+                        onCreateHere = wizardVm::createOnInspectedSeat,
                         onDone = { navController.popBackStack() },
                         onCancel = { navController.popBackStack() },
                     )
@@ -300,7 +303,10 @@ fun PvmApp(
                         onLoadPreview = updateVm::loadPreview,
                         onCancelPreview = updateVm::cancelPreview,
                         onApply = updateVm::apply,
+                        onReceiveOnly = updateVm::applyReceiveOnly,
                         onResolve = updateVm::setResolution,
+                        onRestoreBackup = updateVm::restoreBackup,
+                        onLinkSource = updateVm::linkSource,
                         onOpenWizard = {
                             navController.navigate(PvmDestination.CatalogSeatWizard.route)
                         },

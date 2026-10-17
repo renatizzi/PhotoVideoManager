@@ -9,6 +9,10 @@ data class HubPackage(
     val updatedAtEpochMs: Long,
     val updatedByDeviceId: String,
     val cards: List<HubCard> = emptyList(),
+    /** Assente nei fascicoli storici: non va inventato in lettura. */
+    val catalogId: String? = null,
+    val displayLabel: String? = null,
+    val sources: List<HubSourceDescriptor> = emptyList(),
 ) {
     companion object {
         const val FORMAT_VERSION = 1
@@ -55,3 +59,43 @@ enum class ConflictResolution {
     TAKE_REMOTE,
     DEFER,
 }
+
+/**
+ * Descrizione portabile di una sorgente. Non contiene URI SAF, permessi o credenziali.
+ * [documentId] e [humanPath] sono indizi, non un'identità trasferibile.
+ */
+data class HubSourceDescriptor(
+    val sourceKey: String,
+    val displayName: String,
+    val provider: String,
+    val humanPath: String = "",
+    val documentId: String? = null,
+    val shareable: Boolean = false,
+)
+
+enum class IdentityAction {
+    NOT_A_CATALOG,
+    SAME_ID,
+    ADOPT_FILE_ID,
+    BLOCK_DIFFERENT_IDS,
+    NEEDS_CONFIRM_NEW_ID,
+    NEEDS_CONFIRM_STAMP,
+}
+
+enum class OverlapHint {
+    NO_LOCAL,
+    NONE,
+    PARTIAL,
+    FULL,
+}
+
+data class IdentityAssessment(
+    val action: IdentityAction,
+    val fileCardCount: Int,
+    val sharedCardCount: Int,
+    val fileCatalogId: String?,
+    val adoptedCatalogId: String?,
+    val hint: OverlapHint,
+    val updatedAtEpochMs: Long = 0L,
+    val displayLabel: String? = null,
+)

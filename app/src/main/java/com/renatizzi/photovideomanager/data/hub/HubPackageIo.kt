@@ -5,39 +5,121 @@ import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeat
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind
-import com.renatizzi.photovideomanager.domain.hub.HubCard
 import com.renatizzi.photovideomanager.domain.hub.HubPackage
-import org.json.JSONArray
-import org.json.JSONObject
+import com.renatizzi.photovideomanager.domain.hub.HubPackageCodec
 import java.io.File
 import java.nio.charset.Charset
 
+/**
+ * Lettura e scrittura del fascicolo. La lettura non crea e non modifica il file.
+ * La scrittura è considerata riuscita solo dopo una rilettura uguale al documento preparato.
+ * Su SAF la sostituzione non è atomica: se la rilettura fallisce si tenta di rimettere l'originale
+ * e, se non si riesce, il fascicolo resta non verificato.
+ */
 class HubPackageIo(
     private val context: Context,
     private val localHubRoot: File,
 ) {
-    fun read(seat: CatalogSeat): HubPackage? {
-        val text = readRaw(seat) ?: return null
-        return parse(text)
+    fun read(seat: CatalogSeat): HubPackage? = when (val outcome = readOutcome(seat)) {
+        is HubReadOutcome.Present -> outcome.pkg
+        is HubReadOutcome.Missing -> null
+        is HubReadOutcome.Invalid -> throw IllegalStateException(outcome.message)
+        is HubReadOutcome.Unreachable -> null
     }
 
-    fun write(seat: CatalogSeat, pkg: HubPackage): Result<Unit> = runCatching {
-        val json = toJson(pkg).toString(2)
-        writeRaw(seat, json)
+    fun readOutcome(seat: CatalogSeat): HubReadOutcome {
+        val text = try {
+            readRaw(seat)
+        } catch (e: Exception) {
+            return HubReadOutcome.Unreachable(e.message ?: "Sede non raggiungibile")
+        } ?: return HubReadOutcome.Missing
+        return runCatching { HubPackageCodec.parse(text) }
+            .fold(
+                onSuccess = { HubReadOutcome.Present(it) },
+                onFailure = { HubReadOutcome.Invalid(it.message ?: "Fascicolo non leggibile") },
+            )
     }
 
-    fun probeWritable(seat: CatalogSeat): Result<Unit> = runCatching {
-        val probe = HubPackage(
-            seatId = seat.treeUri ?: "local",
-            updatedAtEpochMs = System.currentTimeMillis(),
-            updatedByDeviceId = "probe",
-            cards = emptyList(),
-        )
-        val existing = read(seat)
-        write(seat, existing ?: probe).getOrThrow()
-        if (existing == null && seat.kind == CatalogSeatKind.LOCAL_DEVICE) {
-            // ok — created empty hub
+    fun writeVerified(seat: CatalogSeat, pkg: HubPackage): HubWriteReport {
+        val json = HubPackageCodec.toJsonString(pkg)
+        return when (seat.kind) {
+            CatalogSeatKind.NONE -> HubWriteReport(false, false, false, "Sede non configurata")
+            CatalogSeatKind.LOCAL_DEVICE -> HubFileWrite.writeVerified(localFile(), json, backupFile())
+            CatalogSeatKind.PC_NOTEBOOK,
+            CatalogSeatKind.CLOUD_DRIVE,
+            CatalogSeatKind.NETWORK_NAS,
+            -> writeSaf(seat, json)
         }
+    }
+
+    fun verifiedBackupText(): String? =
+        backupFile().takeIf { it.isFile }?.readText(Charsets.UTF_8)
+
+    private fun writeSaf(seat: CatalogSeat, json: String): HubWriteReport {
+        val original = readRaw(seat)
+        if (original != null) {
+            val saved = runCatching {
+                backupFile().parentFile?.mkdirs()
+                backupFile().writeText(original, Charsets.UTF_8)
+                backupFile().readText(Charsets.UTF_8) == original
+            }.getOrDefault(false)
+            if (!saved) {
+                return HubWriteReport(false, false, false, "Copia originale non verificata: fascicolo non sostituito")
+            }
+        }
+        val doc = hubDocument(seat, createIfMissing = true)
+            ?: return HubWriteReport(false, false, false, "Impossibile creare il fascicolo nella sede")
+        val wrote = writeDocument(doc, json)
+        if (!wrote) {
+            return finishFailedWrite(doc, original, seat)
+        }
+        val back = readRaw(seat)
+        if (back != json) {
+            return finishFailedWrite(doc, original, seat)
+        }
+        return HubWriteReport(true, false, false, "Verificato")
+    }
+
+    /**
+     * SAF non garantisce una sostituzione atomica. Se la rilettura non coincide,
+     * si rimette l'originale verificato. Un file nuovo e non verificato si elimina, se il provider lo consente.
+     * Altrimenti il fascicolo resta non verificato e le scritture successive sono bloccate.
+     */
+    private fun finishFailedWrite(doc: DocumentFile, original: String?, seat: CatalogSeat): HubWriteReport {
+        if (original != null) {
+            val restored = writeDocument(doc, original) && readRaw(seat) == original
+            return HubWriteReport(
+                verified = false,
+                restored = restored,
+                unverified = !restored,
+                message = if (restored) {
+                    "Scrittura non riuscita: fascicolo originale ripristinato"
+                } else {
+                    "Fascicolo non verificato"
+                },
+            )
+        }
+        val removed = runCatching { doc.delete() }.getOrDefault(false)
+        return HubWriteReport(
+            verified = false,
+            restored = false,
+            unverified = !removed,
+            message = if (removed) {
+                "Scrittura non verificata: il file nuovo è stato rimosso"
+            } else {
+                "Fascicolo non verificato"
+            },
+        )
+    }
+
+    private fun writeDocument(doc: DocumentFile, json: String): Boolean {
+        return runCatching {
+            context.contentResolver.openOutputStream(doc.uri, "wt")?.use { out ->
+                out.write(json.toByteArray(Charsets.UTF_8))
+                out.flush()
+            } ?: return false
+            true
+        }.getOrDefault(false)
     }
 
     private fun readRaw(seat: CatalogSeat): String? = when (seat.kind) {
@@ -57,29 +139,11 @@ class HubPackageIo(
         }
     }
 
-    private fun writeRaw(seat: CatalogSeat, json: String) {
-        when (seat.kind) {
-            CatalogSeatKind.NONE -> error("Sede non configurata")
-            CatalogSeatKind.LOCAL_DEVICE -> {
-                val file = localFile()
-                file.parentFile?.mkdirs()
-                file.writeText(json, Charsets.UTF_8)
-            }
-            CatalogSeatKind.PC_NOTEBOOK,
-            CatalogSeatKind.CLOUD_DRIVE,
-            CatalogSeatKind.NETWORK_NAS,
-            -> {
-                val doc = hubDocument(seat, createIfMissing = true)
-                    ?: error("Impossibile creare il fascicolo nella sede")
-                context.contentResolver.openOutputStream(doc.uri, "wt")?.use { out ->
-                    out.write(json.toByteArray(Charsets.UTF_8))
-                } ?: error("Scrittura sede non disponibile")
-            }
-        }
-    }
-
     private fun localFile(): File =
         File(File(localHubRoot, HubPackage.RELATIVE_DIR), HubPackage.FILE_NAME)
+
+    private fun backupFile(): File =
+        File(localHubRoot, "catalog_hub.verified.bak")
 
     private fun hubDocument(seat: CatalogSeat, createIfMissing: Boolean): DocumentFile? {
         val uri = seat.treeUri?.let(Uri::parse) ?: return null
@@ -96,62 +160,11 @@ class HubPackageIo(
         }
         return file
     }
+}
 
-    private fun parse(text: String): HubPackage {
-        val obj = JSONObject(text)
-        val cardsJson = obj.optJSONArray("cards") ?: JSONArray()
-        val cards = buildList {
-            for (i in 0 until cardsJson.length()) {
-                val c = cardsJson.getJSONObject(i)
-                add(
-                    HubCard(
-                        id = c.getString("id"),
-                        kind = c.getString("kind"),
-                        displayTitle = if (c.isNull("displayTitle")) {
-                            null
-                        } else {
-                            c.optString("displayTitle").takeIf { it.isNotEmpty() }
-                        },
-                        updatedAtEpochMs = c.getLong("updatedAtEpochMs"),
-                        updatedByDeviceId = c.getString("updatedByDeviceId"),
-                        trashed = c.optBoolean("trashed", false),
-                        sha256 = if (c.isNull("sha256")) {
-                            null
-                        } else {
-                            c.optString("sha256").takeIf { it.isNotEmpty() }
-                        },
-                    ),
-                )
-            }
-        }
-        return HubPackage(
-            formatVersion = obj.optInt("formatVersion", HubPackage.FORMAT_VERSION),
-            seatId = obj.optString("seatId", ""),
-            updatedAtEpochMs = obj.optLong("updatedAtEpochMs", 0L),
-            updatedByDeviceId = obj.optString("updatedByDeviceId", ""),
-            cards = cards,
-        )
-    }
-
-    private fun toJson(pkg: HubPackage): JSONObject {
-        val cards = JSONArray()
-        pkg.cards.forEach { c ->
-            cards.put(
-                JSONObject()
-                    .put("id", c.id)
-                    .put("kind", c.kind)
-                    .put("displayTitle", c.displayTitle)
-                    .put("updatedAtEpochMs", c.updatedAtEpochMs)
-                    .put("updatedByDeviceId", c.updatedByDeviceId)
-                    .put("trashed", c.trashed)
-                    .put("sha256", c.sha256),
-            )
-        }
-        return JSONObject()
-            .put("formatVersion", pkg.formatVersion)
-            .put("seatId", pkg.seatId)
-            .put("updatedAtEpochMs", pkg.updatedAtEpochMs)
-            .put("updatedByDeviceId", pkg.updatedByDeviceId)
-            .put("cards", cards)
-    }
+sealed class HubReadOutcome {
+    data class Present(val pkg: HubPackage) : HubReadOutcome()
+    data object Missing : HubReadOutcome()
+    data class Invalid(val message: String) : HubReadOutcome()
+    data class Unreachable(val message: String) : HubReadOutcome()
 }
