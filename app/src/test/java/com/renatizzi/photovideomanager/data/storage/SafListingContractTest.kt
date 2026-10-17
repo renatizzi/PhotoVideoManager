@@ -10,11 +10,11 @@ import java.io.File
 class SafListingContractTest {
     @Test
     fun saf_adapter_uses_documents_contract_for_children() {
-        val source = File(
-            "/workspace/app/src/main/java/com/renatizzi/photovideomanager/data/storage/SafTreeStorageAdapter.kt",
-        )
-        assertTrue("SafTreeStorageAdapter.kt non trovato", source.exists())
-        val text = source.readText()
+        val relative = "src/main/java/com/renatizzi/photovideomanager/data/storage/SafTreeStorageAdapter.kt"
+        val source = listOf(File(relative), File("app/$relative"), File("/workspace/app/$relative"))
+            .firstOrNull { it.exists() }
+        assertTrue("SafTreeStorageAdapter.kt non trovato", source != null)
+        val text = source!!.readText()
         assertTrue(text.contains("buildChildDocumentsUriUsingTree"))
         assertTrue(text.contains("buildDocumentUriUsingTree"))
         assertTrue(text.contains("COLUMN_DOCUMENT_ID"))

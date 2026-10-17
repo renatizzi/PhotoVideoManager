@@ -35,6 +35,38 @@ class CatalogFacade(
     suspend fun configureCatalogSeat(seat: com.renatizzi.photovideomanager.domain.hub.CatalogSeat) =
         catalogHubService.configureSeat(seat)
 
+    suspend fun inspectCatalogSeat(seat: com.renatizzi.photovideomanager.domain.hub.CatalogSeat) =
+        catalogHubService.inspectSeat(seat)
+
+    suspend fun adoptDefinedCatalogSeat(seat: com.renatizzi.photovideomanager.domain.hub.CatalogSeat) =
+        catalogHubService.adoptDefinedSeat(seat)
+
+    suspend fun assignCatalogIdentity(
+        seat: com.renatizzi.photovideomanager.domain.hub.CatalogSeat,
+        stampExisting: Boolean,
+    ) = catalogHubService.assignCatalogIdentity(seat, stampExisting)
+
+    fun adoptedCatalogId(): String? = catalogHubService.adoptedCatalogId()
+
+    fun hubUnverified(): Boolean = catalogHubService.hubUnverified()
+
+    suspend fun restoreHubBackup() = catalogHubService.restoreVerifiedBackup()
+
+    suspend fun portableHubSources() = catalogHubService.portableSources()
+
+    fun linkedHubSourceKeys(): Set<String> = catalogHubService.linkedSourceKeys()
+
+    suspend fun linkHubSource(sourceKey: String, treeUri: android.net.Uri, displayName: String) =
+        runCatching {
+            val source = catalogHubService.portableSources()
+                .firstOrNull { it.sourceKey == sourceKey }
+                ?: error("Sorgente non presente nel fascicolo")
+            if (!source.shareable) error("Questa sorgente non è condivisibile su questo apparecchio")
+            val registered = sourceRegistry.registerSafFolder(treeUri, displayName)
+            catalogHubService.rememberSourceLink(sourceKey, registered.source.locationId)
+            registered
+        }
+
     suspend fun catalogSeatReachable(): Boolean = catalogHubService.seatReachable()
 
     suspend fun catalogHubPreview() = catalogHubService.buildPreview()
@@ -42,7 +74,8 @@ class CatalogFacade(
     suspend fun applyCatalogHubUpdate(
         preview: com.renatizzi.photovideomanager.domain.hub.HubDiffPreview,
         resolutions: Map<String, com.renatizzi.photovideomanager.domain.hub.ConflictResolution>,
-    ) = catalogHubService.applyUpdate(preview, resolutions)
+        receiveOnly: Boolean = false,
+    ) = catalogHubService.applyUpdate(preview, resolutions, receiveOnly)
     suspend fun bootstrapPersonalArchiveIfNeeded() {
         sourceRegistry.bootstrapPersonalArchiveIfNeeded()
         // Orfani: MediaItem rimasti dopo CASCADE su sorgente rimossa (senza copie).

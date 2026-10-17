@@ -12,6 +12,8 @@ import com.renatizzi.photovideomanager.data.hub.WindowsSetupScriptExporter
 import com.renatizzi.photovideomanager.data.storage.NetworkDriveAssistant
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeat
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind
+import com.renatizzi.photovideomanager.domain.hub.IdentityAction
+import com.renatizzi.photovideomanager.domain.hub.IdentityAssessment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -37,6 +39,8 @@ data class CatalogSeatWizardUiState(
     val usbCopiedTo: String? = null,
     val statusMessage: String? = null,
     val cifsInstalled: Boolean = false,
+    val adoptMode: Boolean = false,
+    val identity: IdentityAssessment? = null,
 )
 
 enum class WizardStep {
@@ -53,6 +57,8 @@ enum class WizardStep {
     W2_PASSWORD_HELP,
     W3_GUIDE,
     W4_GUIDE,
+    ADOPT_SUMMARY,
+    ADOPT_LOCAL_LIMIT,
     DONE,
 }
 
@@ -76,8 +82,25 @@ class CatalogSeatWizardViewModel(
 
     fun goIntro() {
         _state.update {
-            it.copy(step = WizardStep.INTRO, errorMessage = null, completedSeat = null, statusMessage = null)
+            it.copy(
+                step = WizardStep.INTRO,
+                errorMessage = null,
+                completedSeat = null,
+                statusMessage = null,
+                adoptMode = false,
+                identity = null,
+            )
         }
+    }
+
+    fun startAdoptFromIntro() {
+        val kind = _state.value.selectedKind
+        if (kind == CatalogSeatKind.LOCAL_DEVICE) {
+            _state.update { it.copy(adoptMode = true, step = WizardStep.ADOPT_LOCAL_LIMIT, errorMessage = null) }
+            return
+        }
+        _state.update { it.copy(adoptMode = true, errorMessage = null) }
+        avantiFromIntro()
     }
 
     fun avantiFromIntro() {
@@ -224,19 +247,108 @@ class CatalogSeatWizardViewModel(
 
     fun onFolderPicked(uri: String, label: String) {
         _state.update { it.copy(pendingTreeUri = uri, pendingLabel = label, errorMessage = null) }
-        confirmSeat(
-            kind = _state.value.selectedKind,
-            treeUri = uri,
-            label = label,
+        considerSeat(
+            CatalogSeat(
+                kind = _state.value.selectedKind,
+                treeUri = uri,
+                displayLabel = label,
+            ),
         )
     }
 
     fun confirmLocalSeat() {
-        confirmSeat(
-            kind = CatalogSeatKind.LOCAL_DEVICE,
-            treeUri = null,
-            label = "Questo dispositivo",
+        considerSeat(
+            CatalogSeat(
+                kind = CatalogSeatKind.LOCAL_DEVICE,
+                treeUri = null,
+                displayLabel = "Questo dispositivo",
+            ),
         )
+    }
+
+    fun confirmIdentity(stampExisting: Boolean) {
+        val current = _state.value
+        val identity = current.identity ?: return
+        val seat = CatalogSeat(
+            kind = current.selectedKind,
+            treeUri = current.pendingTreeUri,
+            displayLabel = current.pendingLabel.ifBlank {
+                if (current.selectedKind == CatalogSeatKind.LOCAL_DEVICE) "Questo dispositivo" else ""
+            },
+        )
+        viewModelScope.launch {
+            _state.update { it.copy(busy = true, errorMessage = null) }
+            val result = when (identity.action) {
+                IdentityAction.ADOPT_FILE_ID, IdentityAction.SAME_ID ->
+                    catalogFacade.adoptDefinedCatalogSeat(seat)
+                IdentityAction.NEEDS_CONFIRM_NEW_ID ->
+                    catalogFacade.assignCatalogIdentity(seat, stampExisting = false).map {
+                        seat.copy(configuredAtEpochMs = System.currentTimeMillis())
+                    }
+                IdentityAction.NEEDS_CONFIRM_STAMP ->
+                    catalogFacade.assignCatalogIdentity(seat, stampExisting = stampExisting).map {
+                        seat.copy(configuredAtEpochMs = System.currentTimeMillis())
+                    }
+                IdentityAction.BLOCK_DIFFERENT_IDS ->
+                    Result.failure(IllegalStateException("Identità diversa: il fascicolo non è stato modificato."))
+                IdentityAction.NOT_A_CATALOG ->
+                    Result.failure(IllegalStateException("Nessun Catalogo in questo fascicolo."))
+            }
+            _state.update {
+                if (result.isSuccess) {
+                    it.copy(busy = false, completedSeat = result.getOrNull(), step = WizardStep.DONE)
+                } else {
+                    it.copy(
+                        busy = false,
+                        errorMessage = result.exceptionOrNull()?.message ?: "Operazione non riuscita",
+                    )
+                }
+            }
+        }
+    }
+
+    fun createOnInspectedSeat() {
+        val current = _state.value
+        if (current.identity?.action != IdentityAction.NOT_A_CATALOG) {
+            _state.update {
+                it.copy(errorMessage = "Nella sede c'è già un Catalogo. Il fascicolo non è stato modificato.")
+            }
+            return
+        }
+        val label = current.pendingLabel.ifBlank {
+            if (current.selectedKind == CatalogSeatKind.LOCAL_DEVICE) "Questo dispositivo" else ""
+        }
+        confirmSeat(current.selectedKind, current.pendingTreeUri, label)
+    }
+
+    private fun considerSeat(seat: CatalogSeat) {
+        viewModelScope.launch {
+            _state.update { it.copy(busy = true, errorMessage = null) }
+            val inspected = catalogFacade.inspectCatalogSeat(seat)
+            val adopt = _state.value.adoptMode
+            inspected.fold(
+                onSuccess = { assessment ->
+                    if (!adopt && assessment.action == IdentityAction.NOT_A_CATALOG) {
+                        confirmSeat(seat.kind, seat.treeUri, seat.displayLabel.ifBlank { "Questo dispositivo" })
+                    } else {
+                        _state.update {
+                            it.copy(
+                                busy = false,
+                                identity = assessment,
+                                step = WizardStep.ADOPT_SUMMARY,
+                                pendingTreeUri = seat.treeUri,
+                                pendingLabel = seat.displayLabel,
+                            )
+                        }
+                    }
+                },
+                onFailure = { error ->
+                    _state.update {
+                        it.copy(busy = false, errorMessage = error.message ?: "Fascicolo non leggibile")
+                    }
+                },
+            )
+        }
     }
 
     private fun confirmSeat(kind: CatalogSeatKind, treeUri: String?, label: String) {

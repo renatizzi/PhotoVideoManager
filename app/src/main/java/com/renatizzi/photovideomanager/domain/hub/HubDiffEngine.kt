@@ -6,7 +6,11 @@ package com.renatizzi.photovideomanager.domain.hub
  */
 object HubDiffEngine {
 
-    data class SyncStamp(val updatedAtEpochMs: Long, val updatedByDeviceId: String)
+    data class SyncStamp(
+        val updatedAtEpochMs: Long,
+        val updatedByDeviceId: String,
+        val trashed: Boolean = false,
+    )
 
     fun preview(
         localCards: List<HubCard>,
@@ -46,14 +50,8 @@ object HubDiffEngine {
                                 publish += HubCardChange(id, title, HubCardChangeKind.PUBLISH, local, remote)
                             !localChanged && remoteChanged ->
                                 receive += HubCardChange(id, title, HubCardChangeKind.RECEIVE, local, remote)
-                            else -> {
-                                // entrambe diverse dallo stamp ma una non "changed" — confronta timestamp
-                                if (local.updatedAtEpochMs >= remote.updatedAtEpochMs) {
-                                    publish += HubCardChange(id, title, HubCardChangeKind.PUBLISH, local, remote)
-                                } else {
-                                    receive += HubCardChange(id, title, HubCardChangeKind.RECEIVE, local, remote)
-                                }
-                            }
+                            else ->
+                                conflicts += HubCardChange(id, title, HubCardChangeKind.CONFLICT, local, remote)
                         }
                     }
                 }
@@ -94,6 +92,7 @@ object HubDiffEngine {
     private fun changedSince(card: HubCard, synced: SyncStamp?): Boolean {
         if (synced == null) return true
         return card.updatedAtEpochMs != synced.updatedAtEpochMs ||
-            card.updatedByDeviceId != synced.updatedByDeviceId
+            card.updatedByDeviceId != synced.updatedByDeviceId ||
+            card.trashed != synced.trashed
     }
 }
