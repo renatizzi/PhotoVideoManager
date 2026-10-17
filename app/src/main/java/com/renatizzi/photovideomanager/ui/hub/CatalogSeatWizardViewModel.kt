@@ -9,6 +9,7 @@ import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.data.hub.WindowsCatalogSetupScript
 import com.renatizzi.photovideomanager.data.hub.WindowsSetupExportResult
 import com.renatizzi.photovideomanager.data.hub.WindowsSetupScriptExporter
+import com.renatizzi.photovideomanager.data.hub.WizardDraftStore
 import com.renatizzi.photovideomanager.data.storage.NetworkDriveAssistant
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeat
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind
@@ -20,9 +21,19 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+enum class SetupMode {
+    CREATE,
+    MODIFY,
+}
+
 data class CatalogSeatWizardUiState(
-    val step: WizardStep = WizardStep.INTRO,
-    val selectedKind: CatalogSeatKind = CatalogSeatKind.LOCAL_DEVICE,
+    val step: WizardStep = WizardStep.S0_START,
+    val selectedKind: CatalogSeatKind = CatalogSeatKind.PC_NOTEBOOK,
+    val setupMode: SetupMode = SetupMode.CREATE,
+    val seatConfigured: Boolean = false,
+    val seatLabel: String = "",
+    val canResumeDraft: Boolean = false,
+    val resumeStepLabel: String = "",
     val pendingTreeUri: String? = null,
     val pendingLabel: String = "",
     val busy: Boolean = false,
@@ -33,13 +44,20 @@ data class CatalogSeatWizardUiState(
     val userName: String = WindowsCatalogSetupScript.DEFAULT_USER,
     val temporaryPassword: String = "",
     val scriptPrepared: Boolean = false,
+    val usbCopiedDeclared: Boolean = false,
+    val scriptRanDeclared: Boolean = false,
     val downloadsSaved: Boolean = false,
     val usbCopiedTo: String? = null,
     val statusMessage: String? = null,
     val cifsInstalled: Boolean = false,
 )
 
+/**
+ * Passi Wizard. S0 = avvio; INTRO = S1 scelta dispositivo; poi rami W1–W4 fino a DONE (S7).
+ * T1: scheletro S0 + ripresa; percorso PC completo nelle tranche successive.
+ */
 enum class WizardStep {
+    S0_START,
     INTRO,
     W1_CONFIRM,
     W2_CHOICE,
@@ -60,6 +78,7 @@ class CatalogSeatWizardViewModel(
     private val catalogFacade: CatalogFacade,
     private val appContext: Context,
     private val exporter: WindowsSetupScriptExporter = WindowsSetupScriptExporter(appContext),
+    private val draftStore: WizardDraftStore = WizardDraftStore(appContext),
 ) : ViewModel() {
     private val _state = MutableStateFlow(CatalogSeatWizardUiState())
     val state: StateFlow<CatalogSeatWizardUiState> = _state.asStateFlow()
@@ -68,16 +87,133 @@ class CatalogSeatWizardViewModel(
 
     init {
         refreshCifsInstalled()
+        loadEntryState()
+    }
+
+    private fun loadEntryState() {
+        val seat = catalogFacade.catalogSeat()
+        val draft = draftStore.load()
+        val canResume = draft != null &&
+            draft.stepName != WizardStep.S0_START.name &&
+            draft.stepName != WizardStep.DONE.name
+        val resumeStep = if (canResume) {
+            runCatching { WizardStep.valueOf(draft!!.stepName) }.getOrNull()
+        } else {
+            null
+        }
+        _state.update {
+            it.copy(
+                step = WizardStep.S0_START,
+                seatConfigured = seat.isConfigured,
+                seatLabel = seat.displayLabel,
+                canResumeDraft = canResume && resumeStep != null,
+                resumeStepLabel = resumeStep?.let { s -> humanStepLabel(s) }.orEmpty(),
+                selectedKind = if (seat.isConfigured) seat.kind else CatalogSeatKind.PC_NOTEBOOK,
+                folderPath = draft?.folderPath ?: WindowsCatalogSetupScript.DEFAULT_FOLDER,
+                shareName = draft?.shareName ?: WindowsCatalogSetupScript.DEFAULT_SHARE,
+                userName = draft?.userName ?: WindowsCatalogSetupScript.DEFAULT_USER,
+                scriptPrepared = draft?.scriptPrepared == true,
+                usbCopiedDeclared = draft?.usbCopiedDeclared == true,
+                scriptRanDeclared = draft?.scriptRanDeclared == true,
+            )
+        }
+    }
+
+    fun startCreate() {
+        draftStore.clear()
+        _state.update {
+            it.copy(
+                setupMode = SetupMode.CREATE,
+                step = WizardStep.INTRO,
+                selectedKind = CatalogSeatKind.PC_NOTEBOOK,
+                completedSeat = null,
+                errorMessage = null,
+                statusMessage = null,
+                canResumeDraft = false,
+                scriptPrepared = false,
+                usbCopiedDeclared = false,
+                scriptRanDeclared = false,
+                temporaryPassword = "",
+                folderPath = WindowsCatalogSetupScript.DEFAULT_FOLDER,
+                shareName = WindowsCatalogSetupScript.DEFAULT_SHARE,
+            )
+        }
+        persistDraft()
+    }
+
+    fun startModify() {
+        val seat = catalogFacade.catalogSeat()
+        _state.update {
+            it.copy(
+                setupMode = SetupMode.MODIFY,
+                step = WizardStep.INTRO,
+                selectedKind = if (seat.kind != CatalogSeatKind.NONE) seat.kind else CatalogSeatKind.PC_NOTEBOOK,
+                completedSeat = null,
+                errorMessage = null,
+                statusMessage = null,
+                canResumeDraft = false,
+            )
+        }
+        persistDraft()
+    }
+
+    fun resumeDraft() {
+        val draft = draftStore.load() ?: return
+        val step = runCatching { WizardStep.valueOf(draft.stepName) }.getOrNull() ?: return
+        val kind = runCatching { CatalogSeatKind.valueOf(draft.selectedKindName) }
+            .getOrDefault(CatalogSeatKind.PC_NOTEBOOK)
+        val mode = if (draft.setupMode == WizardDraftStore.MODE_MODIFY) {
+            SetupMode.MODIFY
+        } else {
+            SetupMode.CREATE
+        }
+        if (step == WizardStep.W2_CIFS || step == WizardStep.W2_PICK || step == WizardStep.W4_GUIDE) {
+            refreshCifsInstalled()
+        }
+        _state.update {
+            it.copy(
+                step = step,
+                setupMode = mode,
+                selectedKind = kind,
+                folderPath = draft.folderPath,
+                shareName = draft.shareName,
+                userName = draft.userName,
+                scriptPrepared = draft.scriptPrepared,
+                usbCopiedDeclared = draft.usbCopiedDeclared,
+                scriptRanDeclared = draft.scriptRanDeclared,
+                canResumeDraft = false,
+                errorMessage = null,
+                statusMessage = null,
+                completedSeat = null,
+            )
+        }
+    }
+
+    fun discardDraftAndStayOnS0() {
+        draftStore.clear()
+        loadEntryState()
+        _state.update { it.copy(canResumeDraft = false, errorMessage = null) }
     }
 
     fun selectKind(kind: CatalogSeatKind) {
         _state.update { it.copy(selectedKind = kind, errorMessage = null) }
+        persistDraft()
     }
 
     fun goIntro() {
         _state.update {
-            it.copy(step = WizardStep.INTRO, errorMessage = null, completedSeat = null, statusMessage = null)
+            it.copy(
+                step = WizardStep.INTRO,
+                errorMessage = null,
+                completedSeat = null,
+                statusMessage = null,
+            )
         }
+        persistDraft()
+    }
+
+    fun goS0() {
+        loadEntryState()
     }
 
     fun avantiFromIntro() {
@@ -90,6 +226,7 @@ class CatalogSeatWizardViewModel(
             CatalogSeatKind.NONE -> WizardStep.INTRO
         }
         _state.update { it.copy(step = step, errorMessage = null) }
+        persistDraft()
     }
 
     fun goStep(step: WizardStep) {
@@ -97,6 +234,51 @@ class CatalogSeatWizardViewModel(
             refreshCifsInstalled()
         }
         _state.update { it.copy(step = step, errorMessage = null, statusMessage = null) }
+        persistDraft()
+    }
+
+    private fun persistDraft() {
+        val s = _state.value
+        if (s.step == WizardStep.S0_START || s.step == WizardStep.DONE) {
+            if (s.step == WizardStep.DONE) draftStore.clear()
+            return
+        }
+        draftStore.save(
+            WizardDraftStore.Draft(
+                stepName = s.step.name,
+                selectedKindName = s.selectedKind.name,
+                folderPath = s.folderPath,
+                shareName = s.shareName,
+                userName = s.userName,
+                scriptPrepared = s.scriptPrepared,
+                usbCopiedDeclared = s.usbCopiedDeclared,
+                scriptRanDeclared = s.scriptRanDeclared,
+                setupMode = when (s.setupMode) {
+                    SetupMode.MODIFY -> WizardDraftStore.MODE_MODIFY
+                    SetupMode.CREATE -> WizardDraftStore.MODE_CREATE
+                },
+            ),
+        )
+    }
+
+    private fun humanStepLabel(step: WizardStep): String = when (step) {
+        WizardStep.S0_START -> "Avvio"
+        WizardStep.INTRO -> "Scelta del dispositivo"
+        WizardStep.W1_CONFIRM -> "Sede su questo apparecchio"
+        WizardStep.W2_CHOICE,
+        WizardStep.W2_ROUTINE_PARAMS,
+        WizardStep.W2_ROUTINE_READY,
+        WizardStep.W2_ROUTINE_CONFIRM,
+        WizardStep.W2_PREPARE,
+        -> "Preparazione sul PC"
+        WizardStep.W2_CIFS,
+        WizardStep.W2_HELP,
+        WizardStep.W2_PASSWORD_HELP,
+        -> "Collegamento CIFS"
+        WizardStep.W2_PICK -> "Scelta cartella"
+        WizardStep.W3_GUIDE -> "Google Drive"
+        WizardStep.W4_GUIDE -> "NAS / rete"
+        WizardStep.DONE -> "Conferma"
     }
 
     fun refreshCifsInstalled() {
@@ -113,6 +295,7 @@ class CatalogSeatWizardViewModel(
                 it.copy(
                     step = WizardStep.W2_CIFS,
                     cifsInstalled = installed,
+                    scriptRanDeclared = true,
                     statusMessage = if (n > 0) {
                         "Script rimosso da Download sul telefono (conteneva la password)."
                     } else {
@@ -121,7 +304,13 @@ class CatalogSeatWizardViewModel(
                     errorMessage = null,
                 )
             }
+            persistDraft()
         }
+    }
+
+    fun markUsbCopied() {
+        _state.update { it.copy(usbCopiedDeclared = true, errorMessage = null) }
+        persistDraft()
     }
 
     /** Manual share path (no script): go to CIFS with whatever credentials known. */
@@ -130,14 +319,17 @@ class CatalogSeatWizardViewModel(
         _state.update {
             it.copy(step = WizardStep.W2_CIFS, errorMessage = null, statusMessage = null)
         }
+        persistDraft()
     }
 
     fun updateFolderPath(value: String) {
         _state.update { it.copy(folderPath = value, errorMessage = null, scriptPrepared = false) }
+        persistDraft()
     }
 
     fun updateShareName(value: String) {
         _state.update { it.copy(shareName = value, errorMessage = null, scriptPrepared = false) }
+        persistDraft()
     }
 
     fun prepareWindowsScript() {
@@ -192,6 +384,7 @@ class CatalogSeatWizardViewModel(
                             step = WizardStep.W2_ROUTINE_READY,
                         )
                     }
+                    persistDraft()
                 },
                 onFailure = { e ->
                     _state.update {
@@ -248,14 +441,19 @@ class CatalogSeatWizardViewModel(
                 displayLabel = label,
             )
             val result = catalogFacade.configureCatalogSeat(seat)
-            _state.update {
-                if (result.isSuccess) {
+            if (result.isSuccess) {
+                draftStore.clear()
+                _state.update {
                     it.copy(
                         busy = false,
                         completedSeat = result.getOrNull(),
                         step = WizardStep.DONE,
+                        seatConfigured = true,
+                        seatLabel = label,
                     )
-                } else {
+                }
+            } else {
+                _state.update {
                     it.copy(
                         busy = false,
                         errorMessage = result.exceptionOrNull()?.message

@@ -46,9 +46,14 @@ import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind
 @Composable
 fun CatalogSeatWizardScreen(
     state: CatalogSeatWizardUiState,
+    onStartCreate: () -> Unit,
+    onStartModify: () -> Unit,
+    onResumeDraft: () -> Unit,
+    onDiscardDraft: () -> Unit,
     onSelectKind: (CatalogSeatKind) -> Unit,
     onAvanti: () -> Unit,
     onBackIntro: () -> Unit,
+    onBackS0: () -> Unit,
     onGoStep: (WizardStep) -> Unit,
     onConfirmLocal: () -> Unit,
     onFolderPathChange: (String) -> Unit,
@@ -92,11 +97,22 @@ fun CatalogSeatWizardScreen(
         )
 
         when (state.step) {
+            WizardStep.S0_START -> S0StartStep(
+                seatConfigured = state.seatConfigured,
+                seatLabel = state.seatLabel,
+                canResumeDraft = state.canResumeDraft,
+                resumeStepLabel = state.resumeStepLabel,
+                onStartCreate = onStartCreate,
+                onStartModify = onStartModify,
+                onResumeDraft = onResumeDraft,
+                onDiscardDraft = onDiscardDraft,
+                onCancel = onCancel,
+            )
             WizardStep.INTRO -> IntroStep(
                 selected = state.selectedKind,
                 onSelectKind = onSelectKind,
                 onAvanti = onAvanti,
-                onCancel = onCancel,
+                onCancel = onBackS0,
             )
             WizardStep.W1_CONFIRM -> SimpleGuide(
                 body = stringResource(R.string.hub_w1_body),
@@ -267,13 +283,67 @@ fun CatalogSeatWizardScreen(
 }
 
 @Composable
+private fun S0StartStep(
+    seatConfigured: Boolean,
+    seatLabel: String,
+    canResumeDraft: Boolean,
+    resumeStepLabel: String,
+    onStartCreate: () -> Unit,
+    onStartModify: () -> Unit,
+    onResumeDraft: () -> Unit,
+    onDiscardDraft: () -> Unit,
+    onCancel: () -> Unit,
+) {
+    Text(stringResource(R.string.hub_s0_body))
+    if (seatConfigured) {
+        Text(
+            text = stringResource(R.string.hub_s0_current_seat, seatLabel.ifBlank { "—" }),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+        )
+    } else {
+        Text(
+            text = stringResource(R.string.hub_s0_no_seat),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+        )
+    }
+    if (canResumeDraft) {
+        Text(
+            text = stringResource(R.string.hub_s0_resume_hint, resumeStepLabel),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Button(onClick = onResumeDraft, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.hub_s0_resume))
+        }
+        TextButton(onClick = onDiscardDraft) {
+            Text(stringResource(R.string.hub_s0_discard_draft))
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+    }
+    Button(onClick = onStartCreate, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.hub_s0_create))
+    }
+    OutlinedButton(
+        onClick = onStartModify,
+        modifier = Modifier.fillMaxWidth(),
+        enabled = seatConfigured,
+    ) {
+        Text(stringResource(R.string.hub_s0_modify))
+    }
+    TextButton(onClick = onCancel) {
+        Text(stringResource(R.string.importa_annulla))
+    }
+}
+
+@Composable
 private fun IntroStep(
     selected: CatalogSeatKind,
     onSelectKind: (CatalogSeatKind) -> Unit,
     onAvanti: () -> Unit,
     onCancel: () -> Unit,
 ) {
-    Text(stringResource(R.string.hub_intro_body))
+    Text(stringResource(R.string.hub_s1_body))
     Text(stringResource(R.string.hub_combo_label), fontWeight = FontWeight.Medium)
     var expanded by remember { mutableStateOf(false) }
     val options = listOf(
