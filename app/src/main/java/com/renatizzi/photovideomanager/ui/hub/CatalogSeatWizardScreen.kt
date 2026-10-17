@@ -132,17 +132,11 @@ fun CatalogSeatWizardScreen(
                 onFolderPathChange = onFolderPathChange,
                 onShareNameChange = onShareNameChange,
                 onPrepare = onPrepareScript,
-                onBack = { onGoStep(WizardStep.W2_CHOICE) },
+                onBack = onBackIntro,
                 busy = state.busy,
             )
             WizardStep.W2_ROUTINE_READY -> W2RoutineReadyStep(
                 state = state,
-                onShareScript = {
-                    onShareScript()?.let { context.startActivity(it) }
-                },
-                onCopyCredentials = {
-                    copyToClipboard(context, onCredentialsText())
-                },
                 onContinue = { onGoStep(WizardStep.W2_ROUTINE_CONFIRM) },
                 onBack = { onGoStep(WizardStep.W2_ROUTINE_PARAMS) },
                 onReprepare = onPrepareScript,
@@ -158,7 +152,7 @@ fun CatalogSeatWizardScreen(
                 body = stringResource(R.string.hub_w2_prepare),
                 primary = stringResource(R.string.hub_w2_prepared),
                 onPrimary = onContinueToCifs,
-                onBack = { onGoStep(WizardStep.W2_CHOICE) },
+                onBack = onBackIntro,
             )
             WizardStep.W2_CIFS -> W2CifsStep(
                 state = state,
@@ -409,11 +403,12 @@ private fun W2RoutineParamsStep(
     onBack: () -> Unit,
     busy: Boolean,
 ) {
-    Text(stringResource(R.string.hub_w2_routine_params_body))
+    Text(stringResource(R.string.hub_s2_pc_body))
     OutlinedTextField(
         value = folderPath,
         onValueChange = onFolderPathChange,
         label = { Text(stringResource(R.string.hub_w2_folder_path_label)) },
+        supportingText = { Text(stringResource(R.string.hub_s2_pc_path_hint)) },
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
         enabled = !busy,
@@ -427,7 +422,7 @@ private fun W2RoutineParamsStep(
         enabled = !busy,
     )
     Text(
-        stringResource(R.string.hub_w2_routine_params_note),
+        stringResource(R.string.hub_s2_pc_note),
         style = MaterialTheme.typography.bodySmall,
     )
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -443,38 +438,26 @@ private fun W2RoutineParamsStep(
 @Composable
 private fun W2RoutineReadyStep(
     state: CatalogSeatWizardUiState,
-    onShareScript: () -> Unit,
-    onCopyCredentials: () -> Unit,
     onContinue: () -> Unit,
     onBack: () -> Unit,
     onReprepare: () -> Unit,
     busy: Boolean,
 ) {
-    Text(stringResource(R.string.hub_w2_routine_ready_body))
-    Text(stringResource(R.string.hub_w2_credentials_title), fontWeight = FontWeight.Medium)
+    Text(stringResource(R.string.hub_s3a_ready_body))
+    Text(stringResource(R.string.hub_s3a_summary_title), fontWeight = FontWeight.Medium)
     Text(
         text = stringResource(
-            R.string.hub_w2_credentials_lines,
-            state.userName,
-            state.temporaryPassword,
+            R.string.hub_s3a_summary_lines,
+            state.folderPath,
             state.shareName,
+            state.userName,
         ),
         fontFamily = FontFamily.Monospace,
     )
-    Button(
-        onClick = onShareScript,
-        enabled = !busy && state.scriptPrepared,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Text(stringResource(R.string.hub_w2_share_script))
-    }
-    OutlinedButton(
-        onClick = onCopyCredentials,
-        enabled = !busy && state.scriptPrepared,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Text(stringResource(R.string.hub_w2_copy_credentials))
-    }
+    Text(
+        stringResource(R.string.hub_s3a_password_later),
+        style = MaterialTheme.typography.bodySmall,
+    )
     TextButton(onClick = onReprepare, enabled = !busy) {
         Text(stringResource(R.string.hub_w2_reprepare_script))
     }

@@ -24,6 +24,22 @@ class WindowsCatalogSetupScriptTest {
     }
 
     @Test
+    fun validateFolderPath_requireDriveC_rejectsOtherLetters() {
+        assertNull(
+            WindowsCatalogSetupScript.validateFolderPath(
+                "C:\\MediaManager\\Catalogo",
+                requireDriveC = true,
+            ),
+        )
+        assertNotNull(
+            WindowsCatalogSetupScript.validateFolderPath(
+                "D:\\Foto\\Catalogo",
+                requireDriveC = true,
+            ),
+        )
+    }
+
+    @Test
     fun validateFolderPath_rejectsInvalid() {
         assertNotNull(WindowsCatalogSetupScript.validateFolderPath(""))
         assertNotNull(WindowsCatalogSetupScript.validateFolderPath("/home/catalogo"))

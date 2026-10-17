@@ -43,11 +43,14 @@ object WindowsCatalogSetupScript {
         }
     }
 
-    fun validateFolderPath(path: String): String? {
+    fun validateFolderPath(path: String, requireDriveC: Boolean = false): String? {
         val trimmed = path.trim()
         if (trimmed.isEmpty()) return "Indica il percorso della cartella sul PC"
         if (!pathRegex.matches(trimmed)) {
             return "Percorso non valido. Esempio: C:\\MediaManager\\Catalogo"
+        }
+        if (requireDriveC && !trimmed.uppercase().startsWith("C:\\")) {
+            return "In questa fase la cartella deve essere sul disco C: (esempio: C:\\MediaManager\\Catalogo)"
         }
         return null
     }

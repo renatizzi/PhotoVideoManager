@@ -218,9 +218,10 @@ class CatalogSeatWizardViewModel(
 
     fun avantiFromIntro() {
         val kind = _state.value.selectedKind
+        // Fase corrente: ramo PC va diretto a S2 (path su C:) + preparazione script.
         val step = when (kind) {
             CatalogSeatKind.LOCAL_DEVICE -> WizardStep.W1_CONFIRM
-            CatalogSeatKind.PC_NOTEBOOK -> WizardStep.W2_CHOICE
+            CatalogSeatKind.PC_NOTEBOOK -> WizardStep.W2_ROUTINE_PARAMS
             CatalogSeatKind.CLOUD_DRIVE -> WizardStep.W3_GUIDE
             CatalogSeatKind.NETWORK_NAS -> WizardStep.W4_GUIDE
             CatalogSeatKind.NONE -> WizardStep.INTRO
@@ -335,7 +336,10 @@ class CatalogSeatWizardViewModel(
     fun prepareWindowsScript() {
         viewModelScope.launch {
             val current = _state.value
-            val pathErr = WindowsCatalogSetupScript.validateFolderPath(current.folderPath)
+            val pathErr = WindowsCatalogSetupScript.validateFolderPath(
+                current.folderPath,
+                requireDriveC = true,
+            )
             val shareErr = WindowsCatalogSetupScript.validateShareName(current.shareName)
             val userErr = WindowsCatalogSetupScript.validateUserName(current.userName)
             if (pathErr != null || shareErr != null || userErr != null) {
