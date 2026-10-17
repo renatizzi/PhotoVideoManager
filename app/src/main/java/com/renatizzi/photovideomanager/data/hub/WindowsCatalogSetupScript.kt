@@ -283,12 +283,21 @@ try {
       Record 'share' ${d}true 'creata'
       Write-Step "Condivisione creata."
     } else {
-      if (${d}shareObj.Path -ne ${d}FolderPath) {
-        Fail-Step 30 ("La condivisione '${d}ShareName' punta gia a '${d}(${d}shareObj.Path)'. Rimuovila o scegli un altro nome.")
+      # Modifica percorso: stessa condivisione gia usata da un Catalogo precedente.
+      # Non fallire: rimuovi e ricrea sul nuovo FolderPath (i file vecchi restano al loro posto).
+      ${d}existingPath = ([string]${d}shareObj.Path).TrimEnd([char]92)
+      ${d}wantedPath = ([string]${d}FolderPath).TrimEnd([char]92)
+      if (${d}existingPath -ieq ${d}wantedPath) {
+        Grant-SmbShareAccess -Name ${d}ShareName -AccountName ${d}UserName -AccessRight Full -Force | Out-Null
+        Record 'share' ${d}true 'aggiornata'
+        Write-Step "Condivisione gia presente: permessi aggiornati."
+      } else {
+        Write-Step ("Condivisione gia su '${d}existingPath': la ripunto a '${d}FolderPath'.")
+        Remove-SmbShare -Name ${d}ShareName -Force
+        New-SmbShare -Name ${d}ShareName -Path ${d}FolderPath -FullAccess ${d}UserName -FolderEnumerationMode AccessBased | Out-Null
+        Record 'share' ${d}true 'ripruntata'
+        Write-Step "Condivisione ripuntata al nuovo percorso."
       }
-      Grant-SmbShareAccess -Name ${d}ShareName -AccountName ${d}UserName -AccessRight Full -Force | Out-Null
-      Record 'share' ${d}true 'aggiornata'
-      Write-Step "Condivisione gia presente: permessi aggiornati."
     }
     Get-SmbShareAccess -Name ${d}ShareName | Where-Object { ${d}_.AccountName -match 'Everyone|Tutti' } | ForEach-Object {
       Revoke-SmbShareAccess -Name ${d}ShareName -AccountName ${d}_.AccountName -Force -ErrorAction SilentlyContinue

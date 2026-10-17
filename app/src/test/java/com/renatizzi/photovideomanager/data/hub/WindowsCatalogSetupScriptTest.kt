@@ -76,6 +76,15 @@ class WindowsCatalogSetupScriptTest {
     }
 
     @Test
+    fun build_shareRepointsWhenFolderPathChanges() {
+        val ps1 = samplePkg().ps1Content
+        assertTrue(ps1.contains("Remove-SmbShare"))
+        assertTrue(ps1.contains("ripruntata"))
+        assertTrue(ps1.contains("-ieq"))
+        assertFalse(ps1.contains("Rimuovila o scegli un altro nome"))
+    }
+
+    @Test
     fun build_cmdAutoElevates() {
         val cmd = samplePkg().cmdContent
         assertTrue(cmd.contains("net session"))
