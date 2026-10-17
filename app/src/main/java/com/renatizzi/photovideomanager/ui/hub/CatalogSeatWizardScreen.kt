@@ -3,7 +3,6 @@ package com.renatizzi.photovideomanager.ui.hub
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Arrangement
@@ -60,13 +59,13 @@ fun CatalogSeatWizardScreen(
     onFolderPathChange: (String) -> Unit,
     onShareNameChange: (String) -> Unit,
     onPrepareScript: () -> Unit,
-    onShareScript: () -> Intent?,
     onCredentialsText: () -> String,
     onConfirmScriptRan: () -> Unit,
     onUsbCopiedContinue: () -> Unit,
     onContinueFromSummary: () -> Unit,
     onContinueToCifs: () -> Unit,
     onRefreshCifs: () -> Unit,
+    onRetryVerify: () -> Unit,
     onFolderPicked: (uri: String, label: String) -> Unit,
     onDone: () -> Unit,
     onCancel: () -> Unit,
@@ -202,12 +201,12 @@ fun CatalogSeatWizardScreen(
                 onPrimary = { onGoStep(WizardStep.W2_CIFS) },
                 onBack = { onGoStep(WizardStep.W2_HELP) },
             )
-            WizardStep.W2_PICK -> SimpleGuide(
-                body = stringResource(R.string.hub_w2_pick),
-                primary = stringResource(R.string.hub_choose_folder),
-                onPrimary = { if (!state.busy) openTree.launch(null) },
+            WizardStep.W2_PICK -> W2VerifyPickStep(
+                state = state,
+                onChooseFolder = { if (!state.busy) openTree.launch(null) },
+                onRetry = onRetryVerify,
+                onBackCifs = { onGoStep(WizardStep.W2_CIFS) },
                 onBack = { onGoStep(WizardStep.W2_CIFS) },
-                busy = state.busy,
             )
             WizardStep.W3_GUIDE -> SimpleGuide(
                 body = stringResource(R.string.hub_w3_body),
@@ -248,22 +247,10 @@ fun CatalogSeatWizardScreen(
                     busy = state.busy,
                 )
             }
-            WizardStep.DONE -> {
-                Text(stringResource(R.string.hub_done_title), fontWeight = FontWeight.Medium)
-                Text(
-                    stringResource(
-                        R.string.hub_done_body,
-                        state.completedSeat?.displayLabel ?: "—",
-                    ),
-                )
-                if (state.scriptPrepared) {
-                    Text(stringResource(R.string.hub_w2_done_password_reminder))
-                }
-                Text(stringResource(R.string.hub_done_resume_catalog))
-                Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.ok))
-                }
-            }
+            WizardStep.DONE -> W2DoneStep(
+                state = state,
+                onDone = onDone,
+            )
         }
 
         state.statusMessage?.let {
@@ -477,6 +464,122 @@ private fun W2RoutineReadyStep(
         Button(onClick = onContinue, enabled = !busy && state.scriptPrepared, modifier = Modifier.weight(1f)) {
             Text(stringResource(R.string.hub_s3b_copied_primary))
         }
+    }
+}
+
+@Composable
+private fun W2VerifyPickStep(
+    state: CatalogSeatWizardUiState,
+    onChooseFolder: () -> Unit,
+    onRetry: () -> Unit,
+    onBackCifs: () -> Unit,
+    onBack: () -> Unit,
+) {
+    Text(
+        if (state.scriptPrepared) {
+            stringResource(R.string.hub_s6_pick_body)
+        } else {
+            stringResource(R.string.hub_w2_pick)
+        },
+    )
+    val statusText = when (state.verification) {
+        SeatVerificationUi.NONE -> stringResource(R.string.hub_s6_status_idle)
+        SeatVerificationUi.IN_PROGRESS -> stringResource(R.string.hub_s6_status_progress)
+        SeatVerificationUi.VERIFIED -> stringResource(R.string.hub_s6_status_ok)
+        SeatVerificationUi.UNREACHABLE -> stringResource(R.string.hub_s6_status_unreachable)
+        SeatVerificationUi.FAILED -> stringResource(R.string.hub_s6_status_failed)
+    }
+    val statusColor = when (state.verification) {
+        SeatVerificationUi.VERIFIED -> MaterialTheme.colorScheme.primary
+        SeatVerificationUi.UNREACHABLE,
+        SeatVerificationUi.FAILED,
+        -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+    }
+    Text(statusText, color = statusColor, fontWeight = FontWeight.Medium)
+    if (state.pendingLabel.isNotBlank() && state.verification != SeatVerificationUi.NONE) {
+        Text(
+            text = state.pendingLabel,
+            style = MaterialTheme.typography.bodySmall,
+            fontFamily = FontFamily.Monospace,
+        )
+    }
+    Button(
+        onClick = onChooseFolder,
+        enabled = !state.busy,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.hub_choose_folder))
+    }
+    if (state.pendingTreeUri != null &&
+        (state.verification == SeatVerificationUi.FAILED ||
+            state.verification == SeatVerificationUi.UNREACHABLE)
+    ) {
+        OutlinedButton(
+            onClick = onRetry,
+            enabled = !state.busy,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.hub_s6_retry))
+        }
+    }
+    if (state.scriptPrepared) {
+        TextButton(onClick = onBackCifs, enabled = !state.busy) {
+            Text(stringResource(R.string.hub_s6_back_cifs))
+        }
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(onClick = onBack, enabled = !state.busy, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.hub_indietro))
+        }
+        Spacer(modifier = Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun W2DoneStep(
+    state: CatalogSeatWizardUiState,
+    onDone: () -> Unit,
+) {
+    Text(
+        if (state.scriptPrepared) {
+            stringResource(R.string.hub_s7_title)
+        } else {
+            stringResource(R.string.hub_done_title)
+        },
+        fontWeight = FontWeight.Medium,
+    )
+    if (state.scriptPrepared && state.verification == SeatVerificationUi.VERIFIED) {
+        Text(
+            stringResource(R.string.hub_s7_verified_line),
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+            text = stringResource(
+                R.string.hub_s7_summary_lines,
+                state.folderPath.ifBlank { WindowsCatalogSetupScript.DEFAULT_FOLDER },
+                state.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE },
+                state.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER },
+                state.completedSeat?.displayLabel ?: state.seatLabel.ifBlank { "—" },
+            ),
+            fontFamily = FontFamily.Monospace,
+        )
+        Text(
+            stringResource(R.string.hub_s7_no_password),
+            style = MaterialTheme.typography.bodySmall,
+        )
+        Text(stringResource(R.string.hub_w2_done_password_reminder))
+    } else {
+        Text(
+            stringResource(
+                R.string.hub_done_body,
+                state.completedSeat?.displayLabel ?: "—",
+            ),
+        )
+    }
+    Text(stringResource(R.string.hub_done_resume_catalog))
+    Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.ok))
     }
 }
 

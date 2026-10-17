@@ -26,6 +26,15 @@ enum class SetupMode {
     MODIFY,
 }
 
+/** Esito prova lettura/scrittura + fascicolo (S6). */
+enum class SeatVerificationUi {
+    NONE,
+    IN_PROGRESS,
+    VERIFIED,
+    UNREACHABLE,
+    FAILED,
+}
+
 data class CatalogSeatWizardUiState(
     val step: WizardStep = WizardStep.S0_START,
     val selectedKind: CatalogSeatKind = CatalogSeatKind.PC_NOTEBOOK,
@@ -50,6 +59,7 @@ data class CatalogSeatWizardUiState(
     val usbCopiedTo: String? = null,
     val statusMessage: String? = null,
     val cifsInstalled: Boolean = false,
+    val verification: SeatVerificationUi = SeatVerificationUi.NONE,
 )
 
 /**
@@ -279,7 +289,7 @@ class CatalogSeatWizardViewModel(
         WizardStep.W2_HELP,
         WizardStep.W2_PASSWORD_HELP,
         -> "Collegamento CIFS"
-        WizardStep.W2_PICK -> "Scelta cartella"
+        WizardStep.W2_PICK -> "Verifica sede"
         WizardStep.W3_GUIDE -> "Google Drive"
         WizardStep.W4_GUIDE -> "NAS / rete"
         WizardStep.DONE -> "Conferma"
@@ -441,7 +451,14 @@ class CatalogSeatWizardViewModel(
     }
 
     fun onFolderPicked(uri: String, label: String) {
-        _state.update { it.copy(pendingTreeUri = uri, pendingLabel = label, errorMessage = null) }
+        _state.update {
+            it.copy(
+                pendingTreeUri = uri,
+                pendingLabel = label,
+                errorMessage = null,
+                verification = SeatVerificationUi.NONE,
+            )
+        }
         confirmSeat(
             kind = _state.value.selectedKind,
             treeUri = uri,
@@ -457,9 +474,28 @@ class CatalogSeatWizardViewModel(
         )
     }
 
+    /** Riprova S6 con l'ultima cartella scelta, senza azzerare S1–S2. */
+    fun retryPendingFolderVerification() {
+        val s = _state.value
+        val uri = s.pendingTreeUri ?: return
+        confirmSeat(
+            kind = s.selectedKind,
+            treeUri = uri,
+            label = s.pendingLabel.ifBlank { "Cartella Catalogo" },
+        )
+    }
+
     private fun confirmSeat(kind: CatalogSeatKind, treeUri: String?, label: String) {
         viewModelScope.launch {
-            _state.update { it.copy(busy = true, errorMessage = null) }
+            _state.update {
+                it.copy(
+                    busy = true,
+                    errorMessage = null,
+                    statusMessage = null,
+                    verification = SeatVerificationUi.IN_PROGRESS,
+                    step = if (kind == CatalogSeatKind.LOCAL_DEVICE) it.step else WizardStep.W2_PICK,
+                )
+            }
             val seat = CatalogSeat(
                 kind = kind,
                 treeUri = treeUri,
@@ -475,17 +511,52 @@ class CatalogSeatWizardViewModel(
                         step = WizardStep.DONE,
                         seatConfigured = true,
                         seatLabel = label,
+                        verification = SeatVerificationUi.VERIFIED,
+                        errorMessage = null,
+                        statusMessage = null,
                     )
                 }
             } else {
+                val raw = result.exceptionOrNull()?.message.orEmpty()
+                val unreachable = isUnreachableSeatError(raw)
                 _state.update {
                     it.copy(
                         busy = false,
-                        errorMessage = result.exceptionOrNull()?.message
-                            ?: "Configurazione sede non riuscita",
+                        verification = if (unreachable) {
+                            SeatVerificationUi.UNREACHABLE
+                        } else {
+                            SeatVerificationUi.FAILED
+                        },
+                        errorMessage = friendlySeatError(raw, unreachable),
+                        // Resta su S6 (o W1); non azzera path/script/dichiarazioni.
+                        step = if (kind == CatalogSeatKind.LOCAL_DEVICE) {
+                            WizardStep.W1_CONFIRM
+                        } else {
+                            WizardStep.W2_PICK
+                        },
                     )
                 }
+                persistDraft()
             }
+        }
+    }
+
+    private fun isUnreachableSeatError(message: String): Boolean {
+        val m = message.lowercase()
+        return m.contains("fascicolo") ||
+            m.contains("scrittura") ||
+            m.contains("non disponibile") ||
+            m.contains("permission") ||
+            m.contains("eacces") ||
+            m.contains("enoent") ||
+            m.contains("not found")
+    }
+
+    private fun friendlySeatError(raw: String, unreachable: Boolean): String {
+        return if (unreachable) {
+            "Sede non raggiungibile o non scrivibile. Controlla CIFS, Wi‑Fi e che il PC non sia in sospensione, poi riprova."
+        } else {
+            raw.ifBlank { "Verifica della sede non riuscita. Riprova o torna a CIFS." }
         }
     }
 

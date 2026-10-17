@@ -2,7 +2,8 @@
 
 **Stato:** annotato, **non implementare ora** (richiesta Renato 17/10/2026).  
 **Branch di riferimento:** `cursor/wizard-setup-pc-c-5645`  
-Proseguire prima le tranche T3–T6 del piano; riprendere questi punti in una tranche UX dedicata.
+**Nota 17/10 sera:** T1–T6 del percorso PC (C:/USB) sono in codice (0.16.33); serve prova end-to-end sul telefono.  
+Questi punti UX restano in coda **dopo** quella prova (o se la prova li conferma ancora).
 
 ---
 
