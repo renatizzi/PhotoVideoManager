@@ -333,7 +333,7 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
 ## 7.1 FASE CORRENTE: BL-17 / H1 Catalogo personale unico + Wizard sede
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)** + **BL-17 / H1**.
-STATO ATTUALE (12/10/2026): **0.16.20-preview** (versionCode 61). **H1 + Wizard BL-17 in SVILUPPO**: sede, fascicolo `catalog_hub.json`, Imposta Catalogo personale (W1–W4), Aggiorna Catalogo con riepilogo/conflitti. Approfondimento: `docs/PVM_H1_Approfondimento_Tecnico.md`.
+STATO ATTUALE (15/10/2026): **0.16.26-preview** (versionCode 67). Wizard sede: (1) scelta dispositivo (2) PC→script+CIFS Documents Provider+SAF (3) ripresa Catalogo. Stesso modello BoxManager `NetworkDriveAssistant`.
 Ordine operativo:
 1. **P1** — verifica Renato su telefono/tablet (Wizard + Aggiorna Catalogo multi-dispositivo).
 2. **P2** — BL-09 assorbito in W2; BL-02/BL-11 non ora.
@@ -560,7 +560,7 @@ Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consoli
 | BL-07 | **Aggiorna — «Sposta» nel menu contestuale** | **CHIUSA (decisione A 11/10/2026):** non aggiungere Sposta. | Renato 09–11/10/2026 |
 | BL-08 | **Copia da Catalogo → dispositivo** | ~~Export esplicito SAF CreateDocument~~ — *fatto 0.16.0* (menu Aggiorna «Copia su dispositivo»; preferisce copia spazio app). Sposta resta BL-07. | Renato 09/10/2026 |
 | BL-09 | **PC / NAS in rete** | Guida «Da PC o rete» in 0.16.18–19. **Assorbita in BL-17 W2** (sede PC, anche memorie di massa sul PC). | Renato 10–12/10/2026 |
-| BL-17 | **Wizard sede Catalogo personale (H1)** | **SVILUPPO 0.16.20:** Wizard W1–W4, fascicolo `catalog_hub.json`, Aggiorna Catalogo (riepilogo/conflitti). §7.1octies. | Renato 12/10/2026 |
+| BL-17 | **Wizard sede Catalogo personale (H1)** | **SVILUPPO 0.16.20–0.16.21:** Wizard W1–W4, fascicolo `catalog_hub.json`, Aggiorna Catalogo; W2 routine PC Windows (script T1 + utente `MediaManager` + S6-A). §7.1octies; interlocuzione §7.26–§7.27. | Renato 12–14/10/2026 |
 | BL-10 | **Fonti apparire senza scelta utente** | **OK** (diagnosi + dedupe SAF 0.16.10; prove 0.16.15). Fonti solo da «+»; residui togliibili con X. | Renato 10–11/10/2026 |
 | BL-11 | **Pulisci — criteri duplicati avanzati (tipo Krokiet)** | **Decisione A 11/10/2026:** restano solo duplicati esatti. Simili = versione successiva. | Renato 11/10/2026 |
 | BL-12 | **Pulisci — doppia funzione (selezionati + duplicati)** | Convalidato 11/10/2026. **0.16.6–0.16.7**: (1) ✓ da Aggiorna → Pulisci; (2) Analizza duplicati. Fix navigazione ✓ in 0.16.7. Prova Renato OK su selezione. | Renato 11/10/2026 |

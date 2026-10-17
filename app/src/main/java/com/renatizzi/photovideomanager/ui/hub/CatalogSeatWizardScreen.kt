@@ -1,8 +1,11 @@
 package com.renatizzi.photovideomanager.ui.hub
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,6 +22,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,9 +34,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.renatizzi.photovideomanager.R
+import com.renatizzi.photovideomanager.data.storage.NetworkDriveAssistant
+import com.renatizzi.photovideomanager.data.storage.OpenDocumentTreeAdvanced
 import com.renatizzi.photovideomanager.data.storage.SafPathLabels
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind
 
@@ -44,6 +51,14 @@ fun CatalogSeatWizardScreen(
     onBackIntro: () -> Unit,
     onGoStep: (WizardStep) -> Unit,
     onConfirmLocal: () -> Unit,
+    onFolderPathChange: (String) -> Unit,
+    onShareNameChange: (String) -> Unit,
+    onPrepareScript: () -> Unit,
+    onShareScript: () -> Intent?,
+    onCredentialsText: () -> String,
+    onConfirmScriptRan: () -> Unit,
+    onContinueToCifs: () -> Unit,
+    onRefreshCifs: () -> Unit,
     onFolderPicked: (uri: String, label: String) -> Unit,
     onDone: () -> Unit,
     onCancel: () -> Unit,
@@ -51,7 +66,7 @@ fun CatalogSeatWizardScreen(
 ) {
     val context = LocalContext.current
     val openTree = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocumentTree(),
+        contract = OpenDocumentTreeAdvanced(),
     ) { uri: Uri? ->
         if (uri != null) {
             val label = SafPathLabels.folderTitle(
@@ -90,31 +105,90 @@ fun CatalogSeatWizardScreen(
                 onBack = onBackIntro,
                 busy = state.busy,
             )
+            WizardStep.W2_CHOICE -> W2ChoiceStep(
+                onRoutine = { onGoStep(WizardStep.W2_ROUTINE_PARAMS) },
+                onAlready = { onGoStep(WizardStep.W2_PREPARE) },
+                onBack = onBackIntro,
+            )
+            WizardStep.W2_ROUTINE_PARAMS -> W2RoutineParamsStep(
+                folderPath = state.folderPath,
+                shareName = state.shareName,
+                onFolderPathChange = onFolderPathChange,
+                onShareNameChange = onShareNameChange,
+                onPrepare = onPrepareScript,
+                onBack = { onGoStep(WizardStep.W2_CHOICE) },
+                busy = state.busy,
+            )
+            WizardStep.W2_ROUTINE_READY -> W2RoutineReadyStep(
+                state = state,
+                onShareScript = {
+                    onShareScript()?.let { context.startActivity(it) }
+                },
+                onCopyCredentials = {
+                    copyToClipboard(context, onCredentialsText())
+                },
+                onContinue = { onGoStep(WizardStep.W2_ROUTINE_CONFIRM) },
+                onBack = { onGoStep(WizardStep.W2_ROUTINE_PARAMS) },
+                onReprepare = onPrepareScript,
+                busy = state.busy,
+            )
+            WizardStep.W2_ROUTINE_CONFIRM -> SimpleGuide(
+                body = stringResource(R.string.hub_w2_routine_confirm_body),
+                primary = stringResource(R.string.hub_w2_routine_confirm_primary),
+                onPrimary = onConfirmScriptRan,
+                onBack = { onGoStep(WizardStep.W2_ROUTINE_READY) },
+            )
             WizardStep.W2_PREPARE -> SimpleGuide(
                 body = stringResource(R.string.hub_w2_prepare),
                 primary = stringResource(R.string.hub_w2_prepared),
-                onPrimary = { onGoStep(WizardStep.W2_CONNECT) },
-                onBack = onBackIntro,
+                onPrimary = onContinueToCifs,
+                onBack = { onGoStep(WizardStep.W2_CHOICE) },
             )
-            WizardStep.W2_CONNECT -> SimpleGuide(
-                body = stringResource(R.string.hub_w2_connect),
-                primary = stringResource(R.string.hub_w2_connected),
-                onPrimary = { onGoStep(WizardStep.W2_PICK) },
-                onBack = { onGoStep(WizardStep.W2_PREPARE) },
-                secondary = stringResource(R.string.hub_w2_help_link),
-                onSecondary = { onGoStep(WizardStep.W2_HELP) },
+            WizardStep.W2_CIFS -> W2CifsStep(
+                state = state,
+                onInstallOrOpen = {
+                    onRefreshCifs()
+                    if (NetworkDriveAssistant.isHelperInstalled(context)) {
+                        if (!NetworkDriveAssistant.openHelperApp(context)) {
+                            NetworkDriveAssistant.openHelperStore(context)
+                        }
+                    } else {
+                        NetworkDriveAssistant.openHelperStore(context)
+                    }
+                },
+                onCopyCredentials = {
+                    copyToClipboard(context, onCredentialsText())
+                },
+                onRefresh = onRefreshCifs,
+                onContinue = { onGoStep(WizardStep.W2_PICK) },
+                onBack = {
+                    if (state.scriptPrepared) {
+                        onGoStep(WizardStep.W2_ROUTINE_CONFIRM)
+                    } else {
+                        onGoStep(WizardStep.W2_PREPARE)
+                    }
+                },
+                onHelp = { onGoStep(WizardStep.W2_HELP) },
             )
             WizardStep.W2_HELP -> SimpleGuide(
                 body = stringResource(R.string.hub_w2_help_body),
                 primary = stringResource(R.string.hub_w2_help_back),
-                onPrimary = { onGoStep(WizardStep.W2_CONNECT) },
+                onPrimary = { onGoStep(WizardStep.W2_CIFS) },
                 onBack = onBackIntro,
+                secondary = stringResource(R.string.hub_w2_password_help_link),
+                onSecondary = { onGoStep(WizardStep.W2_PASSWORD_HELP) },
+            )
+            WizardStep.W2_PASSWORD_HELP -> SimpleGuide(
+                body = stringResource(R.string.hub_w2_password_help_body),
+                primary = stringResource(R.string.hub_w2_help_back),
+                onPrimary = { onGoStep(WizardStep.W2_CIFS) },
+                onBack = { onGoStep(WizardStep.W2_HELP) },
             )
             WizardStep.W2_PICK -> SimpleGuide(
                 body = stringResource(R.string.hub_w2_pick),
                 primary = stringResource(R.string.hub_choose_folder),
                 onPrimary = { if (!state.busy) openTree.launch(null) },
-                onBack = { onGoStep(WizardStep.W2_CONNECT) },
+                onBack = { onGoStep(WizardStep.W2_CIFS) },
                 busy = state.busy,
             )
             WizardStep.W3_GUIDE -> SimpleGuide(
@@ -124,13 +198,38 @@ fun CatalogSeatWizardScreen(
                 onBack = onBackIntro,
                 busy = state.busy,
             )
-            WizardStep.W4_GUIDE -> SimpleGuide(
-                body = stringResource(R.string.hub_w4_body),
-                primary = stringResource(R.string.hub_choose_folder),
-                onPrimary = { if (!state.busy) openTree.launch(null) },
-                onBack = onBackIntro,
-                busy = state.busy,
-            )
+            WizardStep.W4_GUIDE -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(stringResource(R.string.hub_w4_body))
+                Text(stringResource(R.string.hub_w4_cifs_note))
+                if (state.cifsInstalled) {
+                    Button(
+                        onClick = {
+                            onRefreshCifs()
+                            NetworkDriveAssistant.openHelperApp(context)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.hub_cifs_open))
+                    }
+                } else {
+                    Button(
+                        onClick = {
+                            NetworkDriveAssistant.openHelperStore(context)
+                            onRefreshCifs()
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.hub_cifs_install))
+                    }
+                }
+                SimpleGuide(
+                    body = stringResource(R.string.hub_w4_pick_hint),
+                    primary = stringResource(R.string.hub_choose_folder),
+                    onPrimary = { if (!state.busy) openTree.launch(null) },
+                    onBack = onBackIntro,
+                    busy = state.busy,
+                )
+            }
             WizardStep.DONE -> {
                 Text(stringResource(R.string.hub_done_title), fontWeight = FontWeight.Medium)
                 Text(
@@ -139,12 +238,19 @@ fun CatalogSeatWizardScreen(
                         state.completedSeat?.displayLabel ?: "—",
                     ),
                 )
+                if (state.scriptPrepared) {
+                    Text(stringResource(R.string.hub_w2_done_password_reminder))
+                }
+                Text(stringResource(R.string.hub_done_resume_catalog))
                 Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.ok))
                 }
             }
         }
 
+        state.statusMessage?.let {
+            Text(it, color = MaterialTheme.colorScheme.primary)
+        }
         state.errorMessage?.let {
             Text(it, color = MaterialTheme.colorScheme.error)
         }
@@ -206,6 +312,179 @@ private fun IntroStep(
 }
 
 @Composable
+private fun W2ChoiceStep(
+    onRoutine: () -> Unit,
+    onAlready: () -> Unit,
+    onBack: () -> Unit,
+) {
+    Text(stringResource(R.string.hub_w2_choice_body))
+    Button(onClick = onRoutine, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.hub_w2_choice_routine))
+    }
+    OutlinedButton(onClick = onAlready, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.hub_w2_choice_already))
+    }
+    TextButton(onClick = onBack) {
+        Text(stringResource(R.string.hub_indietro))
+    }
+}
+
+@Composable
+private fun W2RoutineParamsStep(
+    folderPath: String,
+    shareName: String,
+    onFolderPathChange: (String) -> Unit,
+    onShareNameChange: (String) -> Unit,
+    onPrepare: () -> Unit,
+    onBack: () -> Unit,
+    busy: Boolean,
+) {
+    Text(stringResource(R.string.hub_w2_routine_params_body))
+    OutlinedTextField(
+        value = folderPath,
+        onValueChange = onFolderPathChange,
+        label = { Text(stringResource(R.string.hub_w2_folder_path_label)) },
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
+        enabled = !busy,
+    )
+    OutlinedTextField(
+        value = shareName,
+        onValueChange = onShareNameChange,
+        label = { Text(stringResource(R.string.hub_w2_share_name_label)) },
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
+        enabled = !busy,
+    )
+    Text(
+        stringResource(R.string.hub_w2_routine_params_note),
+        style = MaterialTheme.typography.bodySmall,
+    )
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(onClick = onBack, enabled = !busy, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.hub_indietro))
+        }
+        Button(onClick = onPrepare, enabled = !busy, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.hub_w2_prepare_script))
+        }
+    }
+}
+
+@Composable
+private fun W2RoutineReadyStep(
+    state: CatalogSeatWizardUiState,
+    onShareScript: () -> Unit,
+    onCopyCredentials: () -> Unit,
+    onContinue: () -> Unit,
+    onBack: () -> Unit,
+    onReprepare: () -> Unit,
+    busy: Boolean,
+) {
+    Text(stringResource(R.string.hub_w2_routine_ready_body))
+    Text(stringResource(R.string.hub_w2_credentials_title), fontWeight = FontWeight.Medium)
+    Text(
+        text = stringResource(
+            R.string.hub_w2_credentials_lines,
+            state.userName,
+            state.temporaryPassword,
+            state.shareName,
+        ),
+        fontFamily = FontFamily.Monospace,
+    )
+    Button(
+        onClick = onShareScript,
+        enabled = !busy && state.scriptPrepared,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.hub_w2_share_script))
+    }
+    OutlinedButton(
+        onClick = onCopyCredentials,
+        enabled = !busy && state.scriptPrepared,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.hub_w2_copy_credentials))
+    }
+    TextButton(onClick = onReprepare, enabled = !busy) {
+        Text(stringResource(R.string.hub_w2_reprepare_script))
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(onClick = onBack, enabled = !busy, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.hub_indietro))
+        }
+        Button(onClick = onContinue, enabled = !busy && state.scriptPrepared, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.hub_avanti))
+        }
+    }
+}
+
+@Composable
+private fun W2CifsStep(
+    state: CatalogSeatWizardUiState,
+    onInstallOrOpen: () -> Unit,
+    onCopyCredentials: () -> Unit,
+    onRefresh: () -> Unit,
+    onContinue: () -> Unit,
+    onBack: () -> Unit,
+    onHelp: () -> Unit,
+) {
+    Text(stringResource(R.string.hub_w2_cifs_body))
+    Text(stringResource(R.string.hub_w2_credentials_title), fontWeight = FontWeight.Medium)
+    Text(
+        text = stringResource(
+            R.string.hub_w2_cifs_fields,
+            state.userName.ifBlank { "MediaManager" },
+            state.temporaryPassword.ifBlank { "(quella dello script o dell'account Windows)" },
+            state.shareName.ifBlank { "MediaManagerCatalog" },
+        ),
+        fontFamily = FontFamily.Monospace,
+    )
+    OutlinedButton(onClick = onCopyCredentials, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.hub_w2_copy_credentials))
+    }
+    Button(onClick = onInstallOrOpen, modifier = Modifier.fillMaxWidth()) {
+        Text(
+            if (state.cifsInstalled) {
+                stringResource(R.string.hub_cifs_open)
+            } else {
+                stringResource(R.string.hub_cifs_install)
+            },
+        )
+    }
+    TextButton(onClick = onRefresh) {
+        Text(stringResource(R.string.hub_cifs_refresh))
+    }
+    Text(
+        if (state.cifsInstalled) {
+            stringResource(R.string.hub_cifs_status_ready)
+        } else {
+            stringResource(R.string.hub_cifs_status_missing)
+        },
+        style = MaterialTheme.typography.bodySmall,
+        color = if (state.cifsInstalled) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.error
+        },
+    )
+    TextButton(onClick = onHelp) {
+        Text(stringResource(R.string.hub_w2_help_link))
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(onClick = onBack, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.hub_indietro))
+        }
+        Button(
+            onClick = onContinue,
+            enabled = state.cifsInstalled,
+            modifier = Modifier.weight(1f),
+        ) {
+            Text(stringResource(R.string.hub_w2_cifs_done))
+        }
+    }
+}
+
+@Composable
 private fun SimpleGuide(
     body: String,
     primary: String,
@@ -227,4 +506,9 @@ private fun SimpleGuide(
             Text(primary)
         }
     }
+}
+
+private fun copyToClipboard(context: Context, text: String) {
+    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    cm.setPrimaryClip(ClipData.newPlainText("MediaManager SMB", text))
 }
