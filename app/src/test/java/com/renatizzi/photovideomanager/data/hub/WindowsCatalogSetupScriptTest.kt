@@ -59,6 +59,9 @@ class WindowsCatalogSetupScriptTest {
         assertFalse(pkg.ps1Content.contains("password ="))
         assertTrue(pkg.cmdContent.contains(WindowsCatalogSetupScript.PS1_FILE_NAME))
         assertTrue(pkg.cmdContent.contains("powershell"))
+        assertTrue(pkg.cmdFileName.startsWith("AVVIA_"))
+        assertTrue(pkg.ps1FileName.startsWith("_non_aprire_"))
+        assertFalse(pkg.cmdFileName.substringBeforeLast('.') == pkg.ps1FileName.substringBeforeLast('.'))
     }
 
     @Test

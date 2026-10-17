@@ -10,8 +10,16 @@ object WindowsCatalogSetupScript {
     const val DEFAULT_USER = "MediaManager"
     const val DEFAULT_SHARE = "MediaManagerCatalog"
     const val DEFAULT_FOLDER = "C:\\MediaManager\\Catalogo"
-    const val PS1_FILE_NAME = "MediaManager_Setup_Catalogo.ps1"
-    const val CMD_FILE_NAME = "MediaManager_Setup_Catalogo.cmd"
+    /** File da avviare (doppio clic). Nome chiaro anche senza estensione su Windows. */
+    const val CMD_FILE_NAME = "AVVIA_Configurazione_Catalogo.cmd"
+    /** Supporto interno (non aprire). Prefisso _ + nome diverso dal .cmd senza estensione. */
+    const val PS1_FILE_NAME = "_non_aprire_supporto_setup.ps1"
+    /** Prefissi Download da ripulire (attuali + vecchio nome unico). */
+    val DOWNLOAD_SCRUB_PREFIXES: List<String> = listOf(
+        "AVVIA_Configurazione_Catalogo",
+        "_non_aprire_supporto_setup",
+        "MediaManager_Setup_Catalogo",
+    )
     const val RESULT_FILE_NAME = "MediaManager_setup_result.json"
     const val LOG_FILE_NAME = "MediaManager_setup.log"
 
@@ -433,7 +441,7 @@ try {
     ${d}self = ${d}MyInvocation.MyCommand.Path
     if (${d}self -and (Test-Path -LiteralPath ${d}self)) {
       Remove-Item -LiteralPath ${d}self -Force -ErrorAction SilentlyContinue
-      Write-Step "File .ps1 eliminato dal PC (conteneva la password)."
+      Write-Step "File di supporto eliminato dal PC (conteneva la password)."
     }
   } catch {}
 

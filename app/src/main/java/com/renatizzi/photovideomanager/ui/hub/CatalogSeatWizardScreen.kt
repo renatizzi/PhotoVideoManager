@@ -444,6 +444,7 @@ private fun W2RoutineReadyStep(
     busy: Boolean,
 ) {
     Text(stringResource(R.string.hub_s3a_ready_body))
+    Text(stringResource(R.string.hub_w2_routine_ready_body))
     Text(stringResource(R.string.hub_s3a_summary_title), fontWeight = FontWeight.Medium)
     Text(
         text = stringResource(
@@ -466,7 +467,7 @@ private fun W2RoutineReadyStep(
             Text(stringResource(R.string.hub_indietro))
         }
         Button(onClick = onContinue, enabled = !busy && state.scriptPrepared, modifier = Modifier.weight(1f)) {
-            Text(stringResource(R.string.hub_avanti))
+            Text(stringResource(R.string.hub_s3b_copied_primary))
         }
     }
 }

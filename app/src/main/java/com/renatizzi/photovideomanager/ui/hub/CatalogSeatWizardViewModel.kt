@@ -298,9 +298,9 @@ class CatalogSeatWizardViewModel(
                     cifsInstalled = installed,
                     scriptRanDeclared = true,
                     statusMessage = if (n > 0) {
-                        "Script rimosso da Download sul telefono (conteneva la password)."
+                        "File di supporto rimosso da Download sul telefono (conteneva la password)."
                     } else {
-                        "Se in Download resta ancora .ps1, eliminalo: contiene la password."
+                        "Se in Download resta ancora _non_aprire_supporto_setup, eliminalo: contiene la password."
                     },
                     errorMessage = null,
                 )
@@ -374,7 +374,10 @@ class CatalogSeatWizardViewModel(
                         if (export.usbCopiedTo != null) {
                             append("Copiato anche su USB («${export.usbCopiedTo}»). ")
                         } else {
-                            append("Usa cavo USB (Trasferimento file) per copiare i due file sul PC. ")
+                            append(
+                                "Collega il cavo USB e sul telefono passa da Solo ricarica " +
+                                    "a Trasferimento file, poi copia i due file sul Desktop del PC. ",
+                            )
                         }
                     }.trim()
                     _state.update {
