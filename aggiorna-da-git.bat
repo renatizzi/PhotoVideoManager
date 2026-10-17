@@ -8,14 +8,12 @@ REM  Doppio clic su questo file
 REM ============================================
 REM
 REM Sceglie AUTOMATICAMENTE il branch origin/cursor/*
-REM con versionCode piu' alto in app/build.gradle.kts.
-REM Cosi' non resta bloccato su un solo branch di consegna
-REM se la build nuova e' stata pushata altrove.
+REM di consegna telefono (vedi pvm-scegli-branch-consegna.bat):
+REM   1) versionCode piu' alto
+REM   2) a parita': versionName piu' alto (0.16.28 > 0.16.27)
+REM   3) a parita': commit remoto piu' recente
+REM   4) a parita': branch di fallback storico
 REM
-REM BRANCH_FALLBACK: usato solo a parita' di versionCode
-REM oppure se nessuno dei branch cursor/* ha un versionCode leggibile.
-REM
-set "BRANCH_FALLBACK=cursor/m02-architettura-applicativa-e02a"
 
 cd /d "%~dp0"
 if errorlevel 1 (
@@ -32,6 +30,12 @@ where git >nul 2>&1
 if errorlevel 1 (
   echo ERRORE: Git non trovato.
   echo Apri il Terminal di Android Studio oppure installa Git for Windows.
+  goto :end
+)
+
+if not exist "%~dp0pvm-scegli-branch-consegna.bat" (
+  echo ERRORE: manca pvm-scegli-branch-consegna.bat
+  echo Esegui sblocca-e-aggiorna.bat oppure riscarica i file da GitHub.
   goto :end
 )
 
@@ -65,20 +69,13 @@ for /f "delims=" %%A in ('git status --porcelain -- "aggiorna-da-git.bat" 2^>nul
   )
 )
 
-REM --- Scelta automatica: branch cursor/* con versionCode massimo ---
-set "BEST_BRANCH="
-set "BEST_CODE=-1"
-set "BEST_NAME="
-set "CANDIDATI=0"
-
-echo === Branch cursor/* su GitHub ^(versionCode^) ===
+echo === Branch cursor/* su GitHub ^(versionCode / versionName^) ===
 for /f "delims=" %%R in ('git branch -r --list "origin/cursor/*" 2^>nul') do (
   set "REF=%%R"
   set "REF=!REF: =!"
   if /I not "!REF!"=="" (
     echo !REF! | findstr /I /C:"origin/HEAD" >nul
     if errorlevel 1 (
-      set /a CANDIDATI+=1
       set "CODE="
       set "VNAME="
       for /f "tokens=2 delims==" %%V in ('git show "!REF!:app/build.gradle.kts" 2^>nul ^| findstr /C:"versionCode"') do (
@@ -87,35 +84,14 @@ for /f "delims=" %%R in ('git branch -r --list "origin/cursor/*" 2^>nul') do (
       for /f "tokens=2 delims==" %%V in ('git show "!REF!:app/build.gradle.kts" 2^>nul ^| findstr /C:"versionName"') do (
         if not defined VNAME set "VNAME=%%V"
       )
+      set "SHORT=!REF:origin/=!"
       if defined CODE (
         set "CODE=!CODE: =!"
         set "CODE=!CODE:"=!"
         set "VNAME=!VNAME: =!"
         set "VNAME=!VNAME:"=!"
-        set "SHORT=!REF:origin/=!"
         echo   !SHORT!  code=!CODE!  name=!VNAME!
-        set /a "CUR_CODE=!CODE!" 2>nul
-        if !CUR_CODE! GTR !BEST_CODE! (
-          set "BEST_CODE=!CUR_CODE!"
-          set "BEST_BRANCH=!SHORT!"
-          set "BEST_NAME=!VNAME!"
-        ) else if !CUR_CODE! EQU !BEST_CODE! (
-          REM A parita' di versionCode: preferisci versionName lessicograficamente
-          REM maggiore (es. 0.16.28-preview batte 0.16.27-preview). Poi il fallback.
-          set "TAKE="
-          if defined BEST_NAME (
-            if /I "!VNAME!" GTR "!BEST_NAME!" set "TAKE=1"
-          ) else (
-            set "TAKE=1"
-          )
-          if /I "!SHORT!"=="%BRANCH_FALLBACK%" set "TAKE=1"
-          if defined TAKE (
-            set "BEST_BRANCH=!SHORT!"
-            set "BEST_NAME=!VNAME!"
-          )
-        )
       ) else (
-        set "SHORT=!REF:origin/=!"
         echo   !SHORT!  ^(senza versionCode^)
       )
     )
@@ -123,12 +99,10 @@ for /f "delims=" %%R in ('git branch -r --list "origin/cursor/*" 2^>nul') do (
 )
 echo.
 
-if not defined BEST_BRANCH (
-  echo Nessun versionCode trovato nei branch cursor/*.
-  echo Uso il fallback: %BRANCH_FALLBACK%
-  set "BEST_BRANCH=%BRANCH_FALLBACK%"
-  set "BEST_CODE=-1"
-)
+call "%~dp0pvm-scegli-branch-consegna.bat"
+set "BEST_BRANCH=!PVM_BEST_BRANCH!"
+set "BEST_CODE=!PVM_BEST_CODE!"
+set "BEST_NAME=!PVM_BEST_NAME!"
 
 echo === Branch scelto per le prove telefono ===
 echo !BEST_BRANCH!
@@ -136,7 +110,7 @@ if !BEST_CODE! GEQ 0 (
   echo versionCode=!BEST_CODE!  versionName=!BEST_NAME!
 )
 echo.
-echo ^(Scelta = versionCode piu' alto tra origin/cursor/*; a parita' preferisce %BRANCH_FALLBACK%^)
+echo ^(Regola: code alto; a parita' versionName; poi commit piu' recente^)
 echo.
 
 git show-ref --verify --quiet "refs/remotes/origin/!BEST_BRANCH!"
@@ -206,7 +180,7 @@ if defined VERSIONE (
 )
 echo.
 
-echo OK. Codice aggiornato al build piu' recente trovato su GitHub.
+echo OK. Codice aggiornato al build di consegna trovato su GitHub.
 echo Ora:
 echo   1^) In Android Studio: File → Sync Project with Gradle Files
 echo   2^) Oppure doppio clic su compila-apk.bat per creare l'APK

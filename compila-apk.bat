@@ -46,6 +46,7 @@ set "VERSIONE="
 set "VCODE="
 for /f "tokens=2 delims==" %%V in ('findstr /C:"versionName" "app\build.gradle.kts" 2^>nul') do set "VERSIONE=%%V"
 for /f "tokens=2 delims==" %%V in ('findstr /C:"versionCode" "app\build.gradle.kts" 2^>nul') do set "VCODE=%%V"
+for /f "delims=" %%B in ('git branch --show-current 2^>nul') do set "BRANCH_ATTUALE=%%B"
 if defined VERSIONE (
   set "VERSIONE=!VERSIONE: =!"
   set "VERSIONE=!VERSIONE:"=!"
@@ -53,8 +54,39 @@ if defined VERSIONE (
   set "VCODE=!VCODE:"=!"
   echo === Versione in compilazione ===
   echo !VERSIONE! ^(code !VCODE!^)
-  for /f "delims=" %%B in ('git branch --show-current 2^>nul') do echo Branch: %%B
+  if defined BRANCH_ATTUALE echo Branch: !BRANCH_ATTUALE!
   echo.
+)
+
+REM Controllo anti-errore: confronta con il branch di consegna su GitHub
+REM (stessa regola di aggiorna-da-git.bat). Se sei su un branch "vecchio"
+REM a parita' di versionCode, avvisa prima di compilare.
+where git >nul 2>&1
+if not errorlevel 1 if exist "%~dp0pvm-scegli-branch-consegna.bat" (
+  echo === Controllo branch di consegna su GitHub ===
+  git fetch origin --prune >nul 2>&1
+  call "%~dp0pvm-scegli-branch-consegna.bat"
+  if defined PVM_BEST_BRANCH (
+    echo Consegna attesa: !PVM_BEST_BRANCH!  ^(!PVM_BEST_NAME! code !PVM_BEST_CODE!^)
+    if defined BRANCH_ATTUALE (
+      if /I not "!BRANCH_ATTUALE!"=="!PVM_BEST_BRANCH!" (
+        echo.
+        echo ATTENZIONE: stai per compilare un branch DIVERSO da quello di consegna.
+        echo   Locale ora:     !BRANCH_ATTUALE!  ^(!VERSIONE! code !VCODE!^)
+        echo   Consegna GitHub: !PVM_BEST_BRANCH!  ^(!PVM_BEST_NAME! code !PVM_BEST_CODE!^)
+        echo.
+        echo Per allinearti: doppio clic su aggiorna-da-git.bat ^(o sblocca-e-aggiorna.bat^),
+        echo poi rilancia questo file.
+        echo.
+        echo Premi un tasto per COMPILARE COMUNQUE questo branch, oppure chiudi la finestra.
+        pause >nul
+        echo.
+      ) else (
+        echo OK: branch locale = branch di consegna.
+        echo.
+      )
+    )
+  )
 )
 
 echo === Compilazione APK debug ===
