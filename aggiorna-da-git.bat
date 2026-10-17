@@ -100,8 +100,16 @@ for /f "delims=" %%R in ('git branch -r --list "origin/cursor/*" 2^>nul') do (
           set "BEST_BRANCH=!SHORT!"
           set "BEST_NAME=!VNAME!"
         ) else if !CUR_CODE! EQU !BEST_CODE! (
-          REM A parita': preferisci il fallback di consegna telefono.
-          if /I "!SHORT!"=="%BRANCH_FALLBACK%" (
+          REM A parita' di versionCode: preferisci versionName lessicograficamente
+          REM maggiore (es. 0.16.28-preview batte 0.16.27-preview). Poi il fallback.
+          set "TAKE="
+          if defined BEST_NAME (
+            if /I "!VNAME!" GTR "!BEST_NAME!" set "TAKE=1"
+          ) else (
+            set "TAKE=1"
+          )
+          if /I "!SHORT!"=="%BRANCH_FALLBACK%" set "TAKE=1"
+          if defined TAKE (
             set "BEST_BRANCH=!SHORT!"
             set "BEST_NAME=!VNAME!"
           )

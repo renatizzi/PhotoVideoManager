@@ -13,7 +13,7 @@ android {
         applicationId = "com.renatizzi.photovideomanager"
         minSdk = 26
         targetSdk = 35
-        versionCode = 68
+        versionCode = 69
         versionName = "0.16.28-preview"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
