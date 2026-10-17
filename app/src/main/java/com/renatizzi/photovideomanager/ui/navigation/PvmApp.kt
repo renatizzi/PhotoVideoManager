@@ -292,6 +292,8 @@ fun PvmApp(
                         onShareScript = wizardVm::shareScriptIntent,
                         onCredentialsText = wizardVm::credentialsClipboardText,
                         onConfirmScriptRan = wizardVm::confirmScriptRanOnPc,
+                        onUsbCopiedContinue = wizardVm::markUsbCopiedAndContinue,
+                        onContinueFromSummary = wizardVm::continueFromSummaryToCifs,
                         onContinueToCifs = wizardVm::continueToCifsFromManualPrepare,
                         onRefreshCifs = wizardVm::refreshCifsInstalled,
                         onFolderPicked = wizardVm::onFolderPicked,

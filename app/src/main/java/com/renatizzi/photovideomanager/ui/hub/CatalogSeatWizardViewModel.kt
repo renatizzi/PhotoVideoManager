@@ -64,6 +64,8 @@ enum class WizardStep {
     W2_ROUTINE_PARAMS,
     W2_ROUTINE_READY,
     W2_ROUTINE_CONFIRM,
+    /** S4 — riepilogo sede PC senza password (prima di CIFS). */
+    W2_SUMMARY,
     W2_PREPARE,
     W2_CIFS,
     W2_HELP,
@@ -272,6 +274,7 @@ class CatalogSeatWizardViewModel(
         WizardStep.W2_ROUTINE_CONFIRM,
         WizardStep.W2_PREPARE,
         -> "Preparazione sul PC"
+        WizardStep.W2_SUMMARY -> "Riepilogo (senza password)"
         WizardStep.W2_CIFS,
         WizardStep.W2_HELP,
         WizardStep.W2_PASSWORD_HELP,
@@ -287,15 +290,13 @@ class CatalogSeatWizardViewModel(
         _state.update { it.copy(cifsInstalled = installed) }
     }
 
-    /** After PC script success: scrub password file and open CIFS step. */
+    /** After PC script success: scrub password file and open S4 (riepilogo senza password). */
     fun confirmScriptRanOnPc() {
         viewModelScope.launch(Dispatchers.IO) {
             val n = runCatching { exporter.scrubDownloadsScripts() }.getOrDefault(0)
-            val installed = NetworkDriveAssistant.isHelperInstalled(appContext)
             _state.update {
                 it.copy(
-                    step = WizardStep.W2_CIFS,
-                    cifsInstalled = installed,
+                    step = WizardStep.W2_SUMMARY,
                     scriptRanDeclared = true,
                     statusMessage = if (n > 0) {
                         "File di supporto rimosso da Download sul telefono (conteneva la password)."
@@ -309,8 +310,25 @@ class CatalogSeatWizardViewModel(
         }
     }
 
-    fun markUsbCopied() {
-        _state.update { it.copy(usbCopiedDeclared = true, errorMessage = null) }
+    /** Dichiarazione utente: file copiati sul Desktop (S3b). */
+    fun markUsbCopiedAndContinue() {
+        _state.update {
+            it.copy(
+                usbCopiedDeclared = true,
+                step = WizardStep.W2_ROUTINE_CONFIRM,
+                errorMessage = null,
+                statusMessage = null,
+            )
+        }
+        persistDraft()
+    }
+
+    /** Da S4 (riepilogo senza password) a S5 CIFS. */
+    fun continueFromSummaryToCifs() {
+        refreshCifsInstalled()
+        _state.update {
+            it.copy(step = WizardStep.W2_CIFS, errorMessage = null, statusMessage = null)
+        }
         persistDraft()
     }
 

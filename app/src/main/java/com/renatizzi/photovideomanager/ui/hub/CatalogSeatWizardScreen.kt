@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.renatizzi.photovideomanager.R
+import com.renatizzi.photovideomanager.data.hub.WindowsCatalogSetupScript
 import com.renatizzi.photovideomanager.data.storage.NetworkDriveAssistant
 import com.renatizzi.photovideomanager.data.storage.OpenDocumentTreeAdvanced
 import com.renatizzi.photovideomanager.data.storage.SafPathLabels
@@ -62,6 +63,8 @@ fun CatalogSeatWizardScreen(
     onShareScript: () -> Intent?,
     onCredentialsText: () -> String,
     onConfirmScriptRan: () -> Unit,
+    onUsbCopiedContinue: () -> Unit,
+    onContinueFromSummary: () -> Unit,
     onContinueToCifs: () -> Unit,
     onRefreshCifs: () -> Unit,
     onFolderPicked: (uri: String, label: String) -> Unit,
@@ -137,7 +140,7 @@ fun CatalogSeatWizardScreen(
             )
             WizardStep.W2_ROUTINE_READY -> W2RoutineReadyStep(
                 state = state,
-                onContinue = { onGoStep(WizardStep.W2_ROUTINE_CONFIRM) },
+                onContinue = onUsbCopiedContinue,
                 onBack = { onGoStep(WizardStep.W2_ROUTINE_PARAMS) },
                 onReprepare = onPrepareScript,
                 busy = state.busy,
@@ -148,6 +151,11 @@ fun CatalogSeatWizardScreen(
                 onPrimary = onConfirmScriptRan,
                 onBack = { onGoStep(WizardStep.W2_ROUTINE_READY) },
             )
+            WizardStep.W2_SUMMARY -> W2SummaryNoPasswordStep(
+                state = state,
+                onContinue = onContinueFromSummary,
+                onBack = { onGoStep(WizardStep.W2_ROUTINE_CONFIRM) },
+            )
             WizardStep.W2_PREPARE -> SimpleGuide(
                 body = stringResource(R.string.hub_w2_prepare),
                 primary = stringResource(R.string.hub_w2_prepared),
@@ -156,6 +164,7 @@ fun CatalogSeatWizardScreen(
             )
             WizardStep.W2_CIFS -> W2CifsStep(
                 state = state,
+                showCopyCredentials = !state.scriptPrepared,
                 onInstallOrOpen = {
                     onRefreshCifs()
                     if (NetworkDriveAssistant.isHelperInstalled(context)) {
@@ -172,10 +181,9 @@ fun CatalogSeatWizardScreen(
                 onRefresh = onRefreshCifs,
                 onContinue = { onGoStep(WizardStep.W2_PICK) },
                 onBack = {
-                    if (state.scriptPrepared) {
-                        onGoStep(WizardStep.W2_ROUTINE_CONFIRM)
-                    } else {
-                        onGoStep(WizardStep.W2_PREPARE)
+                    when {
+                        state.scriptPrepared -> onGoStep(WizardStep.W2_SUMMARY)
+                        else -> onGoStep(WizardStep.W2_PREPARE)
                     }
                 },
                 onHelp = { onGoStep(WizardStep.W2_HELP) },
@@ -473,8 +481,39 @@ private fun W2RoutineReadyStep(
 }
 
 @Composable
+private fun W2SummaryNoPasswordStep(
+    state: CatalogSeatWizardUiState,
+    onContinue: () -> Unit,
+    onBack: () -> Unit,
+) {
+    Text(stringResource(R.string.hub_s4_summary_body))
+    Text(
+        text = stringResource(
+            R.string.hub_s4_summary_lines,
+            state.folderPath.ifBlank { WindowsCatalogSetupScript.DEFAULT_FOLDER },
+            state.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE },
+            state.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER },
+        ),
+        fontFamily = FontFamily.Monospace,
+    )
+    Text(
+        stringResource(R.string.hub_s3a_password_later),
+        style = MaterialTheme.typography.bodySmall,
+    )
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(onClick = onBack, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.hub_indietro))
+        }
+        Button(onClick = onContinue, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.hub_s4_continue_cifs))
+        }
+    }
+}
+
+@Composable
 private fun W2CifsStep(
     state: CatalogSeatWizardUiState,
+    showCopyCredentials: Boolean,
     onInstallOrOpen: () -> Unit,
     onCopyCredentials: () -> Unit,
     onRefresh: () -> Unit,
@@ -482,19 +521,27 @@ private fun W2CifsStep(
     onBack: () -> Unit,
     onHelp: () -> Unit,
 ) {
-    Text(stringResource(R.string.hub_w2_cifs_body))
+    Text(
+        if (state.scriptPrepared) {
+            stringResource(R.string.hub_s5_cifs_body)
+        } else {
+            stringResource(R.string.hub_w2_cifs_body)
+        },
+    )
     Text(stringResource(R.string.hub_w2_credentials_title), fontWeight = FontWeight.Medium)
     Text(
         text = stringResource(
-            R.string.hub_w2_cifs_fields,
+            if (state.scriptPrepared) R.string.hub_s5_cifs_fields else R.string.hub_w2_cifs_fields,
             state.userName.ifBlank { "MediaManager" },
             state.temporaryPassword.ifBlank { "(quella dello script o dell'account Windows)" },
             state.shareName.ifBlank { "MediaManagerCatalog" },
         ),
         fontFamily = FontFamily.Monospace,
     )
-    OutlinedButton(onClick = onCopyCredentials, modifier = Modifier.fillMaxWidth()) {
-        Text(stringResource(R.string.hub_w2_copy_credentials))
+    if (showCopyCredentials) {
+        OutlinedButton(onClick = onCopyCredentials, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.hub_w2_copy_credentials))
+        }
     }
     Button(onClick = onInstallOrOpen, modifier = Modifier.fillMaxWidth()) {
         Text(

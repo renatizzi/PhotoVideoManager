@@ -108,6 +108,11 @@
     <string name="hub_w2_reprepare_script">Rigenera script e password</string>
     <string name="hub_w2_routine_confirm_body">Passo 2/4 — Sul Desktop del PC: doppio clic su AVVIA_Configurazione_Catalogo (non sull\'altro file). Se compare SmartScreen: Ulteriori informazioni → Esegui comunque. Conferma Sì all\'amministratore e attendi «Tutto pronto».\nPoi torna qui. L\'app rimuoverà da Download il file di supporto (contiene la password).</string>
     <string name="hub_w2_routine_confirm_primary">Ho visto Tutto pronto sul PC</string>
+    <string name="hub_s4_summary_body">Riepilogo (senza password). Controlla che sia corretto; la password la vedi al passo successivo, solo per CIFS.</string>
+    <string name="hub_s4_summary_lines">Dispositivo: PC Windows\nCartella: %1$s\nCondivisione: %2$s\nUtente: %3$s</string>
+    <string name="hub_s4_continue_cifs">Continua: configura CIFS</string>
+    <string name="hub_s5_cifs_body">Passo CIFS — Rendi la cartella del PC visibile sul telefono con l\'app gratuita CIFS Documents Provider (stessa di BoxManager).\n\nIn CIFS crea una connessione con i dati sotto (Storage = SMB2,3 jCIFS NG; Porta = 445). Poi torna qui.</string>
+    <string name="hub_s5_cifs_fields">Host = IP o nome PC\nUtente = %1$s\nPassword = %2$s\nFolder/condivisione = %3$s\nPorta = 445\nStorage = SMB2,3 (jCIFS NG)</string>
     <string name="hub_w2_prepare">1. Sul PC crea o scegli una cartella (anche su disco USB, chiavetta o microSD collegata al PC).\n2. Tasto destro → Proprietà → Condivisione → Condividi.\n3. Preferisci un utente Windows locale dedicato (es. MediaManager), non l\'account Microsoft/Gmail.\n4. Annota nome PC o indirizzo IP. Stessa Wi‑Fi.</string>
     <string name="hub_w2_prepared">Ho creato la cartella</string>
     <string name="hub_w2_cifs_body">Passo 3 — Rendi la cartella del PC visibile sul telefono con l\'app gratuita CIFS Documents Provider (stessa di BoxManager).\n\nIn CIFS crea una connessione con i dati sotto (Storage = SMB2,3 jCIFS NG; Porta = 445). Poi torna qui.</string>
