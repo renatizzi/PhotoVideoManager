@@ -208,8 +208,9 @@ S7  DONE                        →  F   Esito
 3. **B0:** indifferente → **fuso in B1** (checklist «PC acceso»).  
 4. **Drive/NAS in S0:** come oggi (stub).
 
-**Template videate PC:** `docs/reference/template-videate-wizard-pc.md` + Canvas «Template videate Wizard PC».  
-Attesa OK sui template prima di riprendere lo sviluppo.
+**Template videate PC v2:** `docs/reference/template-videate-wizard-pc.md` + Canvas «Template videate Wizard PC v2».  
+Recepite le raccomandazioni (Q&A chiuse, checkpoint, CIFS formato reale, Posizione del Catalogo, no dichiarazioni cieche).  
+Attesa OK sui template v2 prima di riprendere lo sviluppo.
 
 ---
 
