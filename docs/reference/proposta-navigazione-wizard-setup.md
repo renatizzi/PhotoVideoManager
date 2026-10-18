@@ -201,14 +201,15 @@ S7  DONE                        →  F   Esito
 
 ---
 
-## 6. Cosa chiedo a Renato prima di scrivere codice
+## 6. Decisioni Renato (18/10) — congelate
 
-Confermare solo questi punti (il resto della proposta può andare in implementazione a tranche UI):
+1. **Quick Share:** solo in «Non riesco» (percorso principale solo USB).  
+2. **Path/share:** default attuali; «Modifica dettagli» opzionale.  
+3. **B0:** indifferente → **fuso in B1** (checklist «PC acceso»).  
+4. **Drive/NAS in S0:** come oggi (stub).
 
-1. **Quick Share:** escluso dal percorso principale (solo USB), oppure ammesso in “Non riesco”?  
-2. **Path/share:** ok nasconderli dietro “Modifica dettagli” con default attuali?  
-3. **B0** (“PC acceso?”) come schermata dedicata o prima riga di B1?  
-4. **Rami Drive/NAS in S0:** nascosti / “Non disponibile” / lasciati come stub attuali?
+**Template videate PC:** `docs/reference/template-videate-wizard-pc.md` + Canvas «Template videate Wizard PC».  
+Attesa OK sui template prima di riprendere lo sviluppo.
 
 ---
 
