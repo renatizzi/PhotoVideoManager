@@ -2,8 +2,22 @@
 
 **Stato:** annotato, **non implementare ora** (richiesta Renato 17/10/2026).  
 **Branch di riferimento:** `cursor/wizard-setup-pc-c-5645`  
-**Nota 17/10 sera:** T1–T6 del percorso PC (C:/USB) sono in codice (0.16.33); serve prova end-to-end sul telefono.  
-Questi punti UX restano in coda **dopo** quella prova (o se la prova li conferma ancora).
+**Nota 17/10 sera:** T1–T6 del percorso PC (C:/USB) sono in codice (0.16.33); serve ancora la prova end-to-end sul telefono con l’ultima build.
+
+---
+
+## IN EVIDENZA — Guida wizard (fino a revisione backlog)
+
+**Documento di riferimento (allegato Renato 18/10/2026):**  
+`docs/reference/Guida_wizard_cartella_condivisa.pdf`
+
+- **Titolo interno:** «Cosa fare se il PC non riconosce il tuo dispositivo mobile» + sezione **«Punti di attenzione per Cursor»**.
+- **Ambito dichiarato:** solo ramo PC/notebook, disco interno **C:**.
+- **Stato in questa chat:** **prima volta** con questo file (`Guida_wizard_cartella_condivisa…`).  
+  In precedenza c’era solo la bozza più corta `Cosa_fare_se_il_PC_non_riconosce_il_tuo_dispositivo_mobile_…pdf` (USB), non questo documento completo.
+- **Obbligo agente:** tenerlo in evidenza e usarlo come input primario quando si riprende il backlog UX / guida. **Non implementare** le correzioni della sezione «Punti di attenzione» finché Renato non chiede di riprendere il backlog (salvo bug bloccanti già trattati altrove).
+
+Copia anche in artifact di sessione: `/opt/cursor/artifacts/guida-wizard/Guida_wizard_cartella_condivisa.pdf`.
 
 ---
 
@@ -28,6 +42,7 @@ Questi punti UX restano in coda **dopo** quella prova (o se la prova li conferma
   > Questa fase dura qualche minuto… aspetta di vedere il messaggio «Tutto pronto», dopo il quale potrai tornare all’app sul tuo dispositivo.
 
 - Non simulare progresso falso; solo aspettativa chiara.
+- Allineare eventuali testi della guida in `docs/reference/Guida_wizard_cartella_condivisa.pdf`.
 
 ---
 
@@ -36,14 +51,15 @@ Questi punti UX restano in coda **dopo** quella prova (o se la prova li conferma
 **Sintomo (test Renato):** la pagina della guida va strutturata diversamente (oggi troppo densa / poco scansionabile).
 
 **Da fare in seguito (non ora):**
-- Riprogettare layout e gerarchia della guida USB / fuori-app (titoli, elenco numerato corto, un’azione primaria per schermata).
-- Allineare a bozza interlocuzione S3b/S3c senza moltiplicare micro-passi inutili.
+- Riprogettare layout e gerarchia della guida USB / fuori-app partendo da **`docs/reference/Guida_wizard_cartella_condivisa.pdf`** (documento in evidenza).
+- Un’azione primaria per schermata; non moltiplicare micro-passi inutili.
 - Validare con Renato prima di congelare i testi.
 
 ---
 
 ## Ordine suggerito quando si riprende
 
+0. **Rileggere** `docs/reference/Guida_wizard_cartella_condivisa.pdf` (sezione «Punti di attenzione per Cursor» per prima).  
 1. BL-UX-3 (struttura guida) — riduce confusione generale.  
 2. BL-UX-2 (messaggio attesa script) — basso costo, alto sollievo in prova.  
 3. BL-UX-1 (async / transizioni) — richiede prova su telefono + eventuali fix ViewModel/Compose.
