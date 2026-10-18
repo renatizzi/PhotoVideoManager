@@ -1,26 +1,25 @@
 # Backlog UX — Wizard Setup Catalogo (PC)
 
-**Stato:** template videate in revisione (18/10/2026). Percorso PC funzionale **congelato** su 0.16.33.  
-**Branch:** `cursor/wizard-setup-pc-c-5645`  
-**Nessun codice UIX** finché Renato non convalida i template.
+**Stato:** template **v2** in revisione (raccomandazioni Renato 18/10).  
+**Nessun codice** finché i template v2 non sono OK.
 
-## Documenti in evidenza
+## In evidenza
 
 | Doc | Ruolo |
 |---|---|
-| `docs/reference/Nota_operativa_Wizard_Catalogo_Cursor_e1d1.pdf` | Primario UI/UX |
-| `docs/reference/Workflow_Catalogo_Cartella_Condivisa_d6dc.pdf` | Claude S0→A–D→F |
+| `docs/reference/template-videate-wizard-pc.md` | **Template v2** (domande chiuse, checkpoint, CIFS) |
+| Canvas «Template videate Wizard PC v2» | Mockup navigabili |
+| `docs/reference/Nota_operativa_Wizard_Catalogo_Cursor_e1d1.pdf` | Nota primaria |
 | `docs/reference/proposta-navigazione-wizard-setup.md` | Proposta navigazione |
-| `docs/reference/template-videate-wizard-pc.md` | **Template testi/azioni PC** |
-| Canvas «Template videate Wizard PC» | Mockup navigabili |
 
-## Decisioni congelate
+## Decisioni + raccomandazioni recepite in v2
 
-- Quick Share solo in «Non riesco»
-- Default path/share attuali (+ Modifica dettagli)
-- B0 fuso in B1
-- Drive/NAS come oggi
-
-## BL-UX-1 / 2 / 3
-
-Assorbiti nei template (B2/B3 + taglio schermate). Non implementare isolati.
+- Titolo fisso / sottotitolo passo  
+- Domanda–risposte chiuse  
+- Checkpoint per gruppi di problemi  
+- Niente «Mostra aiuto» (solo Non riesco)  
+- Niente «Ho copiato…» → domanda su ciò che vedi  
+- Riepilogo solo dove serve  
+- **Posizione del Catalogo** (al posto di Sede)  
+- Script a micro-passi + attesa  
+- CIFS: form etichette reali; manuale consigliato vs scan  
