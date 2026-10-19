@@ -290,6 +290,7 @@ fun PvmApp(
                         onShareNameChange = wizardVm::updateShareName,
                         onPrepareScript = { wizardVm.prepareWindowsScript() },
                         onCredentialsText = wizardVm::credentialsClipboardText,
+                        onPasswordText = wizardVm::passwordClipboardText,
                         onConfirmScriptRan = wizardVm::confirmScriptRanOnPc,
                         onUsbCopiedContinue = wizardVm::markUsbCopiedAndContinue,
                         onContinueFromSummary = wizardVm::continueFromSummaryToCifs,

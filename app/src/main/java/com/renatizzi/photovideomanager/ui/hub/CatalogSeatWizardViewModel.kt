@@ -277,7 +277,7 @@ class CatalogSeatWizardViewModel(
     private fun humanStepLabel(step: WizardStep): String = when (step) {
         WizardStep.S0_START -> "Avvio"
         WizardStep.INTRO -> "Scelta del dispositivo"
-        WizardStep.W1_CONFIRM -> "Sede su questo apparecchio"
+        WizardStep.W1_CONFIRM -> "Posizione su questo apparecchio"
         WizardStep.W2_CHOICE,
         WizardStep.W2_ROUTINE_PARAMS,
         WizardStep.W2_ROUTINE_READY,
@@ -289,11 +289,14 @@ class CatalogSeatWizardViewModel(
         WizardStep.W2_HELP,
         WizardStep.W2_PASSWORD_HELP,
         -> "Collegamento CIFS"
-        WizardStep.W2_PICK -> "Verifica sede"
+        WizardStep.W2_PICK -> "Verifica Posizione del Catalogo"
         WizardStep.W3_GUIDE -> "Google Drive"
         WizardStep.W4_GUIDE -> "NAS / rete"
         WizardStep.DONE -> "Conferma"
     }
+
+    /** Solo password, per copia rapida allo step CIFS (usabilità senza tocco script). */
+    fun passwordClipboardText(): String = _state.value.temporaryPassword
 
     fun refreshCifsInstalled() {
         val installed = NetworkDriveAssistant.isHelperInstalled(appContext)
@@ -554,9 +557,9 @@ class CatalogSeatWizardViewModel(
 
     private fun friendlySeatError(raw: String, unreachable: Boolean): String {
         return if (unreachable) {
-            "Sede non raggiungibile o non scrivibile. Controlla CIFS, Wi‑Fi e che il PC non sia in sospensione, poi riprova."
+            "Posizione del Catalogo non raggiungibile o non scrivibile. Controlla CIFS, Wi‑Fi e che il PC non sia in sospensione, poi riprova."
         } else {
-            raw.ifBlank { "Verifica della sede non riuscita. Riprova o torna a CIFS." }
+            raw.ifBlank { "Verifica della Posizione del Catalogo non riuscita. Riprova o torna a CIFS." }
         }
     }
 

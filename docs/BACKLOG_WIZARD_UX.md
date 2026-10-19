@@ -1,8 +1,9 @@
 # Backlog UX — Wizard Setup Catalogo (PC)
 
-**Aggiornato:** 19/10/2026 — feedback Renato su discrasie A–E recepito e chiuso.  
+**Aggiornato:** 19/10/2026 — avvio implementazione UIX (tranche 1).  
 **Valutazione:** `docs/reference/valutazione-revisione-guida-pptx.md`  
-**PPT:** `docs/reference/revisione_guida.pptx`
+**PPT:** `docs/reference/revisione_guida.pptx`  
+**Lettura PPT:** target **a regime**, non descrizione dell’as-is 0.16.33. L’implementazione **ponte** as-is → regime a tranche, senza rompere la filiera funzionale PC già collaudata.
 
 ---
 
@@ -30,12 +31,13 @@
 2. **Contratto CIFS** — scheda + **Copia** (host/porta/folder/user/**password**) + Apri app; **niente auto-fill form**. Spike auto-fill solo se richiesto esplicitamente.
 
 ### P1 — Da implementare (decisioni già prese)
-3. **Slide 0 condizionale** — etichette/campi adattati al dispositivo (PC → lettera+path; mobile → Memoria principale/Secondaria; Cloud/NAS → stub come oggi).  
-4. **Password usabilità** — allo step CIFS: mostra PW già nota all’app + **Copia** (niente trascrizione da PC, niente tocco script).  
-5. **Prepara file sull’OK** — export `CONFIGURA`/`sup` al conferma del passo checklist pre-copia (gate: tutte le spunte).  
-6. **Rinomina file** `CONFIGURA` / `sup` — aggiornare exporter + testi.  
-7. **Messaggio attesa** — obbligatorio in checklist app; in-script = opzionale/backlog script.  
-8. **Istruzione avvio** — doppio clic + UAC (auto-elevate).
+3. **Slide 0 condizionale** — etichette/campi adattati al dispositivo (PC → lettera+path; mobile → Memoria principale/Secondaria; Cloud/NAS → stub come oggi). *Parziale as-is: path resta su passo 2 PC.*  
+4. **Password usabilità** — ✅ tranche 1 (0.16.34): CIFS con **Copia password** anche sul ramo script.  
+5. **Prepara file sull’OK** — ✅ ponte: CTA «OK — prepara i file» su params (export invariato); checklist gated su copia USB e avvio script.  
+6. **Rinomina file** `CONFIGURA` / `sup` — aggiornare exporter + testi (*regime*; non in tranche 1*).  
+7. **Messaggio attesa** — ✅ in checklist app (voce «Tutto pronto»); in-script = opzionale.  
+8. **Istruzione avvio** — ✅ doppio clic + UAC (testi 0.16.34).  
+9. **Chrome titolo/sottotitolo** — ✅ tranche 1.
 
 ### P2 — Fuori Wizard PC immediato
 9. Pagina **Configura** «stile Utility» (slide 2 PPT).  

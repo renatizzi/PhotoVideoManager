@@ -60,6 +60,7 @@ fun CatalogSeatWizardScreen(
     onShareNameChange: (String) -> Unit,
     onPrepareScript: () -> Unit,
     onCredentialsText: () -> String,
+    onPasswordText: () -> String,
     onConfirmScriptRan: () -> Unit,
     onUsbCopiedContinue: () -> Unit,
     onContinueFromSummary: () -> Unit,
@@ -97,6 +98,13 @@ fun CatalogSeatWizardScreen(
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold,
         )
+        WizardStepChrome.subtitle(state.step, state.selectedKind)?.let { sub ->
+            Text(
+                text = sub.text,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+            )
+        }
 
         when (state.step) {
             WizardStep.S0_START -> S0StartStep(
@@ -144,11 +152,10 @@ fun CatalogSeatWizardScreen(
                 onReprepare = onPrepareScript,
                 busy = state.busy,
             )
-            WizardStep.W2_ROUTINE_CONFIRM -> SimpleGuide(
-                body = stringResource(R.string.hub_w2_routine_confirm_body),
-                primary = stringResource(R.string.hub_w2_routine_confirm_primary),
-                onPrimary = onConfirmScriptRan,
+            WizardStep.W2_ROUTINE_CONFIRM -> W2RoutineConfirmStep(
+                onConfirm = onConfirmScriptRan,
                 onBack = { onGoStep(WizardStep.W2_ROUTINE_READY) },
+                busy = state.busy,
             )
             WizardStep.W2_SUMMARY -> W2SummaryNoPasswordStep(
                 state = state,
@@ -163,7 +170,6 @@ fun CatalogSeatWizardScreen(
             )
             WizardStep.W2_CIFS -> W2CifsStep(
                 state = state,
-                showCopyCredentials = !state.scriptPrepared,
                 onInstallOrOpen = {
                     onRefreshCifs()
                     if (NetworkDriveAssistant.isHelperInstalled(context)) {
@@ -176,6 +182,12 @@ fun CatalogSeatWizardScreen(
                 },
                 onCopyCredentials = {
                     copyToClipboard(context, onCredentialsText())
+                },
+                onCopyPassword = {
+                    val pwd = onPasswordText()
+                    if (pwd.isNotBlank()) {
+                        copyToClipboard(context, pwd)
+                    }
                 },
                 onRefresh = onRefreshCifs,
                 onContinue = { onGoStep(WizardStep.W2_PICK) },
@@ -438,6 +450,9 @@ private fun W2RoutineReadyStep(
     onReprepare: () -> Unit,
     busy: Boolean,
 ) {
+    var checks by remember {
+        mutableStateOf(booleanArrayOf(false, false, false))
+    }
     Text(stringResource(R.string.hub_s3a_ready_body))
     Text(stringResource(R.string.hub_w2_routine_ready_body))
     Text(stringResource(R.string.hub_s3a_summary_title), fontWeight = FontWeight.Medium)
@@ -454,6 +469,17 @@ private fun W2RoutineReadyStep(
         stringResource(R.string.hub_s3a_password_later),
         style = MaterialTheme.typography.bodySmall,
     )
+    WizardChecklistBlock(
+        items = listOf(
+            stringResource(R.string.hub_s3_check_usb) to checks[0],
+            stringResource(R.string.hub_s3_check_download) to checks[1],
+            stringResource(R.string.hub_s3_check_desktop) to checks[2],
+        ),
+        onToggle = { index ->
+            checks = checks.copyOf().also { it[index] = !it[index] }
+        },
+        enabled = !busy,
+    )
     TextButton(onClick = onReprepare, enabled = !busy) {
         Text(stringResource(R.string.hub_w2_reprepare_script))
     }
@@ -461,8 +487,47 @@ private fun W2RoutineReadyStep(
         OutlinedButton(onClick = onBack, enabled = !busy, modifier = Modifier.weight(1f)) {
             Text(stringResource(R.string.hub_indietro))
         }
-        Button(onClick = onContinue, enabled = !busy && state.scriptPrepared, modifier = Modifier.weight(1f)) {
-            Text(stringResource(R.string.hub_s3b_copied_primary))
+        Button(
+            onClick = onContinue,
+            enabled = !busy && state.scriptPrepared && allChecklistChecked(checks),
+            modifier = Modifier.weight(1f),
+        ) {
+            Text(stringResource(R.string.hub_s3_ok_continue))
+        }
+    }
+}
+
+@Composable
+private fun W2RoutineConfirmStep(
+    onConfirm: () -> Unit,
+    onBack: () -> Unit,
+    busy: Boolean,
+) {
+    var checks by remember {
+        mutableStateOf(booleanArrayOf(false, false, false))
+    }
+    Text(stringResource(R.string.hub_w2_routine_confirm_body))
+    WizardChecklistBlock(
+        items = listOf(
+            stringResource(R.string.hub_s4_check_doubleclick) to checks[0],
+            stringResource(R.string.hub_s4_check_uac) to checks[1],
+            stringResource(R.string.hub_s4_check_ready) to checks[2],
+        ),
+        onToggle = { index ->
+            checks = checks.copyOf().also { it[index] = !it[index] }
+        },
+        enabled = !busy,
+    )
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(onClick = onBack, enabled = !busy, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.hub_indietro))
+        }
+        Button(
+            onClick = onConfirm,
+            enabled = !busy && allChecklistChecked(checks),
+            modifier = Modifier.weight(1f),
+        ) {
+            Text(stringResource(R.string.hub_s4_ok_continue))
         }
     }
 }
@@ -616,14 +681,15 @@ private fun W2SummaryNoPasswordStep(
 @Composable
 private fun W2CifsStep(
     state: CatalogSeatWizardUiState,
-    showCopyCredentials: Boolean,
     onInstallOrOpen: () -> Unit,
     onCopyCredentials: () -> Unit,
+    onCopyPassword: () -> Unit,
     onRefresh: () -> Unit,
     onContinue: () -> Unit,
     onBack: () -> Unit,
     onHelp: () -> Unit,
 ) {
+    val hasPassword = state.temporaryPassword.isNotBlank()
     Text(
         if (state.scriptPrepared) {
             stringResource(R.string.hub_s5_cifs_body)
@@ -636,12 +702,24 @@ private fun W2CifsStep(
         text = stringResource(
             if (state.scriptPrepared) R.string.hub_s5_cifs_fields else R.string.hub_w2_cifs_fields,
             state.userName.ifBlank { "MediaManager" },
-            state.temporaryPassword.ifBlank { "(quella dello script o dell'account Windows)" },
+            state.temporaryPassword.ifBlank { "(non in memoria — usa Copia solo se disponibile)" },
             state.shareName.ifBlank { "MediaManagerCatalog" },
         ),
         fontFamily = FontFamily.Monospace,
     )
-    if (showCopyCredentials) {
+    if (hasPassword) {
+        Button(onClick = onCopyPassword, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.hub_copy_password))
+        }
+        OutlinedButton(onClick = onCopyCredentials, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.hub_w2_copy_credentials))
+        }
+    } else {
+        Text(
+            stringResource(R.string.hub_password_missing_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+        )
         OutlinedButton(onClick = onCopyCredentials, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.hub_w2_copy_credentials))
         }
