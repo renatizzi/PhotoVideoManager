@@ -38,14 +38,14 @@ Il PPT introduce due novità di metodo che **non contraddicono** le Note, ma le 
 | Chrome pagina (titolo/sottotitolo/intro/OK) | Alta | Alta |
 | Checklist operativa + OK gated | Media–alta (è ancora autodichiarazione, ma granulare) | Alta in UI; non sostituisce prova SAF finale |
 | Errori fuori dalle pagine operative → help | Alta (catalogo W-xxx Claude = contenuto del repository) | Media: è un **nuovo sottosistema** da progettare |
-| Sequenza PC 1→5 | Media (manca esplicitamente «Prepara file» app) | Media |
-| Path + dispositivo sulla stessa slide 0 | **Bassa** vs «una decisione» e vs rami non-PC | Bassa se applicata a tutti i dispositivi |
-| «Esegui come Amministratore» da tasto destro | **Bassa** vs script attuale (auto-elevate del `.cmd`) | Media se si cambia istruzione; alta se si resta sul doppio clic |
-| Password fissa `mediamanager` | Fuori Nota UI-only | Richiede **cambio script + app** esplicito |
+| Sequenza PC 1→5 | Alta (export sull’OK del passo pre-copia — chiarito 19/10) | Alta |
+| Path + dispositivo sulla stessa slide 0 | **Ok se condizionale** (campi adattati al dispositivo) | Alta |
+| «Esegui come Amministratore» da tasto destro | **Corretto in impl** → doppio clic + UAC | Alta |
+| Password usabilità | **Copia dall’app** allo step CIFS (niente tocco script) | Alta |
 | Integrazione CIFS «tutto tranne password» | **Non sostenibile oggi** (vedi §4) | Solo dopo spike tecnico dedicato |
 | Rinomina `CONFIGURA` / `sup` | Coerente con problema estensioni nascoste | OK se aggiorniamo exporter + testi |
 
-**Conclusione:** la proposta è **utilizzabile come direzione UIX** (checklist + help contestuale), **non** come specifica chiuda end-to-end senza le correzioni alle discrasie sotto. Non adotto acriticamente path unificato, auto-fill CIFS e password fissa.
+**Conclusione:** la proposta è **utilizzabile come direzione UIX** (checklist + help contestuale), **non** come specifica chiuda end-to-end senza le correzioni alle discrasie sotto. Adotto checklist + help; slide 0 condizionale; password via Copia in-app; niente auto-fill CIFS né password fissa in script.
 
 ---
 
@@ -57,26 +57,26 @@ Il PPT introduce due novità di metodo che **non contraddicono** le Note, ma le 
 - **Rischio residuo:** restano due decisioni sulla stessa pagina (dove + quale volume/path). Accettabile se il secondo blocco compare solo dopo la scelta dispositivo e con etichette adattate.  
 - **In implementazione:** validazione diversa per ramo (PC = solo C: in questa fase; mobile = volumi disponibili; stub per Cloud/NAS).
 
-### B — Cloud/NAS e «stub» (chiarimento linguaggio)
-- **«Stub»** = voce visibile ma percorso **non completo/verificato**: o disabilitata, o con etichetta tipo «Non ancora disponibile», o apre un messaggio breve invece del Wizard end-to-end.  
-- **Nota:** non far credere che Cloud/NAS funzionino come il PC.  
-- **Chiedere a Renato:** in slide 0 le voci Cloud/NAS devono (1) apparire selezionabili come oggi, (2) mostrare «in arrivo», o (3) essere nascoste?
+### B — Cloud/NAS e «stub» (chiarimento linguaggio) — chiuso
+- **«Stub»** = voce/ramo presente in UI ma **senza percorso Wizard completo e verificato** come il PC: non è un bug, è un placeholder funzionale. In pratica: si può selezionare/aprire, ma non promette end-to-end (es. messaggio breve, campi non operativi, o flusso ridotto).  
+- **Decisione adottata (già in Nota):** Cloud/NAS restano **come oggi** (stub) finché non completiamo i rami. In UIX: etichette/campi adattati al tipo, senza far credere che funzionino come il PC.  
+- Non è richiesta marcatura «in arrivo» separata salvo preferenza futura.
 
-### C — Checklist = dichiarazione, non prova
+### C — Checklist = dichiarazione, non prova — accettato
 - Spuntare «ho copiato i file» **non** prova che i file siano sul Desktop (stesso limite epistemico delle Note).  
-- È comunque **migliore** di un solo bottone «Ho fatto tutto» se le voci sono osservabili («vedo entrambi i file»).  
+- Accettato come metodo: checklist **granulare** + OK gated; meglio del solo «Ho fatto tutto».  
 - La **prova reale** resta solo a fine percorso (SAF + scrittura fascicolo), come Nota F3.  
 - Non vendere la checklist come «controllo automatico».
 
-### D — Script: istruzioni e password
-- **PPT:** tasto destro → Esegui come Amministratore; password fissa `mediamanager`; messaggio di attesa *dentro* lo script.  
-- **Codice/Nota:** `.cmd` già auto-eleva; password generata; «non modificare lo script per opportunità UI».  
-- **Discrasia:** tre richieste toccano lo script. Sostenibili solo con **tranche esplicita script** (fuori dal solo riordino UI), dopo OK tuo.  
-- Per la UI: preferisco istruzione **doppio clic su CONFIGURA** + UAC (coerente con l’auto-elevate già collaudato).
+### D — Script: istruzioni e password — chiuso (19/10)
+- **Avvio script:** in implementazione istruzione = **doppio clic** su `CONFIGURA` + conferma UAC (auto-elevate già nel `.cmd`). Niente «Esegui come Amministratore» da tasto destro.  
+- **Password usabilità (senza toccare lo script):** non chiedere di trascrivere dalla finestra PC. Allo step CIFS l’app mostra la password **già nota all’app** (quella generata/esportata) con **Copia** + Mostra/Nascondi — un tap, niente digitazione da monitor.  
+- Messaggio di attesa: obbligatorio in checklist app; in-script resta opzionale (tranche script separata).  
+- Password fissa `mediamanager` **non** adottata (richiederebbe cambio script).
 
-### E — Sequenza: quando l’app prepara i file?
-- PPT: passo 3 = copia da Download, ma non c’è uno step chiaro «Prepara i file» che chiama l’exporter.  
-- **Serve** uno step (o sotto-step di 2) che genera `CONFIGURA`/`sup` *prima* della copia. Altrimenti Download è vuoto.
+### E — Sequenza: quando l’app prepara i file? — chiuso (19/10)
+- **Chiarimento Renato:** non serve uno step UI separato «Prepara file». La generazione (`CONFIGURA`/`sup`) avviene sull’**OK** del passo checklist che conferma le attività spuntate (senza OK non si avanza).  
+- **In implementazione:** allineare numerazione PPT: l’OK del blocco pre-copia (USB/collegamento) **esporta** i file in Download, poi si passa alla checklist copia Desktop.
 
 ### F — Help contestuale
 - Coerente con Note (warning catalog, what-if).  
@@ -149,16 +149,16 @@ Senza (1)–(2), le pagine operative restano «cieche» quando qualcosa va male.
 
 Sequenza PC sostenibile, fondendo PPT + Note + limiti tecnici:
 
-0. Scelta dispositivo (solo)  
+0. Scelta dispositivo + campi volume/path **condizionati** al tipo  
 1. Checklist disponibilità (telefono, PC Win10+, cavo)  
-2. Checklist collegamento USB + Trasferimento file **+ Prepara file (app)**  
+2. Checklist collegamento USB + Trasferimento file → **OK = export** `CONFIGURA`/`sup` in Download  
 3. Checklist copia Desktop (`CONFIGURA` + `sup`)  
 4. Checklist avvio script (doppio clic / UAC / attesa / Tutto pronto) + scheda dati stampabile  
-5. CIFS: scheda formato CIFS + Copia campi + Apri CIFS + ritorno manuale  
+5. CIFS: scheda + Copia campi **inclusa password** + Apri CIFS + ritorno manuale  
 6. SAF + prova scrittura → esito  
 
 Errori → Help contestuale (non in-page).  
-Rami non-PC: invariati/stub finché non specificati.
+Rami non-PC: stub come oggi finché non specificati.
 
 ---
 
