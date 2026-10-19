@@ -24,6 +24,22 @@ class WindowsCatalogSetupScriptTest {
     }
 
     @Test
+    fun validateFolderPath_requireDriveC_rejectsOtherLetters() {
+        assertNull(
+            WindowsCatalogSetupScript.validateFolderPath(
+                "C:\\MediaManager\\Catalogo",
+                requireDriveC = true,
+            ),
+        )
+        assertNotNull(
+            WindowsCatalogSetupScript.validateFolderPath(
+                "D:\\Foto\\Catalogo",
+                requireDriveC = true,
+            ),
+        )
+    }
+
+    @Test
     fun validateFolderPath_rejectsInvalid() {
         assertNotNull(WindowsCatalogSetupScript.validateFolderPath(""))
         assertNotNull(WindowsCatalogSetupScript.validateFolderPath("/home/catalogo"))
@@ -43,6 +59,9 @@ class WindowsCatalogSetupScriptTest {
         assertFalse(pkg.ps1Content.contains("password ="))
         assertTrue(pkg.cmdContent.contains(WindowsCatalogSetupScript.PS1_FILE_NAME))
         assertTrue(pkg.cmdContent.contains("powershell"))
+        assertTrue(pkg.cmdFileName.startsWith("AVVIA_"))
+        assertTrue(pkg.ps1FileName.startsWith("_non_aprire_"))
+        assertFalse(pkg.cmdFileName.substringBeforeLast('.') == pkg.ps1FileName.substringBeforeLast('.'))
     }
 
     @Test
@@ -57,6 +76,15 @@ class WindowsCatalogSetupScriptTest {
                 "New-Object System.Security.AccessControl.FileSystemAccessRule(",
             ),
         )
+    }
+
+    @Test
+    fun build_shareRepointsWhenFolderPathChanges() {
+        val ps1 = samplePkg().ps1Content
+        assertTrue(ps1.contains("Remove-SmbShare"))
+        assertTrue(ps1.contains("ripruntata"))
+        assertTrue(ps1.contains("-ieq"))
+        assertFalse(ps1.contains("Rimuovila o scegli un altro nome"))
     }
 
     @Test

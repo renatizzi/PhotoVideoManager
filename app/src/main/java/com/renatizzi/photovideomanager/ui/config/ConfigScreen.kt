@@ -1,5 +1,6 @@
 package com.renatizzi.photovideomanager.ui.config
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +19,7 @@ import com.renatizzi.photovideomanager.R
 
 @Composable
 fun ConfigScreen(
+    onOpenSetupCatalogo: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -36,6 +38,11 @@ fun ConfigScreen(
             text = stringResource(R.string.config_intro),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+        )
+        ConfigActionSection(
+            title = stringResource(R.string.config_setup_catalogo),
+            body = stringResource(R.string.config_setup_catalogo_hint),
+            onClick = onOpenSetupCatalogo,
         )
         ConfigSection(
             title = stringResource(R.string.settings),
@@ -56,6 +63,33 @@ fun ConfigScreen(
         ConfigSection(
             title = stringResource(R.string.config_play_store),
             body = stringResource(R.string.coming_soon),
+        )
+    }
+}
+
+@Composable
+private fun ConfigActionSection(
+    title: String,
+    body: String,
+    onClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+            text = body,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
         )
     }
 }

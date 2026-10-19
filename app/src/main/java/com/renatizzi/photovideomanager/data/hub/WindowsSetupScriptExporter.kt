@@ -68,18 +68,22 @@ class WindowsSetupScriptExporter(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val resolver = context.contentResolver
                 val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-                removed = resolver.delete(
-                    collection,
-                    "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
-                    arrayOf("MediaManager_Setup_Catalogo%"),
-                )
+                for (prefix in WindowsCatalogSetupScript.DOWNLOAD_SCRUB_PREFIXES) {
+                    removed += resolver.delete(
+                        collection,
+                        "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
+                        arrayOf("$prefix%"),
+                    )
+                }
             } else {
                 @Suppress("DEPRECATION")
                 val downloads = Environment.getExternalStoragePublicDirectory(
                     Environment.DIRECTORY_DOWNLOADS,
                 )
                 downloads.listFiles()
-                    ?.filter { it.name.startsWith("MediaManager_Setup_Catalogo") }
+                    ?.filter { file ->
+                        WindowsCatalogSetupScript.DOWNLOAD_SCRUB_PREFIXES.any { file.name.startsWith(it) }
+                    }
                     ?.forEach {
                         if (it.delete()) removed++
                     }
@@ -106,8 +110,8 @@ class WindowsSetupScriptExporter(
             )
             putExtra(
                 Intent.EXTRA_TEXT,
-                "Esegui sul PC Windows (doppio clic) il file MediaManager_Setup_Catalogo.cmd " +
-                    "e conferma Amministratore. Poi torna all'app MediaManager.",
+                "Sul Desktop del PC: doppio clic su AVVIA_Configurazione_Catalogo " +
+                    "(non sull'altro file) e conferma Amministratore. Poi torna all'app MediaManager.",
             )
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
@@ -146,16 +150,20 @@ class WindowsSetupScriptExporter(
         val resolver = context.contentResolver
         val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
         // Exact names and Samsung-renamed "*.cmd.txt" / "*.ps1 (n).txt" leftovers.
-        resolver.delete(
-            collection,
-            "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
-            arrayOf("MediaManager_Setup_Catalogo%"),
-        )
+        for (prefix in WindowsCatalogSetupScript.DOWNLOAD_SCRUB_PREFIXES) {
+            resolver.delete(
+                collection,
+                "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
+                arrayOf("$prefix%"),
+            )
+        }
     }
 
     private fun purgeLegacyDownloadFiles(downloads: File) {
         downloads.listFiles()
-            ?.filter { it.name.startsWith("MediaManager_Setup_Catalogo") }
+            ?.filter { file ->
+                WindowsCatalogSetupScript.DOWNLOAD_SCRUB_PREFIXES.any { file.name.startsWith(it) }
+            }
             ?.forEach { it.delete() }
     }
 

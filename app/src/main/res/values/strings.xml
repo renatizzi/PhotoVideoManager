@@ -56,60 +56,186 @@
     <string name="acquisisci_da_pc_step3">3. Tocca «Scegli cartella». Nel selettore apri «Disco di rete» (dove già vedi il NAS) e cerca il PC o la cartella Foto. Conferma con Usa questa cartella.</string>
     <string name="acquisisci_da_pc_note">MediaManager non elenca da solo i PC: mostra solo ciò che il tablet ha già in Disco di rete. Non serve il cloud.</string>
     <string name="acquisisci_da_pc_choose">Scegli cartella</string>
-    <string name="hub_wizard_title">Imposta Catalogo personale</string>
-    <string name="hub_wizard_entry">Imposta Catalogo personale</string>
-    <string name="hub_intro_body">Passo 1 — Scegli dove tenere il Catalogo personale (telefono, PC, Drive o NAS). Poi l\'app ti guida a rendere quella cartella visibile e a riprendere la gestione in MediaManager.</string>
-    <string name="hub_combo_label">Tengo il Catalogo…</string>
+    <string name="hub_wizard_title">Setup Catalogo personale</string>
+    <string name="hub_wizard_entry">Setup Catalogo personale</string>
+    <string name="config_setup_catalogo">Setup Catalogo personale</string>
+    <string name="config_setup_catalogo_hint">Scegli dove tenere il Catalogo (telefono, PC, Drive o NAS) e completa i passi guidati. Tocca qui per aprire.</string>
+
+    <!-- E0 Inizio -->
+    <string name="hub_s0_question">Cosa vuoi fare con la Posizione del Catalogo?</string>
+    <string name="hub_s0_body">Non acquisisce foto: serve solo a definire dove risiede il Catalogo e come accedervi.</string>
+    <string name="hub_s0_no_seat">Nessuna Posizione del Catalogo impostata su questo apparecchio.</string>
+    <string name="hub_s0_current_seat">Posizione attuale: %1$s</string>
+    <string name="hub_s0_modify_note">La Posizione attuale resta valida finché la nuova non è verificata.</string>
+    <string name="hub_s0_create">Creare una nuova Posizione del Catalogo</string>
+    <string name="hub_s0_modify">Modificare la Posizione del Catalogo attuale</string>
+    <string name="hub_s0_resume">Riprendere il percorso interrotto (%1$s)</string>
+    <string name="hub_s0_resume_hint">Hai un percorso di setup interrotto al passo: %1$s.</string>
+    <string name="hub_s0_discard_draft">Scartare il percorso interrotto</string>
+    <string name="hub_checklist_ok">OK</string>
+    <string name="hub_copy">Copia</string>
+    <string name="hub_show">Mostra</string>
+    <string name="hub_hide">Nascondi</string>
+    <string name="hub_non_riesco">Non riesco</string>
+    <string name="hub_pc_asleep_hint">Riattiva il PC (acceso, sbloccato, non in sospensione) e riprova.</string>
+
+    <!-- S0 Destinazione -->
+    <string name="hub_s1_question">Dove vuoi tenere il Catalogo?</string>
+    <string name="hub_s1_body">Qui puoi scegliere in quale dispositivo tenere il Catalogo personale.</string>
+    <string name="hub_intro_body">Qui puoi scegliere in quale dispositivo tenere il Catalogo personale.</string>
+    <string name="hub_acquire_needs_setup_title">Serve prima il Setup del Catalogo</string>
+    <string name="hub_acquire_needs_setup_body">Acquisisci aggiunge foto al Catalogo. Prima imposta la Posizione del Catalogo. Tocca Setup Catalogo personale.</string>
+    <string name="hub_acquire_needs_setup_action">Vai al Setup Catalogo</string>
+    <string name="hub_combo_label">Seleziona il dispositivo</string>
     <string name="hub_kind_local">Su questo telefono o tablet</string>
+    <string name="hub_kind_local_hint">Nessuna rete necessaria</string>
     <string name="hub_kind_pc">Su un PC o notebook</string>
+    <string name="hub_kind_pc_hint">Deve essere acceso; altrimenti userai il cavo USB</string>
     <string name="hub_kind_drive">Su Google Drive (o cloud)</string>
+    <string name="hub_kind_drive_hint">Percorso base</string>
     <string name="hub_kind_nas">Su un disco di rete o NAS</string>
-    <string name="hub_avanti">Avanti</string>
+    <string name="hub_kind_nas_hint">Percorso base</string>
+    <string name="hub_avanti">OK</string>
     <string name="hub_indietro">Indietro</string>
     <string name="hub_choose_folder">Scegli cartella</string>
     <string name="hub_seat_folder_fallback">Cartella Catalogo</string>
-    <string name="hub_w1_body">Questo dispositivo diventa la sede di riferimento del Catalogo personale. Un secondo telefono o tablet, in questa versione, si collega più facilmente se usi una sede su PC, Drive o NAS.</string>
-    <string name="hub_w1_confirm">Usa questo dispositivo</string>
+
+    <!-- W1 locale -->
+    <string name="hub_w1_question">Vuoi usare questo apparecchio come Posizione del Catalogo?</string>
+    <string name="hub_w1_body">Questo dispositivo diventa la Posizione di riferimento del Catalogo personale. Un secondo telefono o tablet, in questa versione, si collega più facilmente se usi una Posizione su PC, Drive o NAS.</string>
+    <string name="hub_w1_confirm">Sì, usa questo dispositivo</string>
+
+    <!-- B1 Prepara file -->
     <string name="hub_w2_choice_body">Per il PC Windows puoi far preparare cartella, utente dedicato e condivisione da uno script (consigliato), oppure usare una condivisione che hai già.</string>
     <string name="hub_w2_choice_routine">Configura il PC con lo script MediaManager</string>
-    <string name="hub_w2_choice_already">Ho già la cartella condivisa</string>
-    <string name="hub_w2_routine_params_body">Indica dove creare il Catalogo sul PC. L\'app prepara lo script e lo salva in Download. Poi servono quattro passi manuali (nessun ritorno automatico all\'app).</string>
-    <string name="hub_w2_folder_path_label">Percorso cartella sul PC</string>
-    <string name="hub_w2_share_name_label">Nome condivisione SMB</string>
-    <string name="hub_w2_routine_params_note">Utente Windows dedicato: MediaManager (senza privilegi di amministratore). Password provvisoria generata dall\'app.</string>
-    <string name="hub_w2_prepare_script">Prepara script</string>
-    <string name="hub_w2_routine_ready_body">Script pronto in Download (nomi esatti .cmd e .ps1, senza .txt).\n\nPasso 1/4 — Copia: cavo USB → Trasferimento file → sul PC apri il telefono → Download → copia entrambi i file sul Desktop.\nIl file .ps1 contiene la password: non lasciarlo in giro sul telefono dopo l\'uso.</string>
-    <string name="hub_w2_credentials_title">Credenziali da usare in Archivio</string>
-    <string name="hub_w2_credentials_lines">Utente: %1$s\nPassword: %2$s\nCondivisione: \\\\%3$s (oppure \\\\IP-del-PC\\%3$s)</string>
-    <string name="hub_w2_share_script">Invia script al PC</string>
-    <string name="hub_w2_copy_credentials">Copia credenziali</string>
-    <string name="hub_w2_reprepare_script">Rigenera script e password</string>
-    <string name="hub_w2_routine_confirm_body">Passo 2/4 — Sul PC: doppio clic su MediaManager_Setup_Catalogo.cmd, conferma Sì all\'UAC, attendi «Tutto pronto».\nPoi torna qui. L\'app rimuoverà lo .ps1 da Download (contiene la password).</string>
-    <string name="hub_w2_routine_confirm_primary">Ho visto Tutto pronto sul PC</string>
-    <string name="hub_w2_prepare">1. Sul PC crea o scegli una cartella (anche su disco USB, chiavetta o microSD collegata al PC).\n2. Tasto destro → Proprietà → Condivisione → Condividi.\n3. Preferisci un utente Windows locale dedicato (es. MediaManager), non l\'account Microsoft/Gmail.\n4. Annota nome PC o indirizzo IP. Stessa Wi‑Fi.</string>
-    <string name="hub_w2_prepared">Ho creato la cartella</string>
-    <string name="hub_w2_cifs_body">Passo 3 — Rendi la cartella del PC visibile sul telefono con l\'app gratuita CIFS Documents Provider (stessa di BoxManager).\n\nIn CIFS crea una connessione con i dati sotto (Storage = SMB2,3 jCIFS NG; Porta = 445). Poi torna qui.</string>
-    <string name="hub_w2_cifs_fields">Host = IP o nome PC\nUtente = %1$s\nPassword = %2$s\nFolder/condivisione = %3$s\nPorta = 445</string>
-    <string name="hub_w2_cifs_done">Ho configurato CIFS</string>
+    <string name="hub_w2_choice_already">Il PC ha già la cartella condivisa</string>
+    <string name="hub_b1_question">Il PC è acceso, sbloccato e non in sospensione?</string>
+    <string name="hub_b1_intro">L\'app prepara due file in Download sul telefono. Non serve scegliere cartella o nome condivisione: usa i valori già previsti.</string>
+    <string name="hub_b1_yes_prepare">Sì, prepara i file</string>
+    <string name="hub_b1_no">No</string>
+    <string name="hub_b1_details">Modifica dettagli (opzionale)</string>
+    <string name="hub_s2_pc_body">L\'app prepara due file in Download sul telefono. Non serve scegliere cartella o nome condivisione: usa i valori già previsti.</string>
+    <string name="hub_s2_pc_path_hint">Deve iniziare con C:\\ — esempio: C:\\MediaManager\\Catalogo</string>
+    <string name="hub_s2_pc_note">Utente Windows dedicato: MediaManager. La password la vedi solo quando configuri CIFS, non ora.</string>
+    <string name="hub_w2_folder_path_label">Percorso cartella sul PC (solo C:)</string>
+    <string name="hub_w2_share_name_label">Nome condivisione</string>
+    <string name="hub_w2_routine_params_note">Valori di default modificabili sotto.</string>
+    <string name="hub_w2_prepare_script">Sì, prepara i file</string>
+    <string name="hub_w2_reprepare_script">Prepara di nuovo i file</string>
+
+    <!-- B2 Copia USB -->
+    <string name="hub_b2_intro">Dopo aver collegato il telefono al PC, copia i due file di configurazione sul Desktop.</string>
+    <string name="hub_b2_instructions">1. Usa un cavo USB che trasferisce file (non solo ricarica).\n2. Collega telefono e PC; entrambi accesi e sbloccati.\n3. Sul telefono apri la notifica USB e scegli Trasferimento file / MTP / File — non «Solo ricarica». Se chiede accesso ai dati, consenti.\n4. Sul PC: Esplora file → Questo PC → telefono → memoria interna → Download.\n5. Seleziona entrambi i file e copiali sul Desktop (stessa cartella):\n   • AVVIA_Configurazione_Catalogo ← quello da avviare dopo\n   • _non_aprire_supporto_setup ← non aprirlo\n6. Controlla che siano entrambi sul Desktop prima di continuare.</string>
+    <string name="hub_b2_question">Sul Desktop del PC vedi entrambi i file?</string>
+    <string name="hub_b2_yes">Sì, entrambi</string>
+    <string name="hub_b2_one">Ne vedo solo uno</string>
+    <string name="hub_b2_no_phone">Non vedo il telefono / la cartella Download</string>
+    <string name="hub_s3a_ready_body">File pronti in Download sul telefono.</string>
+    <string name="hub_s3a_password_later">La password non viene mostrata qui: la vedi solo quando configuri CIFS.</string>
+    <string name="hub_w2_routine_ready_body">1. Usa un cavo USB che trasferisce file (non solo ricarica).\n2. Collega telefono e PC; entrambi accesi e sbloccati.\n3. Sul telefono apri la notifica USB e scegli Trasferimento file / MTP / File — non «Solo ricarica».\n4. Sul PC: Esplora file → Questo PC → telefono → memoria interna → Download.\n5. Copia sul Desktop entrambi i file: AVVIA_Configurazione_Catalogo e _non_aprire_supporto_setup.\n6. Controlla che siano entrambi sul Desktop.</string>
+    <string name="hub_s3b_copied_primary">Sì, entrambi</string>
+
+    <!-- B3a/b/c Script -->
+    <string name="hub_b3a_intro">Sul Desktop del PC cerca il file AVVIA_Configurazione_Catalogo. L\'altro file deve restare accanto; non aprirlo.</string>
+    <string name="hub_b3a_question">Hai trovato AVVIA_Configurazione_Catalogo sul Desktop?</string>
+    <string name="hub_b3a_yes">Sì</string>
+    <string name="hub_b3b_intro">1. Doppio clic su AVVIA_Configurazione_Catalogo.\n2. Se compare SmartScreen: Ulteriori informazioni → Esegui comunque.\n3. Se compare Controllo account utente: conferma Sì.\n4. Si apre una finestra «MediaManager - configurazione Catalogo».\n\nDa qui possono passare alcuni minuti senza nuovi messaggi. Non chiudere la finestra.\nNon serve «Esegui come amministratore» dal tasto destro: lo script chiede già l\'elevazione (UAC).</string>
+    <string name="hub_b3b_question">Cosa è successo dopo il doppio clic?</string>
+    <string name="hub_b3b_started">È partita la finestra dello script</string>
+    <string name="hub_b3b_blocked">SmartScreen / UAC e non so cosa fare</string>
+    <string name="hub_b3b_nothing">Non parte nulla</string>
+    <string name="hub_b3c_intro">Guarda l\'ultima riga della finestra dello script. Serve il messaggio «Tutto pronto». Se vedi un errore o un codice, non continuare: usa Non riesco.</string>
+    <string name="hub_b3c_question">Cosa mostra ora la finestra dello script?</string>
+    <string name="hub_b3c_ready">Tutto pronto</string>
+    <string name="hub_b3c_working">Ancora in lavorazione / passi in corso</string>
+    <string name="hub_b3c_error">Messaggio di errore / Configurazione NON completata</string>
+    <string name="hub_b3c_closed">Ho chiuso la finestra per sbaglio</string>
+    <string name="hub_b3c_wait_note">Attendi: non chiudere la finestra finché non compare «Tutto pronto».</string>
+    <string name="hub_w2_routine_confirm_body">Sul Desktop del PC: doppio clic su AVVIA_Configurazione_Catalogo.</string>
+    <string name="hub_w2_routine_confirm_primary">Tutto pronto</string>
+
+    <!-- B4 Ponte CIFS -->
+    <string name="hub_b4_intro">Ora colleghiamo il telefono alla cartella del PC. La password la vedi solo al passo successivo, quando la digiti in CIFS.</string>
+    <string name="hub_b4_question">Sul telefono hai già l\'app CIFS Documents Provider?</string>
+    <string name="hub_b4_yes">Sì</string>
+    <string name="hub_b4_no_install">No — Installa</string>
+    <string name="hub_s4_summary_body">Ora colleghiamo il telefono alla cartella del PC. La password la vedi solo al passo successivo, quando la digiti in CIFS.</string>
+    <string name="hub_s4_continue_cifs">Sì</string>
+
+    <!-- B5a metodo -->
+    <string name="hub_b5a_intro">In CIFS Documents Provider crea una connessione alla cartella del PC.</string>
+    <string name="hub_b5a_question">In CIFS, come vuoi creare la connessione?</string>
+    <string name="hub_b5a_manual">Inserimento manuale (consigliato)</string>
+    <string name="hub_b5a_scan">Provare la scansione automatica</string>
+    <string name="hub_b5a_scan_warn">Spesso la condivisione MediaManager non compare nell\'elenco trovato. Se non la vedi, usa inserimento manuale.</string>
+
+    <!-- B5b scheda CIFS -->
+    <string name="hub_b5b_intro">1. Tocca Apri CIFS Documents Provider.\n2. Tocca + / Aggiungi connessione.\n3. Compila i campi esattamente come sotto (stesse etichette del form CIFS). Usa Copia sul singolo campo per incollare.\n4. Tocca Verifica (in CIFS), poi Salva.\n5. Torna a MediaManager con il tasto Indietro del sistema (il ritorno non è automatico).</string>
+    <string name="hub_b5b_card_title">Nuova connessione (CIFS Documents Provider)</string>
+    <string name="hub_b5b_label_name">Nome / Connection name</string>
+    <string name="hub_b5b_label_host">Host</string>
+    <string name="hub_b5b_label_port">Port</string>
+    <string name="hub_b5b_label_domain">Domain / Workgroup</string>
+    <string name="hub_b5b_label_folder">Folder / Shared folder</string>
+    <string name="hub_b5b_label_user">Username</string>
+    <string name="hub_b5b_label_password">Password</string>
+    <string name="hub_b5b_label_storage">Storage / SMB</string>
+    <string name="hub_b5b_domain_value">(lascia vuoto)</string>
+    <string name="hub_b5b_host_placeholder">IP del PC</string>
+    <string name="hub_b5b_host_hint">Sul PC, nella finestra «Tutto pronto», usa l\'IP indicato; oppure Impostazioni Windows → rete.</string>
+    <string name="hub_b5b_storage_value">SMB2,3 (jCIFS NG)</string>
+    <string name="hub_b5b_question">Hai salvato la connessione in CIFS e sei tornato qui?</string>
+    <string name="hub_b5b_yes">Sì</string>
+    <string name="hub_b5b_verify_fail">La verifica in CIFS è fallita</string>
+    <string name="hub_password_missing_hint">Password non disponibile in memoria (es. dopo ripresa bozza). Torna indietro e prepara di nuovo i file, oppure usa «Ho cambiato la password».</string>
+    <string name="hub_s5_cifs_body">Compila i campi in CIFS Documents Provider come nella scheda sotto.</string>
+    <string name="hub_w2_cifs_body">Compila i campi in CIFS Documents Provider come nella scheda sotto.</string>
+    <string name="hub_w2_cifs_done">Sì</string>
+    <string name="hub_w2_credentials_title">Dati da inserire in CIFS</string>
+    <string name="hub_w2_copy_credentials">Copia tutti i campi noti</string>
+    <string name="hub_copy_password">Copia password</string>
     <string name="hub_cifs_install">Installa CIFS Documents Provider</string>
     <string name="hub_cifs_open">Apri CIFS Documents Provider</string>
     <string name="hub_cifs_refresh">Ho installato / aggiornato: ricontrolla</string>
-    <string name="hub_cifs_status_ready">CIFS risulta installata su questo dispositivo.</string>
-    <string name="hub_cifs_status_missing">CIFS non risulta installata: tocca Installa (Play Store).</string>
-    <string name="hub_w2_help_link">Non riesco a collegarmi</string>
-    <string name="hub_w2_help_body">Usa l\'utente locale MediaManager dello script (non Microsoft/Gmail). In CIFS: Storage SMB2,3 (jCIFS NG), porta 445, stessa Wi‑Fi, PC non in sospensione. Se hai cambiato la password sul PC, aggiornala in CIFS.</string>
+    <string name="hub_cifs_status_ready">CIFS Documents Provider risulta installata.</string>
+    <string name="hub_cifs_status_missing">CIFS Documents Provider non risulta installata: tocca Installa (Play Store).</string>
+    <string name="hub_w2_help_link">Non riesco</string>
+    <string name="hub_w2_help_body">Usa l\'utente locale MediaManager dello script (non Microsoft/Gmail). In CIFS: Storage SMB2,3 (jCIFS NG), porta 445, stessa Wi‑Fi, PC non in sospensione. Host = IP dalla finestra «Tutto pronto». Folder = MediaManagerCatalog. Se hai cambiato la password sul PC, aggiornala in CIFS.</string>
     <string name="hub_w2_help_back">Torna al collegamento</string>
     <string name="hub_w2_password_help_link">Ho cambiato la password</string>
-    <string name="hub_w2_password_help_body">1. Sul PC cambia la password dell\'utente MediaManager (Impostazioni → Account oppure net user).\n2. In Archivio / Gestione file aggiorna o ricrea la connessione SMB con la nuova password.\n3. Torna qui e riprova Scegli cartella. Il riferimento alla sede in MediaManager non si perde.</string>
-    <string name="hub_w2_pick">Passo 4 — Tocca Scegli cartella. Nel selettore apri CIFS Documents Provider (o Tutte le cartelle → menu → CIFS) e seleziona la cartella del Catalogo. Conferma con Usa questa cartella. MediaManager verifica lettura/scrittura e registra la sede.</string>
-    <string name="hub_w2_done_password_reminder">Ricorda: la password SMB è provvisoria. Cambiala sul PC e aggiorna Archivio quando puoi.</string>
+    <string name="hub_w2_password_help_body">1. Sul PC cambia la password dell\'utente MediaManager (Impostazioni → Account oppure net user).\n2. In CIFS aggiorna o ricrea la connessione SMB con la nuova password.\n3. Torna qui e riprova Scegli cartella. Il riferimento alla Posizione del Catalogo in MediaManager non si perde.</string>
+
+    <!-- Manual share path -->
+    <string name="hub_w2_prepare">1. Sul PC crea o scegli una cartella (anche su disco USB, chiavetta o microSD collegata al PC).\n2. Tasto destro → Proprietà → Condivisione → Condividi.\n3. Preferisci un utente Windows locale dedicato (es. MediaManager), non l\'account Microsoft/Gmail.\n4. Annota nome PC o indirizzo IP. Stessa Wi‑Fi.</string>
+    <string name="hub_w2_prepared">Ho creato la cartella</string>
+
+    <!-- B6 SAF -->
+    <string name="hub_b6_intro">Tocca Scegli cartella → nel selettore apri CIFS Documents Provider (o Tutte le cartelle → CIFS) → apri la connessione appena salvata → seleziona la cartella del Catalogo → Usa questa cartella → Consenti.</string>
+    <string name="hub_b6_question">Hai concesso l\'accesso alla cartella?</string>
+    <string name="hub_w2_pick">Tocca Scegli cartella. Nel selettore apri CIFS Documents Provider e seleziona la cartella del Catalogo. Conferma con Usa questa cartella.</string>
+    <string name="hub_s6_pick_body">Tocca Scegli cartella. Nel selettore apri CIFS Documents Provider (o Tutte le cartelle → CIFS) → apri la connessione appena salvata → seleziona la cartella del Catalogo → Usa questa cartella → Consenti.\n\nMediaManager prova lettura/scrittura e il fascicolo. Se fallisce, resti qui: non riparti da zero.</string>
+    <string name="hub_s6_status_idle">Stato: non verificato</string>
+    <string name="hub_s6_status_progress">Stato: verifica in corso…</string>
+    <string name="hub_s6_status_ok">Stato: verificato</string>
+    <string name="hub_s6_status_unreachable">Stato: non raggiungibile</string>
+    <string name="hub_s6_status_failed">Stato: non verificato (errore)</string>
+    <string name="hub_s6_retry">Riprova verifica</string>
+    <string name="hub_s6_back_cifs">Torna a CIFS</string>
+
+    <!-- F Esito -->
+    <string name="hub_s7_title">Configurazione completata</string>
+    <string name="hub_s7_verified_line">Posizione del Catalogo valida: verificata (lettura/scrittura ok).</string>
+    <string name="hub_s7_summary_lines">Posizione del Catalogo = PC\nCartella: %1$s\nCondivisione: %2$s\nUtente: %3$s\nCartella scelta: %4$s</string>
+    <string name="hub_s7_no_password">La password non viene mostrata qui.</string>
+    <string name="hub_w2_done_password_reminder">La password SMB è provvisoria: cambiala sul PC e aggiorna la connessione in CIFS quando puoi.</string>
     <string name="hub_w3_body">Serve un account Google sul dispositivo. Tocca Scegli cartella, apri Google Drive, crea o seleziona una cartella (es. Foto Catalogo) e conferma. Non è obbligatorio usare il cloud.</string>
-    <string name="hub_w4_body">Passo 2 — Collega il NAS/disco di rete con CIFS Documents Provider (Host, porta 445, utente, cartella).</string>
+    <string name="hub_w4_body">Collega il NAS/disco di rete con CIFS Documents Provider (Host, porta 445, utente, cartella).</string>
     <string name="hub_w4_cifs_note">Come in BoxManager: le credenziali restano in CIFS; MediaManager sceglie solo la cartella.</string>
-    <string name="hub_w4_pick_hint">Passo 3 — Quando CIFS mostra la cartella, tocca Scegli cartella qui sotto.</string>
-    <string name="hub_done_title">Catalogo impostato</string>
-    <string name="hub_done_body">Sede: %1$s.</string>
-    <string name="hub_done_resume_catalog">Passo finale — Riprendi la gestione in MediaManager: Acquisisci per le foto; Aggiorna Catalogo per allineare le schede con la sede. Per cambiare sede: Imposta Catalogo personale.</string>
+    <string name="hub_w4_pick_hint">Quando CIFS mostra la cartella, tocca Scegli cartella qui sotto.</string>
+    <string name="hub_done_title">Configurazione completata</string>
+    <string name="hub_done_body">Posizione del Catalogo: %1$s.</string>
+    <string name="hub_done_resume_catalog">Riprendi la gestione in MediaManager: Acquisisci per le foto; Aggiorna Catalogo per allineare le schede. Per cambiare Posizione: Setup Catalogo personale.</string>
+
     <string name="hub_update_title">Aggiorna Catalogo</string>
     <string name="hub_update_action">Confronta con la sede</string>
     <string name="hub_update_no_seat">Nessuna sede configurata. Imposta prima il Catalogo personale.</string>
@@ -266,7 +392,7 @@
     <string name="sort_device">Dispositivo</string>
     <string name="sort_newest">Più recenti</string>
     <string name="sort_kind">Tipo</string>
-    <string name="config_intro">Impostazioni, sicurezza, setup Archivio Condiviso, accessi e parametri di distribuzione. Le sorgenti operative sono in Organizza → Acquisisci.</string>
+    <string name="config_intro">Setup Catalogo personale, impostazioni, sicurezza, Archivio Condiviso e accessi. Le sorgenti operative restano in Organizza → Acquisisci.</string>
     <string name="help_body">MediaManager gestisce foto e video personali e dell’Archivio Condiviso.\n\nIn basso: Home, Organizza, Componi, Utility e l’icona Impostazioni.\nIn alto: Guida e switch chiaro/scuro.\nPer aggiungere sorgenti: Organizza → Acquisisci (Fonti → Importa).</string>
     <string name="ok">OK</string>
     <string name="acquire_title">Importa nel Catalogo</string>

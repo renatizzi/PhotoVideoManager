@@ -93,6 +93,7 @@ fun AcquisisciStaticScreen(
     onRemoveSource: (String) -> Unit = {},
     onOpenCatalogSeatWizard: () -> Unit = {},
     onOpenCatalogUpdate: () -> Unit = {},
+    seatConfigured: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -214,6 +215,25 @@ fun AcquisisciStaticScreen(
                 } else {
                     Text(stringResource(R.string.acquisisci_conferma))
                 }
+            }
+        }
+        if (!seatConfigured) {
+            Text(
+                text = stringResource(R.string.hub_acquire_needs_setup_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = stringResource(R.string.hub_acquire_needs_setup_body),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+            )
+            Button(
+                onClick = onOpenCatalogSeatWizard,
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.hub_acquire_needs_setup_action))
             }
         }
         TextButton(

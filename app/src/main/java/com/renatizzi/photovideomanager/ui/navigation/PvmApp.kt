@@ -179,7 +179,11 @@ fun PvmApp(
                     )
                 }
                 composable(PvmDestination.Config.route) {
-                    ConfigScreen()
+                    ConfigScreen(
+                        onOpenSetupCatalogo = {
+                            navController.navigate(PvmDestination.CatalogSeatWizard.route)
+                        },
+                    )
                 }
                 // Acquisisci: UN solo processo. Layout congelato + dominio reale (censimento → acquisizione).
                 composable(PvmDestination.Acquire.route) {
@@ -247,6 +251,7 @@ fun PvmApp(
                             onOpenCatalogUpdate = {
                                 navController.navigate(PvmDestination.CatalogUpdate.route)
                             },
+                            seatConfigured = catalogFacade.catalogSeat().isConfigured,
                         )
                         AcquireFlowStep.COPY -> ImportaStaticScreen(
                             state = acquireState,
@@ -271,19 +276,29 @@ fun PvmApp(
                     val wizardState by wizardVm.state.collectAsStateWithLifecycle()
                     CatalogSeatWizardScreen(
                         state = wizardState,
+                        onStartCreate = wizardVm::startCreate,
+                        onStartModify = wizardVm::startModify,
+                        onResumeDraft = wizardVm::resumeDraft,
+                        onDiscardDraft = wizardVm::discardDraftAndStayOnS0,
                         onSelectKind = wizardVm::selectKind,
                         onAvanti = wizardVm::avantiFromIntro,
                         onBackIntro = wizardVm::goIntro,
+                        onBackS0 = wizardVm::goS0,
                         onGoStep = wizardVm::goStep,
                         onConfirmLocal = wizardVm::confirmLocalSeat,
                         onFolderPathChange = wizardVm::updateFolderPath,
                         onShareNameChange = wizardVm::updateShareName,
                         onPrepareScript = { wizardVm.prepareWindowsScript() },
-                        onShareScript = wizardVm::shareScriptIntent,
                         onCredentialsText = wizardVm::credentialsClipboardText,
+                        onPasswordText = wizardVm::passwordClipboardText,
+                        onFieldText = wizardVm::fieldClipboardText,
                         onConfirmScriptRan = wizardVm::confirmScriptRanOnPc,
+                        onUsbCopiedContinue = wizardVm::markUsbCopiedAndContinue,
+                        onContinueFromBridge = wizardVm::continueFromSummaryToCifs,
+                        onContinueToCifsForm = wizardVm::continueToCifsForm,
                         onContinueToCifs = wizardVm::continueToCifsFromManualPrepare,
                         onRefreshCifs = wizardVm::refreshCifsInstalled,
+                        onRetryVerify = wizardVm::retryPendingFolderVerification,
                         onFolderPicked = wizardVm::onFolderPicked,
                         onDone = { navController.popBackStack() },
                         onCancel = { navController.popBackStack() },

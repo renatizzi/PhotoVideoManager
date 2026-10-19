@@ -12,34 +12,31 @@ Identificativi tecnici invariati: `applicationId` / package `com.renatizzi.photo
 - Room (Catalogo logico)
 - minSdk 26 · targetSdk 35 · applicationId `com.renatizzi.photovideomanager`
 
-## Build
+## Build (Linux / CI)
 
 ```bash
 export ANDROID_HOME="$HOME/Android/Sdk"
 ./gradlew :app:assembleDebug :app:testDebugUnitTest
 ```
 
-## Aggiornare il codice sul PC (Windows)
+## Prove sul telefono (Windows) — un solo script
 
-Nella cartella del progetto c’è lo script `aggiorna-da-git.bat`.
-
-1. Doppio clic su `aggiorna-da-git.bat`.
-2. Attendi il messaggio OK, poi chiudi la finestra.
-3. In Android Studio: **File → Sync Project with Gradle Files**, poi **Run**.
-
-Non incollare nel terminale le frasi delle istruzioni (es. «Torna in Home…»): non sono comandi.
-
-## APK sul telefono (senza cavo / senza Run da Studio)
+Nella cartella del progetto usa solo `consegna-telefono.bat`.
 
 1. Apri il progetto **almeno una volta** in Android Studio e fai **Sync** (così esistono SDK e `local.properties`).
-2. Doppio clic su `compila-apk.bat`.
-   - Lo script cerca da solo il Java di Android Studio (cartella `jbr`): **non serve** impostare `JAVA_HOME` a mano.
-3. Si apre la cartella con `app-debug.apk`.
-4. Copia quel file sul telefono (USB, Google Drive, email/Telegram a te stesso).
-5. Sul telefono apri il file → **Installa**.
+2. Doppio clic su `consegna-telefono.bat`.
+   - Scarica da GitHub l’ultima build di consegna
+   - Compila l’APK di test
+   - Apre la cartella con `app-debug.apk`
+3. Copia quel file sul telefono (USB, Google Drive, email/Telegram a te stesso).
+4. Sul telefono apri il file → **Installa**.
 
-Se `compila-apk.bat` dice ancora “Java non trovato”: in Android Studio usa  
+Lo script cerca da solo il Java di Android Studio (cartella `jbr`): **non serve** impostare `JAVA_HOME` a mano.
+
+Se dice ancora “Java non trovato”: in Android Studio usa  
 **Build → Build Bundle(s) / APK(s) → Build APK(s)** → link *locate* (stesso risultato, senza terminale).
+
+Non incollare nel terminale le frasi delle istruzioni (es. «Torna in Home…»): non sono comandi.
 
 ## Se Sync/Run fallisce su Windows (FileSystemException / mergeDebugResources)
 
@@ -47,6 +44,6 @@ Spesso è la cartella `app\build` bloccata o sporca (antivirus, OneDrive, Studio
 
 1. Chiudi Android Studio.
 2. Doppio clic su `pulisci-build.bat`.
-3. Riapri Studio → **File → Sync Project with Gradle Files** → **Run**.
+3. Riesegui `consegna-telefono.bat` (oppure in Studio: Sync → Run).
 
 In alternativa da Studio: **Build → Clean Project**, poi **Rebuild Project**.

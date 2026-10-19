@@ -9,6 +9,7 @@ import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.data.hub.WindowsCatalogSetupScript
 import com.renatizzi.photovideomanager.data.hub.WindowsSetupExportResult
 import com.renatizzi.photovideomanager.data.hub.WindowsSetupScriptExporter
+import com.renatizzi.photovideomanager.data.hub.WizardDraftStore
 import com.renatizzi.photovideomanager.data.storage.NetworkDriveAssistant
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeat
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind
@@ -20,9 +21,39 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+enum class SetupMode {
+    CREATE,
+    MODIFY,
+}
+
+/** Campi scheda CIFS (etichette form provider) — copia singola. */
+enum class CifsCopyField {
+    CONNECTION_NAME,
+    HOST,
+    PORT,
+    FOLDER,
+    USERNAME,
+    PASSWORD,
+    STORAGE,
+}
+
+/** Esito prova lettura/scrittura + fascicolo (S6). */
+enum class SeatVerificationUi {
+    NONE,
+    IN_PROGRESS,
+    VERIFIED,
+    UNREACHABLE,
+    FAILED,
+}
+
 data class CatalogSeatWizardUiState(
-    val step: WizardStep = WizardStep.INTRO,
-    val selectedKind: CatalogSeatKind = CatalogSeatKind.LOCAL_DEVICE,
+    val step: WizardStep = WizardStep.S0_START,
+    val selectedKind: CatalogSeatKind = CatalogSeatKind.PC_NOTEBOOK,
+    val setupMode: SetupMode = SetupMode.CREATE,
+    val seatConfigured: Boolean = false,
+    val seatLabel: String = "",
+    val canResumeDraft: Boolean = false,
+    val resumeStepLabel: String = "",
     val pendingTreeUri: String? = null,
     val pendingLabel: String = "",
     val busy: Boolean = false,
@@ -33,20 +64,42 @@ data class CatalogSeatWizardUiState(
     val userName: String = WindowsCatalogSetupScript.DEFAULT_USER,
     val temporaryPassword: String = "",
     val scriptPrepared: Boolean = false,
+    val usbCopiedDeclared: Boolean = false,
+    val scriptRanDeclared: Boolean = false,
     val downloadsSaved: Boolean = false,
     val usbCopiedTo: String? = null,
     val statusMessage: String? = null,
     val cifsInstalled: Boolean = false,
+    val verification: SeatVerificationUi = SeatVerificationUi.NONE,
 )
 
+/**
+ * Passi Wizard — filiera PC allineata a template v2 (E0→S0→B1…→F).
+ * Alias legacy (`W2_ROUTINE_CONFIRM`, `W2_SUMMARY`) restano per bozze vecchie e si rimappano.
+ */
 enum class WizardStep {
+    S0_START,
     INTRO,
     W1_CONFIRM,
     W2_CHOICE,
     W2_ROUTINE_PARAMS,
     W2_ROUTINE_READY,
+    /** B3a — trova AVVIA_… sul Desktop. */
+    W2_SCRIPT_FIND,
+    /** B3b — doppio clic + UAC. */
+    W2_SCRIPT_LAUNCH,
+    /** B3c — messaggio Tutto pronto. */
+    W2_SCRIPT_RESULT,
+    /** @deprecated bozze pre-0.16.35 → rimappa a W2_SCRIPT_FIND */
     W2_ROUTINE_CONFIRM,
+    /** B4 — hai CIFS? (senza password). Alias legacy: W2_SUMMARY. */
+    W2_CIFS_BRIDGE,
+    /** @deprecated bozze pre-0.16.35 → rimappa a W2_CIFS_BRIDGE */
+    W2_SUMMARY,
     W2_PREPARE,
+    /** B5a — manuale vs scansione. */
+    W2_CIFS_METHOD,
+    /** B5b — scheda campi CIFS + password. */
     W2_CIFS,
     W2_HELP,
     W2_PICK,
@@ -60,6 +113,7 @@ class CatalogSeatWizardViewModel(
     private val catalogFacade: CatalogFacade,
     private val appContext: Context,
     private val exporter: WindowsSetupScriptExporter = WindowsSetupScriptExporter(appContext),
+    private val draftStore: WizardDraftStore = WizardDraftStore(appContext),
 ) : ViewModel() {
     private val _state = MutableStateFlow(CatalogSeatWizardUiState())
     val state: StateFlow<CatalogSeatWizardUiState> = _state.asStateFlow()
@@ -68,35 +122,217 @@ class CatalogSeatWizardViewModel(
 
     init {
         refreshCifsInstalled()
+        loadEntryState()
+    }
+
+    private fun loadEntryState() {
+        val seat = catalogFacade.catalogSeat()
+        val draft = draftStore.load()
+        val canResume = draft != null &&
+            draft.stepName != WizardStep.S0_START.name &&
+            draft.stepName != WizardStep.DONE.name
+        val resumeStep = if (canResume) {
+            runCatching { WizardStep.valueOf(draft!!.stepName) }.getOrNull()
+        } else {
+            null
+        }
+        _state.update {
+            it.copy(
+                step = WizardStep.S0_START,
+                seatConfigured = seat.isConfigured,
+                seatLabel = seat.displayLabel,
+                canResumeDraft = canResume && resumeStep != null,
+                resumeStepLabel = resumeStep?.let { s -> humanStepLabel(s) }.orEmpty(),
+                selectedKind = if (seat.isConfigured) seat.kind else CatalogSeatKind.PC_NOTEBOOK,
+                folderPath = draft?.folderPath ?: WindowsCatalogSetupScript.DEFAULT_FOLDER,
+                shareName = draft?.shareName ?: WindowsCatalogSetupScript.DEFAULT_SHARE,
+                userName = draft?.userName ?: WindowsCatalogSetupScript.DEFAULT_USER,
+                scriptPrepared = draft?.scriptPrepared == true,
+                usbCopiedDeclared = draft?.usbCopiedDeclared == true,
+                scriptRanDeclared = draft?.scriptRanDeclared == true,
+            )
+        }
+    }
+
+    fun startCreate() {
+        draftStore.clear()
+        _state.update {
+            it.copy(
+                setupMode = SetupMode.CREATE,
+                step = WizardStep.INTRO,
+                selectedKind = CatalogSeatKind.PC_NOTEBOOK,
+                completedSeat = null,
+                errorMessage = null,
+                statusMessage = null,
+                canResumeDraft = false,
+                scriptPrepared = false,
+                usbCopiedDeclared = false,
+                scriptRanDeclared = false,
+                temporaryPassword = "",
+                folderPath = WindowsCatalogSetupScript.DEFAULT_FOLDER,
+                shareName = WindowsCatalogSetupScript.DEFAULT_SHARE,
+            )
+        }
+        persistDraft()
+    }
+
+    fun startModify() {
+        val seat = catalogFacade.catalogSeat()
+        _state.update {
+            it.copy(
+                setupMode = SetupMode.MODIFY,
+                step = WizardStep.INTRO,
+                selectedKind = if (seat.kind != CatalogSeatKind.NONE) seat.kind else CatalogSeatKind.PC_NOTEBOOK,
+                completedSeat = null,
+                errorMessage = null,
+                statusMessage = null,
+                canResumeDraft = false,
+            )
+        }
+        persistDraft()
+    }
+
+    fun resumeDraft() {
+        val draft = draftStore.load() ?: return
+        val rawStep = runCatching { WizardStep.valueOf(draft.stepName) }.getOrNull() ?: return
+        val step = normalizeLegacyStep(rawStep)
+        val kind = runCatching { CatalogSeatKind.valueOf(draft.selectedKindName) }
+            .getOrDefault(CatalogSeatKind.PC_NOTEBOOK)
+        val mode = if (draft.setupMode == WizardDraftStore.MODE_MODIFY) {
+            SetupMode.MODIFY
+        } else {
+            SetupMode.CREATE
+        }
+        if (step == WizardStep.W2_CIFS ||
+            step == WizardStep.W2_CIFS_BRIDGE ||
+            step == WizardStep.W2_CIFS_METHOD ||
+            step == WizardStep.W2_PICK ||
+            step == WizardStep.W4_GUIDE
+        ) {
+            refreshCifsInstalled()
+        }
+        _state.update {
+            it.copy(
+                step = step,
+                setupMode = mode,
+                selectedKind = kind,
+                folderPath = draft.folderPath,
+                shareName = draft.shareName,
+                userName = draft.userName,
+                scriptPrepared = draft.scriptPrepared,
+                usbCopiedDeclared = draft.usbCopiedDeclared,
+                scriptRanDeclared = draft.scriptRanDeclared,
+                canResumeDraft = false,
+                errorMessage = null,
+                statusMessage = null,
+                completedSeat = null,
+            )
+        }
+    }
+
+    fun discardDraftAndStayOnS0() {
+        draftStore.clear()
+        loadEntryState()
+        _state.update { it.copy(canResumeDraft = false, errorMessage = null) }
     }
 
     fun selectKind(kind: CatalogSeatKind) {
         _state.update { it.copy(selectedKind = kind, errorMessage = null) }
+        persistDraft()
     }
 
     fun goIntro() {
         _state.update {
-            it.copy(step = WizardStep.INTRO, errorMessage = null, completedSeat = null, statusMessage = null)
+            it.copy(
+                step = WizardStep.INTRO,
+                errorMessage = null,
+                completedSeat = null,
+                statusMessage = null,
+            )
         }
+        persistDraft()
+    }
+
+    fun goS0() {
+        loadEntryState()
     }
 
     fun avantiFromIntro() {
         val kind = _state.value.selectedKind
+        // Fase corrente: ramo PC va diretto a S2 (path su C:) + preparazione script.
         val step = when (kind) {
             CatalogSeatKind.LOCAL_DEVICE -> WizardStep.W1_CONFIRM
-            CatalogSeatKind.PC_NOTEBOOK -> WizardStep.W2_CHOICE
+            CatalogSeatKind.PC_NOTEBOOK -> WizardStep.W2_ROUTINE_PARAMS
             CatalogSeatKind.CLOUD_DRIVE -> WizardStep.W3_GUIDE
             CatalogSeatKind.NETWORK_NAS -> WizardStep.W4_GUIDE
             CatalogSeatKind.NONE -> WizardStep.INTRO
         }
         _state.update { it.copy(step = step, errorMessage = null) }
+        persistDraft()
     }
 
     fun goStep(step: WizardStep) {
-        if (step == WizardStep.W2_CIFS || step == WizardStep.W2_PICK || step == WizardStep.W4_GUIDE) {
+        val target = normalizeLegacyStep(step)
+        if (target == WizardStep.W2_CIFS ||
+            target == WizardStep.W2_CIFS_BRIDGE ||
+            target == WizardStep.W2_CIFS_METHOD ||
+            target == WizardStep.W2_PICK ||
+            target == WizardStep.W4_GUIDE
+        ) {
             refreshCifsInstalled()
         }
-        _state.update { it.copy(step = step, errorMessage = null, statusMessage = null) }
+        _state.update { it.copy(step = target, errorMessage = null, statusMessage = null) }
+        persistDraft()
+    }
+
+    private fun normalizeLegacyStep(step: WizardStep): WizardStep = when (step) {
+        WizardStep.W2_ROUTINE_CONFIRM -> WizardStep.W2_SCRIPT_FIND
+        WizardStep.W2_SUMMARY -> WizardStep.W2_CIFS_BRIDGE
+        else -> step
+    }
+
+    private fun persistDraft() {
+        val s = _state.value
+        if (s.step == WizardStep.S0_START || s.step == WizardStep.DONE) {
+            if (s.step == WizardStep.DONE) draftStore.clear()
+            return
+        }
+        draftStore.save(
+            WizardDraftStore.Draft(
+                stepName = s.step.name,
+                selectedKindName = s.selectedKind.name,
+                folderPath = s.folderPath,
+                shareName = s.shareName,
+                userName = s.userName,
+                scriptPrepared = s.scriptPrepared,
+                usbCopiedDeclared = s.usbCopiedDeclared,
+                scriptRanDeclared = s.scriptRanDeclared,
+                setupMode = when (s.setupMode) {
+                    SetupMode.MODIFY -> WizardDraftStore.MODE_MODIFY
+                    SetupMode.CREATE -> WizardDraftStore.MODE_CREATE
+                },
+            ),
+        )
+    }
+
+    private fun humanStepLabel(step: WizardStep): String =
+        WizardStepChrome.subtitle(normalizeLegacyStep(step), CatalogSeatKind.PC_NOTEBOOK).text
+
+    /** Solo password, per copia rapida allo step CIFS (usabilità senza tocco script). */
+    fun passwordClipboardText(): String = _state.value.temporaryPassword
+
+    fun fieldClipboardText(field: CifsCopyField): String {
+        val s = _state.value
+        return when (field) {
+            CifsCopyField.CONNECTION_NAME,
+            CifsCopyField.FOLDER,
+            -> s.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
+            CifsCopyField.HOST -> "" // IP solo dal PC; non inventare
+            CifsCopyField.PORT -> "445"
+            CifsCopyField.USERNAME -> s.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER }
+            CifsCopyField.PASSWORD -> s.temporaryPassword
+            CifsCopyField.STORAGE -> "SMB2,3"
+        }
     }
 
     fun refreshCifsInstalled() {
@@ -104,24 +340,54 @@ class CatalogSeatWizardViewModel(
         _state.update { it.copy(cifsInstalled = installed) }
     }
 
-    /** After PC script success: scrub password file and open CIFS step. */
+    /** B3c: Tutto pronto → scrub Download → B4 (ponte CIFS, senza password). */
     fun confirmScriptRanOnPc() {
         viewModelScope.launch(Dispatchers.IO) {
             val n = runCatching { exporter.scrubDownloadsScripts() }.getOrDefault(0)
-            val installed = NetworkDriveAssistant.isHelperInstalled(appContext)
             _state.update {
                 it.copy(
-                    step = WizardStep.W2_CIFS,
-                    cifsInstalled = installed,
+                    step = WizardStep.W2_CIFS_BRIDGE,
+                    scriptRanDeclared = true,
                     statusMessage = if (n > 0) {
-                        "Script rimosso da Download sul telefono (conteneva la password)."
+                        "File di supporto rimosso da Download sul telefono (conteneva la password)."
                     } else {
-                        "Se in Download resta ancora .ps1, eliminalo: contiene la password."
+                        null
                     },
                     errorMessage = null,
                 )
             }
+            persistDraft()
         }
+    }
+
+    /** B2: entrambi i file sul Desktop → B3a. */
+    fun markUsbCopiedAndContinue() {
+        _state.update {
+            it.copy(
+                usbCopiedDeclared = true,
+                step = WizardStep.W2_SCRIPT_FIND,
+                errorMessage = null,
+                statusMessage = null,
+            )
+        }
+        persistDraft()
+    }
+
+    /** B4 → B5a (scelta metodo CIFS). */
+    fun continueFromSummaryToCifs() {
+        refreshCifsInstalled()
+        _state.update {
+            it.copy(step = WizardStep.W2_CIFS_METHOD, errorMessage = null, statusMessage = null)
+        }
+        persistDraft()
+    }
+
+    fun continueToCifsForm() {
+        refreshCifsInstalled()
+        _state.update {
+            it.copy(step = WizardStep.W2_CIFS, errorMessage = null, statusMessage = null)
+        }
+        persistDraft()
     }
 
     /** Manual share path (no script): go to CIFS with whatever credentials known. */
@@ -130,20 +396,26 @@ class CatalogSeatWizardViewModel(
         _state.update {
             it.copy(step = WizardStep.W2_CIFS, errorMessage = null, statusMessage = null)
         }
+        persistDraft()
     }
 
     fun updateFolderPath(value: String) {
         _state.update { it.copy(folderPath = value, errorMessage = null, scriptPrepared = false) }
+        persistDraft()
     }
 
     fun updateShareName(value: String) {
         _state.update { it.copy(shareName = value, errorMessage = null, scriptPrepared = false) }
+        persistDraft()
     }
 
     fun prepareWindowsScript() {
         viewModelScope.launch {
             val current = _state.value
-            val pathErr = WindowsCatalogSetupScript.validateFolderPath(current.folderPath)
+            val pathErr = WindowsCatalogSetupScript.validateFolderPath(
+                current.folderPath,
+                requireDriveC = true,
+            )
             val shareErr = WindowsCatalogSetupScript.validateShareName(current.shareName)
             val userErr = WindowsCatalogSetupScript.validateUserName(current.userName)
             if (pathErr != null || shareErr != null || userErr != null) {
@@ -178,7 +450,10 @@ class CatalogSeatWizardViewModel(
                         if (export.usbCopiedTo != null) {
                             append("Copiato anche su USB («${export.usbCopiedTo}»). ")
                         } else {
-                            append("Usa cavo USB (Trasferimento file) per copiare i due file sul PC. ")
+                            append(
+                                "Collega il cavo USB e sul telefono passa da Solo ricarica " +
+                                    "a Trasferimento file, poi copia i due file sul Desktop del PC. ",
+                            )
                         }
                     }.trim()
                     _state.update {
@@ -192,6 +467,7 @@ class CatalogSeatWizardViewModel(
                             step = WizardStep.W2_ROUTINE_READY,
                         )
                     }
+                    persistDraft()
                 },
                 onFailure = { e ->
                     _state.update {
@@ -212,18 +488,29 @@ class CatalogSeatWizardViewModel(
 
     fun credentialsClipboardText(): String {
         val s = _state.value
+        val share = s.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
+        val user = s.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER }
         return buildString {
-            append("Host: IP-del-PC (o nome PC)\n")
-            append("Porta: 445\n")
-            append("Utente: ${s.userName}\n")
+            append("Nome / Connection name: $share\n")
+            append("Host: (IP del PC dalla finestra Tutto pronto)\n")
+            append("Port: 445\n")
+            append("Domain / Workgroup: (lascia vuoto)\n")
+            append("Folder / Shared folder: $share\n")
+            append("Username: $user\n")
             append("Password: ${s.temporaryPassword}\n")
-            append("Cartella/condivisione: ${s.shareName}\n")
-            append("Storage in CIFS: SMB2,3 (jCIFS NG)")
+            append("Storage / SMB: SMB2,3 (jCIFS NG)")
         }
     }
 
     fun onFolderPicked(uri: String, label: String) {
-        _state.update { it.copy(pendingTreeUri = uri, pendingLabel = label, errorMessage = null) }
+        _state.update {
+            it.copy(
+                pendingTreeUri = uri,
+                pendingLabel = label,
+                errorMessage = null,
+                verification = SeatVerificationUi.NONE,
+            )
+        }
         confirmSeat(
             kind = _state.value.selectedKind,
             treeUri = uri,
@@ -239,30 +526,89 @@ class CatalogSeatWizardViewModel(
         )
     }
 
+    /** Riprova S6 con l'ultima cartella scelta, senza azzerare S1–S2. */
+    fun retryPendingFolderVerification() {
+        val s = _state.value
+        val uri = s.pendingTreeUri ?: return
+        confirmSeat(
+            kind = s.selectedKind,
+            treeUri = uri,
+            label = s.pendingLabel.ifBlank { "Cartella Catalogo" },
+        )
+    }
+
     private fun confirmSeat(kind: CatalogSeatKind, treeUri: String?, label: String) {
         viewModelScope.launch {
-            _state.update { it.copy(busy = true, errorMessage = null) }
+            _state.update {
+                it.copy(
+                    busy = true,
+                    errorMessage = null,
+                    statusMessage = null,
+                    verification = SeatVerificationUi.IN_PROGRESS,
+                    step = if (kind == CatalogSeatKind.LOCAL_DEVICE) it.step else WizardStep.W2_PICK,
+                )
+            }
             val seat = CatalogSeat(
                 kind = kind,
                 treeUri = treeUri,
                 displayLabel = label,
             )
             val result = catalogFacade.configureCatalogSeat(seat)
-            _state.update {
-                if (result.isSuccess) {
+            if (result.isSuccess) {
+                draftStore.clear()
+                _state.update {
                     it.copy(
                         busy = false,
                         completedSeat = result.getOrNull(),
                         step = WizardStep.DONE,
-                    )
-                } else {
-                    it.copy(
-                        busy = false,
-                        errorMessage = result.exceptionOrNull()?.message
-                            ?: "Configurazione sede non riuscita",
+                        seatConfigured = true,
+                        seatLabel = label,
+                        verification = SeatVerificationUi.VERIFIED,
+                        errorMessage = null,
+                        statusMessage = null,
                     )
                 }
+            } else {
+                val raw = result.exceptionOrNull()?.message.orEmpty()
+                val unreachable = isUnreachableSeatError(raw)
+                _state.update {
+                    it.copy(
+                        busy = false,
+                        verification = if (unreachable) {
+                            SeatVerificationUi.UNREACHABLE
+                        } else {
+                            SeatVerificationUi.FAILED
+                        },
+                        errorMessage = friendlySeatError(raw, unreachable),
+                        // Resta su S6 (o W1); non azzera path/script/dichiarazioni.
+                        step = if (kind == CatalogSeatKind.LOCAL_DEVICE) {
+                            WizardStep.W1_CONFIRM
+                        } else {
+                            WizardStep.W2_PICK
+                        },
+                    )
+                }
+                persistDraft()
             }
+        }
+    }
+
+    private fun isUnreachableSeatError(message: String): Boolean {
+        val m = message.lowercase()
+        return m.contains("fascicolo") ||
+            m.contains("scrittura") ||
+            m.contains("non disponibile") ||
+            m.contains("permission") ||
+            m.contains("eacces") ||
+            m.contains("enoent") ||
+            m.contains("not found")
+    }
+
+    private fun friendlySeatError(raw: String, unreachable: Boolean): String {
+        return if (unreachable) {
+            "Posizione del Catalogo non raggiungibile o non scrivibile. Controlla CIFS, Wi‑Fi e che il PC non sia in sospensione, poi riprova."
+        } else {
+            raw.ifBlank { "Verifica della Posizione del Catalogo non riuscita. Riprova o torna a CIFS." }
         }
     }
 

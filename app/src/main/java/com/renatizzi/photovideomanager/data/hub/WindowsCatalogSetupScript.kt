@@ -10,8 +10,16 @@ object WindowsCatalogSetupScript {
     const val DEFAULT_USER = "MediaManager"
     const val DEFAULT_SHARE = "MediaManagerCatalog"
     const val DEFAULT_FOLDER = "C:\\MediaManager\\Catalogo"
-    const val PS1_FILE_NAME = "MediaManager_Setup_Catalogo.ps1"
-    const val CMD_FILE_NAME = "MediaManager_Setup_Catalogo.cmd"
+    /** File da avviare (doppio clic). Nome chiaro anche senza estensione su Windows. */
+    const val CMD_FILE_NAME = "AVVIA_Configurazione_Catalogo.cmd"
+    /** Supporto interno (non aprire). Prefisso _ + nome diverso dal .cmd senza estensione. */
+    const val PS1_FILE_NAME = "_non_aprire_supporto_setup.ps1"
+    /** Prefissi Download da ripulire (attuali + vecchio nome unico). */
+    val DOWNLOAD_SCRUB_PREFIXES: List<String> = listOf(
+        "AVVIA_Configurazione_Catalogo",
+        "_non_aprire_supporto_setup",
+        "MediaManager_Setup_Catalogo",
+    )
     const val RESULT_FILE_NAME = "MediaManager_setup_result.json"
     const val LOG_FILE_NAME = "MediaManager_setup.log"
 
@@ -43,11 +51,14 @@ object WindowsCatalogSetupScript {
         }
     }
 
-    fun validateFolderPath(path: String): String? {
+    fun validateFolderPath(path: String, requireDriveC: Boolean = false): String? {
         val trimmed = path.trim()
         if (trimmed.isEmpty()) return "Indica il percorso della cartella sul PC"
         if (!pathRegex.matches(trimmed)) {
             return "Percorso non valido. Esempio: C:\\MediaManager\\Catalogo"
+        }
+        if (requireDriveC && !trimmed.uppercase().startsWith("C:\\")) {
+            return "In questa fase la cartella deve essere sul disco C: (esempio: C:\\MediaManager\\Catalogo)"
         }
         return null
     }
@@ -280,12 +291,21 @@ try {
       Record 'share' ${d}true 'creata'
       Write-Step "Condivisione creata."
     } else {
-      if (${d}shareObj.Path -ne ${d}FolderPath) {
-        Fail-Step 30 ("La condivisione '${d}ShareName' punta gia a '${d}(${d}shareObj.Path)'. Rimuovila o scegli un altro nome.")
+      # Modifica percorso: stessa condivisione gia usata da un Catalogo precedente.
+      # Non fallire: rimuovi e ricrea sul nuovo FolderPath (i file vecchi restano al loro posto).
+      ${d}existingPath = ([string]${d}shareObj.Path).TrimEnd([char]92)
+      ${d}wantedPath = ([string]${d}FolderPath).TrimEnd([char]92)
+      if (${d}existingPath -ieq ${d}wantedPath) {
+        Grant-SmbShareAccess -Name ${d}ShareName -AccountName ${d}UserName -AccessRight Full -Force | Out-Null
+        Record 'share' ${d}true 'aggiornata'
+        Write-Step "Condivisione gia presente: permessi aggiornati."
+      } else {
+        Write-Step ("Condivisione gia su '${d}existingPath': la ripunto a '${d}FolderPath'.")
+        Remove-SmbShare -Name ${d}ShareName -Force
+        New-SmbShare -Name ${d}ShareName -Path ${d}FolderPath -FullAccess ${d}UserName -FolderEnumerationMode AccessBased | Out-Null
+        Record 'share' ${d}true 'ripruntata'
+        Write-Step "Condivisione ripuntata al nuovo percorso."
       }
-      Grant-SmbShareAccess -Name ${d}ShareName -AccountName ${d}UserName -AccessRight Full -Force | Out-Null
-      Record 'share' ${d}true 'aggiornata'
-      Write-Step "Condivisione gia presente: permessi aggiornati."
     }
     Get-SmbShareAccess -Name ${d}ShareName | Where-Object { ${d}_.AccountName -match 'Everyone|Tutti' } | ForEach-Object {
       Revoke-SmbShareAccess -Name ${d}ShareName -AccountName ${d}_.AccountName -Force -ErrorAction SilentlyContinue
@@ -421,7 +441,7 @@ try {
     ${d}self = ${d}MyInvocation.MyCommand.Path
     if (${d}self -and (Test-Path -LiteralPath ${d}self)) {
       Remove-Item -LiteralPath ${d}self -Force -ErrorAction SilentlyContinue
-      Write-Step "File .ps1 eliminato dal PC (conteneva la password)."
+      Write-Step "File di supporto eliminato dal PC (conteneva la password)."
     }
   } catch {}
 
