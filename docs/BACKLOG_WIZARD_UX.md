@@ -26,11 +26,12 @@
 2. **Contratto CIFS** — livello attuale: scheda + Copia + Apri app; **niente auto-fill form**. Spike auto-fill solo se richiesto esplicitamente.  
 3. **Correzione slide 0** — non unire path `C:\` alla scelta dispositivo per tutti i rami; path solo per PC.
 
-### P1 — Decisioni prodotto (richiedono OK esplicito)
-4. **Password fissa `mediamanager`** — richiede modifica script + app (fuori «solo UI»).  
+### P1 — Decisioni prodotto
+4. **Password usabilità (scelta preferita):** non trascrivere dalla finestra PC; **Copia dall’app** allo step CIFS (niente tocco script). Alternativa: PW semplificata in script — solo con OK esplicito.  
 5. **Rinomina file** `CONFIGURA` / `sup` — OK di principio; aggiornare exporter + testi.  
-6. **Messaggio attesa dentro lo script** — tranche script, non solo stringhe Wizard.  
-7. **Istruzione avvio:** doppio clic (auto-elevate) vs «Esegui come Amministratore» da tasto destro — allineare al `.cmd` attuale.
+6. **Messaggio attesa:** obbligatorio in checklist app; in-script = opzionale/backlog script.  
+7. **Istruzione avvio:** doppio clic + UAC (auto-elevate) — concordato 19/10.  
+8. **Slide 0 condizionale:** campi volume/path adattati al dispositivo (chiarito 19/10); Cloud/NAS: definire se stub etichettato o come oggi.
 
 ### P2 — Fuori Wizard PC immediato
 8. Pagina **Configura** «stile Utility» (slide 2 PPT).  

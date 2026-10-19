@@ -51,16 +51,16 @@ Il PPT introduce due novità di metodo che **non contraddicono** le Note, ma le 
 
 ## 3. Discrasie e rischi (senso critico)
 
-### A — Slide 0: dispositivo + lettera disco + path insieme
-- **Nota/Claude:** una decisione per schermata; path C: solo ramo PC.  
-- **PPT:** combo dispositivo + `C:\…` sulla stessa pagina per tutti.  
-- **Problema:** per telefono/Drive/NAS la lettera `C:` non ha senso; si confonde l’utente e si rompe `requireDriveC`.  
-- **Proposta sostenibile:** slide 0 = solo scelta dispositivo (come S0). Path/default solo se dispositivo = PC (e meglio in Modifica dettagli / dopo la scelta).
+### A — Slide 0: dispositivo + path (chiarimento Renato 19/10)
+- **Chiarimento:** i campi sotto (lettera/percorso) si **adattano** al dispositivo scelto (es. mobile → Memoria principale / Secondaria microSD; PC → `C:\…`).  
+- **Revisione posizione:** non è più una discrasia di principio se l’UI è davvero condizionale.  
+- **Rischio residuo:** restano due decisioni sulla stessa pagina (dove + quale volume/path). Accettabile se il secondo blocco compare solo dopo la scelta dispositivo e con etichette adattate.  
+- **In implementazione:** validazione diversa per ramo (PC = solo C: in questa fase; mobile = volumi disponibili; stub per Cloud/NAS).
 
-### B — Cloud/NAS selezionabili senza marcatura «non completo»
-- **Nota:** non presentare C/D come pronti.  
-- **PPT slide 4:** li elenca come le altre opzioni.  
-- **Proposta:** mantenere stub / «come oggi» finché non c’è percorso verificato.
+### B — Cloud/NAS e «stub» (chiarimento linguaggio)
+- **«Stub»** = voce visibile ma percorso **non completo/verificato**: o disabilitata, o con etichetta tipo «Non ancora disponibile», o apre un messaggio breve invece del Wizard end-to-end.  
+- **Nota:** non far credere che Cloud/NAS funzionino come il PC.  
+- **Chiedere a Renato:** in slide 0 le voci Cloud/NAS devono (1) apparire selezionabili come oggi, (2) mostrare «in arrivo», o (3) essere nascoste?
 
 ### C — Checklist = dichiarazione, non prova
 - Spuntare «ho copiato i file» **non** prova che i file siano sul Desktop (stesso limite epistemico delle Note).  
