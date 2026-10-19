@@ -26,6 +26,17 @@ enum class SetupMode {
     MODIFY,
 }
 
+/** Campi scheda CIFS (etichette form provider) — copia singola. */
+enum class CifsCopyField {
+    CONNECTION_NAME,
+    HOST,
+    PORT,
+    FOLDER,
+    USERNAME,
+    PASSWORD,
+    STORAGE,
+}
+
 /** Esito prova lettura/scrittura + fascicolo (S6). */
 enum class SeatVerificationUi {
     NONE,
@@ -63,8 +74,8 @@ data class CatalogSeatWizardUiState(
 )
 
 /**
- * Passi Wizard. S0 = avvio; INTRO = S1 scelta dispositivo; poi rami W1–W4 fino a DONE (S7).
- * T1: scheletro S0 + ripresa; percorso PC completo nelle tranche successive.
+ * Passi Wizard — filiera PC allineata a template v2 (E0→S0→B1…→F).
+ * Alias legacy (`W2_ROUTINE_CONFIRM`, `W2_SUMMARY`) restano per bozze vecchie e si rimappano.
  */
 enum class WizardStep {
     S0_START,
@@ -73,10 +84,22 @@ enum class WizardStep {
     W2_CHOICE,
     W2_ROUTINE_PARAMS,
     W2_ROUTINE_READY,
+    /** B3a — trova AVVIA_… sul Desktop. */
+    W2_SCRIPT_FIND,
+    /** B3b — doppio clic + UAC. */
+    W2_SCRIPT_LAUNCH,
+    /** B3c — messaggio Tutto pronto. */
+    W2_SCRIPT_RESULT,
+    /** @deprecated bozze pre-0.16.35 → rimappa a W2_SCRIPT_FIND */
     W2_ROUTINE_CONFIRM,
-    /** S4 — riepilogo sede PC senza password (prima di CIFS). */
+    /** B4 — hai CIFS? (senza password). Alias legacy: W2_SUMMARY. */
+    W2_CIFS_BRIDGE,
+    /** @deprecated bozze pre-0.16.35 → rimappa a W2_CIFS_BRIDGE */
     W2_SUMMARY,
     W2_PREPARE,
+    /** B5a — manuale vs scansione. */
+    W2_CIFS_METHOD,
+    /** B5b — scheda campi CIFS + password. */
     W2_CIFS,
     W2_HELP,
     W2_PICK,
@@ -171,7 +194,8 @@ class CatalogSeatWizardViewModel(
 
     fun resumeDraft() {
         val draft = draftStore.load() ?: return
-        val step = runCatching { WizardStep.valueOf(draft.stepName) }.getOrNull() ?: return
+        val rawStep = runCatching { WizardStep.valueOf(draft.stepName) }.getOrNull() ?: return
+        val step = normalizeLegacyStep(rawStep)
         val kind = runCatching { CatalogSeatKind.valueOf(draft.selectedKindName) }
             .getOrDefault(CatalogSeatKind.PC_NOTEBOOK)
         val mode = if (draft.setupMode == WizardDraftStore.MODE_MODIFY) {
@@ -179,7 +203,12 @@ class CatalogSeatWizardViewModel(
         } else {
             SetupMode.CREATE
         }
-        if (step == WizardStep.W2_CIFS || step == WizardStep.W2_PICK || step == WizardStep.W4_GUIDE) {
+        if (step == WizardStep.W2_CIFS ||
+            step == WizardStep.W2_CIFS_BRIDGE ||
+            step == WizardStep.W2_CIFS_METHOD ||
+            step == WizardStep.W2_PICK ||
+            step == WizardStep.W4_GUIDE
+        ) {
             refreshCifsInstalled()
         }
         _state.update {
@@ -243,11 +272,23 @@ class CatalogSeatWizardViewModel(
     }
 
     fun goStep(step: WizardStep) {
-        if (step == WizardStep.W2_CIFS || step == WizardStep.W2_PICK || step == WizardStep.W4_GUIDE) {
+        val target = normalizeLegacyStep(step)
+        if (target == WizardStep.W2_CIFS ||
+            target == WizardStep.W2_CIFS_BRIDGE ||
+            target == WizardStep.W2_CIFS_METHOD ||
+            target == WizardStep.W2_PICK ||
+            target == WizardStep.W4_GUIDE
+        ) {
             refreshCifsInstalled()
         }
-        _state.update { it.copy(step = step, errorMessage = null, statusMessage = null) }
+        _state.update { it.copy(step = target, errorMessage = null, statusMessage = null) }
         persistDraft()
+    }
+
+    private fun normalizeLegacyStep(step: WizardStep): WizardStep = when (step) {
+        WizardStep.W2_ROUTINE_CONFIRM -> WizardStep.W2_SCRIPT_FIND
+        WizardStep.W2_SUMMARY -> WizardStep.W2_CIFS_BRIDGE
+        else -> step
     }
 
     private fun persistDraft() {
@@ -274,47 +315,43 @@ class CatalogSeatWizardViewModel(
         )
     }
 
-    private fun humanStepLabel(step: WizardStep): String = when (step) {
-        WizardStep.S0_START -> "Avvio"
-        WizardStep.INTRO -> "Scelta del dispositivo"
-        WizardStep.W1_CONFIRM -> "Posizione su questo apparecchio"
-        WizardStep.W2_CHOICE,
-        WizardStep.W2_ROUTINE_PARAMS,
-        WizardStep.W2_ROUTINE_READY,
-        WizardStep.W2_ROUTINE_CONFIRM,
-        WizardStep.W2_PREPARE,
-        -> "Preparazione sul PC"
-        WizardStep.W2_SUMMARY -> "Riepilogo (senza password)"
-        WizardStep.W2_CIFS,
-        WizardStep.W2_HELP,
-        WizardStep.W2_PASSWORD_HELP,
-        -> "Collegamento CIFS"
-        WizardStep.W2_PICK -> "Verifica Posizione del Catalogo"
-        WizardStep.W3_GUIDE -> "Google Drive"
-        WizardStep.W4_GUIDE -> "NAS / rete"
-        WizardStep.DONE -> "Conferma"
-    }
+    private fun humanStepLabel(step: WizardStep): String =
+        WizardStepChrome.subtitle(normalizeLegacyStep(step), CatalogSeatKind.PC_NOTEBOOK).text
 
     /** Solo password, per copia rapida allo step CIFS (usabilità senza tocco script). */
     fun passwordClipboardText(): String = _state.value.temporaryPassword
+
+    fun fieldClipboardText(field: CifsCopyField): String {
+        val s = _state.value
+        return when (field) {
+            CifsCopyField.CONNECTION_NAME,
+            CifsCopyField.FOLDER,
+            -> s.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
+            CifsCopyField.HOST -> "" // IP solo dal PC; non inventare
+            CifsCopyField.PORT -> "445"
+            CifsCopyField.USERNAME -> s.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER }
+            CifsCopyField.PASSWORD -> s.temporaryPassword
+            CifsCopyField.STORAGE -> "SMB2,3"
+        }
+    }
 
     fun refreshCifsInstalled() {
         val installed = NetworkDriveAssistant.isHelperInstalled(appContext)
         _state.update { it.copy(cifsInstalled = installed) }
     }
 
-    /** After PC script success: scrub password file and open S4 (riepilogo senza password). */
+    /** B3c: Tutto pronto → scrub Download → B4 (ponte CIFS, senza password). */
     fun confirmScriptRanOnPc() {
         viewModelScope.launch(Dispatchers.IO) {
             val n = runCatching { exporter.scrubDownloadsScripts() }.getOrDefault(0)
             _state.update {
                 it.copy(
-                    step = WizardStep.W2_SUMMARY,
+                    step = WizardStep.W2_CIFS_BRIDGE,
                     scriptRanDeclared = true,
                     statusMessage = if (n > 0) {
                         "File di supporto rimosso da Download sul telefono (conteneva la password)."
                     } else {
-                        "Se in Download resta ancora _non_aprire_supporto_setup, eliminalo: contiene la password."
+                        null
                     },
                     errorMessage = null,
                 )
@@ -323,12 +360,12 @@ class CatalogSeatWizardViewModel(
         }
     }
 
-    /** Dichiarazione utente: file copiati sul Desktop (S3b). */
+    /** B2: entrambi i file sul Desktop → B3a. */
     fun markUsbCopiedAndContinue() {
         _state.update {
             it.copy(
                 usbCopiedDeclared = true,
-                step = WizardStep.W2_ROUTINE_CONFIRM,
+                step = WizardStep.W2_SCRIPT_FIND,
                 errorMessage = null,
                 statusMessage = null,
             )
@@ -336,8 +373,16 @@ class CatalogSeatWizardViewModel(
         persistDraft()
     }
 
-    /** Da S4 (riepilogo senza password) a S5 CIFS. */
+    /** B4 → B5a (scelta metodo CIFS). */
     fun continueFromSummaryToCifs() {
+        refreshCifsInstalled()
+        _state.update {
+            it.copy(step = WizardStep.W2_CIFS_METHOD, errorMessage = null, statusMessage = null)
+        }
+        persistDraft()
+    }
+
+    fun continueToCifsForm() {
         refreshCifsInstalled()
         _state.update {
             it.copy(step = WizardStep.W2_CIFS, errorMessage = null, statusMessage = null)
@@ -443,13 +488,17 @@ class CatalogSeatWizardViewModel(
 
     fun credentialsClipboardText(): String {
         val s = _state.value
+        val share = s.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
+        val user = s.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER }
         return buildString {
-            append("Host: IP-del-PC (o nome PC)\n")
-            append("Porta: 445\n")
-            append("Utente: ${s.userName}\n")
+            append("Nome / Connection name: $share\n")
+            append("Host: (IP del PC dalla finestra Tutto pronto)\n")
+            append("Port: 445\n")
+            append("Domain / Workgroup: (lascia vuoto)\n")
+            append("Folder / Shared folder: $share\n")
+            append("Username: $user\n")
             append("Password: ${s.temporaryPassword}\n")
-            append("Cartella/condivisione: ${s.shareName}\n")
-            append("Storage in CIFS: SMB2,3 (jCIFS NG)")
+            append("Storage / SMB: SMB2,3 (jCIFS NG)")
         }
     }
 

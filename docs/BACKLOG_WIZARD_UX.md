@@ -1,9 +1,10 @@
 # Backlog UX — Wizard Setup Catalogo (PC)
 
-**Aggiornato:** 19/10/2026 — avvio implementazione UIX (tranche 1).  
+**Aggiornato:** 19/10/2026 — UIX 0.16.35: filiera testuale template v2 (Passo N di 10) + scheda CIFS.  
 **Valutazione:** `docs/reference/valutazione-revisione-guida-pptx.md`  
 **PPT:** `docs/reference/revisione_guida.pptx`  
-**Lettura PPT:** target **a regime**, non descrizione dell’as-is 0.16.33. L’implementazione **ponte** as-is → regime a tranche, senza rompere la filiera funzionale PC già collaudata.
+**Template testi:** `docs/reference/template-videate-wizard-pc.md`  
+**Lettura:** PPT/template = target **a regime**. Numerazione unica Passo N di 10 (niente «1/4» / «di 7»).
 
 ---
 
