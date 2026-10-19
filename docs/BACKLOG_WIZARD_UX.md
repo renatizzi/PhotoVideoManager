@@ -1,10 +1,9 @@
 # Backlog UX — Wizard Setup Catalogo (PC)
 
-**Aggiornato:** 19/10/2026 — UIX 0.16.35: filiera testuale template v2 (Passo N di 10) + scheda CIFS.  
+**Aggiornato:** 19/10/2026 — UIX 0.16.36: filiera Setup Catalogo allineata al PPT (passi 0–5), menu a tendina, checklist gated, file CONFIGURA/sup.  
 **Valutazione:** `docs/reference/valutazione-revisione-guida-pptx.md`  
-**PPT:** `docs/reference/revisione_guida.pptx`  
-**Template testi:** `docs/reference/template-videate-wizard-pc.md`  
-**Lettura:** PPT/template = target **a regime**. Numerazione unica Passo N di 10 (niente «1/4» / «di 7»).
+**PPT (fonte testi):** `docs/reference/revisione_guida.pptx`  
+**Non usare come specifica:** `docs/reference/template-videate-wizard-pc.md`
 
 ---
 
@@ -22,23 +21,24 @@
 | «Esegui come Amministratore» da tasto destro | **Chiuso:** doppio clic + UAC |
 | Step UI separato «Prepara file» | **Chiuso:** export sull’OK del passo checklist pre-copia |
 | Password fissa `mediamanager` | **Non adottata** → Copia dall’app allo step CIFS |
+| Pulsanti Sì/No / «Passo N di 10» | **Chiuso in 0.16.36:** combo + checklist PPT 0–5 |
+| Nomi file lunghi | **Chiuso in 0.16.36:** `CONFIGURA` / `sup` |
 
 ---
 
 ## Aperto — da fare prima/durante lo sviluppo UIX
 
 ### P0 — Bloccanti di metodo
-1. **Help contestuale (nuovo)** — repository what/if (da catalogo Claude W-xxx + Nota §5.6), ingresso per passo, niente gestione errori lunga sulle pagine operative.  
-2. **Contratto CIFS** — scheda + **Copia** (host/porta/folder/user/**password**) + Apri app; **niente auto-fill form**. Spike auto-fill solo se richiesto esplicitamente.
+1. **Help contestuale (nuovo)** — repository what/if (da catalogo Claude W-xxx + Nota §5.6), ingresso per passo, niente gestione errori lunga sulle pagine operative. *Non in 0.16.36.*
 
 ### P1 — Da implementare (decisioni già prese)
-3. **Slide 0 condizionale** — etichette/campi adattati al dispositivo (PC → lettera+path; mobile → Memoria principale/Secondaria; Cloud/NAS → stub come oggi). *Parziale as-is: path resta su passo 2 PC.*  
-4. **Password usabilità** — ✅ tranche 1 (0.16.34): CIFS con **Copia password** anche sul ramo script.  
-5. **Prepara file sull’OK** — ✅ ponte: CTA «OK — prepara i file» su params (export invariato); checklist gated su copia USB e avvio script.  
-6. **Rinomina file** `CONFIGURA` / `sup` — aggiornare exporter + testi (*regime*; non in tranche 1*).  
+3. **Slide 0 condizionale** — ✅ 0.16.36: menu a tendina + campi PC/locale/stub Cloud-NAS.  
+4. **Password usabilità** — ✅ CIFS con **Copia password** + Mostra/Nascondi.  
+5. **Prepara file sull’OK** — ✅ export sull’OK del passo 2 (checklist USB).  
+6. **Rinomina file** `CONFIGURA` / `sup` — ✅ 0.16.36.  
 7. **Messaggio attesa** — ✅ in checklist app (voce «Tutto pronto»); in-script = opzionale.  
-8. **Istruzione avvio** — ✅ doppio clic + UAC (testi 0.16.34).  
-9. **Chrome titolo/sottotitolo** — ✅ tranche 1.
+8. **Istruzione avvio** — ✅ doppio clic + UAC.  
+9. **Chrome titolo/sottotitolo** — ✅ passi PPT 0–5 (non «Passo N di 10»).
 
 ### P2 — Fuori Wizard PC immediato
 9. Pagina **Configura** «stile Utility» (slide 2 PPT).  
@@ -59,7 +59,11 @@
 
 ---
 
-## Prossimo passo consigliato
+## Verificato in 0.16.36 (testo/struttura vs PPT)
 
-1. Congelare contratto CIFS (manuale + Copia, inclusa password).  
-2. Implementazione UI a tranche: chrome → slide 0 condizionale → checklist + OK/export → scheda CIFS con Copia → help contestuale.
+- Passo 0: tendina «Seleziona il dispositivo» + campi condizionati + OK  
+- Passi 1–4: checklist + OK gated  
+- Passo 5: scheda CIFS con Copia per campo (password inclusa)  
+- File: CONFIGURA / sup  
+
+Non verificato in questa tranche: help contestuale, Configura stile Utility, Cloud/NAS completi.

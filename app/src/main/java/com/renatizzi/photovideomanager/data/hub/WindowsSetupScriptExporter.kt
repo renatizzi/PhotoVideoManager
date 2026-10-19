@@ -110,8 +110,8 @@ class WindowsSetupScriptExporter(
             )
             putExtra(
                 Intent.EXTRA_TEXT,
-                "Sul Desktop del PC: doppio clic su AVVIA_Configurazione_Catalogo " +
-                    "(non sull'altro file) e conferma Amministratore. Poi torna all'app MediaManager.",
+                "Sul Desktop del PC: doppio clic su CONFIGURA " +
+                    "(non sul file sup) e conferma la finestra di Windows. Poi torna all'app MediaManager.",
             )
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }

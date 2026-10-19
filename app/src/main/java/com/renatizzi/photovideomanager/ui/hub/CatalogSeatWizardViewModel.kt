@@ -74,39 +74,42 @@ data class CatalogSeatWizardUiState(
 )
 
 /**
- * Passi Wizard — filiera PC allineata a template v2 (E0→S0→B1…→F).
- * Alias legacy (`W2_ROUTINE_CONFIRM`, `W2_SUMMARY`) restano per bozze vecchie e si rimappano.
+ * Passi Wizard — filiera PC allineata al PPT (passi 0–5).
+ * Enum legacy restano per bozze vecchie e si rimappano in [normalizeLegacyStep].
  */
 enum class WizardStep {
     S0_START,
+    /** Passo 0 — Dove tenere il Catalogo (menu a tendina). */
     INTRO,
     W1_CONFIRM,
-    W2_CHOICE,
-    W2_ROUTINE_PARAMS,
-    W2_ROUTINE_READY,
-    /** B3a — trova AVVIA_… sul Desktop. */
-    W2_SCRIPT_FIND,
-    /** B3b — doppio clic + UAC. */
-    W2_SCRIPT_LAUNCH,
-    /** B3c — messaggio Tutto pronto. */
-    W2_SCRIPT_RESULT,
-    /** @deprecated bozze pre-0.16.35 → rimappa a W2_SCRIPT_FIND */
-    W2_ROUTINE_CONFIRM,
-    /** B4 — hai CIFS? (senza password). Alias legacy: W2_SUMMARY. */
-    W2_CIFS_BRIDGE,
-    /** @deprecated bozze pre-0.16.35 → rimappa a W2_CIFS_BRIDGE */
-    W2_SUMMARY,
-    W2_PREPARE,
-    /** B5a — manuale vs scansione. */
-    W2_CIFS_METHOD,
-    /** B5b — scheda campi CIFS + password. */
+    /** Passo 1 — Verifica disponibilità. */
+    PC_AVAILABILITY,
+    /** Passo 2 — USB / collegamento; OK esporta CONFIGURA + sup. */
+    PC_USB_PREPARE,
+    /** Passo 3 — Copia manuale sul Desktop. */
+    PC_COPY_FILES,
+    /** Passo 4 — Avvio script (doppio clic + UAC + Tutto pronto). */
+    PC_RUN_SCRIPT,
+    /** Passo 5 — Scheda CIFS con Copia. */
     W2_CIFS,
-    W2_HELP,
     W2_PICK,
-    W2_PASSWORD_HELP,
     W3_GUIDE,
     W4_GUIDE,
     DONE,
+    // --- legacy (bozze pre-0.16.36) ---
+    @Deprecated("legacy") W2_CHOICE,
+    @Deprecated("legacy") W2_ROUTINE_PARAMS,
+    @Deprecated("legacy") W2_ROUTINE_READY,
+    @Deprecated("legacy") W2_SCRIPT_FIND,
+    @Deprecated("legacy") W2_SCRIPT_LAUNCH,
+    @Deprecated("legacy") W2_SCRIPT_RESULT,
+    @Deprecated("legacy") W2_ROUTINE_CONFIRM,
+    @Deprecated("legacy") W2_CIFS_BRIDGE,
+    @Deprecated("legacy") W2_SUMMARY,
+    @Deprecated("legacy") W2_PREPARE,
+    @Deprecated("legacy") W2_CIFS_METHOD,
+    @Deprecated("legacy") W2_HELP,
+    @Deprecated("legacy") W2_PASSWORD_HELP,
 }
 
 class CatalogSeatWizardViewModel(
@@ -204,8 +207,6 @@ class CatalogSeatWizardViewModel(
             SetupMode.CREATE
         }
         if (step == WizardStep.W2_CIFS ||
-            step == WizardStep.W2_CIFS_BRIDGE ||
-            step == WizardStep.W2_CIFS_METHOD ||
             step == WizardStep.W2_PICK ||
             step == WizardStep.W4_GUIDE
         ) {
@@ -258,24 +259,58 @@ class CatalogSeatWizardViewModel(
     }
 
     fun avantiFromIntro() {
-        val kind = _state.value.selectedKind
-        // Fase corrente: ramo PC va diretto a S2 (path su C:) + preparazione script.
+        val current = _state.value
+        val kind = current.selectedKind
+        if (kind == CatalogSeatKind.PC_NOTEBOOK) {
+            val pathErr = WindowsCatalogSetupScript.validateFolderPath(
+                current.folderPath,
+                requireDriveC = true,
+            )
+            if (pathErr != null) {
+                _state.update { it.copy(errorMessage = pathErr) }
+                return
+            }
+        }
         val step = when (kind) {
             CatalogSeatKind.LOCAL_DEVICE -> WizardStep.W1_CONFIRM
-            CatalogSeatKind.PC_NOTEBOOK -> WizardStep.W2_ROUTINE_PARAMS
+            CatalogSeatKind.PC_NOTEBOOK -> WizardStep.PC_AVAILABILITY
             CatalogSeatKind.CLOUD_DRIVE -> WizardStep.W3_GUIDE
             CatalogSeatKind.NETWORK_NAS -> WizardStep.W4_GUIDE
             CatalogSeatKind.NONE -> WizardStep.INTRO
         }
-        _state.update { it.copy(step = step, errorMessage = null) }
+        _state.update { it.copy(step = step, errorMessage = null, statusMessage = null) }
+        persistDraft()
+    }
+
+    /** Passo 1 → 2. */
+    fun confirmAvailabilityChecked() {
+        _state.update {
+            it.copy(step = WizardStep.PC_USB_PREPARE, errorMessage = null, statusMessage = null)
+        }
+        persistDraft()
+    }
+
+    /** Passo 2 OK → esporta CONFIGURA/sup in Download, poi passo 3. */
+    fun confirmUsbAndPrepareFiles() {
+        prepareWindowsScript()
+    }
+
+    /** Passo 3 → 4. */
+    fun confirmCopyChecked() {
+        _state.update {
+            it.copy(
+                usbCopiedDeclared = true,
+                step = WizardStep.PC_RUN_SCRIPT,
+                errorMessage = null,
+                statusMessage = null,
+            )
+        }
         persistDraft()
     }
 
     fun goStep(step: WizardStep) {
         val target = normalizeLegacyStep(step)
         if (target == WizardStep.W2_CIFS ||
-            target == WizardStep.W2_CIFS_BRIDGE ||
-            target == WizardStep.W2_CIFS_METHOD ||
             target == WizardStep.W2_PICK ||
             target == WizardStep.W4_GUIDE
         ) {
@@ -285,9 +320,23 @@ class CatalogSeatWizardViewModel(
         persistDraft()
     }
 
-    private fun normalizeLegacyStep(step: WizardStep): WizardStep = when (step) {
-        WizardStep.W2_ROUTINE_CONFIRM -> WizardStep.W2_SCRIPT_FIND
-        WizardStep.W2_SUMMARY -> WizardStep.W2_CIFS_BRIDGE
+    fun normalizeLegacyStep(step: WizardStep): WizardStep = when (step) {
+        WizardStep.W2_CHOICE,
+        WizardStep.W2_ROUTINE_PARAMS,
+        -> WizardStep.PC_AVAILABILITY
+        WizardStep.W2_ROUTINE_READY -> WizardStep.PC_COPY_FILES
+        WizardStep.W2_SCRIPT_FIND,
+        WizardStep.W2_SCRIPT_LAUNCH,
+        WizardStep.W2_SCRIPT_RESULT,
+        WizardStep.W2_ROUTINE_CONFIRM,
+        -> WizardStep.PC_RUN_SCRIPT
+        WizardStep.W2_CIFS_BRIDGE,
+        WizardStep.W2_SUMMARY,
+        WizardStep.W2_CIFS_METHOD,
+        WizardStep.W2_PREPARE,
+        WizardStep.W2_HELP,
+        WizardStep.W2_PASSWORD_HELP,
+        -> WizardStep.W2_CIFS
         else -> step
     }
 
@@ -340,13 +389,14 @@ class CatalogSeatWizardViewModel(
         _state.update { it.copy(cifsInstalled = installed) }
     }
 
-    /** B3c: Tutto pronto → scrub Download → B4 (ponte CIFS, senza password). */
+    /** Passo 4 OK: Tutto pronto → scrub Download → passo 5 CIFS. */
     fun confirmScriptRanOnPc() {
         viewModelScope.launch(Dispatchers.IO) {
             val n = runCatching { exporter.scrubDownloadsScripts() }.getOrDefault(0)
+            refreshCifsInstalled()
             _state.update {
                 it.copy(
-                    step = WizardStep.W2_CIFS_BRIDGE,
+                    step = WizardStep.W2_CIFS,
                     scriptRanDeclared = true,
                     statusMessage = if (n > 0) {
                         "File di supporto rimosso da Download sul telefono (conteneva la password)."
@@ -360,38 +410,10 @@ class CatalogSeatWizardViewModel(
         }
     }
 
-    /** B2: entrambi i file sul Desktop → B3a. */
-    fun markUsbCopiedAndContinue() {
-        _state.update {
-            it.copy(
-                usbCopiedDeclared = true,
-                step = WizardStep.W2_SCRIPT_FIND,
-                errorMessage = null,
-                statusMessage = null,
-            )
-        }
-        persistDraft()
-    }
-
-    /** B4 → B5a (scelta metodo CIFS). */
-    fun continueFromSummaryToCifs() {
-        refreshCifsInstalled()
-        _state.update {
-            it.copy(step = WizardStep.W2_CIFS_METHOD, errorMessage = null, statusMessage = null)
-        }
-        persistDraft()
-    }
+    /** @deprecated bozze: usa [confirmCopyChecked]. */
+    fun markUsbCopiedAndContinue() = confirmCopyChecked()
 
     fun continueToCifsForm() {
-        refreshCifsInstalled()
-        _state.update {
-            it.copy(step = WizardStep.W2_CIFS, errorMessage = null, statusMessage = null)
-        }
-        persistDraft()
-    }
-
-    /** Manual share path (no script): go to CIFS with whatever credentials known. */
-    fun continueToCifsFromManualPrepare() {
         refreshCifsInstalled()
         _state.update {
             it.copy(step = WizardStep.W2_CIFS, errorMessage = null, statusMessage = null)
@@ -446,14 +468,13 @@ class CatalogSeatWizardViewModel(
                 onSuccess = { export ->
                     lastExport = export
                     val status = buildString {
-                        if (export.downloadsSaved) append("Salvato in Download. ")
+                        if (export.downloadsSaved) {
+                            append("File CONFIGURA e sup salvati in Download. ")
+                        }
                         if (export.usbCopiedTo != null) {
-                            append("Copiato anche su USB («${export.usbCopiedTo}»). ")
+                            append("Copiati anche su USB («${export.usbCopiedTo}»). ")
                         } else {
-                            append(
-                                "Collega il cavo USB e sul telefono passa da Solo ricarica " +
-                                    "a Trasferimento file, poi copia i due file sul Desktop del PC. ",
-                            )
+                            append("Ora copiali sul Desktop del PC come da istruzioni. ")
                         }
                     }.trim()
                     _state.update {
@@ -464,7 +485,7 @@ class CatalogSeatWizardViewModel(
                             downloadsSaved = export.downloadsSaved,
                             usbCopiedTo = export.usbCopiedTo,
                             statusMessage = status,
-                            step = WizardStep.W2_ROUTINE_READY,
+                            step = WizardStep.PC_COPY_FILES,
                         )
                     }
                     persistDraft()
