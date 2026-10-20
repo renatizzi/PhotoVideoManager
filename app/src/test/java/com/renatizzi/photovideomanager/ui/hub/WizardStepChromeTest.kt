@@ -1,5 +1,6 @@
 package com.renatizzi.photovideomanager.ui.hub
 
+import com.renatizzi.photovideomanager.data.hub.WindowsCatalogSetupScript
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -8,41 +9,39 @@ import org.junit.Test
 
 class WizardStepChromeTest {
     @Test
-    fun pcPath_usesPassoNDi10_only() {
+    fun deviceSelection_usesDropdownNotButtonStack() {
+        assertTrue(WizardUiContract.DEVICE_SELECTION_USES_DROPDOWN)
+    }
+
+    @Test
+    fun step0_subtitleHasNoNumber() {
+        assertTrue(WizardUiContract.STEP0_SUBTITLE_HAS_NO_NUMBER)
+        val text = WizardStepChrome.subtitle(WizardStep.INTRO, CatalogSeatKind.PC_NOTEBOOK).text
+        assertEquals("Dove tenere il Catalogo", text)
+        assertFalse(text.first().isDigit())
+        assertFalse(text.startsWith("0"))
+    }
+
+    @Test
+    fun pcPipeline_subtitlesMatchVideateUtente() {
         val kind = CatalogSeatKind.PC_NOTEBOOK
-        assertEquals("Inizio", WizardStepChrome.subtitle(WizardStep.S0_START, kind).text)
-        assertTrue(
-            WizardStepChrome.subtitle(WizardStep.INTRO, kind).text
-                .startsWith("Passo 1 di 10"),
-        )
-        assertTrue(
-            WizardStepChrome.subtitle(WizardStep.W2_ROUTINE_PARAMS, kind).text
-                .startsWith("Passo 2 di 10"),
-        )
-        assertTrue(
-            WizardStepChrome.subtitle(WizardStep.W2_ROUTINE_READY, kind).text
-                .startsWith("Passo 3 di 10"),
-        )
-        assertTrue(
-            WizardStepChrome.subtitle(WizardStep.W2_SCRIPT_FIND, kind).text
-                .startsWith("Passo 4 di 10"),
-        )
-        assertTrue(
-            WizardStepChrome.subtitle(WizardStep.W2_CIFS, kind).text
-                .startsWith("Passo 8 di 10"),
-        )
-        assertTrue(
-            WizardStepChrome.subtitle(WizardStep.W2_PICK, kind).text
-                .startsWith("Passo 9 di 10"),
-        )
-        assertTrue(
-            WizardStepChrome.subtitle(WizardStep.DONE, kind).text
-                .startsWith("Passo 10 di 10"),
-        )
-        // Nessuna numerazione legacy «di 7» o «1/4»
+        val expected = WizardUiContract.PC_STEP_SUBTITLES
+        assertEquals(expected[0], WizardStepChrome.subtitle(WizardStep.INTRO, kind).text)
+        assertEquals(expected[1], WizardStepChrome.subtitle(WizardStep.PC_AVAILABILITY, kind).text)
+        assertEquals(expected[2], WizardStepChrome.subtitle(WizardStep.PC_USB_PREPARE, kind).text)
+        assertEquals(expected[3], WizardStepChrome.subtitle(WizardStep.PC_COPY_FILES, kind).text)
+        assertEquals(expected[4], WizardStepChrome.subtitle(WizardStep.PC_RUN_SCRIPT, kind).text)
+        assertEquals(expected[5], WizardStepChrome.subtitle(WizardStep.W2_CIFS, kind).text)
+
         val all = WizardStep.entries.map { WizardStepChrome.subtitle(it, kind).text }
+        assertFalse(all.any { it.contains("Passo ") && it.contains(" di 10") })
         assertFalse(all.any { it.contains("di 7") })
-        assertFalse(all.any { it.contains("1/4") })
+    }
+
+    @Test
+    fun setupFiles_areConfiguraAndSup() {
+        assertEquals("CONFIGURA.cmd", WindowsCatalogSetupScript.CMD_FILE_NAME)
+        assertEquals("sup.ps1", WindowsCatalogSetupScript.PS1_FILE_NAME)
     }
 
     @Test

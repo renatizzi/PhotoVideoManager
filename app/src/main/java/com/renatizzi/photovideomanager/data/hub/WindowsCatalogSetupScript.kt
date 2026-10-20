@@ -10,12 +10,14 @@ object WindowsCatalogSetupScript {
     const val DEFAULT_USER = "MediaManager"
     const val DEFAULT_SHARE = "MediaManagerCatalog"
     const val DEFAULT_FOLDER = "C:\\MediaManager\\Catalogo"
-    /** File da avviare (doppio clic). Nome chiaro anche senza estensione su Windows. */
-    const val CMD_FILE_NAME = "AVVIA_Configurazione_Catalogo.cmd"
-    /** Supporto interno (non aprire). Prefisso _ + nome diverso dal .cmd senza estensione. */
-    const val PS1_FILE_NAME = "_non_aprire_supporto_setup.ps1"
-    /** Prefissi Download da ripulire (attuali + vecchio nome unico). */
+    /** File da avviare (doppio clic). Nome PPT: CONFIGURA. */
+    const val CMD_FILE_NAME = "CONFIGURA.cmd"
+    /** Supporto interno (non aprire). Nome PPT: sup. */
+    const val PS1_FILE_NAME = "sup.ps1"
+    /** Prefissi Download da ripulire (attuali + nomi legacy). */
     val DOWNLOAD_SCRUB_PREFIXES: List<String> = listOf(
+        "CONFIGURA",
+        "sup",
         "AVVIA_Configurazione_Catalogo",
         "_non_aprire_supporto_setup",
         "MediaManager_Setup_Catalogo",

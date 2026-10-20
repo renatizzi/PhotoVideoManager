@@ -1,5 +1,6 @@
 package com.renatizzi.photovideomanager.data.hub
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -59,8 +60,8 @@ class WindowsCatalogSetupScriptTest {
         assertFalse(pkg.ps1Content.contains("password ="))
         assertTrue(pkg.cmdContent.contains(WindowsCatalogSetupScript.PS1_FILE_NAME))
         assertTrue(pkg.cmdContent.contains("powershell"))
-        assertTrue(pkg.cmdFileName.startsWith("AVVIA_"))
-        assertTrue(pkg.ps1FileName.startsWith("_non_aprire_"))
+        assertEquals("CONFIGURA.cmd", pkg.cmdFileName)
+        assertEquals("sup.ps1", pkg.ps1FileName)
         assertFalse(pkg.cmdFileName.substringBeforeLast('.') == pkg.ps1FileName.substringBeforeLast('.'))
     }
 
