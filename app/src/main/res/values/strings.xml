@@ -79,10 +79,10 @@
     <string name="hub_non_riesco">Non riesco</string>
     <string name="hub_pc_asleep_hint">Riattiva il PC (acceso, sbloccato, non in sospensione) e riprova.</string>
 
-    <!-- Passo 0 — Dove tenere il Catalogo (PPT slide 4) -->
+    <!-- Passo 0 — Dove tenere il Catalogo (senza numero) -->
     <string name="hub_s1_question">Dove tenere il Catalogo</string>
-    <string name="hub_s1_body">Qui puoi scegliere in quale dispositivo e cartella tieni il Catalogo Personale:</string>
-    <string name="hub_intro_body">Qui puoi scegliere in quale dispositivo e cartella tieni il Catalogo Personale:</string>
+    <string name="hub_s1_body">Inizia a scegliere in quale dispositivo e cartella vuoi tenere il Catalogo Personale:</string>
+    <string name="hub_intro_body">Inizia a scegliere in quale dispositivo e cartella vuoi tenere il Catalogo Personale:</string>
     <string name="hub_acquire_needs_setup_title">Serve prima il Setup del Catalogo</string>
     <string name="hub_acquire_needs_setup_body">Acquisisci aggiunge foto al Catalogo. Prima imposta la Posizione del Catalogo. Tocca Setup Catalogo personale.</string>
     <string name="hub_acquire_needs_setup_action">Vai al Setup Catalogo</string>
@@ -95,15 +95,16 @@
     <string name="hub_kind_drive_hint">Percorso base</string>
     <string name="hub_kind_nas">Su disco di rete o NAS</string>
     <string name="hub_kind_nas_hint">Percorso base</string>
-    <string name="hub_s0_pc_path_intro">Indica la lettera del dispositivo e la cartella</string>
-    <string name="hub_s0_pc_defaults_note">Valori di default che puoi modificare:</string>
-    <string name="hub_s0_drive_letter_label">Lettera del disco</string>
-    <string name="hub_s0_drive_letter_hint">In questa fase solo C:</string>
+    <string name="hub_s0_pc_guided_intro">Da questa pagina si attiva la procedura guidata per la creazione o modifica della cartella condivisa dove tenere il Catalogo. Per motivi di sicurezza ci sono delle operazioni che puoi fare solo tu.</string>
+    <string name="hub_s0_pc_procedure_label">Se hai scelto un PC o Notebook Windows, la procedura prevede:</string>
+    <string name="hub_s0_pc_procedure_steps">1 – Verifica della disponibilità di quanto necessario\n2 – Verifica preliminare, preparazione dei file e collegamento\n3 – Copia manuale dei file di configurazione\n4 – Generazione password e altri dati necessari per configurare la cartella condivisa\n5 – Accedere alla cartella del Catalogo mediante CIFS</string>
+    <string name="hub_s0_valori_modificabili">Valori modificabili</string>
     <string name="hub_s0_local_volume_intro">Scegli dove tenere il Catalogo su questo dispositivo</string>
     <string name="hub_s0_volume_label">Memoria</string>
     <string name="hub_s0_volume_primary">Memoria principale</string>
     <string name="hub_s0_volume_secondary">Secondaria (microSD)</string>
     <string name="hub_s0_stub_note">Percorso breve: dopo OK seguirai le istruzioni disponibili per questo tipo di dispositivo.</string>
+    <string name="hub_s0_stub_procedure_note">I passi della procedura per questo tipo di dispositivo saranno definiti in seguito. Dopo OK seguirai le istruzioni disponibili.</string>
     <string name="hub_s0_when_ready">Quando pronto clicca su OK</string>
     <string name="hub_avanti">OK</string>
     <string name="hub_indietro">Indietro</string>
@@ -138,8 +139,21 @@
     <string name="hub_pc4_item_uac">Ho confermato la finestra di Windows (Controllo account utente), se è comparsa</string>
     <string name="hub_pc4_item_wait">Ho atteso senza interrompere finché la routine ha mostrato «Tutto pronto»</string>
 
-    <!-- Passo 5 — CIFS (PPT slide 13) -->
-    <string name="hub_pc5_intro">L\'ultimo passo della procedura prevede la configurazione dell\'app CIFS Documents Provider (scaricabile gratuitamente su Google Play). Ecco i dati da inserire campo per campo (usa Copia su ogni dato, password inclusa):</string>
+    <!-- Passo 5 — CIFS -->
+    <string name="hub_pc5_intro">L\'ultimo passo della procedura prevede la configurazione dell\'app denominata CIFS Documents Provider (scaricabile gratuitamente su Google Play).\n\nEcco i dati da inserire: con il bottone «Copia» puoi incollarli uno alla volta sul form di CIFS:</string>
+    <string name="hub_pc5_checklist_title">Conferma le operazioni eseguite</string>
+    <string name="hub_pc5_item_open">Ho installato / aperto CIFS Documents Provider</string>
+    <string name="hub_pc5_item_id">Ho creato una nuova Connection e lasciato ID com\'è</string>
+    <string name="hub_pc5_item_name">Ho copiato e incollato Name</string>
+    <string name="hub_pc5_item_storage">Ho impostato Storage su SMB2,3 (jCIFS NG)</string>
+    <string name="hub_pc5_item_domain">Ho lasciato Domain vuoto</string>
+    <string name="hub_pc5_item_host">Ho copiato e incollato Host (IP del PC)</string>
+    <string name="hub_pc5_item_port">Ho impostato Port a 445</string>
+    <string name="hub_pc5_item_dfs">Ho lasciato Enable DFS deselezionato</string>
+    <string name="hub_pc5_item_user">Ho copiato e incollato User</string>
+    <string name="hub_pc5_item_password">Ho copiato e incollato Password</string>
+    <string name="hub_pc5_item_save">In CIFS ho toccato Save e sono tornato a MediaManager con Indietro</string>
+    <string name="hub_pc5_item_outcome">Esito: la connessione in CIFS è salvata e la configurazione è andata a buon fine</string>
 
     <!-- W1 locale -->
     <string name="hub_w1_question">Vuoi usare questo apparecchio come Posizione del Catalogo?</string>
@@ -150,19 +164,25 @@
     <string name="hub_s2_pc_path_hint">Deve iniziare con C:\\ — esempio: C:\\MediaManager\\Catalogo</string>
     <string name="hub_w2_folder_path_label">Percorso cartella sul PC (solo C:)</string>
 
-    <!-- Passo 5 — scheda CIFS -->
-    <string name="hub_b5b_card_title">Nuova connessione (CIFS Documents Provider)</string>
-    <string name="hub_b5b_label_name">Nome / Connection name</string>
+    <!-- Passo 5 — scheda CIFS (nomi originali form Connection) -->
+    <string name="hub_b5b_card_title">Connection (CIFS Documents Provider)</string>
+    <string name="hub_b5b_label_id">ID</string>
+    <string name="hub_b5b_id_value">(generato da CIFS)</string>
+    <string name="hub_b5b_id_hint">Non modificare</string>
+    <string name="hub_b5b_label_name">Name</string>
     <string name="hub_b5b_label_host">Host</string>
     <string name="hub_b5b_label_port">Port</string>
-    <string name="hub_b5b_label_domain">Domain / Workgroup</string>
-    <string name="hub_b5b_label_folder">Folder / Shared folder</string>
-    <string name="hub_b5b_label_user">Username</string>
+    <string name="hub_b5b_label_domain">Domain</string>
+    <string name="hub_b5b_label_user">User</string>
     <string name="hub_b5b_label_password">Password</string>
-    <string name="hub_b5b_label_storage">Storage / SMB</string>
+    <string name="hub_b5b_label_storage">Storage</string>
+    <string name="hub_b5b_label_dfs">Enable DFS (Distributed File System)</string>
     <string name="hub_b5b_domain_value">(lascia vuoto)</string>
+    <string name="hub_b5b_domain_hint">Lascia vuoto</string>
+    <string name="hub_b5b_dfs_value">Non attivo</string>
+    <string name="hub_b5b_dfs_hint">Lascia deselezionato</string>
     <string name="hub_b5b_host_placeholder">IP del PC</string>
-    <string name="hub_b5b_host_hint">Sul PC, nella finestra «Tutto pronto», usa l\'IP indicato; oppure Impostazioni Windows → rete.</string>
+    <string name="hub_b5b_host_hint">Sul PC, nella finestra «Tutto pronto», usa l\'IP indicato. Incollalo in Host (non usare la lente di scansione come percorso principale).</string>
     <string name="hub_b5b_storage_value">SMB2,3 (jCIFS NG)</string>
     <string name="hub_password_missing_hint">Password non disponibile in memoria (es. dopo ripresa bozza). Torna al passo di collegamento USB e conferma di nuovo con OK per rigenerare i file.</string>
     <string name="hub_w2_copy_credentials">Copia tutti i campi noti</string>

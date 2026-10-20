@@ -1,8 +1,8 @@
 # Backlog UX — Wizard Setup Catalogo (PC)
 
-**Aggiornato:** 19/10/2026 — UIX 0.16.36: filiera Setup Catalogo allineata al PPT (passi 0–5), menu a tendina, checklist gated, file CONFIGURA/sup.  
-**Valutazione:** `docs/reference/valutazione-revisione-guida-pptx.md`  
-**PPT (fonte testi):** `docs/reference/revisione_guida.pptx`  
+**Aggiornato:** 20/10/2026 — UIX 0.16.37: videate utente da `videate-utente-setup-catalogo-pc.md` (PPT V2 + Q1–Q7).  
+**Specifica UI:** `docs/reference/videate-utente-setup-catalogo-pc.md`  
+**PPT V2:** `docs/reference/revisione_guida_V2.pptx`  
 **Non usare come specifica:** `docs/reference/template-videate-wizard-pc.md`
 
 ---

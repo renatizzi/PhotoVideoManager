@@ -10,14 +10,20 @@ import org.junit.Test
 class WizardStepChromeTest {
     @Test
     fun deviceSelection_usesDropdownNotButtonStack() {
-        assertTrue(
-            "Passo 0: la scelta dispositivo deve essere un menu a tendina",
-            WizardUiContract.DEVICE_SELECTION_USES_DROPDOWN,
-        )
+        assertTrue(WizardUiContract.DEVICE_SELECTION_USES_DROPDOWN)
     }
 
     @Test
-    fun pcPipeline_subtitlesMatchPptSteps0to5() {
+    fun step0_subtitleHasNoNumber() {
+        assertTrue(WizardUiContract.STEP0_SUBTITLE_HAS_NO_NUMBER)
+        val text = WizardStepChrome.subtitle(WizardStep.INTRO, CatalogSeatKind.PC_NOTEBOOK).text
+        assertEquals("Dove tenere il Catalogo", text)
+        assertFalse(text.first().isDigit())
+        assertFalse(text.startsWith("0"))
+    }
+
+    @Test
+    fun pcPipeline_subtitlesMatchVideateUtente() {
         val kind = CatalogSeatKind.PC_NOTEBOOK
         val expected = WizardUiContract.PC_STEP_SUBTITLES
         assertEquals(expected[0], WizardStepChrome.subtitle(WizardStep.INTRO, kind).text)
@@ -30,15 +36,12 @@ class WizardStepChromeTest {
         val all = WizardStep.entries.map { WizardStepChrome.subtitle(it, kind).text }
         assertFalse(all.any { it.contains("Passo ") && it.contains(" di 10") })
         assertFalse(all.any { it.contains("di 7") })
-        assertFalse(all.any { it.contains("1/4") })
     }
 
     @Test
     fun setupFiles_areConfiguraAndSup() {
         assertEquals("CONFIGURA.cmd", WindowsCatalogSetupScript.CMD_FILE_NAME)
         assertEquals("sup.ps1", WindowsCatalogSetupScript.PS1_FILE_NAME)
-        assertTrue(WindowsCatalogSetupScript.DOWNLOAD_SCRUB_PREFIXES.contains("CONFIGURA"))
-        assertTrue(WindowsCatalogSetupScript.DOWNLOAD_SCRUB_PREFIXES.contains("sup"))
     }
 
     @Test

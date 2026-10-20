@@ -26,15 +26,14 @@ enum class SetupMode {
     MODIFY,
 }
 
-/** Campi scheda CIFS (etichette form provider) — copia singola. */
+/** Campi scheda CIFS — ordine form Connection (screenshot PPT V2). */
 enum class CifsCopyField {
-    CONNECTION_NAME,
+    NAME,
+    STORAGE,
     HOST,
     PORT,
-    FOLDER,
     USERNAME,
     PASSWORD,
-    STORAGE,
 }
 
 /** Esito prova lettura/scrittura + fascicolo (S6). */
@@ -146,7 +145,7 @@ class CatalogSeatWizardViewModel(
                 seatLabel = seat.displayLabel,
                 canResumeDraft = canResume && resumeStep != null,
                 resumeStepLabel = resumeStep?.let { s -> humanStepLabel(s) }.orEmpty(),
-                selectedKind = if (seat.isConfigured) seat.kind else CatalogSeatKind.PC_NOTEBOOK,
+                selectedKind = if (seat.isConfigured) seat.kind else CatalogSeatKind.LOCAL_DEVICE,
                 folderPath = draft?.folderPath ?: WindowsCatalogSetupScript.DEFAULT_FOLDER,
                 shareName = draft?.shareName ?: WindowsCatalogSetupScript.DEFAULT_SHARE,
                 userName = draft?.userName ?: WindowsCatalogSetupScript.DEFAULT_USER,
@@ -163,7 +162,7 @@ class CatalogSeatWizardViewModel(
             it.copy(
                 setupMode = SetupMode.CREATE,
                 step = WizardStep.INTRO,
-                selectedKind = CatalogSeatKind.PC_NOTEBOOK,
+                selectedKind = CatalogSeatKind.LOCAL_DEVICE,
                 completedSeat = null,
                 errorMessage = null,
                 statusMessage = null,
@@ -373,14 +372,12 @@ class CatalogSeatWizardViewModel(
     fun fieldClipboardText(field: CifsCopyField): String {
         val s = _state.value
         return when (field) {
-            CifsCopyField.CONNECTION_NAME,
-            CifsCopyField.FOLDER,
-            -> s.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
+            CifsCopyField.NAME -> s.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
+            CifsCopyField.STORAGE -> "SMB2,3 (jCIFS NG)"
             CifsCopyField.HOST -> "" // IP solo dal PC; non inventare
             CifsCopyField.PORT -> "445"
             CifsCopyField.USERNAME -> s.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER }
             CifsCopyField.PASSWORD -> s.temporaryPassword
-            CifsCopyField.STORAGE -> "SMB2,3"
         }
     }
 
@@ -512,14 +509,14 @@ class CatalogSeatWizardViewModel(
         val share = s.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
         val user = s.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER }
         return buildString {
-            append("Nome / Connection name: $share\n")
+            append("Name: $share\n")
+            append("Storage: SMB2,3 (jCIFS NG)\n")
+            append("Domain: (lascia vuoto)\n")
             append("Host: (IP del PC dalla finestra Tutto pronto)\n")
             append("Port: 445\n")
-            append("Domain / Workgroup: (lascia vuoto)\n")
-            append("Folder / Shared folder: $share\n")
-            append("Username: $user\n")
-            append("Password: ${s.temporaryPassword}\n")
-            append("Storage / SMB: SMB2,3 (jCIFS NG)")
+            append("Enable DFS: (lascia deselezionato)\n")
+            append("User: $user\n")
+            append("Password: ${s.temporaryPassword}")
         }
     }
 

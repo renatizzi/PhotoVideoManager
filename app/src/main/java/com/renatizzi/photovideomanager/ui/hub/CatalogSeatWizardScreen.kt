@@ -339,10 +339,9 @@ private fun S0StartStep(
 }
 
 /**
- * Passo 0 PPT: menu a tendina chiuso + campi condizionati al dispositivo + OK.
+ * Passo 0: menu a tendina chiuso + blocco variabile per dispositivo + OK.
  * Le voci NON sono pulsanti uno sotto l'altro.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun IntroStep(
     selected: CatalogSeatKind,
@@ -363,29 +362,23 @@ private fun IntroStep(
     when (selected) {
         CatalogSeatKind.PC_NOTEBOOK -> {
             Text(
-                stringResource(R.string.hub_s0_pc_path_intro),
+                stringResource(R.string.hub_s0_pc_guided_intro),
                 style = MaterialTheme.typography.bodyMedium,
             )
             Text(
-                stringResource(R.string.hub_s0_pc_defaults_note),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+                stringResource(R.string.hub_s0_pc_procedure_label),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
             )
-            OutlinedTextField(
-                value = "C",
-                onValueChange = {},
-                label = { Text(stringResource(R.string.hub_s0_drive_letter_label)) },
-                supportingText = { Text(stringResource(R.string.hub_s0_drive_letter_hint)) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = false,
-                readOnly = true,
+            Text(
+                stringResource(R.string.hub_s0_pc_procedure_steps),
+                style = MaterialTheme.typography.bodyMedium,
             )
             OutlinedTextField(
                 value = folderPath,
                 onValueChange = onFolderPathChange,
                 label = { Text(stringResource(R.string.hub_w2_folder_path_label)) },
-                supportingText = { Text(stringResource(R.string.hub_s2_pc_path_hint)) },
+                supportingText = { Text(stringResource(R.string.hub_s0_valori_modificabili)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 enabled = !busy,
@@ -401,12 +394,17 @@ private fun IntroStep(
                 onSelect = { localVolume = it },
                 enabled = !busy,
             )
+            Text(
+                stringResource(R.string.hub_s0_stub_procedure_note),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+            )
         }
         CatalogSeatKind.CLOUD_DRIVE,
         CatalogSeatKind.NETWORK_NAS,
         -> {
             Text(
-                stringResource(R.string.hub_s0_stub_note),
+                stringResource(R.string.hub_s0_stub_procedure_note),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
             )
@@ -664,6 +662,7 @@ private fun CifsCardStep(
         stringResource(R.string.hub_b5b_card_title),
         fontWeight = FontWeight.Medium,
     )
+    // Ordine = form CIFS «Connection» (screenshot PPT V2)
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -672,9 +671,26 @@ private fun CifsCardStep(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         CifsFieldRow(
+            label = stringResource(R.string.hub_b5b_label_id),
+            value = stringResource(R.string.hub_b5b_id_value),
+            onCopy = null,
+            hint = stringResource(R.string.hub_b5b_id_hint),
+        )
+        CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_name),
             value = share,
-            onCopy = { onCopyField(CifsCopyField.CONNECTION_NAME) },
+            onCopy = { onCopyField(CifsCopyField.NAME) },
+        )
+        CifsFieldRow(
+            label = stringResource(R.string.hub_b5b_label_storage),
+            value = stringResource(R.string.hub_b5b_storage_value),
+            onCopy = { onCopyField(CifsCopyField.STORAGE) },
+        )
+        CifsFieldRow(
+            label = stringResource(R.string.hub_b5b_label_domain),
+            value = stringResource(R.string.hub_b5b_domain_value),
+            onCopy = null,
+            hint = stringResource(R.string.hub_b5b_domain_hint),
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_host),
@@ -688,14 +704,10 @@ private fun CifsCardStep(
             onCopy = { onCopyField(CifsCopyField.PORT) },
         )
         CifsFieldRow(
-            label = stringResource(R.string.hub_b5b_label_domain),
-            value = stringResource(R.string.hub_b5b_domain_value),
+            label = stringResource(R.string.hub_b5b_label_dfs),
+            value = stringResource(R.string.hub_b5b_dfs_value),
             onCopy = null,
-        )
-        CifsFieldRow(
-            label = stringResource(R.string.hub_b5b_label_folder),
-            value = share,
-            onCopy = { onCopyField(CifsCopyField.FOLDER) },
+            hint = stringResource(R.string.hub_b5b_dfs_hint),
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_user),
@@ -743,11 +755,6 @@ private fun CifsCardStep(
                 color = MaterialTheme.colorScheme.error,
             )
         }
-        CifsFieldRow(
-            label = stringResource(R.string.hub_b5b_label_storage),
-            value = stringResource(R.string.hub_b5b_storage_value),
-            onCopy = { onCopyField(CifsCopyField.STORAGE) },
-        )
     }
 
     Button(onClick = onOpenCifs, modifier = Modifier.fillMaxWidth()) {
@@ -765,22 +772,32 @@ private fun CifsCardStep(
     TextButton(onClick = onRefresh) {
         Text(stringResource(R.string.hub_cifs_refresh))
     }
+
     Text(
-        stringResource(R.string.hub_s0_when_ready),
-        style = MaterialTheme.typography.bodyMedium,
+        stringResource(R.string.hub_pc5_checklist_title),
+        fontWeight = FontWeight.Medium,
     )
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedButton(onClick = onBack, modifier = Modifier.weight(1f)) {
-            Text(stringResource(R.string.hub_indietro))
-        }
-        Button(
-            onClick = onContinue,
-            enabled = state.cifsInstalled,
-            modifier = Modifier.weight(1f),
-        ) {
-            Text(stringResource(R.string.hub_checklist_ok))
-        }
-    }
+    val checklistLabels = listOf(
+        stringResource(R.string.hub_pc5_item_open),
+        stringResource(R.string.hub_pc5_item_id),
+        stringResource(R.string.hub_pc5_item_name),
+        stringResource(R.string.hub_pc5_item_storage),
+        stringResource(R.string.hub_pc5_item_domain),
+        stringResource(R.string.hub_pc5_item_host),
+        stringResource(R.string.hub_pc5_item_port),
+        stringResource(R.string.hub_pc5_item_dfs),
+        stringResource(R.string.hub_pc5_item_user),
+        stringResource(R.string.hub_pc5_item_password),
+        stringResource(R.string.hub_pc5_item_save),
+        stringResource(R.string.hub_pc5_item_outcome),
+    )
+    ChecklistOkBlock(
+        labels = checklistLabels,
+        onOk = onContinue,
+        onBack = onBack,
+        busy = state.busy,
+        okEnabledExtra = state.cifsInstalled && hasPassword,
+    )
 }
 
 @Composable

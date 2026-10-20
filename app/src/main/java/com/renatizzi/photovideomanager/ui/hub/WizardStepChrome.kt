@@ -3,15 +3,19 @@ package com.renatizzi.photovideomanager.ui.hub
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind
 
 /**
- * Chrome UIX — numerazione PPT ramo PC (passi 0–5).
- * Fonte: docs/reference/revisione_guida.pptx (non template-videate-wizard-pc.md).
+ * Chrome UIX — videate utente Setup Catalogo (PPT V2).
+ * Fonte: docs/reference/videate-utente-setup-catalogo-pc.md
  */
 object WizardStepChrome {
     data class Subtitle(val text: String)
 
-    @Suppress("UNUSED_PARAMETER")
+    @Suppress("UNUSED_PARAMETER", "DEPRECATION")
     fun subtitle(step: WizardStep, kind: CatalogSeatKind): Subtitle {
         val pc = WizardUiContract.PC_STEP_SUBTITLES
+        check(WizardUiContract.STEP0_SUBTITLE_HAS_NO_NUMBER)
+        check(!pc[0].first().isDigit()) {
+            "Passo 0: sottotitolo senza numero"
+        }
         return when (step) {
             WizardStep.S0_START -> Subtitle("Inizio")
             WizardStep.INTRO -> Subtitle(pc[0])
@@ -37,6 +41,7 @@ object WizardStepChrome {
             WizardStep.W2_HELP,
             WizardStep.W2_PASSWORD_HELP,
             -> Subtitle(pc[5])
+            // Continuazione operativa dopo CIFS (non è un passo numerato del PPT)
             WizardStep.W2_PICK -> Subtitle("Scegli la cartella del Catalogo")
             WizardStep.W3_GUIDE -> Subtitle("Google Drive")
             WizardStep.W4_GUIDE -> Subtitle("NAS / disco di rete")
