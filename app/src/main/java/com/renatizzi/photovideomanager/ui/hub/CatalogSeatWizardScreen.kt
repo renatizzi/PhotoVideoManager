@@ -18,6 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -189,7 +190,6 @@ fun CatalogSeatWizardScreen(
                     val pwd = onPasswordText()
                     if (pwd.isNotBlank()) copyToClipboard(context, pwd)
                 },
-                onCopyAll = { copyToClipboard(context, onCredentialsText()) },
                 onOpenCifs = {
                     onRefreshCifs()
                     if (NetworkDriveAssistant.isHelperInstalled(context)) {
@@ -533,12 +533,12 @@ private fun AvailabilityChecklistStep(
     busy: Boolean,
 ) {
     Text(stringResource(R.string.hub_pc1_intro))
-    val labels = listOf(
-        stringResource(R.string.hub_pc1_item_phone),
-        stringResource(R.string.hub_pc1_item_pc),
-        stringResource(R.string.hub_pc1_item_cable),
+    val items = listOf(
+        WizardChecklistItem(stringResource(R.string.hub_pc1_item_phone)),
+        WizardChecklistItem(stringResource(R.string.hub_pc1_item_pc)),
+        WizardChecklistItem(stringResource(R.string.hub_pc1_item_cable)),
     )
-    ChecklistOkBlock(labels = labels, onOk = onOk, onBack = onBack, busy = busy)
+    ChecklistOkBlock(items = items, onOk = onOk, onBack = onBack, busy = busy)
 }
 
 @Composable
@@ -548,17 +548,21 @@ private fun UsbPrepareChecklistStep(
     busy: Boolean,
 ) {
     Text(stringResource(R.string.hub_pc2_intro))
-    Text(
-        stringResource(R.string.hub_pc2_usb_how),
-        style = MaterialTheme.typography.bodySmall,
+    val items = listOf(
+        WizardChecklistItem(stringResource(R.string.hub_pc2_item_connect)),
+        WizardChecklistItem(stringResource(R.string.hub_pc2_item_unlocked)),
+        WizardChecklistItem(
+            label = stringResource(R.string.hub_pc2_item_transfer),
+            nestedBullets = listOf(
+                stringResource(R.string.hub_pc2_bullet_intro),
+                stringResource(R.string.hub_pc2_bullet_notif),
+                stringResource(R.string.hub_pc2_bullet_tap),
+                stringResource(R.string.hub_pc2_bullet_choose),
+                stringResource(R.string.hub_pc2_bullet_allow),
+            ),
+        ),
     )
-    val labels = listOf(
-        stringResource(R.string.hub_pc2_item_connect),
-        stringResource(R.string.hub_pc2_item_unlocked),
-        stringResource(R.string.hub_pc2_item_transfer),
-        stringResource(R.string.hub_pc2_item_allow),
-    )
-    ChecklistOkBlock(labels = labels, onOk = onOk, onBack = onBack, busy = busy)
+    ChecklistOkBlock(items = items, onOk = onOk, onBack = onBack, busy = busy)
 }
 
 @Composable
@@ -569,17 +573,36 @@ private fun CopyFilesChecklistStep(
     scriptPrepared: Boolean,
 ) {
     Text(stringResource(R.string.hub_pc3_intro))
-    Text(
-        stringResource(R.string.hub_pc3_howto),
-        style = MaterialTheme.typography.bodySmall,
-    )
-    val labels = listOf(
-        stringResource(R.string.hub_pc3_item_download),
-        stringResource(R.string.hub_pc3_item_copy),
-        stringResource(R.string.hub_pc3_item_verify),
+    val items = listOf(
+        WizardChecklistItem(
+            label = stringResource(R.string.hub_pc3_item_download),
+            nestedBullets = listOf(
+                stringResource(R.string.hub_pc3_b_explorer),
+                stringResource(R.string.hub_pc3_b_thispc),
+                stringResource(R.string.hub_pc3_b_phone),
+                stringResource(R.string.hub_pc3_b_dbl),
+                stringResource(R.string.hub_pc3_b_mem),
+            ),
+        ),
+        WizardChecklistItem(
+            label = stringResource(R.string.hub_pc3_item_copy),
+            nestedBullets = listOf(
+                stringResource(R.string.hub_pc3_b_search),
+                stringResource(R.string.hub_pc3_b_file1),
+                stringResource(R.string.hub_pc3_b_file2),
+                stringResource(R.string.hub_pc3_b_ctrlc),
+                stringResource(R.string.hub_pc3_b_ctrlv),
+            ),
+        ),
+        WizardChecklistItem(
+            label = stringResource(R.string.hub_pc3_item_verify),
+            nestedBullets = listOf(
+                stringResource(R.string.hub_pc3_b_verify),
+            ),
+        ),
     )
     ChecklistOkBlock(
-        labels = labels,
+        items = items,
         onOk = onOk,
         onBack = onBack,
         busy = busy,
@@ -594,29 +617,26 @@ private fun ScriptChecklistStep(
     busy: Boolean,
 ) {
     Text(stringResource(R.string.hub_pc4_intro))
-    Text(
-        stringResource(R.string.hub_pc4_howto),
-        style = MaterialTheme.typography.bodySmall,
+    val items = listOf(
+        WizardChecklistItem(stringResource(R.string.hub_pc4_item_1)),
+        WizardChecklistItem(stringResource(R.string.hub_pc4_item_2)),
+        WizardChecklistItem(stringResource(R.string.hub_pc4_item_3)),
     )
-    val labels = listOf(
-        stringResource(R.string.hub_pc4_item_doubleclick),
-        stringResource(R.string.hub_pc4_item_uac),
-        stringResource(R.string.hub_pc4_item_wait),
-    )
-    ChecklistOkBlock(labels = labels, onOk = onOk, onBack = onBack, busy = busy)
+    ChecklistOkBlock(items = items, onOk = onOk, onBack = onBack, busy = busy)
 }
 
 @Composable
 private fun ChecklistOkBlock(
-    labels: List<String>,
+    items: List<WizardChecklistItem>,
     onOk: () -> Unit,
     onBack: () -> Unit,
     busy: Boolean,
     okEnabledExtra: Boolean = true,
 ) {
-    var flags by remember(labels.size) { mutableStateOf(BooleanArray(labels.size) { false }) }
+    var flags by remember(items.size) { mutableStateOf(BooleanArray(items.size) { false }) }
     WizardChecklistBlock(
-        items = labels.mapIndexed { i, label -> label to flags[i] },
+        items = items,
+        checked = flags,
         onToggle = { index ->
             flags = flags.copyOf().also { it[index] = !it[index] }
         },
@@ -645,17 +665,20 @@ private fun CifsCardStep(
     state: CatalogSeatWizardUiState,
     onCopyField: (CifsCopyField) -> Unit,
     onCopyPassword: () -> Unit,
-    onCopyAll: () -> Unit,
     onOpenCifs: () -> Unit,
     onRefresh: () -> Unit,
     onContinue: () -> Unit,
     onBack: () -> Unit,
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
+    // Checkbox sulle righe con Copia/Conferma: Name, Storage, Host, Port, User, Password
+    var rowFlags by remember { mutableStateOf(BooleanArray(6) { false }) }
     val share = state.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
     val user = state.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER }
     val password = state.temporaryPassword
     val hasPassword = password.isNotBlank()
+    // IP da routine → app: non ancora disponibile (recupero in seguito)
+    val hostCopyable = false
 
     Text(stringResource(R.string.hub_pc5_intro))
     Text(
@@ -673,52 +696,97 @@ private fun CifsCardStep(
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_id),
             value = stringResource(R.string.hub_b5b_id_value),
-            onCopy = null,
+            actionLabel = null,
+            onAction = null,
+            checked = null,
+            onCheckedChange = null,
             hint = stringResource(R.string.hub_b5b_id_hint),
+            enabled = !state.busy,
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_name),
             value = share,
-            onCopy = { onCopyField(CifsCopyField.NAME) },
+            actionLabel = stringResource(R.string.hub_copy),
+            onAction = { onCopyField(CifsCopyField.NAME) },
+            checked = rowFlags[0],
+            onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[0] = !it[0] } },
+            enabled = !state.busy,
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_storage),
             value = stringResource(R.string.hub_b5b_storage_value),
-            onCopy = { onCopyField(CifsCopyField.STORAGE) },
+            actionLabel = stringResource(R.string.hub_pc5_confirm),
+            onAction = { rowFlags = rowFlags.copyOf().also { it[1] = true } },
+            checked = rowFlags[1],
+            onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[1] = !it[1] } },
+            enabled = !state.busy,
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_domain),
             value = stringResource(R.string.hub_b5b_domain_value),
-            onCopy = null,
+            actionLabel = null,
+            onAction = null,
+            checked = null,
+            onCheckedChange = null,
             hint = stringResource(R.string.hub_b5b_domain_hint),
+            enabled = !state.busy,
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_host),
             value = stringResource(R.string.hub_b5b_host_placeholder),
-            onCopy = null,
+            actionLabel = stringResource(R.string.hub_copy),
+            onAction = if (hostCopyable) {
+                { onCopyField(CifsCopyField.HOST) }
+            } else {
+                null
+            },
+            checked = rowFlags[2],
+            onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[2] = !it[2] } },
             hint = stringResource(R.string.hub_b5b_host_hint),
+            enabled = !state.busy,
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_port),
             value = "445",
-            onCopy = { onCopyField(CifsCopyField.PORT) },
+            actionLabel = stringResource(R.string.hub_copy),
+            onAction = { onCopyField(CifsCopyField.PORT) },
+            checked = rowFlags[3],
+            onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[3] = !it[3] } },
+            enabled = !state.busy,
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_dfs),
             value = stringResource(R.string.hub_b5b_dfs_value),
-            onCopy = null,
+            actionLabel = null,
+            onAction = null,
+            checked = null,
+            onCheckedChange = null,
             hint = stringResource(R.string.hub_b5b_dfs_hint),
+            enabled = !state.busy,
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_user),
             value = user,
-            onCopy = { onCopyField(CifsCopyField.USERNAME) },
+            actionLabel = stringResource(R.string.hub_copy),
+            onAction = { onCopyField(CifsCopyField.USERNAME) },
+            checked = rowFlags[4],
+            onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[4] = !it[4] } },
+            enabled = !state.busy,
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
+            Checkbox(
+                checked = rowFlags[5],
+                onCheckedChange = {
+                    if (!state.busy) {
+                        rowFlags = rowFlags.copyOf().also { it[5] = !it[5] }
+                    }
+                },
+                enabled = !state.busy,
+            )
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     stringResource(R.string.hub_b5b_label_password),
@@ -736,14 +804,17 @@ private fun CifsCardStep(
                 )
             }
             if (hasPassword) {
-                TextButton(onClick = { passwordVisible = !passwordVisible }) {
+                TextButton(
+                    onClick = { passwordVisible = !passwordVisible },
+                    enabled = !state.busy,
+                ) {
                     Text(
                         stringResource(
                             if (passwordVisible) R.string.hub_hide else R.string.hub_show,
                         ),
                     )
                 }
-                TextButton(onClick = onCopyPassword) {
+                TextButton(onClick = onCopyPassword, enabled = !state.busy) {
                     Text(stringResource(R.string.hub_copy))
                 }
             }
@@ -757,7 +828,7 @@ private fun CifsCardStep(
         }
     }
 
-    Button(onClick = onOpenCifs, modifier = Modifier.fillMaxWidth()) {
+    Button(onClick = onOpenCifs, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
         Text(
             if (state.cifsInstalled) {
                 stringResource(R.string.hub_cifs_open)
@@ -766,37 +837,21 @@ private fun CifsCardStep(
             },
         )
     }
-    TextButton(onClick = onCopyAll) {
-        Text(stringResource(R.string.hub_w2_copy_credentials))
-    }
-    TextButton(onClick = onRefresh) {
+    TextButton(onClick = onRefresh, enabled = !state.busy) {
         Text(stringResource(R.string.hub_cifs_refresh))
     }
 
-    Text(
-        stringResource(R.string.hub_pc5_checklist_title),
-        fontWeight = FontWeight.Medium,
-    )
-    val checklistLabels = listOf(
-        stringResource(R.string.hub_pc5_item_open),
-        stringResource(R.string.hub_pc5_item_id),
-        stringResource(R.string.hub_pc5_item_name),
-        stringResource(R.string.hub_pc5_item_storage),
-        stringResource(R.string.hub_pc5_item_domain),
-        stringResource(R.string.hub_pc5_item_host),
-        stringResource(R.string.hub_pc5_item_port),
-        stringResource(R.string.hub_pc5_item_dfs),
-        stringResource(R.string.hub_pc5_item_user),
-        stringResource(R.string.hub_pc5_item_password),
-        stringResource(R.string.hub_pc5_item_save),
-        stringResource(R.string.hub_pc5_item_outcome),
+    val closingItems = listOf(
+        WizardChecklistItem(stringResource(R.string.hub_pc5_item_open)),
+        WizardChecklistItem(stringResource(R.string.hub_pc5_item_save)),
+        WizardChecklistItem(stringResource(R.string.hub_pc5_item_outcome)),
     )
     ChecklistOkBlock(
-        labels = checklistLabels,
+        items = closingItems,
         onOk = onContinue,
         onBack = onBack,
         busy = state.busy,
-        okEnabledExtra = state.cifsInstalled && hasPassword,
+        okEnabledExtra = state.cifsInstalled && hasPassword && allChecklistChecked(rowFlags),
     )
 }
 
@@ -804,14 +859,25 @@ private fun CifsCardStep(
 private fun CifsFieldRow(
     label: String,
     value: String,
-    onCopy: (() -> Unit)?,
+    actionLabel: String?,
+    onAction: (() -> Unit)?,
+    checked: Boolean?,
+    onCheckedChange: (() -> Unit)?,
     hint: String? = null,
+    enabled: Boolean = true,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
+        if (checked != null && onCheckedChange != null) {
+            Checkbox(
+                checked = checked,
+                onCheckedChange = { if (enabled) onCheckedChange() },
+                enabled = enabled,
+            )
+        }
         Column(modifier = Modifier.weight(1f)) {
             Text(label, style = MaterialTheme.typography.labelMedium)
             Text(value, fontFamily = FontFamily.Monospace)
@@ -823,9 +889,12 @@ private fun CifsFieldRow(
                 )
             }
         }
-        if (onCopy != null) {
-            TextButton(onClick = onCopy) {
-                Text(stringResource(R.string.hub_copy))
+        if (actionLabel != null) {
+            TextButton(
+                onClick = { onAction?.invoke() },
+                enabled = enabled && onAction != null,
+            ) {
+                Text(actionLabel)
             }
         }
     }

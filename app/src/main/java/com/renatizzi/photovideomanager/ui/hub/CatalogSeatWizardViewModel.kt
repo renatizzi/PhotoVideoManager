@@ -89,7 +89,7 @@ enum class WizardStep {
     PC_COPY_FILES,
     /** Passo 4 — Avvio script (doppio clic + UAC + Tutto pronto). */
     PC_RUN_SCRIPT,
-    /** Passo 5 — Scheda CIFS con Copia. */
+    /** Passo 5 — Scheda CIFS: Copia/Conferma in riga + checkbox. */
     W2_CIFS,
     W2_PICK,
     W3_GUIDE,
