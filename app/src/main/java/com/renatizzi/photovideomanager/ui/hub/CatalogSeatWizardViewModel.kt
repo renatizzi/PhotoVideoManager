@@ -71,6 +71,8 @@ data class CatalogSeatWizardUiState(
     val statusMessage: String? = null,
     val cifsInstalled: Boolean = false,
     val verification: SeatVerificationUi = SeatVerificationUi.NONE,
+    /** Dopo Scegli cartella: mostra domanda SI/NO (revisione4). */
+    val awaitAccessOutcome: Boolean = false,
 )
 
 /**
@@ -84,13 +86,14 @@ enum class WizardStep {
     W1_CONFIRM,
     /** Passo 1 — Verifica disponibilità. */
     PC_AVAILABILITY,
-    /** Passo 2 — USB / collegamento; OK esporta CONFIGURA + sup. */
+    /** Passo 2 — USB + copia file (ex passo 3 fuso); OK esporta CONFIGURA + sup. */
     PC_USB_PREPARE,
-    /** Passo 3 — Copia manuale sul Desktop. */
+    /** @deprecated bozze: copia era passo separato; ora fusa in [PC_USB_PREPARE]. */
+    @Deprecated("legacy — usa PC_USB_PREPARE")
     PC_COPY_FILES,
-    /** Passo 4 — Avvio script (doppio clic + UAC + Tutto pronto). */
+    /** Passo 3 — Avvio script (doppio clic + UAC + Tutto pronto). */
     PC_RUN_SCRIPT,
-    /** Passo 5 — Scheda CIFS: Copia/Conferma in riga + checkbox. */
+    /** Passo 4 — Scheda CIFS + collegamento Catalogo (revisione4). */
     W2_CIFS,
     W2_PICK,
     W3_GUIDE,
@@ -290,12 +293,12 @@ class CatalogSeatWizardViewModel(
         persistDraft()
     }
 
-    /** Passo 2 OK → esporta CONFIGURA/sup in Download, poi passo 3. */
+    /** Passo 2 OK → esporta CONFIGURA/sup in Download, poi passo 3 (script). */
     fun confirmUsbAndPrepareFiles() {
         prepareWindowsScript()
     }
 
-    /** Passo 3 → 4. */
+    /** @deprecated bozze: la copia è nel passo 2. */
     fun confirmCopyChecked() {
         _state.update {
             it.copy(
@@ -320,11 +323,14 @@ class CatalogSeatWizardViewModel(
         persistDraft()
     }
 
+    @Suppress("DEPRECATION")
     fun normalizeLegacyStep(step: WizardStep): WizardStep = when (step) {
         WizardStep.W2_CHOICE,
         WizardStep.W2_ROUTINE_PARAMS,
         -> WizardStep.PC_AVAILABILITY
-        WizardStep.W2_ROUTINE_READY -> WizardStep.PC_COPY_FILES
+        WizardStep.W2_ROUTINE_READY,
+        WizardStep.PC_COPY_FILES,
+        -> WizardStep.PC_USB_PREPARE
         WizardStep.W2_SCRIPT_FIND,
         WizardStep.W2_SCRIPT_LAUNCH,
         WizardStep.W2_SCRIPT_RESULT,
@@ -336,6 +342,7 @@ class CatalogSeatWizardViewModel(
         WizardStep.W2_PREPARE,
         WizardStep.W2_HELP,
         WizardStep.W2_PASSWORD_HELP,
+        WizardStep.W2_PICK,
         -> WizardStep.W2_CIFS
         else -> step
     }
@@ -484,7 +491,8 @@ class CatalogSeatWizardViewModel(
                             downloadsSaved = export.downloadsSaved,
                             usbCopiedTo = export.usbCopiedTo,
                             statusMessage = status,
-                            step = WizardStep.PC_COPY_FILES,
+                            usbCopiedDeclared = true,
+                            step = WizardStep.PC_RUN_SCRIPT,
                         )
                     }
                     persistDraft()
@@ -567,7 +575,8 @@ class CatalogSeatWizardViewModel(
                     errorMessage = null,
                     statusMessage = null,
                     verification = SeatVerificationUi.IN_PROGRESS,
-                    // Passo 5 accorpato con scelta cartella: resta su W2_CIFS.
+                    awaitAccessOutcome = false,
+                    // Ramo PC: resta sulla pagina CIFS (revisione4 SI/NO).
                     step = if (kind == CatalogSeatKind.LOCAL_DEVICE) it.step else WizardStep.W2_CIFS,
                 )
             }
@@ -583,10 +592,16 @@ class CatalogSeatWizardViewModel(
                     it.copy(
                         busy = false,
                         completedSeat = result.getOrNull(),
-                        step = WizardStep.DONE,
+                        // Locale: esito diretto. PC: domanda SI/NO prima di Acquisisci.
+                        step = if (kind == CatalogSeatKind.LOCAL_DEVICE) {
+                            WizardStep.DONE
+                        } else {
+                            WizardStep.W2_CIFS
+                        },
                         seatConfigured = true,
                         seatLabel = label,
                         verification = SeatVerificationUi.VERIFIED,
+                        awaitAccessOutcome = kind != CatalogSeatKind.LOCAL_DEVICE,
                         errorMessage = null,
                         statusMessage = null,
                     )
@@ -602,8 +617,8 @@ class CatalogSeatWizardViewModel(
                         } else {
                             SeatVerificationUi.FAILED
                         },
+                        awaitAccessOutcome = kind != CatalogSeatKind.LOCAL_DEVICE,
                         errorMessage = friendlySeatError(raw, unreachable),
-                        // Resta su S6 (o W1); non azzera path/script/dichiarazioni.
                         step = if (kind == CatalogSeatKind.LOCAL_DEVICE) {
                             WizardStep.W1_CONFIRM
                         } else {
@@ -614,6 +629,30 @@ class CatalogSeatWizardViewModel(
                 persistDraft()
             }
         }
+    }
+
+    /** revisione4: SI → chiude il wizard (navigazione verso Acquisisci dal caller). */
+    fun acceptAccessYes() {
+        _state.update {
+            it.copy(
+                step = WizardStep.DONE,
+                awaitAccessOutcome = false,
+                errorMessage = null,
+                statusMessage = null,
+            )
+        }
+    }
+
+    /** revisione4: NO → stub procedura problemi (da sviluppare). */
+    fun acceptAccessNo() {
+        _state.update {
+            it.copy(
+                awaitAccessOutcome = true,
+                statusMessage = null,
+                errorMessage = null,
+            )
+        }
+        // Messaggio UI via stringa dedicata; resta su W2_CIFS.
     }
 
     private fun isUnreachableSeatError(message: String): Boolean {

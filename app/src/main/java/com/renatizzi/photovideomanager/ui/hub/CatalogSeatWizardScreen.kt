@@ -6,6 +6,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -66,7 +67,6 @@ fun CatalogSeatWizardScreen(
     onFolderPathChange: (String) -> Unit,
     onConfirmAvailability: () -> Unit,
     onConfirmUsbAndPrepare: () -> Unit,
-    onConfirmCopy: () -> Unit,
     onConfirmScriptRan: () -> Unit,
     onCredentialsText: () -> String,
     onPasswordText: () -> String,
@@ -74,7 +74,10 @@ fun CatalogSeatWizardScreen(
     onRefreshCifs: () -> Unit,
     onRetryVerify: () -> Unit,
     onFolderPicked: (uri: String, label: String) -> Unit,
+    onAccessYes: () -> Unit,
+    onAccessNo: () -> Unit,
     onDone: () -> Unit,
+    onGoToAcquire: () -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -150,18 +153,13 @@ fun CatalogSeatWizardScreen(
                 onBack = onBackIntro,
                 busy = state.busy,
             )
-            WizardStep.PC_USB_PREPARE -> UsbPrepareChecklistStep(
+            WizardStep.PC_USB_PREPARE,
+            WizardStep.PC_COPY_FILES,
+            WizardStep.W2_ROUTINE_READY,
+            -> UsbPrepareChecklistStep(
                 onOk = onConfirmUsbAndPrepare,
                 onBack = { onGoStep(WizardStep.PC_AVAILABILITY) },
                 busy = state.busy,
-            )
-            WizardStep.PC_COPY_FILES,
-            WizardStep.W2_ROUTINE_READY,
-            -> CopyFilesChecklistStep(
-                onOk = onConfirmCopy,
-                onBack = { onGoStep(WizardStep.PC_USB_PREPARE) },
-                busy = state.busy,
-                scriptPrepared = state.scriptPrepared,
             )
             WizardStep.PC_RUN_SCRIPT,
             WizardStep.W2_SCRIPT_FIND,
@@ -170,7 +168,7 @@ fun CatalogSeatWizardScreen(
             WizardStep.W2_ROUTINE_CONFIRM,
             -> ScriptChecklistStep(
                 onOk = onConfirmScriptRan,
-                onBack = { onGoStep(WizardStep.PC_COPY_FILES) },
+                onBack = { onGoStep(WizardStep.PC_USB_PREPARE) },
                 busy = state.busy,
             )
             WizardStep.W2_CIFS,
@@ -204,6 +202,11 @@ fun CatalogSeatWizardScreen(
                 onRefresh = onRefreshCifs,
                 onChooseFolder = { if (!state.busy) openTree.launch(null) },
                 onRetry = onRetryVerify,
+                onAccessYes = {
+                    onAccessYes()
+                    onGoToAcquire()
+                },
+                onAccessNo = onAccessNo,
                 onBack = { onGoStep(WizardStep.PC_RUN_SCRIPT) },
             )
             WizardStep.W3_GUIDE -> SimpleGuide(
@@ -560,13 +563,14 @@ private fun UsbPrepareChecklistStep(
 }
 
 @Composable
-private fun CopyFilesChecklistStep(
+private fun ScriptChecklistStep(
     onOk: () -> Unit,
     onBack: () -> Unit,
     busy: Boolean,
-    scriptPrepared: Boolean,
 ) {
+    // Ex passo 3 (copia) fuso qui: i file esistono dopo OK del passo 2.
     Text(stringResource(R.string.hub_pc3_intro))
+    Text(stringResource(R.string.hub_pc4_intro))
     val items = listOf(
         WizardChecklistItem(
             label = stringResource(R.string.hub_pc3_item_download),
@@ -602,30 +606,17 @@ private fun CopyFilesChecklistStep(
                 WizardNestedBullet(stringResource(R.string.hub_pc3_b_verify)),
             ),
         ),
+        WizardChecklistItem(stringResource(R.string.hub_pc4_item_1)),
+        WizardChecklistItem(stringResource(R.string.hub_pc4_item_2)),
+        WizardChecklistItem(stringResource(R.string.hub_pc4_item_3)),
     )
     ChecklistOkBlock(
         items = items,
         onOk = onOk,
         onBack = onBack,
         busy = busy,
-        okEnabledExtra = scriptPrepared,
         showWhenReadyHint = false,
     )
-}
-
-@Composable
-private fun ScriptChecklistStep(
-    onOk: () -> Unit,
-    onBack: () -> Unit,
-    busy: Boolean,
-) {
-    Text(stringResource(R.string.hub_pc4_intro))
-    val items = listOf(
-        WizardChecklistItem(stringResource(R.string.hub_pc4_item_1)),
-        WizardChecklistItem(stringResource(R.string.hub_pc4_item_2)),
-        WizardChecklistItem(stringResource(R.string.hub_pc4_item_3)),
-    )
-    ChecklistOkBlock(items = items, onOk = onOk, onBack = onBack, busy = busy)
 }
 
 @Composable
@@ -669,24 +660,6 @@ private fun ChecklistOkBlock(
     }
 }
 
-/** Checklist senza bottoni: le spunte alimentano un gate esterno (es. Passo 5). */
-@Composable
-private fun ChecklistFlagsOnly(
-    items: List<WizardChecklistItem>,
-    flags: BooleanArray,
-    onFlagsChange: (BooleanArray) -> Unit,
-    busy: Boolean,
-) {
-    WizardChecklistBlock(
-        items = items,
-        checked = flags,
-        onToggle = { index ->
-            onFlagsChange(flags.copyOf().also { it[index] = !it[index] })
-        },
-        enabled = !busy,
-    )
-}
-
 @Composable
 private fun CifsCardStep(
     state: CatalogSeatWizardUiState,
@@ -696,12 +669,15 @@ private fun CifsCardStep(
     onRefresh: () -> Unit,
     onChooseFolder: () -> Unit,
     onRetry: () -> Unit,
+    onAccessYes: () -> Unit,
+    onAccessNo: () -> Unit,
     onBack: () -> Unit,
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
     // Name, Storage, Host, Port, User, Password, Anonymous, Folder
     var rowFlags by remember { mutableStateOf(BooleanArray(8) { false }) }
-    var closingFlags by remember { mutableStateOf(BooleanArray(3) { false }) }
+    var cifsSavedConfirmed by remember { mutableStateOf(false) }
+    var showProblemsStub by remember { mutableStateOf(false) }
     val share = state.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
     val user = state.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER }
     val folder = state.folderPath.ifBlank { WindowsCatalogSetupScript.DEFAULT_FOLDER }
@@ -709,10 +685,7 @@ private fun CifsCardStep(
     val hasPassword = password.isNotBlank()
     // IP da routine → app: intervento successivo (insieme a messaggio attesa)
     val hostCopyable = false
-    val readyForPick = state.cifsInstalled &&
-        hasPassword &&
-        allChecklistChecked(rowFlags) &&
-        allChecklistChecked(closingFlags)
+    val readyForPick = state.cifsInstalled && hasPassword && cifsSavedConfirmed
 
     Text(stringResource(R.string.hub_pc5_intro))
     Text(
@@ -900,19 +873,48 @@ private fun CifsCardStep(
         Text(stringResource(R.string.hub_cifs_refresh))
     }
 
-    ChecklistFlagsOnly(
-        items = listOf(
-            WizardChecklistItem(stringResource(R.string.hub_pc5_item_open)),
-            WizardChecklistItem(stringResource(R.string.hub_pc5_item_save)),
-            WizardChecklistItem(stringResource(R.string.hub_pc5_item_outcome)),
-        ),
-        flags = closingFlags,
-        onFlagsChange = { closingFlags = it },
-        busy = state.busy,
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = !state.busy) { cifsSavedConfirmed = !cifsSavedConfirmed },
+        verticalAlignment = Alignment.Top,
+    ) {
+        Checkbox(
+            checked = cifsSavedConfirmed,
+            onCheckedChange = { if (!state.busy) cifsSavedConfirmed = it },
+            enabled = !state.busy,
+        )
+        Text(
+            text = stringResource(R.string.hub_pc5_item_saved),
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(start = 4.dp, top = 12.dp),
+        )
+    }
+
+    Text(
+        stringResource(R.string.hub_pc5_ultima_azione),
+        fontWeight = FontWeight.Medium,
+    )
+    Text(
+        "• ${stringResource(R.string.hub_pc5_pick_click)}",
+        style = MaterialTheme.typography.bodyMedium,
+    )
+    Button(
+        onClick = onChooseFolder,
+        enabled = !state.busy && readyForPick,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.hub_choose_folder))
+    }
+    Text(
+        "• ${stringResource(R.string.hub_pc5_pick_select)}",
+        style = MaterialTheme.typography.bodyMedium,
+    )
+    Text(
+        "• ${stringResource(R.string.hub_pc5_pick_allow)}",
+        style = MaterialTheme.typography.bodyMedium,
     )
 
-    // Ex-passo 6: scelta cartella SAF sulla stessa pagina
-    Text(stringResource(R.string.hub_s6_pick_body))
     val statusText = when (state.verification) {
         SeatVerificationUi.NONE -> stringResource(R.string.hub_s6_status_idle)
         SeatVerificationUi.IN_PROGRESS -> stringResource(R.string.hub_s6_status_progress)
@@ -927,20 +929,15 @@ private fun CifsCardStep(
         -> MaterialTheme.colorScheme.error
         else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
     }
-    Text(statusText, color = statusColor, fontWeight = FontWeight.Medium)
+    if (state.verification != SeatVerificationUi.NONE) {
+        Text(statusText, color = statusColor, fontWeight = FontWeight.Medium)
+    }
     if (state.pendingLabel.isNotBlank() && state.verification != SeatVerificationUi.NONE) {
         Text(
             text = state.pendingLabel,
             style = MaterialTheme.typography.bodySmall,
             fontFamily = FontFamily.Monospace,
         )
-    }
-    Button(
-        onClick = onChooseFolder,
-        enabled = !state.busy && readyForPick,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Text(stringResource(R.string.hub_choose_folder))
     }
     if (state.pendingTreeUri != null &&
         (state.verification == SeatVerificationUi.FAILED ||
@@ -954,6 +951,43 @@ private fun CifsCardStep(
             Text(stringResource(R.string.hub_s6_retry))
         }
     }
+
+    if (state.awaitAccessOutcome) {
+        Text(
+            stringResource(R.string.hub_pc5_access_question),
+            fontWeight = FontWeight.SemiBold,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(
+                onClick = {
+                    showProblemsStub = false
+                    onAccessYes()
+                },
+                enabled = !state.busy && state.verification == SeatVerificationUi.VERIFIED,
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(stringResource(R.string.hub_pc5_access_yes))
+            }
+            OutlinedButton(
+                onClick = {
+                    showProblemsStub = true
+                    onAccessNo()
+                },
+                enabled = !state.busy,
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(stringResource(R.string.hub_pc5_access_no))
+            }
+        }
+    }
+    if (showProblemsStub) {
+        Text(
+            stringResource(R.string.hub_pc5_problems_stub),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.error,
+        )
+    }
+
     OutlinedButton(onClick = onBack, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.hub_indietro))
     }
