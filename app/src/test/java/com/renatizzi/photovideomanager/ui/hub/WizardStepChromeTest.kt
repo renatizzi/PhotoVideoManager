@@ -32,6 +32,8 @@ class WizardStepChromeTest {
         assertEquals(expected[3], WizardStepChrome.subtitle(WizardStep.PC_COPY_FILES, kind).text)
         assertEquals(expected[4], WizardStepChrome.subtitle(WizardStep.PC_RUN_SCRIPT, kind).text)
         assertEquals(expected[5], WizardStepChrome.subtitle(WizardStep.W2_CIFS, kind).text)
+        // Ex-passo 6 accorpato: stesso chrome del Passo 5
+        assertEquals(expected[5], WizardStepChrome.subtitle(WizardStep.W2_PICK, kind).text)
 
         val all = WizardStep.entries.map { WizardStepChrome.subtitle(it, kind).text }
         assertFalse(all.any { it.contains("Passo ") && it.contains(" di 10") })

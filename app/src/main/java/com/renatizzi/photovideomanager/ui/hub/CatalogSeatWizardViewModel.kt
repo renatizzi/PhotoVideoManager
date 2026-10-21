@@ -34,6 +34,7 @@ enum class CifsCopyField {
     PORT,
     USERNAME,
     PASSWORD,
+    FOLDER,
 }
 
 /** Esito prova lettura/scrittura + fascicolo (S6). */
@@ -374,10 +375,11 @@ class CatalogSeatWizardViewModel(
         return when (field) {
             CifsCopyField.NAME -> s.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
             CifsCopyField.STORAGE -> "SMB2,3 (jCIFS NG)"
-            CifsCopyField.HOST -> "" // IP solo dal PC; non inventare
+            CifsCopyField.HOST -> "" // IP solo dal PC; non inventare (intervento successivo)
             CifsCopyField.PORT -> "445"
             CifsCopyField.USERNAME -> s.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER }
             CifsCopyField.PASSWORD -> s.temporaryPassword
+            CifsCopyField.FOLDER -> s.folderPath.ifBlank { WindowsCatalogSetupScript.DEFAULT_FOLDER }
         }
     }
 
@@ -516,7 +518,9 @@ class CatalogSeatWizardViewModel(
             append("Port: 445\n")
             append("Enable DFS: (lascia deselezionato)\n")
             append("User: $user\n")
-            append("Password: ${s.temporaryPassword}")
+            append("Password: ${s.temporaryPassword}\n")
+            append("Anonymous: (lascia deselezionato)\n")
+            append("Folder: ${s.folderPath.ifBlank { WindowsCatalogSetupScript.DEFAULT_FOLDER }}")
         }
     }
 
@@ -563,7 +567,8 @@ class CatalogSeatWizardViewModel(
                     errorMessage = null,
                     statusMessage = null,
                     verification = SeatVerificationUi.IN_PROGRESS,
-                    step = if (kind == CatalogSeatKind.LOCAL_DEVICE) it.step else WizardStep.W2_PICK,
+                    // Passo 5 accorpato con scelta cartella: resta su W2_CIFS.
+                    step = if (kind == CatalogSeatKind.LOCAL_DEVICE) it.step else WizardStep.W2_CIFS,
                 )
             }
             val seat = CatalogSeat(
@@ -602,7 +607,7 @@ class CatalogSeatWizardViewModel(
                         step = if (kind == CatalogSeatKind.LOCAL_DEVICE) {
                             WizardStep.W1_CONFIRM
                         } else {
-                            WizardStep.W2_PICK
+                            WizardStep.W2_CIFS
                         },
                     )
                 }

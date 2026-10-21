@@ -174,6 +174,7 @@ fun CatalogSeatWizardScreen(
                 busy = state.busy,
             )
             WizardStep.W2_CIFS,
+            WizardStep.W2_PICK,
             WizardStep.W2_CIFS_BRIDGE,
             WizardStep.W2_SUMMARY,
             WizardStep.W2_CIFS_METHOD,
@@ -201,15 +202,9 @@ fun CatalogSeatWizardScreen(
                     }
                 },
                 onRefresh = onRefreshCifs,
-                onContinue = { onGoStep(WizardStep.W2_PICK) },
-                onBack = { onGoStep(WizardStep.PC_RUN_SCRIPT) },
-            )
-            WizardStep.W2_PICK -> W2VerifyPickStep(
-                state = state,
                 onChooseFolder = { if (!state.busy) openTree.launch(null) },
                 onRetry = onRetryVerify,
-                onBackCifs = { onGoStep(WizardStep.W2_CIFS) },
-                onBack = { onGoStep(WizardStep.W2_CIFS) },
+                onBack = { onGoStep(WizardStep.PC_RUN_SCRIPT) },
             )
             WizardStep.W3_GUIDE -> SimpleGuide(
                 body = stringResource(R.string.hub_w3_body),
@@ -549,16 +544,15 @@ private fun UsbPrepareChecklistStep(
 ) {
     Text(stringResource(R.string.hub_pc2_intro))
     val items = listOf(
-        WizardChecklistItem(stringResource(R.string.hub_pc2_item_connect)),
         WizardChecklistItem(stringResource(R.string.hub_pc2_item_unlocked)),
+        WizardChecklistItem(stringResource(R.string.hub_pc2_item_connect)),
         WizardChecklistItem(
             label = stringResource(R.string.hub_pc2_item_transfer),
             nestedBullets = listOf(
-                stringResource(R.string.hub_pc2_bullet_intro),
-                stringResource(R.string.hub_pc2_bullet_notif),
-                stringResource(R.string.hub_pc2_bullet_tap),
-                stringResource(R.string.hub_pc2_bullet_choose),
-                stringResource(R.string.hub_pc2_bullet_allow),
+                WizardNestedBullet(stringResource(R.string.hub_pc2_bullet_notif)),
+                WizardNestedBullet(stringResource(R.string.hub_pc2_bullet_tap)),
+                WizardNestedBullet(stringResource(R.string.hub_pc2_bullet_choose)),
+                WizardNestedBullet(stringResource(R.string.hub_pc2_bullet_allow)),
             ),
         ),
     )
@@ -577,27 +571,35 @@ private fun CopyFilesChecklistStep(
         WizardChecklistItem(
             label = stringResource(R.string.hub_pc3_item_download),
             nestedBullets = listOf(
-                stringResource(R.string.hub_pc3_b_explorer),
-                stringResource(R.string.hub_pc3_b_thispc),
-                stringResource(R.string.hub_pc3_b_phone),
-                stringResource(R.string.hub_pc3_b_dbl),
-                stringResource(R.string.hub_pc3_b_mem),
+                WizardNestedBullet(stringResource(R.string.hub_pc3_b_explorer)),
+                WizardNestedBullet(stringResource(R.string.hub_pc3_b_thispc)),
+                WizardNestedBullet(stringResource(R.string.hub_pc3_b_phone)),
+                WizardNestedBullet(stringResource(R.string.hub_pc3_b_dbl)),
+                WizardNestedBullet(stringResource(R.string.hub_pc3_b_mem)),
             ),
         ),
         WizardChecklistItem(
             label = stringResource(R.string.hub_pc3_item_copy),
             nestedBullets = listOf(
-                stringResource(R.string.hub_pc3_b_search),
-                stringResource(R.string.hub_pc3_b_file1),
-                stringResource(R.string.hub_pc3_b_file2),
-                stringResource(R.string.hub_pc3_b_ctrlc),
-                stringResource(R.string.hub_pc3_b_ctrlv),
+                WizardNestedBullet(stringResource(R.string.hub_pc3_b_search)),
+                WizardNestedBullet(
+                    text = stringResource(R.string.hub_pc3_b_file1),
+                    marker = "✓",
+                    extraStart = 16.dp,
+                ),
+                WizardNestedBullet(
+                    text = stringResource(R.string.hub_pc3_b_file2),
+                    marker = "✓",
+                    extraStart = 16.dp,
+                ),
+                WizardNestedBullet(stringResource(R.string.hub_pc3_b_ctrlc)),
+                WizardNestedBullet(stringResource(R.string.hub_pc3_b_ctrlv)),
             ),
         ),
         WizardChecklistItem(
             label = stringResource(R.string.hub_pc3_item_verify),
             nestedBullets = listOf(
-                stringResource(R.string.hub_pc3_b_verify),
+                WizardNestedBullet(stringResource(R.string.hub_pc3_b_verify)),
             ),
         ),
     )
@@ -607,6 +609,7 @@ private fun CopyFilesChecklistStep(
         onBack = onBack,
         busy = busy,
         okEnabledExtra = scriptPrepared,
+        showWhenReadyHint = false,
     )
 }
 
@@ -632,6 +635,8 @@ private fun ChecklistOkBlock(
     onBack: () -> Unit,
     busy: Boolean,
     okEnabledExtra: Boolean = true,
+    showWhenReadyHint: Boolean = true,
+    showOk: Boolean = true,
 ) {
     var flags by remember(items.size) { mutableStateOf(BooleanArray(items.size) { false }) }
     WizardChecklistBlock(
@@ -642,22 +647,44 @@ private fun ChecklistOkBlock(
         },
         enabled = !busy,
     )
-    Text(
-        stringResource(R.string.hub_s0_when_ready),
-        style = MaterialTheme.typography.bodyMedium,
-    )
+    if (showWhenReadyHint) {
+        Text(
+            stringResource(R.string.hub_s0_when_ready),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+    }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedButton(onClick = onBack, enabled = !busy, modifier = Modifier.weight(1f)) {
             Text(stringResource(R.string.hub_indietro))
         }
-        Button(
-            onClick = onOk,
-            enabled = !busy && okEnabledExtra && allChecklistChecked(flags),
-            modifier = Modifier.weight(1f),
-        ) {
-            Text(stringResource(R.string.hub_checklist_ok))
+        if (showOk) {
+            Button(
+                onClick = onOk,
+                enabled = !busy && okEnabledExtra && allChecklistChecked(flags),
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(stringResource(R.string.hub_checklist_ok))
+            }
         }
     }
+}
+
+/** Checklist senza bottoni: le spunte alimentano un gate esterno (es. Passo 5). */
+@Composable
+private fun ChecklistFlagsOnly(
+    items: List<WizardChecklistItem>,
+    flags: BooleanArray,
+    onFlagsChange: (BooleanArray) -> Unit,
+    busy: Boolean,
+) {
+    WizardChecklistBlock(
+        items = items,
+        checked = flags,
+        onToggle = { index ->
+            onFlagsChange(flags.copyOf().also { it[index] = !it[index] })
+        },
+        enabled = !busy,
+    )
 }
 
 @Composable
@@ -667,25 +694,32 @@ private fun CifsCardStep(
     onCopyPassword: () -> Unit,
     onOpenCifs: () -> Unit,
     onRefresh: () -> Unit,
-    onContinue: () -> Unit,
+    onChooseFolder: () -> Unit,
+    onRetry: () -> Unit,
     onBack: () -> Unit,
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
-    // Checkbox sulle righe con Copia/Conferma: Name, Storage, Host, Port, User, Password
-    var rowFlags by remember { mutableStateOf(BooleanArray(6) { false }) }
+    // Name, Storage, Host, Port, User, Password, Anonymous, Folder
+    var rowFlags by remember { mutableStateOf(BooleanArray(8) { false }) }
+    var closingFlags by remember { mutableStateOf(BooleanArray(3) { false }) }
     val share = state.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
     val user = state.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER }
+    val folder = state.folderPath.ifBlank { WindowsCatalogSetupScript.DEFAULT_FOLDER }
     val password = state.temporaryPassword
     val hasPassword = password.isNotBlank()
-    // IP da routine → app: non ancora disponibile (recupero in seguito)
+    // IP da routine → app: intervento successivo (insieme a messaggio attesa)
     val hostCopyable = false
+    val readyForPick = state.cifsInstalled &&
+        hasPassword &&
+        allChecklistChecked(rowFlags) &&
+        allChecklistChecked(closingFlags)
 
     Text(stringResource(R.string.hub_pc5_intro))
     Text(
         stringResource(R.string.hub_b5b_card_title),
         fontWeight = FontWeight.Medium,
     )
-    // Ordine = form CIFS «Connection» (screenshot PPT V2)
+    // Ordine = form CIFS «Connection» (screenshot completo)
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -826,6 +860,31 @@ private fun CifsCardStep(
                 color = MaterialTheme.colorScheme.error,
             )
         }
+        CifsFieldRow(
+            label = stringResource(R.string.hub_b5b_label_anonymous),
+            value = stringResource(R.string.hub_b5b_anonymous_value),
+            actionLabel = stringResource(R.string.hub_pc5_confirm),
+            onAction = { rowFlags = rowFlags.copyOf().also { it[6] = true } },
+            checked = rowFlags[6],
+            onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[6] = !it[6] } },
+            hint = stringResource(R.string.hub_b5b_anonymous_hint),
+            enabled = !state.busy,
+        )
+        CifsFieldRow(
+            label = stringResource(R.string.hub_b5b_label_folder),
+            value = folder,
+            actionLabel = stringResource(R.string.hub_copy),
+            onAction = { onCopyField(CifsCopyField.FOLDER) },
+            checked = rowFlags[7],
+            onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[7] = !it[7] } },
+            hint = stringResource(R.string.hub_b5b_folder_hint),
+            enabled = !state.busy,
+        )
+        Text(
+            stringResource(R.string.hub_pc5_options_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+        )
     }
 
     Button(onClick = onOpenCifs, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
@@ -841,18 +900,63 @@ private fun CifsCardStep(
         Text(stringResource(R.string.hub_cifs_refresh))
     }
 
-    val closingItems = listOf(
-        WizardChecklistItem(stringResource(R.string.hub_pc5_item_open)),
-        WizardChecklistItem(stringResource(R.string.hub_pc5_item_save)),
-        WizardChecklistItem(stringResource(R.string.hub_pc5_item_outcome)),
-    )
-    ChecklistOkBlock(
-        items = closingItems,
-        onOk = onContinue,
-        onBack = onBack,
+    ChecklistFlagsOnly(
+        items = listOf(
+            WizardChecklistItem(stringResource(R.string.hub_pc5_item_open)),
+            WizardChecklistItem(stringResource(R.string.hub_pc5_item_save)),
+            WizardChecklistItem(stringResource(R.string.hub_pc5_item_outcome)),
+        ),
+        flags = closingFlags,
+        onFlagsChange = { closingFlags = it },
         busy = state.busy,
-        okEnabledExtra = state.cifsInstalled && hasPassword && allChecklistChecked(rowFlags),
     )
+
+    // Ex-passo 6: scelta cartella SAF sulla stessa pagina
+    Text(stringResource(R.string.hub_s6_pick_body))
+    val statusText = when (state.verification) {
+        SeatVerificationUi.NONE -> stringResource(R.string.hub_s6_status_idle)
+        SeatVerificationUi.IN_PROGRESS -> stringResource(R.string.hub_s6_status_progress)
+        SeatVerificationUi.VERIFIED -> stringResource(R.string.hub_s6_status_ok)
+        SeatVerificationUi.UNREACHABLE -> stringResource(R.string.hub_s6_status_unreachable)
+        SeatVerificationUi.FAILED -> stringResource(R.string.hub_s6_status_failed)
+    }
+    val statusColor = when (state.verification) {
+        SeatVerificationUi.VERIFIED -> MaterialTheme.colorScheme.primary
+        SeatVerificationUi.UNREACHABLE,
+        SeatVerificationUi.FAILED,
+        -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+    }
+    Text(statusText, color = statusColor, fontWeight = FontWeight.Medium)
+    if (state.pendingLabel.isNotBlank() && state.verification != SeatVerificationUi.NONE) {
+        Text(
+            text = state.pendingLabel,
+            style = MaterialTheme.typography.bodySmall,
+            fontFamily = FontFamily.Monospace,
+        )
+    }
+    Button(
+        onClick = onChooseFolder,
+        enabled = !state.busy && readyForPick,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.hub_choose_folder))
+    }
+    if (state.pendingTreeUri != null &&
+        (state.verification == SeatVerificationUi.FAILED ||
+            state.verification == SeatVerificationUi.UNREACHABLE)
+    ) {
+        OutlinedButton(
+            onClick = onRetry,
+            enabled = !state.busy,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.hub_s6_retry))
+        }
+    }
+    OutlinedButton(onClick = onBack, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.hub_indietro))
+    }
 }
 
 @Composable
@@ -897,64 +1001,6 @@ private fun CifsFieldRow(
                 Text(actionLabel)
             }
         }
-    }
-}
-
-@Composable
-private fun W2VerifyPickStep(
-    state: CatalogSeatWizardUiState,
-    onChooseFolder: () -> Unit,
-    onRetry: () -> Unit,
-    onBackCifs: () -> Unit,
-    onBack: () -> Unit,
-) {
-    Text(stringResource(R.string.hub_s6_pick_body))
-    val statusText = when (state.verification) {
-        SeatVerificationUi.NONE -> stringResource(R.string.hub_s6_status_idle)
-        SeatVerificationUi.IN_PROGRESS -> stringResource(R.string.hub_s6_status_progress)
-        SeatVerificationUi.VERIFIED -> stringResource(R.string.hub_s6_status_ok)
-        SeatVerificationUi.UNREACHABLE -> stringResource(R.string.hub_s6_status_unreachable)
-        SeatVerificationUi.FAILED -> stringResource(R.string.hub_s6_status_failed)
-    }
-    val statusColor = when (state.verification) {
-        SeatVerificationUi.VERIFIED -> MaterialTheme.colorScheme.primary
-        SeatVerificationUi.UNREACHABLE,
-        SeatVerificationUi.FAILED,
-        -> MaterialTheme.colorScheme.error
-        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
-    }
-    Text(statusText, color = statusColor, fontWeight = FontWeight.Medium)
-    if (state.pendingLabel.isNotBlank() && state.verification != SeatVerificationUi.NONE) {
-        Text(
-            text = state.pendingLabel,
-            style = MaterialTheme.typography.bodySmall,
-            fontFamily = FontFamily.Monospace,
-        )
-    }
-    Button(
-        onClick = onChooseFolder,
-        enabled = !state.busy,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Text(stringResource(R.string.hub_choose_folder))
-    }
-    if (state.pendingTreeUri != null &&
-        (state.verification == SeatVerificationUi.FAILED ||
-            state.verification == SeatVerificationUi.UNREACHABLE)
-    ) {
-        OutlinedButton(
-            onClick = onRetry,
-            enabled = !state.busy,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(stringResource(R.string.hub_s6_retry))
-        }
-    }
-    TextButton(onClick = onBackCifs, enabled = !state.busy) {
-        Text(stringResource(R.string.hub_s6_back_cifs))
-    }
-    TextButton(onClick = onBack, enabled = !state.busy) {
-        Text(stringResource(R.string.hub_indietro))
     }
 }
 
