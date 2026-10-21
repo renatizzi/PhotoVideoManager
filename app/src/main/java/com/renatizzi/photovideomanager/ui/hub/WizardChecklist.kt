@@ -12,7 +12,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+
+/** Bullet sotto una voce checklist (• oppure ✓ con indentazione extra). */
+data class WizardNestedBullet(
+    val text: String,
+    val marker: String = "•",
+    val extraStart: Dp = 0.dp,
+)
 
 /**
  * Voce checklist: etichetta + eventuali bullet indentati (come nei template PPT).
@@ -20,7 +28,7 @@ import androidx.compose.ui.unit.dp
  */
 data class WizardChecklistItem(
     val label: String,
-    val nestedBullets: List<String> = emptyList(),
+    val nestedBullets: List<WizardNestedBullet> = emptyList(),
 )
 
 /**
@@ -66,9 +74,10 @@ fun WizardChecklistBlock(
                     ) {
                         item.nestedBullets.forEach { bullet ->
                             Text(
-                                text = "• $bullet",
+                                text = "${bullet.marker} ${bullet.text}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+                                modifier = Modifier.padding(start = bullet.extraStart),
                             )
                         }
                     }

@@ -117,18 +117,17 @@
     <string name="hub_pc1_item_pc">PC/Notebook Windows v. 10 o superiore</string>
     <string name="hub_pc1_item_cable">Cavo USB adatto al trasferimento dei dati</string>
 
-    <!-- Passo 2 — USB (testo PPT Template 2 + bullet indentati) -->
+    <!-- Passo 2 — USB (REVISIONE3: ordine Sbloccati → Collega → USB) -->
     <string name="hub_pc2_intro">Esegui ora le seguenti verifiche preliminari:</string>
-    <string name="hub_pc2_item_connect">Collega il telefono al PC/Notebook con un cavetto USB adatto al trasferimento dei dati (meglio se quello fornito in dotazione)</string>
     <string name="hub_pc2_item_unlocked">Verifica che il PC e il telefono siano accesi e sbloccati</string>
-    <string name="hub_pc2_item_transfer">Modifica sul telefono la modalità di collegamento USB da “Solo Ricarica” a “Trasferimento Dati” usando l’opzione di notifica «USB per ricarica smartphone»:</string>
-    <string name="hub_pc2_bullet_intro">Il cavetto USB è configurato per essere usato per ricaricare. Nel nostro caso però lo dobbiamo configurare per il trasferimento dei dati. Ecco come fare:</string>
+    <string name="hub_pc2_item_connect">Collega il telefono al PC/Notebook con un cavetto USB adatto al trasferimento dei dati (meglio se quello fornito in dotazione)</string>
+    <string name="hub_pc2_item_transfer">Modifica sul telefono la modalità di collegamento USB da “Solo Ricarica” a “Trasferimento Dati” usando l’opzione di notifica «USB per ricarica smartphone». Ecco come fare:</string>
     <string name="hub_pc2_bullet_notif">Apri le notifiche scorrendo verso il basso il bordo superiore</string>
     <string name="hub_pc2_bullet_tap">Tocca la notifica «Ricarica questo dispositivo via USB» o simile</string>
     <string name="hub_pc2_bullet_choose">Scegli «Trasferimento di file» o simile</string>
     <string name="hub_pc2_bullet_allow">Consenti l’accesso ai dati del telefono</string>
 
-    <!-- Passo 3 — Copia (testo PPT Template 3; file CONFIGURA / sup) -->
+    <!-- Passo 3 — Copia (REVISIONE3: nesting CONFIGURA / Sup) -->
     <string name="hub_pc3_intro">Dopo aver collegato il telefono al PC/Notebook esegui le seguenti operazioni:</string>
     <string name="hub_pc3_item_download">Accedi dal PC alla cartella Download del telefono</string>
     <string name="hub_pc3_b_explorer">Vai sul PC ed apri “Esplora file”</string>
@@ -139,7 +138,7 @@
     <string name="hub_pc3_item_copy">Copia i due file che trovi in Download del telefono ed incollali sulla cartella Desktop del PC</string>
     <string name="hub_pc3_b_search">Cerca nella cartella Download del telefono i file denominati:</string>
     <string name="hub_pc3_b_file1">CONFIGURA</string>
-    <string name="hub_pc3_b_file2">sup</string>
+    <string name="hub_pc3_b_file2">Sup</string>
     <string name="hub_pc3_b_ctrlc">Seleziona entrambi i file e copiali con Ctrl + C</string>
     <string name="hub_pc3_b_ctrlv">Torna sul PC, vai sul Desktop e incollali con Ctrl + V.</string>
     <string name="hub_pc3_item_verify">Verifica la presenza dei due file dopo il salvataggio</string>
@@ -151,12 +150,13 @@
     <string name="hub_pc4_item_2">Se compare la finestra di Controllo account utente di Windows, conferma: la routine di configurazione viene così eseguita</string>
     <string name="hub_pc4_item_3">Al termine (ci vorrà qualche minuto) la routine mostrerà il messaggio di «Tutto pronto» per passare alla fase successiva. Non interrompere la routine</string>
 
-    <!-- Passo 5 — CIFS (testo PPT + riga con checkbox) -->
+    <!-- Passo 5 — CIFS + scelta cartella (accorpato con ex-passo 6) -->
     <string name="hub_pc5_intro">L’ultimo passo della procedura prevede la configurazione dell’app denominata CIFS Documents Provider (scaricabile gratuitamente su Google Play).\nEcco i dati da inserire: con il bottone «Copia» puoi incollarli uno alla volta sul form di CIFS:</string>
     <string name="hub_pc5_confirm">Conferma</string>
     <string name="hub_pc5_item_open">Ho installato / aperto CIFS Documents Provider</string>
     <string name="hub_pc5_item_save">In CIFS ho toccato Save e sono tornato a MediaManager con Indietro</string>
     <string name="hub_pc5_item_outcome">Esito: la connessione in CIFS è salvata e la configurazione è andata a buon fine</string>
+    <string name="hub_pc5_options_hint">Nella sezione Option di CIFS lascia i valori predefiniti (Safe data transfer, Read only, Add extension, Thumbnail).</string>
 
     <!-- W1 locale -->
     <string name="hub_w1_question">Vuoi usare questo apparecchio come Posizione del Catalogo?</string>
@@ -178,6 +178,11 @@
     <string name="hub_b5b_label_domain">Domain</string>
     <string name="hub_b5b_label_user">User</string>
     <string name="hub_b5b_label_password">Password</string>
+    <string name="hub_b5b_label_anonymous">Anonymous</string>
+    <string name="hub_b5b_anonymous_value">Non attivo</string>
+    <string name="hub_b5b_anonymous_hint">Lascia deselezionato</string>
+    <string name="hub_b5b_label_folder">Folder</string>
+    <string name="hub_b5b_folder_hint">Stesso percorso scelto al primo passo</string>
     <string name="hub_b5b_label_storage">Storage</string>
     <string name="hub_b5b_label_dfs">Enable DFS (Distributed File System)</string>
     <string name="hub_b5b_domain_value">(lascia vuoto)</string>
