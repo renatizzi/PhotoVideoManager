@@ -97,7 +97,7 @@
     <string name="hub_kind_nas_hint">Percorso base</string>
     <string name="hub_s0_pc_guided_intro">Da questa pagina si attiva la procedura guidata per la creazione o modifica della cartella condivisa dove tenere il Catalogo. Per motivi di sicurezza ci sono delle operazioni che puoi fare solo tu.</string>
     <string name="hub_s0_pc_procedure_label">Se hai scelto un PC o Notebook Windows, la procedura prevede:</string>
-    <string name="hub_s0_pc_procedure_steps">1 – Verifica della disponibilità di quanto necessario\n2 – Verifica preliminare, preparazione dei file e collegamento\n3 – Generazione password e altri dati necessari per configurare la cartella condivisa\n4 – Accedere alla cartella del Catalogo mediante CIFS</string>
+    <string name="hub_s0_pc_procedure_steps">1 – Verifica della disponibilità di quanto necessario\n2 – Verifica preliminare, preparazione dei file e collegamento\n3 – Copia manuale dei file di configurazione\n4 – Generazione password e altri dati necessari per configurare la cartella condivisa\n5 – Accedere alla cartella del Catalogo mediante CIFS</string>
     <string name="hub_s0_valori_modificabili">Valori modificabili</string>
     <string name="hub_s0_local_volume_intro">Scegli dove tenere il Catalogo su questo dispositivo</string>
     <string name="hub_s0_volume_label">Memoria</string>

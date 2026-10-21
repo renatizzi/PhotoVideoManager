@@ -289,6 +289,7 @@ fun PvmApp(
                         onFolderPathChange = wizardVm::updateFolderPath,
                         onConfirmAvailability = wizardVm::confirmAvailabilityChecked,
                         onConfirmUsbAndPrepare = wizardVm::confirmUsbAndPrepareFiles,
+                        onConfirmCopy = wizardVm::confirmCopyChecked,
                         onConfirmScriptRan = wizardVm::confirmScriptRanOnPc,
                         onCredentialsText = wizardVm::credentialsClipboardText,
                         onPasswordText = wizardVm::passwordClipboardText,

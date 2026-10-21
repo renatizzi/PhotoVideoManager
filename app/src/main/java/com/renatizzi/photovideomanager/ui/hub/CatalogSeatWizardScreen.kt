@@ -67,6 +67,7 @@ fun CatalogSeatWizardScreen(
     onFolderPathChange: (String) -> Unit,
     onConfirmAvailability: () -> Unit,
     onConfirmUsbAndPrepare: () -> Unit,
+    onConfirmCopy: () -> Unit,
     onConfirmScriptRan: () -> Unit,
     onCredentialsText: () -> String,
     onPasswordText: () -> String,
@@ -153,13 +154,18 @@ fun CatalogSeatWizardScreen(
                 onBack = onBackIntro,
                 busy = state.busy,
             )
-            WizardStep.PC_USB_PREPARE,
-            WizardStep.PC_COPY_FILES,
-            WizardStep.W2_ROUTINE_READY,
-            -> UsbPrepareChecklistStep(
+            WizardStep.PC_USB_PREPARE -> UsbPrepareChecklistStep(
                 onOk = onConfirmUsbAndPrepare,
                 onBack = { onGoStep(WizardStep.PC_AVAILABILITY) },
                 busy = state.busy,
+            )
+            WizardStep.PC_COPY_FILES,
+            WizardStep.W2_ROUTINE_READY,
+            -> CopyFilesChecklistStep(
+                onOk = onConfirmCopy,
+                onBack = { onGoStep(WizardStep.PC_USB_PREPARE) },
+                busy = state.busy,
+                scriptPrepared = state.scriptPrepared,
             )
             WizardStep.PC_RUN_SCRIPT,
             WizardStep.W2_SCRIPT_FIND,
@@ -168,7 +174,7 @@ fun CatalogSeatWizardScreen(
             WizardStep.W2_ROUTINE_CONFIRM,
             -> ScriptChecklistStep(
                 onOk = onConfirmScriptRan,
-                onBack = { onGoStep(WizardStep.PC_USB_PREPARE) },
+                onBack = { onGoStep(WizardStep.PC_COPY_FILES) },
                 busy = state.busy,
             )
             WizardStep.W2_CIFS,
@@ -563,14 +569,13 @@ private fun UsbPrepareChecklistStep(
 }
 
 @Composable
-private fun ScriptChecklistStep(
+private fun CopyFilesChecklistStep(
     onOk: () -> Unit,
     onBack: () -> Unit,
     busy: Boolean,
+    scriptPrepared: Boolean,
 ) {
-    // Ex passo 3 (copia) fuso qui: i file esistono dopo OK del passo 2.
     Text(stringResource(R.string.hub_pc3_intro))
-    Text(stringResource(R.string.hub_pc4_intro))
     val items = listOf(
         WizardChecklistItem(
             label = stringResource(R.string.hub_pc3_item_download),
@@ -606,17 +611,30 @@ private fun ScriptChecklistStep(
                 WizardNestedBullet(stringResource(R.string.hub_pc3_b_verify)),
             ),
         ),
-        WizardChecklistItem(stringResource(R.string.hub_pc4_item_1)),
-        WizardChecklistItem(stringResource(R.string.hub_pc4_item_2)),
-        WizardChecklistItem(stringResource(R.string.hub_pc4_item_3)),
     )
     ChecklistOkBlock(
         items = items,
         onOk = onOk,
         onBack = onBack,
         busy = busy,
-        showWhenReadyHint = false,
+        okEnabledExtra = scriptPrepared,
+        showWhenReadyHint = true,
     )
+}
+
+@Composable
+private fun ScriptChecklistStep(
+    onOk: () -> Unit,
+    onBack: () -> Unit,
+    busy: Boolean,
+) {
+    Text(stringResource(R.string.hub_pc4_intro))
+    val items = listOf(
+        WizardChecklistItem(stringResource(R.string.hub_pc4_item_1)),
+        WizardChecklistItem(stringResource(R.string.hub_pc4_item_2)),
+        WizardChecklistItem(stringResource(R.string.hub_pc4_item_3)),
+    )
+    ChecklistOkBlock(items = items, onOk = onOk, onBack = onBack, busy = busy)
 }
 
 @Composable

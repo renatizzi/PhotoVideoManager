@@ -1,21 +1,16 @@
 # Annotazioni Renato su bozza pagine (testo PPT V2)
 
-**Passo 1:** eliminare l’asterisco dopo «superiore».  
-Testo checklist: `PC/Notebook Windows v. 10 o superiore`
+**Passo 1:** eliminare l’asterisco dopo «superiore».
 
 **Passo 2 (REVISIONE3):** ordine Sbloccati → Collega → USB + 4 bullet.
 
-**Passo 3 — ELIMINATO come pagina (REVISIONE4 / richiesta Renato):**  
-La copia CONFIGURA/Sup resta come checklist fusa all’inizio del passo script (dopo l’export del passo 2). Elenco Passo 0 rinumerato 1–4.
+**Passo 3:** pagina separata (copia CONFIGURA/Sup).  
+- Sopra i bottoni: «Quando pronto clicca su OK».  
+- **Non** mostrare sotto i bottoni lo status «File CONFIGURA e sup salvati…».
 
-**Passo script (ora 3):** copia file + doppio clic CONFIGURA / UAC / Tutto pronto.
+**Passo 4:** checklist CONFIGURA / UAC / Tutto pronto.
 
-**Passo CIFS (ora 4) — revisione4:**
-- Checkbox: «Confermo di aver configurato e salvato CIFS…»
-- Ultima azione + [SCEGLI CARTELLA] + istruzioni
-- Dopo ritorno: «La prova di accesso…? (Sì / No)»
-- Sì → Acquisisci (sostenibile)
-- No → stub procedura problemi (da sviluppare)
-- Routine Windows / IP / messaggio attesa: differiti
+**Passo 5 (revisione4):** conferma CIFS salvato → Ultima azione → Scegli cartella → SI/NO  
+(SI → Acquisisci; NO → stub problemi). Routine/IP/attesa differiti.
 
-**Stato:** `0.16.40-preview`
+**Stato:** `0.16.41-preview`

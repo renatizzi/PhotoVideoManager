@@ -29,12 +29,11 @@ class WizardStepChromeTest {
         assertEquals(expected[0], WizardStepChrome.subtitle(WizardStep.INTRO, kind).text)
         assertEquals(expected[1], WizardStepChrome.subtitle(WizardStep.PC_AVAILABILITY, kind).text)
         assertEquals(expected[2], WizardStepChrome.subtitle(WizardStep.PC_USB_PREPARE, kind).text)
-        // Ex passo 3 (copia) eliminato: chrome allineato al passo 2
-        assertEquals(expected[2], WizardStepChrome.subtitle(WizardStep.PC_COPY_FILES, kind).text)
-        assertEquals(expected[3], WizardStepChrome.subtitle(WizardStep.PC_RUN_SCRIPT, kind).text)
-        assertEquals(expected[4], WizardStepChrome.subtitle(WizardStep.W2_CIFS, kind).text)
-        assertEquals(expected[4], WizardStepChrome.subtitle(WizardStep.W2_PICK, kind).text)
-        assertEquals(5, expected.size)
+        assertEquals(expected[3], WizardStepChrome.subtitle(WizardStep.PC_COPY_FILES, kind).text)
+        assertEquals(expected[4], WizardStepChrome.subtitle(WizardStep.PC_RUN_SCRIPT, kind).text)
+        assertEquals(expected[5], WizardStepChrome.subtitle(WizardStep.W2_CIFS, kind).text)
+        assertEquals(expected[5], WizardStepChrome.subtitle(WizardStep.W2_PICK, kind).text)
+        assertEquals(6, expected.size)
 
         val all = WizardStep.entries.map { WizardStepChrome.subtitle(it, kind).text }
         assertFalse(all.any { it.contains("Passo ") && it.contains(" di 10") })
