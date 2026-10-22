@@ -154,7 +154,7 @@
     <string name="hub_pc5_intro">L’ultimo passo della procedura prevede la configurazione dell’app denominata CIFS Documents Provider (scaricabile gratuitamente su Google Play).\nEcco i dati da inserire: con il bottone «Copia» puoi incollarli uno alla volta sul form di CIFS:</string>
     <string name="hub_pc5_confirm">Conferma</string>
     <string name="hub_pc5_item_saved">Confermo di aver configurato e salvato CIFS Documents Provider secondo le istruzioni sopra indicate</string>
-    <string name="hub_pc5_ultima_azione">Ultima azione: clicca sul bottone «Attiva collegamento» per consentire l\'accesso al Catalogo mediante CIFS (seleziona la cartella appena salvata)</string>
+    <string name="hub_pc5_ultima_azione">Ultima azione: clicca su «Attiva collegamento», apri la riga della condivisione MediaManagerCatalog (non restare sull\'elenco delle share) e solo lì premi «Usa questa cartella»</string>
     <string name="hub_pc5_activate_link">Attiva collegamento</string>
     <string name="hub_pc5_access_question">La prova di accesso al Catalogo è andata a buon fine?</string>
     <string name="hub_pc5_access_yes">Sì</string>
@@ -186,7 +186,9 @@
     <string name="hub_b5b_anonymous_value">Non attivo</string>
     <string name="hub_b5b_anonymous_hint">Lascia deselezionato</string>
     <string name="hub_b5b_label_folder">Folder</string>
-    <string name="hub_b5b_folder_hint">Stesso percorso scelto al primo passo</string>
+    <string name="hub_b5b_folder_value">(lascia vuoto)</string>
+    <string name="hub_b5b_folder_hint">Lascia vuoto e conferma: dopo il salvataggio compare l\'elenco delle share; apri MediaManagerCatalog</string>
+    <string name="hub_b5b_user_hint">Come «Utente SMB» in Tutto pronto (NOMEPC\\MediaManager). Se Copia mette NOMEPC, sostituiscilo con il nome del PC</string>
     <string name="hub_b5b_label_storage">Storage</string>
     <string name="hub_b5b_label_dfs">Enable DFS (Distributed File System)</string>
     <string name="hub_b5b_domain_value">(lascia vuoto)</string>

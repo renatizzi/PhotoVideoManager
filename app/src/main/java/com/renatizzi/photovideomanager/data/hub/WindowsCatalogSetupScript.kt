@@ -10,6 +10,13 @@ object WindowsCatalogSetupScript {
     const val DEFAULT_USER = "MediaManager"
     const val DEFAULT_SHARE = "MediaManagerCatalog"
     const val DEFAULT_FOLDER = "C:\\MediaManager\\Catalogo"
+    /**
+     * Segnaposto nome PC nel formato User CIFS (`NOMEPC\utente`), allineato a
+     * «Utente SMB» nella finestra Tutto pronto. Il nome reale arriva in app in seguito.
+     */
+    const val CIFS_USER_PC_PLACEHOLDER = "NOMEPC"
+    /** Folder CIFS: vuoto → elenco share; non il percorso Windows della cartella. */
+    const val CIFS_FOLDER_EMPTY = ""
     /** File da avviare (doppio clic). Nome PPT: CONFIGURA. */
     const val CMD_FILE_NAME = "CONFIGURA.cmd"
     /** Supporto interno (non aprire). Nome PPT: sup. */
@@ -84,6 +91,15 @@ object WindowsCatalogSetupScript {
             return "Nome utente non valido"
         }
         return null
+    }
+
+    /**
+     * Testo User da mostrare/copiare in CIFS: `NOMEPC\MediaManager` (o già
+     * qualificato). Il nome PC reale è quello in «Utente SMB» su Tutto pronto.
+     */
+    fun cifsUserCopyText(userName: String): String {
+        val user = userName.trim().ifBlank { DEFAULT_USER }
+        return if ('\\' in user) user else "$CIFS_USER_PC_PLACEHOLDER\\$user"
     }
 
     fun build(params: Params): Package {

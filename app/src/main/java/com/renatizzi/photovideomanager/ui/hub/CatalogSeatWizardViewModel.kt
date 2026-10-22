@@ -378,9 +378,11 @@ class CatalogSeatWizardViewModel(
             CifsCopyField.STORAGE -> "SMB2,3 (jCIFS NG)"
             CifsCopyField.HOST -> "" // IP solo dal PC; non inventare (intervento successivo)
             CifsCopyField.PORT -> "445"
-            CifsCopyField.USERNAME -> s.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER }
+            CifsCopyField.USERNAME ->
+                WindowsCatalogSetupScript.cifsUserCopyText(s.userName)
             CifsCopyField.PASSWORD -> s.temporaryPassword
-            CifsCopyField.FOLDER -> s.folderPath.ifBlank { WindowsCatalogSetupScript.DEFAULT_FOLDER }
+            // Folder CIFS: lasciare vuoto (elenco share), non il path Windows.
+            CifsCopyField.FOLDER -> WindowsCatalogSetupScript.CIFS_FOLDER_EMPTY
         }
     }
 
@@ -496,7 +498,7 @@ class CatalogSeatWizardViewModel(
     fun credentialsClipboardText(): String {
         val s = _state.value
         val share = s.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
-        val user = s.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER }
+        val user = WindowsCatalogSetupScript.cifsUserCopyText(s.userName)
         return buildString {
             append("Name: $share\n")
             append("Storage: SMB2,3 (jCIFS NG)\n")
@@ -507,7 +509,7 @@ class CatalogSeatWizardViewModel(
             append("User: $user\n")
             append("Password: ${s.temporaryPassword}\n")
             append("Anonymous: (lascia deselezionato)\n")
-            append("Folder: ${s.folderPath.ifBlank { WindowsCatalogSetupScript.DEFAULT_FOLDER }}")
+            append("Folder: (lascia vuoto)")
         }
     }
 

@@ -166,6 +166,26 @@ class WindowsCatalogSetupScriptTest {
     }
 
     @Test
+    fun cifsUserCopyText_prefixesNomePcPlaceholder() {
+        assertEquals(
+            "NOMEPC\\MediaManager",
+            WindowsCatalogSetupScript.cifsUserCopyText("MediaManager"),
+        )
+        assertEquals(
+            "NOMEPC\\MediaManager",
+            WindowsCatalogSetupScript.cifsUserCopyText(""),
+        )
+        assertEquals(
+            "MINI_IT13\\MediaManager",
+            WindowsCatalogSetupScript.cifsUserCopyText("MINI_IT13\\MediaManager"),
+        )
+        assertEquals(
+            WindowsCatalogSetupScript.CIFS_FOLDER_EMPTY,
+            "",
+        )
+    }
+
+    @Test
     fun build_passwordNotWrittenViaWriteLogTemplates() {
         val ps1 = samplePkg().ps1Content
         val logLines = ps1.lines().filter { it.contains("Write-Log") || it.contains("Write-Step") }

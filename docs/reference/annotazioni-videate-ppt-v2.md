@@ -10,16 +10,18 @@
 
 **Passo 4:** checklist CONFIGURA / UAC / Tutto pronto.
 
-**Passo 5 (revisione4 + annotazione 22/10):**  
+**Passo 5 (revisione4 + annotazione 22/10 + fix CIFS 0.16.44):**  
 - Eliminati: «ricontrolla», bullet «Clicca qui» / «Consenti…», status sotto Indietro.  
 - Unico blocco + bottone **Attiva collegamento** (ex Scegli cartella).  
-- SI → Acquisisci; NO → stub. Routine/IP/attesa differiti.
+- SI → Acquisisci; NO → stub. Routine/IP/attesa differiti.  
+- **User CIFS:** Copia in formato `NOMEPC\MediaManager` (come «Utente SMB» in Tutto pronto; sostituire NOMEPC se ancora segnaposto).  
+- **Folder CIFS:** lasciare vuoto + Conferma (non il path Windows).  
+- **Attiva collegamento:** aprire la share `MediaManagerCatalog`, poi «Usa questa cartella».
 
 **Disco esterno PC:** percorso Windows su qualsiasi lettera (non solo C:); default resta `C:\MediaManager\Catalogo`.
 
 **Da verificare (test / follow-up):** stesso disco esterno configurato su un PC (stessa lettera + stesso percorso) collegato poi a un **altro** PC — esito SMB/share/CIFS/MediaManager (forse nessun problema; va confermato sul campo).
 
-**Test filiera 0.16.43 — KO (Renato 22/10):** Dell + MiniPC Geekom, stesso esito. Cartella creata ok su SSD esterno (`G:`). Accesso CIFS / File Manager+ «Impossibile accedere»; MediaManager «Stato: non raggiungibile».  
-**Incongruenza credenziali:** script mostra `Utente SMB: MINI_IT13\MediaManager`; Copia in app mette solo `MediaManager`. Ipotesi: formato User/Domain per jCIFS (come in passato). Approfondimento richiesto prima di fix.
+**Test filiera 0.16.43 — KO poi OK manuale (Renato 22/10):** con User `MINI_IT13\MediaManager` + Folder vuoto + aprire `MediaManagerCatalog` → **Stato: verificato**. Fix app in `0.16.44-preview` (Copia User/Folder + testo Attiva collegamento).
 
-**Stato:** `0.16.43-preview` (filiera PC non consolidata finché KO non risolto)
+**Stato:** `0.16.44-preview` (fix CIFS; da riconvalidare sul campo con Copia senza correzioni manuali)

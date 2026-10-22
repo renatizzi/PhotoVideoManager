@@ -700,8 +700,7 @@ private fun CifsCardStep(
     var cifsSavedConfirmed by remember { mutableStateOf(false) }
     var showProblemsStub by remember { mutableStateOf(false) }
     val share = state.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
-    val user = state.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER }
-    val folder = state.folderPath.ifBlank { WindowsCatalogSetupScript.DEFAULT_FOLDER }
+    val user = WindowsCatalogSetupScript.cifsUserCopyText(state.userName)
     val password = state.temporaryPassword
     val hasPassword = password.isNotBlank()
     // IP da routine → app: intervento successivo (insieme a messaggio attesa)
@@ -799,6 +798,7 @@ private fun CifsCardStep(
             onAction = { onCopyField(CifsCopyField.USERNAME) },
             checked = rowFlags[4],
             onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[4] = !it[4] } },
+            hint = stringResource(R.string.hub_b5b_user_hint),
             enabled = !state.busy,
         )
         Row(
@@ -866,9 +866,9 @@ private fun CifsCardStep(
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_folder),
-            value = folder,
-            actionLabel = stringResource(R.string.hub_copy),
-            onAction = { onCopyField(CifsCopyField.FOLDER) },
+            value = stringResource(R.string.hub_b5b_folder_value),
+            actionLabel = stringResource(R.string.hub_pc5_confirm),
+            onAction = { rowFlags = rowFlags.copyOf().also { it[7] = true } },
             checked = rowFlags[7],
             onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[7] = !it[7] } },
             hint = stringResource(R.string.hub_b5b_folder_hint),
