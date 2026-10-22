@@ -1,9 +1,21 @@
 # Backlog UX — Wizard Setup Catalogo (PC)
 
-**Aggiornato:** 20/10/2026 — UIX 0.16.37: videate utente da `videate-utente-setup-catalogo-pc.md` (PPT V2 + Q1–Q7).  
+**Aggiornato:** 22/10/2026 — nota P0 Acquisisci/censimento dispositivi; tranche CIFS visibilità + import esito.  
 **Specifica UI:** `docs/reference/videate-utente-setup-catalogo-pc.md`  
 **PPT V2:** `docs/reference/revisione_guida_V2.pptx`  
 **Non usare come specifica:** `docs/reference/template-videate-wizard-pc.md`
+
+---
+
+## P0 — Bloccante prodotto (Acquisisci / fonti) — Renato 22/10
+
+**Sintomo (S25):** in **Acquisisci** si vedono solo le cartelle del telefono, quelle di Drive e quelle di CIFS. **Nessuna visibilità** sugli altri dispositivi dove ci sono foto/video da importare nel Catalogo.
+
+**Impatto:** senza questa funzione l’app **non regge più**.
+
+**Obiettivo:** prevedere un **censimento dei dispositivi** con cui si può interagire **prima** di parlare di Catalogo (oppure un meccanismo equivalente con lo stesso risultato). Quando si apre Acquisisci devono essere visibili **tutti i dispositivi** e quindi le **cartelle disponibili** utilizzabili come fonti.
+
+**Stato:** aperto — da progettare/implementare (priorità superiore al piano residuo Wizard non bloccante).
 
 ---
 
