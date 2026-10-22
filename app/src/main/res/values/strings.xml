@@ -154,14 +154,12 @@
     <string name="hub_pc5_intro">L’ultimo passo della procedura prevede la configurazione dell’app denominata CIFS Documents Provider (scaricabile gratuitamente su Google Play).\nEcco i dati da inserire: con il bottone «Copia» puoi incollarli uno alla volta sul form di CIFS:</string>
     <string name="hub_pc5_confirm">Conferma</string>
     <string name="hub_pc5_item_saved">Confermo di aver configurato e salvato CIFS Documents Provider secondo le istruzioni sopra indicate</string>
-    <string name="hub_pc5_ultima_azione">Ultima azione: Come attivare il collegamento tra il Catalogo e CIFS</string>
-    <string name="hub_pc5_pick_click">Clicca qui</string>
-    <string name="hub_pc5_pick_select">Seleziona la cartella del Catalogo appena salvata tra quelle visualizzate in CIFS Documents Provider</string>
-    <string name="hub_pc5_pick_allow">Consenti l\'accesso alla cartella</string>
+    <string name="hub_pc5_ultima_azione">Ultima azione: clicca sul bottone «Attiva collegamento» per consentire l\'accesso al Catalogo mediante CIFS (seleziona la cartella appena salvata)</string>
+    <string name="hub_pc5_activate_link">Attiva collegamento</string>
     <string name="hub_pc5_access_question">La prova di accesso al Catalogo è andata a buon fine?</string>
     <string name="hub_pc5_access_yes">Sì</string>
     <string name="hub_pc5_access_no">No</string>
-    <string name="hub_pc5_problems_stub">La procedura che gestisce i problemi di accesso è in sviluppo. Riprova «Scegli cartella» oppure torna Indietro e verifica CIFS e il PC.</string>
+    <string name="hub_pc5_problems_stub">La procedura che gestisce i problemi di accesso è in sviluppo. Riprova «Attiva collegamento» oppure torna Indietro e verifica CIFS e il PC.</string>
     <string name="hub_pc5_options_hint">Nella sezione Option di CIFS lascia i valori predefiniti (Safe data transfer, Read only, Add extension, Thumbnail).</string>
 
     <!-- W1 locale -->
@@ -201,7 +199,6 @@
     <string name="hub_password_missing_hint">Password non disponibile in memoria (es. dopo ripresa bozza). Torna al passo di collegamento USB e conferma di nuovo con OK per rigenerare i file.</string>
     <string name="hub_cifs_install">Installa CIFS Documents Provider</string>
     <string name="hub_cifs_open">Apri CIFS Documents Provider</string>
-    <string name="hub_cifs_refresh">Ho installato / aggiornato: ricontrolla</string>
 
     <!-- Stato verifica accesso Catalogo (stessa pagina CIFS) -->
     <string name="hub_s6_status_idle">Stato: non verificato</string>

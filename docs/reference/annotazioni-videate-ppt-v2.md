@@ -10,7 +10,9 @@
 
 **Passo 4:** checklist CONFIGURA / UAC / Tutto pronto.
 
-**Passo 5 (revisione4):** conferma CIFS salvato → Ultima azione → Scegli cartella → SI/NO  
-(SI → Acquisisci; NO → stub problemi). Routine/IP/attesa differiti.
+**Passo 5 (revisione4 + annotazione 22/10):**  
+- Eliminati: «ricontrolla», bullet «Clicca qui» / «Consenti…», status sotto Indietro.  
+- Unico blocco + bottone **Attiva collegamento** (ex Scegli cartella).  
+- SI → Acquisisci; NO → stub. Routine/IP/attesa differiti.
 
-**Stato:** `0.16.41-preview`
+**Stato:** `0.16.42-preview`

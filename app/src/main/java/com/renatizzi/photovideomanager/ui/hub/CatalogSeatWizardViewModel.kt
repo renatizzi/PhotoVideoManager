@@ -395,17 +395,14 @@ class CatalogSeatWizardViewModel(
     /** Passo 4 OK: Tutto pronto → scrub Download → passo 5 CIFS. */
     fun confirmScriptRanOnPc() {
         viewModelScope.launch(Dispatchers.IO) {
-            val n = runCatching { exporter.scrubDownloadsScripts() }.getOrDefault(0)
+            runCatching { exporter.scrubDownloadsScripts() }
             refreshCifsInstalled()
             _state.update {
                 it.copy(
                     step = WizardStep.W2_CIFS,
                     scriptRanDeclared = true,
-                    statusMessage = if (n > 0) {
-                        "File di supporto rimosso da Download sul telefono (conteneva la password)."
-                    } else {
-                        null
-                    },
+                    // Nessun messaggio sotto i bottoni del Passo CIFS.
+                    statusMessage = null,
                     errorMessage = null,
                 )
             }

@@ -205,7 +205,6 @@ fun CatalogSeatWizardScreen(
                         NetworkDriveAssistant.openHelperStore(context)
                     }
                 },
-                onRefresh = onRefreshCifs,
                 onChooseFolder = { if (!state.busy) openTree.launch(null) },
                 onRetry = onRetryVerify,
                 onAccessYes = {
@@ -684,7 +683,6 @@ private fun CifsCardStep(
     onCopyField: (CifsCopyField) -> Unit,
     onCopyPassword: () -> Unit,
     onOpenCifs: () -> Unit,
-    onRefresh: () -> Unit,
     onChooseFolder: () -> Unit,
     onRetry: () -> Unit,
     onAccessYes: () -> Unit,
@@ -887,9 +885,6 @@ private fun CifsCardStep(
             },
         )
     }
-    TextButton(onClick = onRefresh, enabled = !state.busy) {
-        Text(stringResource(R.string.hub_cifs_refresh))
-    }
 
     Row(
         modifier = Modifier
@@ -911,10 +906,6 @@ private fun CifsCardStep(
 
     Text(
         stringResource(R.string.hub_pc5_ultima_azione),
-        fontWeight = FontWeight.Medium,
-    )
-    Text(
-        "• ${stringResource(R.string.hub_pc5_pick_click)}",
         style = MaterialTheme.typography.bodyMedium,
     )
     Button(
@@ -922,16 +913,8 @@ private fun CifsCardStep(
         enabled = !state.busy && readyForPick,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Text(stringResource(R.string.hub_choose_folder))
+        Text(stringResource(R.string.hub_pc5_activate_link))
     }
-    Text(
-        "• ${stringResource(R.string.hub_pc5_pick_select)}",
-        style = MaterialTheme.typography.bodyMedium,
-    )
-    Text(
-        "• ${stringResource(R.string.hub_pc5_pick_allow)}",
-        style = MaterialTheme.typography.bodyMedium,
-    )
 
     val statusText = when (state.verification) {
         SeatVerificationUi.NONE -> stringResource(R.string.hub_s6_status_idle)
