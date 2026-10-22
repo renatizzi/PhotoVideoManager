@@ -19,4 +19,7 @@
 
 **Da verificare (test / follow-up):** stesso disco esterno configurato su un PC (stessa lettera + stesso percorso) collegato poi a un **altro** PC — esito SMB/share/CIFS/MediaManager (forse nessun problema; va confermato sul campo).
 
-**Stato:** `0.16.43-preview`
+**Test filiera 0.16.43 — KO (Renato 22/10):** Dell + MiniPC Geekom, stesso esito. Cartella creata ok su SSD esterno (`G:`). Accesso CIFS / File Manager+ «Impossibile accedere»; MediaManager «Stato: non raggiungibile».  
+**Incongruenza credenziali:** script mostra `Utente SMB: MINI_IT13\MediaManager`; Copia in app mette solo `MediaManager`. Ipotesi: formato User/Domain per jCIFS (come in passato). Approfondimento richiesto prima di fix.
+
+**Stato:** `0.16.43-preview` (filiera PC non consolidata finché KO non risolto)
