@@ -297,7 +297,15 @@ fun PvmApp(
                         onRefreshCifs = wizardVm::refreshCifsInstalled,
                         onRetryVerify = wizardVm::retryPendingFolderVerification,
                         onFolderPicked = wizardVm::onFolderPicked,
+                        onAccessYes = wizardVm::acceptAccessYes,
+                        onAccessNo = wizardVm::acceptAccessNo,
                         onDone = { navController.popBackStack() },
+                        onGoToAcquire = {
+                            navController.popBackStack()
+                            navController.navigate(PvmDestination.Acquire.route) {
+                                launchSingleTop = true
+                            }
+                        },
                         onCancel = { navController.popBackStack() },
                     )
                 }

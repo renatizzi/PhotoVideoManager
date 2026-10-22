@@ -19,13 +19,14 @@ class WindowsCatalogSetupScriptTest {
     )
 
     @Test
-    fun validateFolderPath_acceptsWindowsAbsolute() {
+    fun validateFolderPath_acceptsWindowsAbsoluteOnAnyDrive() {
         assertNull(WindowsCatalogSetupScript.validateFolderPath("C:\\MediaManager\\Catalogo"))
         assertNull(WindowsCatalogSetupScript.validateFolderPath("D:\\Foto\\Catalogo"))
+        assertNull(WindowsCatalogSetupScript.validateFolderPath("E:\\MediaManager\\Catalogo"))
     }
 
     @Test
-    fun validateFolderPath_requireDriveC_rejectsOtherLetters() {
+    fun validateFolderPath_requireDriveC_optionalLegacyOnly() {
         assertNull(
             WindowsCatalogSetupScript.validateFolderPath(
                 "C:\\MediaManager\\Catalogo",
@@ -38,6 +39,21 @@ class WindowsCatalogSetupScriptTest {
                 requireDriveC = true,
             ),
         )
+        // Wizard PC: senza requireDriveC accetta disco esterno
+        assertNull(WindowsCatalogSetupScript.validateFolderPath("D:\\Foto\\Catalogo"))
+    }
+
+    @Test
+    fun build_embedsExternalDriveFolderPath() {
+        val pkg = WindowsCatalogSetupScript.build(
+            WindowsCatalogSetupScript.Params(
+                folderPath = "E:\\MediaManager\\Catalogo",
+                shareName = "MediaManagerCatalog",
+                userName = "MediaManager",
+                temporaryPassword = "TempPass!23456",
+            ),
+        )
+        assertTrue(pkg.ps1Content.contains("'E:\\MediaManager\\Catalogo'"))
     }
 
     @Test

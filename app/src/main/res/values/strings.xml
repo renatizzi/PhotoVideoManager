@@ -117,43 +117,50 @@
     <string name="hub_pc1_item_pc">PC/Notebook Windows v. 10 o superiore</string>
     <string name="hub_pc1_item_cable">Cavo USB adatto al trasferimento dei dati</string>
 
-    <!-- Passo 2 — USB / preparazione file (PPT slide 5) -->
+    <!-- Passo 2 — USB (REVISIONE3: ordine Sbloccati → Collega → USB) -->
     <string name="hub_pc2_intro">Esegui ora le seguenti verifiche preliminari:</string>
-    <string name="hub_pc2_usb_how">Il cavetto USB è spesso configurato solo per ricaricare. Per trasferire i file: apri le notifiche scorrendo dal bordo superiore, tocca «Ricarica questo dispositivo via USB» (o simile), scegli «Trasferimento di file» (o simile), poi consenti l\'accesso ai dati del telefono.</string>
-    <string name="hub_pc2_item_connect">Collega il telefono al PC/Notebook con un cavetto USB adatto al trasferimento dei dati (meglio se quello fornito in dotazione)</string>
     <string name="hub_pc2_item_unlocked">Verifica che il PC e il telefono siano accesi e sbloccati</string>
-    <string name="hub_pc2_item_transfer">Modifica sul telefono la modalità di collegamento USB da «Solo ricarica» a «Trasferimento di file»</string>
-    <string name="hub_pc2_item_allow">Consenti l\'accesso ai dati del telefono</string>
+    <string name="hub_pc2_item_connect">Collega il telefono al PC/Notebook con un cavetto USB adatto al trasferimento dei dati (meglio se quello fornito in dotazione)</string>
+    <string name="hub_pc2_item_transfer">Modifica sul telefono la modalità di collegamento USB da “Solo Ricarica” a “Trasferimento Dati” usando l’opzione di notifica «USB per ricarica smartphone». Ecco come fare:</string>
+    <string name="hub_pc2_bullet_notif">Apri le notifiche scorrendo verso il basso il bordo superiore</string>
+    <string name="hub_pc2_bullet_tap">Tocca la notifica «Ricarica questo dispositivo via USB» o simile</string>
+    <string name="hub_pc2_bullet_choose">Scegli «Trasferimento di file» o simile</string>
+    <string name="hub_pc2_bullet_allow">Consenti l’accesso ai dati del telefono</string>
 
-    <!-- Passo 3 — Copia file (PPT slide 6; nomi CONFIGURA / sup) -->
+    <!-- Passo 3 — Copia (REVISIONE3: nesting CONFIGURA / Sup) -->
     <string name="hub_pc3_intro">Dopo aver collegato il telefono al PC/Notebook esegui le seguenti operazioni:</string>
-    <string name="hub_pc3_howto">Dal PC: Esplora file → Questo PC → nome del telefono → Memoria interna (o Telefono) → Download. Seleziona i file CONFIGURA e sup, copiali (Ctrl+C) e incollali sul Desktop (Ctrl+V).</string>
     <string name="hub_pc3_item_download">Accedi dal PC alla cartella Download del telefono</string>
-    <string name="hub_pc3_item_copy">Copia i due file CONFIGURA e sup dalla cartella Download sul Desktop del PC</string>
-    <string name="hub_pc3_item_verify">Verifica che entrambi i file siano presenti sul Desktop</string>
+    <string name="hub_pc3_b_explorer">Vai sul PC ed apri “Esplora file”</string>
+    <string name="hub_pc3_b_thispc">Nel menu a sinistra clicca “Questo PC”</string>
+    <string name="hub_pc3_b_phone">Sotto \"Dispositivi e unità\" compare il nome del tuo telefono</string>
+    <string name="hub_pc3_b_dbl">Fai doppio clic sul nome</string>
+    <string name="hub_pc3_b_mem">Apri “Memoria interna condivisa” (o più semplicemente \"Telefono\" / \"Memoria interna\").</string>
+    <string name="hub_pc3_item_copy">Copia i due file che trovi in Download del telefono ed incollali sulla cartella Desktop del PC</string>
+    <string name="hub_pc3_b_search">Cerca nella cartella Download del telefono i file denominati:</string>
+    <string name="hub_pc3_b_file1">CONFIGURA</string>
+    <string name="hub_pc3_b_file2">Sup</string>
+    <string name="hub_pc3_b_ctrlc">Seleziona entrambi i file e copiali con Ctrl + C</string>
+    <string name="hub_pc3_b_ctrlv">Torna sul PC, vai sul Desktop e incollali con Ctrl + V.</string>
+    <string name="hub_pc3_item_verify">Verifica la presenza dei due file dopo il salvataggio</string>
+    <string name="hub_pc3_b_verify">Dopo il salvataggio dei file sul PC/Notebook verifica che siano presenti sulla cartella Desktop.</string>
 
-    <!-- Passo 4 — Script (PPT slide 8; doppio clic + UAC, non tasto destro) -->
+    <!-- Passo 4 — checklist accorpata Renato -->
     <string name="hub_pc4_intro">È tutto pronto per lanciare la routine che ti consentirà di creare la cartella dedicata al Catalogo personale. Ecco le istruzioni:</string>
-    <string name="hub_pc4_howto">Doppio clic sul file CONFIGURA sul Desktop. Se compare la finestra di Controllo account utente di Windows, conferma. Attendi senza interrompere: può richiedere alcuni minuti finché compare «Tutto pronto». Non usare «Esegui come amministratore» dal tasto destro.</string>
-    <string name="hub_pc4_item_doubleclick">Sul Desktop del PC/Notebook ho fatto doppio clic su CONFIGURA</string>
-    <string name="hub_pc4_item_uac">Ho confermato la finestra di Windows (Controllo account utente), se è comparsa</string>
-    <string name="hub_pc4_item_wait">Ho atteso senza interrompere finché la routine ha mostrato «Tutto pronto»</string>
+    <string name="hub_pc4_item_1">Vai sul Desktop del PC/Notebook, seleziona e fai doppio clic sul file CONFIGURA</string>
+    <string name="hub_pc4_item_2">Se compare la finestra di Controllo account utente di Windows, conferma: la routine di configurazione viene così eseguita</string>
+    <string name="hub_pc4_item_3">Al termine (ci vorrà qualche minuto) la routine mostrerà il messaggio di «Tutto pronto» per passare alla fase successiva. Non interrompere la routine</string>
 
-    <!-- Passo 5 — CIFS -->
-    <string name="hub_pc5_intro">L\'ultimo passo della procedura prevede la configurazione dell\'app denominata CIFS Documents Provider (scaricabile gratuitamente su Google Play).\n\nEcco i dati da inserire: con il bottone «Copia» puoi incollarli uno alla volta sul form di CIFS:</string>
-    <string name="hub_pc5_checklist_title">Conferma le operazioni eseguite</string>
-    <string name="hub_pc5_item_open">Ho installato / aperto CIFS Documents Provider</string>
-    <string name="hub_pc5_item_id">Ho creato una nuova Connection e lasciato ID com\'è</string>
-    <string name="hub_pc5_item_name">Ho copiato e incollato Name</string>
-    <string name="hub_pc5_item_storage">Ho impostato Storage su SMB2,3 (jCIFS NG)</string>
-    <string name="hub_pc5_item_domain">Ho lasciato Domain vuoto</string>
-    <string name="hub_pc5_item_host">Ho copiato e incollato Host (IP del PC)</string>
-    <string name="hub_pc5_item_port">Ho impostato Port a 445</string>
-    <string name="hub_pc5_item_dfs">Ho lasciato Enable DFS deselezionato</string>
-    <string name="hub_pc5_item_user">Ho copiato e incollato User</string>
-    <string name="hub_pc5_item_password">Ho copiato e incollato Password</string>
-    <string name="hub_pc5_item_save">In CIFS ho toccato Save e sono tornato a MediaManager con Indietro</string>
-    <string name="hub_pc5_item_outcome">Esito: la connessione in CIFS è salvata e la configurazione è andata a buon fine</string>
+    <!-- Passo 4 (ex-5) — CIFS + collegamento Catalogo (revisione4) -->
+    <string name="hub_pc5_intro">L’ultimo passo della procedura prevede la configurazione dell’app denominata CIFS Documents Provider (scaricabile gratuitamente su Google Play).\nEcco i dati da inserire: con il bottone «Copia» puoi incollarli uno alla volta sul form di CIFS:</string>
+    <string name="hub_pc5_confirm">Conferma</string>
+    <string name="hub_pc5_item_saved">Confermo di aver configurato e salvato CIFS Documents Provider secondo le istruzioni sopra indicate</string>
+    <string name="hub_pc5_ultima_azione">Ultima azione: clicca sul bottone «Attiva collegamento» per consentire l\'accesso al Catalogo mediante CIFS (seleziona la cartella appena salvata)</string>
+    <string name="hub_pc5_activate_link">Attiva collegamento</string>
+    <string name="hub_pc5_access_question">La prova di accesso al Catalogo è andata a buon fine?</string>
+    <string name="hub_pc5_access_yes">Sì</string>
+    <string name="hub_pc5_access_no">No</string>
+    <string name="hub_pc5_problems_stub">La procedura che gestisce i problemi di accesso è in sviluppo. Riprova «Attiva collegamento» oppure torna Indietro e verifica CIFS e il PC.</string>
+    <string name="hub_pc5_options_hint">Nella sezione Option di CIFS lascia i valori predefiniti (Safe data transfer, Read only, Add extension, Thumbnail).</string>
 
     <!-- W1 locale -->
     <string name="hub_w1_question">Vuoi usare questo apparecchio come Posizione del Catalogo?</string>
@@ -161,8 +168,8 @@
     <string name="hub_w1_confirm">Sì, usa questo dispositivo</string>
 
     <!-- Path PC (passo 0) -->
-    <string name="hub_s2_pc_path_hint">Deve iniziare con C:\\ — esempio: C:\\MediaManager\\Catalogo</string>
-    <string name="hub_w2_folder_path_label">Percorso cartella sul PC (solo C:)</string>
+    <string name="hub_s2_pc_path_hint">Percorso Windows assoluto (disco interno o esterno collegato al PC). Esempio: C:\\MediaManager\\Catalogo oppure E:\\MediaManager\\Catalogo</string>
+    <string name="hub_w2_folder_path_label">Percorso cartella sul PC</string>
 
     <!-- Passo 5 — scheda CIFS (nomi originali form Connection) -->
     <string name="hub_b5b_card_title">Connection (CIFS Documents Provider)</string>
@@ -175,6 +182,11 @@
     <string name="hub_b5b_label_domain">Domain</string>
     <string name="hub_b5b_label_user">User</string>
     <string name="hub_b5b_label_password">Password</string>
+    <string name="hub_b5b_label_anonymous">Anonymous</string>
+    <string name="hub_b5b_anonymous_value">Non attivo</string>
+    <string name="hub_b5b_anonymous_hint">Lascia deselezionato</string>
+    <string name="hub_b5b_label_folder">Folder</string>
+    <string name="hub_b5b_folder_hint">Stesso percorso scelto al primo passo</string>
     <string name="hub_b5b_label_storage">Storage</string>
     <string name="hub_b5b_label_dfs">Enable DFS (Distributed File System)</string>
     <string name="hub_b5b_domain_value">(lascia vuoto)</string>
@@ -182,23 +194,19 @@
     <string name="hub_b5b_dfs_value">Non attivo</string>
     <string name="hub_b5b_dfs_hint">Lascia deselezionato</string>
     <string name="hub_b5b_host_placeholder">IP del PC</string>
-    <string name="hub_b5b_host_hint">Sul PC, nella finestra «Tutto pronto», usa l\'IP indicato. Incollalo in Host (non usare la lente di scansione come percorso principale).</string>
+    <string name="hub_b5b_host_hint">IP dalla finestra «Tutto pronto» sul PC (recupero automatico in app: in seguito).</string>
     <string name="hub_b5b_storage_value">SMB2,3 (jCIFS NG)</string>
     <string name="hub_password_missing_hint">Password non disponibile in memoria (es. dopo ripresa bozza). Torna al passo di collegamento USB e conferma di nuovo con OK per rigenerare i file.</string>
-    <string name="hub_w2_copy_credentials">Copia tutti i campi noti</string>
     <string name="hub_cifs_install">Installa CIFS Documents Provider</string>
     <string name="hub_cifs_open">Apri CIFS Documents Provider</string>
-    <string name="hub_cifs_refresh">Ho installato / aggiornato: ricontrolla</string>
 
-    <!-- Dopo CIFS: scelta cartella SAF -->
-    <string name="hub_s6_pick_body">Tocca Scegli cartella. Nel selettore apri CIFS Documents Provider (o Tutte le cartelle → CIFS) → apri la connessione appena salvata → seleziona la cartella del Catalogo → Usa questa cartella → Consenti.\n\nMediaManager prova lettura/scrittura e il fascicolo. Se fallisce, resti qui: non riparti da zero.</string>
+    <!-- Stato verifica accesso Catalogo (stessa pagina CIFS) -->
     <string name="hub_s6_status_idle">Stato: non verificato</string>
     <string name="hub_s6_status_progress">Stato: verifica in corso…</string>
     <string name="hub_s6_status_ok">Stato: verificato</string>
     <string name="hub_s6_status_unreachable">Stato: non raggiungibile</string>
     <string name="hub_s6_status_failed">Stato: non verificato (errore)</string>
     <string name="hub_s6_retry">Riprova verifica</string>
-    <string name="hub_s6_back_cifs">Torna a CIFS</string>
 
     <!-- F Esito -->
     <string name="hub_s7_title">Configurazione completata</string>

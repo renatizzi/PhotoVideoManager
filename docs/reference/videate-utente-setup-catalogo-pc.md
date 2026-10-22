@@ -47,7 +47,7 @@ Voci (menu chiuso in pagina):
 `C:\MediaManager\Catalogo`
 
 Sotto il riquadro: `Valori modificabili`  
-Validazione sintassi (es. `\` e non `/`; lettera disco con `:`). In questa fase il disco è `C:`.
+Validazione sintassi (es. `\` e non `/`; lettera disco con `:`). Amessi disco interno **e** dischi esterni collegati al PC (`C:\…`, `E:\…`, …). Default: `C:\MediaManager\Catalogo`.
 
 **A regime:** lo stesso controllo **ridisegna** riquadro e valori di input in base al dispositivo:
 
