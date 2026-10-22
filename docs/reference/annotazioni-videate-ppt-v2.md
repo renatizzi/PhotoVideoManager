@@ -17,4 +17,6 @@
 
 **Disco esterno PC:** percorso Windows su qualsiasi lettera (non solo C:); default resta `C:\MediaManager\Catalogo`.
 
+**Da verificare (test / follow-up):** stesso disco esterno configurato su un PC (stessa lettera + stesso percorso) collegato poi a un **altro** PC — esito SMB/share/CIFS/MediaManager (forse nessun problema; va confermato sul campo).
+
 **Stato:** `0.16.43-preview`
