@@ -43,7 +43,8 @@
 ### P2 — Fuori Wizard PC immediato
 9. Pagina **Configura** «stile Utility» (slide 2 PPT).  
 10. Completare rami Cloud/NAS (oggi stub).  
-11. Funzione stampa/PDF scheda dati (nice-to-have; printscreen utente resta fallback).
+11. Funzione stampa/PDF scheda dati (nice-to-have; printscreen utente resta fallback).  
+12. **Disco esterno su secondo PC** — verificare cosa succede se lo stesso volume (stessa lettera + percorso) configurato su un PC viene usato su un altro PC (share SMB / CIFS / MediaManager). Annotato Renato 22/10.
 
 ---
 
