@@ -59,6 +59,49 @@ class WindowsSetupScriptExporter(
     }
 
     /**
+     * Cerca `MediaManager_setup_result.json` in Download (copiato dal Desktop del PC).
+     */
+    fun findSetupResultInDownloads(): WindowsSetupResult? {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                readResultFromMediaStore()
+            } else {
+                @Suppress("DEPRECATION")
+                val downloads = Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_DOWNLOADS,
+                )
+                val file = File(downloads, WindowsCatalogSetupScript.RESULT_FILE_NAME)
+                if (!file.isFile) return null
+                WindowsSetupResultParser.parse(file.readText(Charsets.UTF_8))
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun readResultFromMediaStore(): WindowsSetupResult? {
+        val resolver = context.contentResolver
+        val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        val name = WindowsCatalogSetupScript.RESULT_FILE_NAME
+        resolver.query(
+            collection,
+            arrayOf(MediaStore.Downloads._ID),
+            "${MediaStore.Downloads.DISPLAY_NAME} = ?",
+            arrayOf(name),
+            "${MediaStore.Downloads.DATE_MODIFIED} DESC",
+        )?.use { cursor ->
+            if (!cursor.moveToFirst()) return null
+            val id = cursor.getLong(0)
+            val uri = android.content.ContentUris.withAppendedId(collection, id)
+            resolver.openInputStream(uri)?.use { input ->
+                val text = input.bufferedReader(Charsets.UTF_8).readText()
+                return WindowsSetupResultParser.parse(text)
+            }
+        }
+        return null
+    }
+
+    /**
      * Removes generated setup scripts from public Downloads after successful PC setup.
      * The .ps1 still contains the temporary password until deleted.
      */

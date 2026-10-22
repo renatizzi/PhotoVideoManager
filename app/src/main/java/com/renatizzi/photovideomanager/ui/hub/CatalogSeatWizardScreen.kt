@@ -69,6 +69,7 @@ fun CatalogSeatWizardScreen(
     onConfirmUsbAndPrepare: () -> Unit,
     onConfirmCopy: () -> Unit,
     onConfirmScriptRan: () -> Unit,
+    onImportSetupResult: () -> Unit,
     onCredentialsText: () -> String,
     onPasswordText: () -> String,
     onFieldText: (CifsCopyField) -> String,
@@ -195,6 +196,7 @@ fun CatalogSeatWizardScreen(
                     val pwd = onPasswordText()
                     if (pwd.isNotBlank()) copyToClipboard(context, pwd)
                 },
+                onImportSetupResult = onImportSetupResult,
                 onOpenCifs = {
                     onRefreshCifs()
                     if (NetworkDriveAssistant.isHelperInstalled(context)) {
@@ -637,6 +639,7 @@ private fun ScriptChecklistStep(
         WizardChecklistItem(stringResource(R.string.hub_pc4_item_1)),
         WizardChecklistItem(stringResource(R.string.hub_pc4_item_2)),
         WizardChecklistItem(stringResource(R.string.hub_pc4_item_3)),
+        WizardChecklistItem(stringResource(R.string.hub_pc4_item_4)),
     )
     ChecklistOkBlock(items = items, onOk = onOk, onBack = onBack, busy = busy)
 }
@@ -687,6 +690,7 @@ private fun CifsCardStep(
     state: CatalogSeatWizardUiState,
     onCopyField: (CifsCopyField) -> Unit,
     onCopyPassword: () -> Unit,
+    onImportSetupResult: () -> Unit,
     onOpenCifs: () -> Unit,
     onChooseFolder: () -> Unit,
     onRetry: () -> Unit,
@@ -700,14 +704,43 @@ private fun CifsCardStep(
     var cifsSavedConfirmed by remember { mutableStateOf(false) }
     var showProblemsStub by remember { mutableStateOf(false) }
     val share = state.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
-    val user = WindowsCatalogSetupScript.cifsUserCopyText(state.userName)
+    val user = state.cifsUserQualified.trim().ifBlank {
+        WindowsCatalogSetupScript.cifsUserCopyText(state.userName)
+    }
+    val hostValue = state.pcHostIp.trim().ifBlank {
+        stringResource(R.string.hub_b5b_host_placeholder)
+    }
     val password = state.temporaryPassword
     val hasPassword = password.isNotBlank()
-    // IP da routine → app: intervento successivo (insieme a messaggio attesa)
-    val hostCopyable = false
+    val hostCopyable = state.pcHostIp.isNotBlank()
     val readyForPick = state.cifsInstalled && hasPassword && cifsSavedConfirmed
 
     Text(stringResource(R.string.hub_pc5_intro))
+    Text(
+        stringResource(R.string.hub_pc5_share_visibility),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+    )
+    if (state.setupResultImported) {
+        Text(
+            stringResource(R.string.hub_pc5_result_imported),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+    } else {
+        Text(
+            stringResource(R.string.hub_pc5_result_missing),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+        )
+        OutlinedButton(
+            onClick = onImportSetupResult,
+            enabled = !state.busy,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.hub_pc5_import_result))
+        }
+    }
     Text(
         stringResource(R.string.hub_b5b_card_title),
         fontWeight = FontWeight.Medium,
@@ -737,6 +770,7 @@ private fun CifsCardStep(
             onAction = { onCopyField(CifsCopyField.NAME) },
             checked = rowFlags[0],
             onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[0] = !it[0] } },
+            hint = stringResource(R.string.hub_b5b_name_hint),
             enabled = !state.busy,
         )
         CifsFieldRow(
@@ -760,7 +794,7 @@ private fun CifsCardStep(
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_host),
-            value = stringResource(R.string.hub_b5b_host_placeholder),
+            value = hostValue,
             actionLabel = stringResource(R.string.hub_copy),
             onAction = if (hostCopyable) {
                 { onCopyField(CifsCopyField.HOST) }
@@ -769,7 +803,9 @@ private fun CifsCardStep(
             },
             checked = rowFlags[2],
             onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[2] = !it[2] } },
-            hint = stringResource(R.string.hub_b5b_host_hint),
+            hint = stringResource(
+                if (hostCopyable) R.string.hub_b5b_host_hint_ready else R.string.hub_b5b_host_hint,
+            ),
             enabled = !state.busy,
         )
         CifsFieldRow(

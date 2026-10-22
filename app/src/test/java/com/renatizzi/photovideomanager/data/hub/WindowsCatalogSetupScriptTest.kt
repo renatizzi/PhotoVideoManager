@@ -166,6 +166,16 @@ class WindowsCatalogSetupScriptTest {
     }
 
     @Test
+    fun build_containsWaitBannerAndDesktopCleanup() {
+        val ps1 = samplePkg().ps1Content
+        assertTrue(ps1.contains("ATTESA: la routine puo richiedere alcuni minuti."))
+        assertTrue(ps1.contains("CONFIGURA.cmd"))
+        assertTrue(ps1.contains("CONFIGURA rimosso dal Desktop"))
+        assertTrue(ps1.contains("MediaManager_setup_result.json"))
+        assertTrue(ps1.contains("Copia dal Desktop sul telefono"))
+    }
+
+    @Test
     fun cifsUserCopyText_prefixesNomePcPlaceholder() {
         assertEquals(
             "NOMEPC\\MediaManager",

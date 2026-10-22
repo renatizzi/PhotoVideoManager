@@ -8,20 +8,22 @@
 - Sopra i bottoni: «Quando pronto clicca su OK».  
 - **Non** mostrare sotto i bottoni lo status «File CONFIGURA e sup salvati…».
 
-**Passo 4:** checklist CONFIGURA / UAC / Tutto pronto.
+**Passo 4:** checklist CONFIGURA / UAC / Tutto pronto / copia `MediaManager_setup_result.json` in Download.
 
-**Passo 5 (revisione4 + annotazione 22/10 + fix CIFS 0.16.44):**  
+**Passo 5 (revisione4 + CIFS 0.16.44/45):**  
 - Eliminati: «ricontrolla», bullet «Clicca qui» / «Consenti…», status sotto Indietro.  
 - Unico blocco + bottone **Attiva collegamento** (ex Scegli cartella).  
-- SI → Acquisisci; NO → stub. Routine/IP/attesa differiti.  
-- **User CIFS:** Copia in formato `NOMEPC\MediaManager` (come «Utente SMB» in Tutto pronto; sostituire NOMEPC se ancora segnaposto).  
-- **Folder CIFS:** lasciare vuoto + Conferma (non il path Windows).  
-- **Attiva collegamento:** aprire la share `MediaManagerCatalog`, poi «Usa questa cartella».
+- SI → Acquisisci; NO → stub.  
+- **Visibilità share:** Folder vuoto → elenco share; aprire `MediaManagerCatalog`.  
+- **User/Host:** da import esito JSON in Download (fallback `NOMEPC\…` + IP da Tutto pronto).  
+- Script: messaggio attesa + cleanup CONFIGURA dal Desktop.
 
 **Disco esterno PC:** percorso Windows su qualsiasi lettera (non solo C:); default resta `C:\MediaManager\Catalogo`.
 
 **Da verificare (test / follow-up):** stesso disco esterno configurato su un PC (stessa lettera + stesso percorso) collegato poi a un **altro** PC — esito SMB/share/CIFS/MediaManager (forse nessun problema; va confermato sul campo).
 
-**Test filiera 0.16.43 — KO poi OK manuale (Renato 22/10):** con User `MINI_IT13\MediaManager` + Folder vuoto + aprire `MediaManagerCatalog` → **Stato: verificato**. Fix app in `0.16.44-preview` (Copia User/Folder + testo Attiva collegamento).
+**P0 Acquisisci (Renato 22/10):** su S25 solo telefono/Drive/CIFS — manca censimento altri dispositivi/fonti. Vedi `docs/BACKLOG_WIZARD_UX.md`.
 
-**Stato:** `0.16.44-preview` (fix CIFS; da riconvalidare sul campo con Copia senza correzioni manuali)
+**Test filiera 0.16.43 — KO poi OK manuale (Renato 22/10):** User `MINI_IT13\MediaManager` + Folder vuoto + `MediaManagerCatalog` → verificato. Fix app 0.16.44/45.
+
+**Stato:** `0.16.45-preview` (visibilità share + import esito; da riconvalidare sul campo)

@@ -258,6 +258,9 @@ function Record(${d}name, ${d}ok, ${d}detail) {
 try {
   Write-Host ""
   Write-Host "=== MediaManager: configurazione Catalogo ===" -ForegroundColor Cyan
+  Write-Host "ATTESA: la routine puo richiedere alcuni minuti." -ForegroundColor Yellow
+  Write-Host "Non chiudere questa finestra e non interrompere finche non compare Tutto pronto." -ForegroundColor Yellow
+  Write-Host ""
   Write-Host "Passo 1 di 6 - Controlli preliminari" -ForegroundColor Cyan
   Write-Host ""
 
@@ -456,7 +459,8 @@ try {
   Write-Host ("Esito (fuori dalla condivisione): {0}" -f ${d}ResultPath)
   Write-Host ("Log: {0}" -f ${d}LogPath)
   Write-Host "AVVISO: se il PC va in sospensione, la cartella sparisce dalla rete."
-  Write-Host "Torna all'app MediaManager e continua il Wizard."
+  Write-Host "Copia dal Desktop sul telefono (Download) il file MediaManager_setup_result.json"
+  Write-Host "poi torna all'app MediaManager e continua il Wizard."
   Write-Host ""
 
   # Rimuove lo .ps1 (contiene la password) dopo successo.
@@ -465,6 +469,19 @@ try {
     if (${d}self -and (Test-Path -LiteralPath ${d}self)) {
       Remove-Item -LiteralPath ${d}self -Force -ErrorAction SilentlyContinue
       Write-Step "File di supporto eliminato dal PC (conteneva la password)."
+    }
+  } catch {}
+
+  # Cleanup CONFIGURA dal Desktop (l'esito JSON resta sul Desktop).
+  try {
+    if (${d}desktop) {
+      foreach (${d}n in @('CONFIGURA.cmd', 'CONFIGURA.CMD', 'sup.ps1')) {
+        ${d}p = Join-Path ${d}desktop ${d}n
+        if (Test-Path -LiteralPath ${d}p) {
+          Remove-Item -LiteralPath ${d}p -Force -ErrorAction SilentlyContinue
+        }
+      }
+      Write-Step "CONFIGURA rimosso dal Desktop (esito JSON lasciato)."
     }
   } catch {}
 

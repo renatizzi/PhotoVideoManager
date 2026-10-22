@@ -8,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.data.hub.WindowsCatalogSetupScript
 import com.renatizzi.photovideomanager.data.hub.WindowsSetupExportResult
+import com.renatizzi.photovideomanager.data.hub.WindowsSetupResult
+import com.renatizzi.photovideomanager.data.hub.WindowsSetupResultParser
 import com.renatizzi.photovideomanager.data.hub.WindowsSetupScriptExporter
 import com.renatizzi.photovideomanager.data.hub.WizardDraftStore
 import com.renatizzi.photovideomanager.data.storage.NetworkDriveAssistant
@@ -73,6 +75,10 @@ data class CatalogSeatWizardUiState(
     val verification: SeatVerificationUi = SeatVerificationUi.NONE,
     /** Dopo Scegli cartella: mostra domanda SI/NO (revisione4). */
     val awaitAccessOutcome: Boolean = false,
+    /** Da `MediaManager_setup_result.json` (Download). */
+    val pcHostIp: String = "",
+    val cifsUserQualified: String = "",
+    val setupResultImported: Boolean = false,
 )
 
 /**
@@ -376,14 +382,53 @@ class CatalogSeatWizardViewModel(
         return when (field) {
             CifsCopyField.NAME -> s.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
             CifsCopyField.STORAGE -> "SMB2,3 (jCIFS NG)"
-            CifsCopyField.HOST -> "" // IP solo dal PC; non inventare (intervento successivo)
+            CifsCopyField.HOST -> s.pcHostIp.trim()
             CifsCopyField.PORT -> "445"
             CifsCopyField.USERNAME ->
-                WindowsCatalogSetupScript.cifsUserCopyText(s.userName)
+                s.cifsUserQualified.trim().ifBlank {
+                    WindowsCatalogSetupScript.cifsUserCopyText(s.userName)
+                }
             CifsCopyField.PASSWORD -> s.temporaryPassword
             // Folder CIFS: lasciare vuoto (elenco share), non il path Windows.
             CifsCopyField.FOLDER -> WindowsCatalogSetupScript.CIFS_FOLDER_EMPTY
         }
+    }
+
+    /** Rilegge l’esito script da Download (User + Host). */
+    fun importSetupResultFromDownloads() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = exporter.findSetupResultInDownloads()
+            withContext(Dispatchers.Main) {
+                if (result == null || !result.isCompleted) {
+                    _state.update {
+                        it.copy(
+                            statusMessage = null,
+                            errorMessage = "Esito non trovato in Download. Copia " +
+                                "MediaManager_setup_result.json dal Desktop del PC nella " +
+                                "cartella Download del telefono, poi riprova.",
+                        )
+                    }
+                    return@withContext
+                }
+                applySetupResult(result)
+            }
+        }
+    }
+
+    private fun applySetupResult(result: WindowsSetupResult) {
+        val user = WindowsSetupResultParser.resolvedUser(result)
+        val ip = result.primaryIpv4
+        _state.update {
+            it.copy(
+                cifsUserQualified = user,
+                pcHostIp = ip,
+                shareName = result.shareName.ifBlank { it.shareName },
+                setupResultImported = true,
+                errorMessage = null,
+                statusMessage = null,
+            )
+        }
+        persistDraft()
     }
 
     fun refreshCifsInstalled() {
@@ -391,16 +436,26 @@ class CatalogSeatWizardViewModel(
         _state.update { it.copy(cifsInstalled = installed) }
     }
 
-    /** Passo 4 OK: Tutto pronto → scrub Download → passo 5 CIFS. */
+    /** Passo 4 OK: Tutto pronto → scrub script Download → import esito → passo 5 CIFS. */
     fun confirmScriptRanOnPc() {
         viewModelScope.launch(Dispatchers.IO) {
             runCatching { exporter.scrubDownloadsScripts() }
+            val result = runCatching { exporter.findSetupResultInDownloads() }.getOrNull()
             refreshCifsInstalled()
-            _state.update {
-                it.copy(
+            _state.update { current ->
+                val withResult = if (result != null && result.isCompleted) {
+                    current.copy(
+                        cifsUserQualified = WindowsSetupResultParser.resolvedUser(result),
+                        pcHostIp = result.primaryIpv4,
+                        shareName = result.shareName.ifBlank { current.shareName },
+                        setupResultImported = true,
+                    )
+                } else {
+                    current.copy(setupResultImported = false)
+                }
+                withResult.copy(
                     step = WizardStep.W2_CIFS,
                     scriptRanDeclared = true,
-                    // Nessun messaggio sotto i bottoni del Passo CIFS.
                     statusMessage = null,
                     errorMessage = null,
                 )
@@ -498,12 +553,15 @@ class CatalogSeatWizardViewModel(
     fun credentialsClipboardText(): String {
         val s = _state.value
         val share = s.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
-        val user = WindowsCatalogSetupScript.cifsUserCopyText(s.userName)
+        val user = s.cifsUserQualified.trim().ifBlank {
+            WindowsCatalogSetupScript.cifsUserCopyText(s.userName)
+        }
+        val host = s.pcHostIp.trim().ifBlank { "(IP del PC dalla finestra Tutto pronto)" }
         return buildString {
             append("Name: $share\n")
             append("Storage: SMB2,3 (jCIFS NG)\n")
             append("Domain: (lascia vuoto)\n")
-            append("Host: (IP del PC dalla finestra Tutto pronto)\n")
+            append("Host: $host\n")
             append("Port: 445\n")
             append("Enable DFS: (lascia deselezionato)\n")
             append("User: $user\n")

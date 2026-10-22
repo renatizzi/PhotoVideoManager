@@ -40,23 +40,28 @@
 
 ## Aperto — da fare prima/durante lo sviluppo UIX
 
-### P0 — Bloccanti di metodo
+### P0 — Bloccanti di metodo (Wizard)
 1. **Help contestuale (nuovo)** — repository what/if (da catalogo Claude W-xxx + Nota §5.6), ingresso per passo, niente gestione errori lunga sulle pagine operative. *Non in 0.16.36.*
 
-### P1 — Da implementare (decisioni già prese)
-3. **Slide 0 condizionale** — ✅ 0.16.36: menu a tendina + campi PC/locale/stub Cloud-NAS.  
-4. **Password usabilità** — ✅ CIFS con **Copia password** + Mostra/Nascondi.  
-5. **Prepara file sull’OK** — ✅ export sull’OK del passo 2 (checklist USB).  
-6. **Rinomina file** `CONFIGURA` / `sup` — ✅ 0.16.36.  
-7. **Messaggio attesa** — ✅ in checklist app (voce «Tutto pronto»); in-script = opzionale.  
-8. **Istruzione avvio** — ✅ doppio clic + UAC.  
-9. **Chrome titolo/sottotitolo** — ✅ passi PPT 0–5 (non «Passo N di 10»).
+### P1 — Tranche attiva (22/10): visibilità share + routine→app
+2. **Visibilità cartella condivisa (Passo 5)** — ✅ 0.16.45: Folder vuoto, share `MediaManagerCatalog`, testi Attiva collegamento.  
+3. **Import esito script → User + Host IP** — ✅ 0.16.45: `MediaManager_setup_result.json` da Download.  
+4. **Script:** ✅ 0.16.45 messaggio attesa + cleanup `CONFIGURA` dal Desktop dopo «Tutto pronto».
+
+### P1 — Già implementato
+5. **Slide 0 condizionale** — ✅ 0.16.36: menu a tendina + campi PC/locale/stub Cloud-NAS.  
+6. **Password usabilità** — ✅ CIFS con **Copia password** + Mostra/Nascondi.  
+7. **Prepara file sull’OK** — ✅ export sull’OK del passo 2 (checklist USB).  
+8. **Rinomina file** `CONFIGURA` / `sup` — ✅ 0.16.36.  
+9. **Messaggio attesa** — ✅ in checklist app (voce «Tutto pronto»); in-script = voce 4 sopra.  
+10. **Istruzione avvio** — ✅ doppio clic + UAC.  
+11. **Chrome titolo/sottotitolo** — ✅ passi PPT 0–5 (non «Passo N di 10»).
 
 ### P2 — Fuori Wizard PC immediato
-9. Pagina **Configura** «stile Utility» (slide 2 PPT).  
-10. Completare rami Cloud/NAS (oggi stub).  
-11. Funzione stampa/PDF scheda dati (nice-to-have; printscreen utente resta fallback).  
-12. **Disco esterno su secondo PC** — verificare cosa succede se lo stesso volume (stessa lettera + percorso) configurato su un PC viene usato su un altro PC (share SMB / CIFS / MediaManager). Annotato Renato 22/10.
+12. Pagina **Configura** «stile Utility» (slide 2 PPT).  
+13. Completare rami Cloud/NAS (oggi stub).  
+14. Funzione stampa/PDF scheda dati (nice-to-have; printscreen utente resta fallback).  
+15. **Disco esterno su secondo PC** — verificare cosa succede se lo stesso volume (stessa lettera + percorso) configurato su un PC viene usato su un altro PC (share SMB / CIFS / MediaManager). Annotato Renato 22/10.
 
 ---
 
