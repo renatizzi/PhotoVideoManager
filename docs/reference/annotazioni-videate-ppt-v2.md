@@ -15,4 +15,6 @@
 - Unico blocco + bottone **Attiva collegamento** (ex Scegli cartella).  
 - SI → Acquisisci; NO → stub. Routine/IP/attesa differiti.
 
-**Stato:** `0.16.42-preview`
+**Disco esterno PC:** percorso Windows su qualsiasi lettera (non solo C:); default resta `C:\MediaManager\Catalogo`.
+
+**Stato:** `0.16.43-preview`

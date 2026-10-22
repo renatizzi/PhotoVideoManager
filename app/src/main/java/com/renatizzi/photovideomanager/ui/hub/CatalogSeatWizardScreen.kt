@@ -381,7 +381,12 @@ private fun IntroStep(
                 value = folderPath,
                 onValueChange = onFolderPathChange,
                 label = { Text(stringResource(R.string.hub_w2_folder_path_label)) },
-                supportingText = { Text(stringResource(R.string.hub_s0_valori_modificabili)) },
+                supportingText = {
+                    Text(
+                        "${stringResource(R.string.hub_s0_valori_modificabili)}. " +
+                            stringResource(R.string.hub_s2_pc_path_hint),
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 enabled = !busy,

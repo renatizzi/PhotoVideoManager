@@ -168,8 +168,8 @@
     <string name="hub_w1_confirm">Sì, usa questo dispositivo</string>
 
     <!-- Path PC (passo 0) -->
-    <string name="hub_s2_pc_path_hint">Deve iniziare con C:\\ — esempio: C:\\MediaManager\\Catalogo</string>
-    <string name="hub_w2_folder_path_label">Percorso cartella sul PC (solo C:)</string>
+    <string name="hub_s2_pc_path_hint">Percorso Windows assoluto (disco interno o esterno collegato al PC). Esempio: C:\\MediaManager\\Catalogo oppure E:\\MediaManager\\Catalogo</string>
+    <string name="hub_w2_folder_path_label">Percorso cartella sul PC</string>
 
     <!-- Passo 5 — scheda CIFS (nomi originali form Connection) -->
     <string name="hub_b5b_card_title">Connection (CIFS Documents Provider)</string>

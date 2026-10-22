@@ -264,10 +264,7 @@ class CatalogSeatWizardViewModel(
         val current = _state.value
         val kind = current.selectedKind
         if (kind == CatalogSeatKind.PC_NOTEBOOK) {
-            val pathErr = WindowsCatalogSetupScript.validateFolderPath(
-                current.folderPath,
-                requireDriveC = true,
-            )
+            val pathErr = WindowsCatalogSetupScript.validateFolderPath(current.folderPath)
             if (pathErr != null) {
                 _state.update { it.copy(errorMessage = pathErr) }
                 return
@@ -434,10 +431,7 @@ class CatalogSeatWizardViewModel(
     fun prepareWindowsScript() {
         viewModelScope.launch {
             val current = _state.value
-            val pathErr = WindowsCatalogSetupScript.validateFolderPath(
-                current.folderPath,
-                requireDriveC = true,
-            )
+            val pathErr = WindowsCatalogSetupScript.validateFolderPath(current.folderPath)
             val shareErr = WindowsCatalogSetupScript.validateShareName(current.shareName)
             val userErr = WindowsCatalogSetupScript.validateUserName(current.userName)
             if (pathErr != null || shareErr != null || userErr != null) {
