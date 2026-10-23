@@ -29,7 +29,8 @@
 
 **0.16.50:** `consegna-telefono.bat` scrive `local.properties`, log `build-consegna.log`, ritenta dopo pulizia; CI Consegna APK; gate anti-spreco in REGOLE §9.
 
-**STOP lavori (Renato 23/10):** basta ricicli/crediti.  
-**KO 0.16.49 (e filiera correlata):** Passo 5 senza bottone «Riprova recupero dati» (UI: se `recoveringPcData` il ramo nasconde Riprova). Compilazione BAT OK dopo fix ambiente; non riprendere finché non richiesto.
+**STOP filiera IP/CIFS auto (Renato 23/10):** recupero Host automatico parcheggiato; IP manuale in CIFS accettato.  
+**KO 0.16.49:** Riprova sparito con `recoveringPcData`.  
+**Ripresa prodotto (23/10):** priorità **visibilità dispositivi/fonti in Acquisisci** — proposta unica in `docs/PROPOSTA_VISIBILITA_FONTI_ACQUISISCI.md` (in convalida).
 
-**Stato:** **PARCHEGGIATO** — non chiedere nuove prove telefono su questo filo.
+**Stato:** IP auto = parcheggiato · Acquisisci P0 = in convalida proposta.

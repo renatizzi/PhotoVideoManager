@@ -1,9 +1,10 @@
 # Backlog UX — Wizard Setup Catalogo (PC)
 
-**Aggiornato:** 22/10/2026 — nota P0 Acquisisci/censimento dispositivi; tranche CIFS visibilità + import esito.  
+**Aggiornato:** 23/10/2026 — proposta unica visibilità fonti; IP recovery parcheggiato.  
 **Specifica UI:** `docs/reference/videate-utente-setup-catalogo-pc.md`  
 **PPT V2:** `docs/reference/revisione_guida_V2.pptx`  
-**Non usare come specifica:** `docs/reference/template-videate-wizard-pc.md`
+**Non usare come specifica:** `docs/reference/template-videate-wizard-pc.md`  
+**Proposta blocco P0 Acquisisci (in convalida):** `docs/PROPOSTA_VISIBILITA_FONTI_ACQUISISCI.md`
 
 ---
 
@@ -13,9 +14,10 @@
 
 **Impatto:** senza questa funzione l’app **non regge più**.
 
-**Obiettivo:** prevedere un **censimento dei dispositivi** con cui si può interagire **prima** di parlare di Catalogo (oppure un meccanismo equivalente con lo stesso risultato). Quando si apre Acquisisci devono essere visibili **tutti i dispositivi** e quindi le **cartelle disponibili** utilizzabili come fonti.
+**Obiettivo:** prevedere un **censimento dei dispositivi** con cui si può interagire **prima** di parlare di Catalogo (oppure un meccanismo equivalente con lo stesso risultato). Quando si apre Acquisisci devono essere visibili **tutti i dispositivi** (ambito Nota W1–W4) e quindi le **cartelle disponibili** utilizzabili come fonti.
 
-**Stato:** aperto — da progettare/implementare (priorità superiore al piano residuo Wizard non bloccante).
+**Stato:** proposta in `docs/PROPOSTA_VISIBILITA_FONTI_ACQUISISCI.md` — **in attesa OK Renato**, poi implementazione in un solo blocco.  
+**Fuori blocco:** recupero automatico IP CIFS (parcheggio; IP manuale ok).
 
 ---
 
