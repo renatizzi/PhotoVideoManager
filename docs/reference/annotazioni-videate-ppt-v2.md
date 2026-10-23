@@ -22,4 +22,7 @@
 **KO 0.16.46 (Renato 23/10):** UDP non ha riempito Host/User; messaggio PC ancora citava JSON (`MediaManager_setup_result.json` — file tecnico interno, non per il cliente).  
 **0.16.47:** TCP+UDP dal PC, scansione HTTP in app già dal Passo 4; messaggi Tutto pronto senza path JSON/log.
 
-**Stato:** `0.16.47-preview`
+**KO 0.16.47 (Renato 23/10):** dopo 5 tentativi User sì, IP no. Causa: accept del primo UDP parziale (nome PC come Host).  
+**0.16.48:** discover completo solo con IPv4+User; IP da peer HTTP/sorgente UDP; merge; simulazioni localhost.
+
+**Stato:** `0.16.48-preview`

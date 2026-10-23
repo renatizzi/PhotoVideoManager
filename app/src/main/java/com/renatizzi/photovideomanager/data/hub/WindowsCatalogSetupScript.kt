@@ -210,14 +210,14 @@ object WindowsCatalogSetupScript {
                   }
               } catch {}
             }
+            ${s}lastUdp = Get-Date
             while ((Get-Date) -lt ${s}end) {
-              Send-UdpAll
+              if (((Get-Date) - ${s}lastUdp).TotalMilliseconds -ge 250) {
+                Send-UdpAll
+                ${s}lastUdp = Get-Date
+              }
               if (${s}tcp -ne ${s}null) {
                 try {
-                  ${s}waitEnd = (Get-Date).AddSeconds(1)
-                  while (-not ${s}tcp.Pending() -and (Get-Date) -lt ${s}waitEnd -and (Get-Date) -lt ${s}end) {
-                    Start-Sleep -Milliseconds 50
-                  }
                   if (${s}tcp.Pending()) {
                     ${s}client = ${s}tcp.AcceptTcpClient()
                     try {
@@ -237,10 +237,12 @@ object WindowsCatalogSetupScript {
                     } finally {
                       try { ${s}client.Close() } catch {}
                     }
+                  } else {
+                    Start-Sleep -Milliseconds 40
                   }
-                } catch {}
+                } catch { Start-Sleep -Milliseconds 40 }
               } else {
-                Start-Sleep -Milliseconds 500
+                Start-Sleep -Milliseconds 250
               }
             }
             try { if (${s}tcp -ne ${s}null) { ${s}tcp.Stop() } } catch {}
@@ -494,7 +496,11 @@ try {
 
   ${d}pc = ${d}env:COMPUTERNAME
   ${d}primaryIp = ${d}null
+  ${d}allIps = @()
   try {
+    ${d}allIps = @(Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+      Where-Object { ${d}_.IPAddress -notlike '127.*' -and ${d}_.IPAddress -notlike '169.254.*' } |
+      Select-Object -ExpandProperty IPAddress -Unique)
     ${d}defaultRoute = Get-NetRoute -DestinationPrefix '0.0.0.0/0' -ErrorAction SilentlyContinue |
       Sort-Object RouteMetric, InterfaceMetric |
       Select-Object -First 1
@@ -502,6 +508,10 @@ try {
       ${d}primaryIp = Get-NetIPAddress -InterfaceIndex ${d}defaultRoute.InterfaceIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue |
         Where-Object { ${d}_.IPAddress -notlike '127.*' -and ${d}_.IPAddress -notlike '169.254.*' } |
         Select-Object -ExpandProperty IPAddress -First 1
+    }
+    if (-not ${d}primaryIp -and ${d}allIps.Count -gt 0) { ${d}primaryIp = ${d}allIps[0] }
+    if (${d}primaryIp -and (${d}allIps -notcontains ${d}primaryIp)) {
+      ${d}allIps = @(${d}primaryIp) + ${d}allIps
     }
   } catch {}
 
@@ -567,14 +577,16 @@ try {
   # Servizio locale HTTP+UDP (~5 min) con i dati memorizzati a Tutto pronto.
   try {
     ${d}userJson = ${d}userHint.Replace([string][char]92, ([string][char]92 + [char]92))
-    ${d}payload = ('{{"v":1,"m":"{0}","t":"{1}","ip":"{2}","user":"{3}","share":"{4}","pc":"{5}"}}' -f ${d}AnnounceMagic, ${d}SetupToken, ${d}ipText, ${d}userJson, ${d}ShareName, ${d}pc)
+    ${d}ipsText = (${d}allIps -join ',')
+    # Concatenazione (no -f): evita amnesia di IP con caratteri speciali nel formato.
+    ${d}payload = '{"v":1,"m":"' + ${d}AnnounceMagic + '","t":"' + ${d}SetupToken + '","ip":"' + ${d}ipText + '","user":"' + ${d}userJson + '","share":"' + ${d}ShareName + '","pc":"' + ${d}pc + '","ips":"' + ${d}ipsText + '"}'
     ${d}announcerPs1 = Join-Path ([System.IO.Path]::GetTempPath()) ('MediaManager_announce_' + ${d}SetupToken + '.ps1')
     ${d}annTpl = [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String('$announcerB64'))
     ${d}annBody = ${d}annTpl.Replace('__PVM_PAYLOAD__', ${d}payload).Replace('__PVM_UDP__', [string]${d}AnnounceUdp).Replace('__PVM_HTTP__', [string]${d}AnnounceHttp)
     Set-Content -LiteralPath ${d}announcerPs1 -Value ${d}annBody -Encoding ASCII
     ${d}annProc = Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-WindowStyle','Hidden','-File', ${d}announcerPs1) -WindowStyle Hidden -PassThru
     if (${d}annProc) {
-      Write-Step 'Servizio dati per app avviato (rete locale).'
+      Write-Step ('Servizio dati per app avviato (rete locale). IP=' + ${d}ipText)
     } else {
       Write-Step 'Servizio dati rete non avviato.'
     }

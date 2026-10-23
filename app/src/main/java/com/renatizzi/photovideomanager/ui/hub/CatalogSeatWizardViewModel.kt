@@ -350,28 +350,29 @@ class CatalogSeatWizardViewModel(
         val token = _state.value.setupToken.trim()
         if (token.isBlank()) return
         stopBackgroundLanListen()
-        cachedLan.set(null)
         val cancel = AtomicBoolean(false)
         lanCancel = cancel
         lanJob = viewModelScope.launch(Dispatchers.IO) {
-            while (isActive && !cancel.get() && cachedLan.get() == null) {
+            // Continua finché non abbiamo IPv4 + utente (non fermarsi al solo User).
+            while (isActive && !cancel.get() && cachedLan.get()?.isComplete != true) {
                 val payload = runCatching {
                     SetupLanAnnounce.discover(
                         context = appContext,
                         expectedToken = token,
                         cancelled = cancel,
-                        discoverMs = 30_000L,
+                        discoverMs = 45_000L,
                     )
                 }.getOrNull()
                 if (payload != null) {
-                    cachedLan.set(payload)
+                    val merged = SetupLanAnnounce.mergePayloads(cachedLan.get(), payload)
+                    cachedLan.set(merged)
                     withContext(Dispatchers.Main.immediate) {
-                        applyLanPayload(payload)
+                        applyLanPayload(merged)
                     }
-                    return@launch
+                    if (merged.isComplete) return@launch
                 }
                 if (cancel.get()) break
-                delay(1_000)
+                delay(500)
             }
         }
     }
@@ -480,7 +481,7 @@ class CatalogSeatWizardViewModel(
     }
 
     private fun applyLanPayload(payload: SetupLanAnnounce.Payload) {
-        val host = payload.hostForCifs
+        val ipv4 = payload.hostForCifs // solo IPv4, mai il solo nome PC
         val user = payload.userQualified.ifBlank {
             if (payload.computerName.isNotBlank()) {
                 "${payload.computerName}\\${WindowsCatalogSetupScript.DEFAULT_USER}"
@@ -489,14 +490,26 @@ class CatalogSeatWizardViewModel(
             }
         }
         _state.update {
+            val host = when {
+                ipv4.isNotBlank() -> ipv4
+                SetupLanAnnounce.isIpv4(it.pcHostIp) -> it.pcHostIp
+                else -> "" // non usare DESKTOP-xxx come Host CIFS
+            }
+            val userOut = user.ifBlank { it.cifsUserQualified }
+            val complete = SetupLanAnnounce.isIpv4(host) && userOut.isNotBlank()
             it.copy(
-                cifsUserQualified = user.ifBlank { it.cifsUserQualified },
-                pcHostIp = host.ifBlank { it.pcHostIp },
+                cifsUserQualified = userOut,
+                pcHostIp = host,
                 shareName = payload.shareName.ifBlank { it.shareName },
-                setupResultImported = host.isNotBlank() || user.isNotBlank(),
-                recoveringPcData = false,
+                setupResultImported = complete,
+                recoveringPcData = !complete,
                 errorMessage = null,
-                statusMessage = null,
+                statusMessage = when {
+                    complete -> null
+                    userOut.isNotBlank() && host.isBlank() ->
+                        "Utente ricevuto; cerco ancora l'IP del PC sulla Wi‑Fi…"
+                    else -> null
+                },
             )
         }
         persistDraft()
@@ -547,9 +560,9 @@ class CatalogSeatWizardViewModel(
         }
         persistDraft()
 
-        // Gia ricevuto mentre eri al Passo 4?
+        // Gia completo mentre eri al Passo 4?
         val early = cachedLan.get()
-        if (early != null) {
+        if (early?.isComplete == true) {
             applyLanPayload(early)
             stopBackgroundLanListen()
             _state.update { it.copy(busy = false, recoveringPcData = false) }
@@ -569,12 +582,15 @@ class CatalogSeatWizardViewModel(
         }
 
         if (lan != null) {
-            cachedLan.set(lan)
-            applyLanPayload(lan)
-            stopBackgroundLanListen()
-            _state.update { it.copy(busy = false, recoveringPcData = false) }
-            persistDraft()
-            return
+            val merged = SetupLanAnnounce.mergePayloads(cachedLan.get(), lan)
+            cachedLan.set(merged)
+            applyLanPayload(merged)
+            if (merged.isComplete) {
+                stopBackgroundLanListen()
+                _state.update { it.copy(busy = false, recoveringPcData = false) }
+                persistDraft()
+                return
+            }
         }
 
         // Riserva silenziosa: JSON in Download (senza chiedere copia al cliente).
@@ -583,23 +599,33 @@ class CatalogSeatWizardViewModel(
         }
         if (fileResult != null && fileResult.isCompleted) {
             applySetupResult(fileResult)
-            _state.update { it.copy(busy = false, recoveringPcData = false) }
-            persistDraft()
-            return
+            val ip = fileResult.primaryIpv4
+            if (SetupLanAnnounce.isIpv4(ip)) {
+                stopBackgroundLanListen()
+                _state.update { it.copy(busy = false, recoveringPcData = false) }
+                persistDraft()
+                return
+            }
         }
 
-        // Continua ascolto in background: Riprova puo bastare pochi secondi dopo.
+        // Continua ascolto: manca ancora IPv4 e/o utente.
         if (token.isNotBlank() && lanJob?.isActive != true) {
             startBackgroundLanListen()
         }
 
+        val partialUser = _state.value.cifsUserQualified.isNotBlank()
         _state.update {
             it.copy(
                 busy = false,
-                recoveringPcData = false,
+                recoveringPcData = true,
                 setupResultImported = false,
-                errorMessage = "Dati del PC non ricevuti. Lascia aperta la finestra «Tutto pronto» " +
-                    "sul PC (stessa Wi‑Fi del telefono) e tocca «Riprova recupero dati».",
+                errorMessage = if (partialUser) {
+                    "Utente ricevuto ma manca l'IP. Lascia aperta «Tutto pronto» sul PC " +
+                        "(stessa Wi‑Fi); riprovo in automatico, oppure «Riprova recupero dati»."
+                } else {
+                    "Dati del PC non ricevuti. Lascia aperta la finestra «Tutto pronto» " +
+                        "sul PC (stessa Wi‑Fi del telefono) e tocca «Riprova recupero dati»."
+                },
             )
         }
         persistDraft()
