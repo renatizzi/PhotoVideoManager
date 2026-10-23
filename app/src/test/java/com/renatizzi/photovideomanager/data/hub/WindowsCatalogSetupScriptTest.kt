@@ -15,17 +15,19 @@ class WindowsCatalogSetupScriptTest {
             shareName = "MediaManagerCatalog",
             userName = "MediaManager",
             temporaryPassword = "TempPass!23456",
+            setupToken = "abc123def456",
         ),
     )
 
     @Test
-    fun validateFolderPath_acceptsWindowsAbsolute() {
+    fun validateFolderPath_acceptsWindowsAbsoluteOnAnyDrive() {
         assertNull(WindowsCatalogSetupScript.validateFolderPath("C:\\MediaManager\\Catalogo"))
         assertNull(WindowsCatalogSetupScript.validateFolderPath("D:\\Foto\\Catalogo"))
+        assertNull(WindowsCatalogSetupScript.validateFolderPath("E:\\MediaManager\\Catalogo"))
     }
 
     @Test
-    fun validateFolderPath_requireDriveC_rejectsOtherLetters() {
+    fun validateFolderPath_requireDriveC_optionalLegacyOnly() {
         assertNull(
             WindowsCatalogSetupScript.validateFolderPath(
                 "C:\\MediaManager\\Catalogo",
@@ -38,6 +40,22 @@ class WindowsCatalogSetupScriptTest {
                 requireDriveC = true,
             ),
         )
+        // Wizard PC: senza requireDriveC accetta disco esterno
+        assertNull(WindowsCatalogSetupScript.validateFolderPath("D:\\Foto\\Catalogo"))
+    }
+
+    @Test
+    fun build_embedsExternalDriveFolderPath() {
+        val pkg = WindowsCatalogSetupScript.build(
+            WindowsCatalogSetupScript.Params(
+                folderPath = "E:\\MediaManager\\Catalogo",
+                shareName = "MediaManagerCatalog",
+                userName = "MediaManager",
+                temporaryPassword = "TempPass!23456",
+                setupToken = "tokdrive01",
+            ),
+        )
+        assertTrue(pkg.ps1Content.contains("'E:\\MediaManager\\Catalogo'"))
     }
 
     @Test
@@ -103,7 +121,7 @@ class WindowsCatalogSetupScriptTest {
         assertTrue(ps1.contains("Fail-Step"))
         assertTrue(ps1.contains("Fail-Step 60") || ps1.contains("60"))
         assertTrue(ps1.contains("Tutto pronto"))
-        assertTrue(ps1.contains("Remove-Item"))
+        assertTrue(ps1.contains("Start-Process"))
         assertTrue(ps1.contains("Test-NetConnection"))
         assertTrue(ps1.contains("0.0.0.0/0"))
     }
@@ -147,6 +165,60 @@ class WindowsCatalogSetupScriptTest {
         // PowerShell does not escape backslash; format must be "{0}\{1}" not "{0}\\{1}".
         assertTrue(ps1.contains("(\"{0}\\{1}\" -f"))
         assertFalse(ps1.contains("(\"{0}\\\\{1}\" -f"))
+    }
+
+    @Test
+    fun build_containsWaitBannerAndLanAnnounce() {
+        val pkg = samplePkg()
+        val ps1 = pkg.ps1Content
+        val cmd = pkg.cmdContent
+        assertTrue(ps1.contains("ATTESA: la routine puo richiedere alcuni minuti."))
+        assertTrue(ps1.contains("SetupToken"))
+        assertTrue(ps1.contains("abc123def456"))
+        assertTrue(ps1.contains("PVMSETUP1"))
+        assertTrue(ps1.contains("FromBase64String"))
+        assertTrue(ps1.contains("Servizio dati per app avviato"))
+        assertTrue(ps1.contains("ConvertTo-Json -Compress"))
+        assertTrue(ps1.contains("ips"))
+        assertFalse(ps1.contains("Esito (fuori dalla condivisione)"))
+        assertFalse(
+            ps1.lines().any {
+                it.contains("Write-Host") && it.contains("MediaManager_setup_result.json")
+            },
+        )
+        assertFalse(
+            ps1.lines().any {
+                it.contains("Write-Host") && it.contains("MediaManager_setup.log")
+            },
+        )
+        assertFalse(ps1.contains("Copia dal Desktop sul telefono"))
+        assertTrue(cmd.contains("Lascia questa finestra aperta"))
+        assertTrue(cmd.contains("pause"))
+        val ann = WindowsCatalogSetupScript.buildAnnouncerScript()
+        assertTrue(ann.contains("TcpListener"))
+        assertTrue(ann.contains("__PVM_PAYLOAD__"))
+        assertTrue(ann.contains("EnableBroadcast"))
+        assertFalse(ann.contains("HttpListener"))
+    }
+
+    @Test
+    fun cifsUserCopyText_prefixesNomePcPlaceholder() {
+        assertEquals(
+            "NOMEPC\\MediaManager",
+            WindowsCatalogSetupScript.cifsUserCopyText("MediaManager"),
+        )
+        assertEquals(
+            "NOMEPC\\MediaManager",
+            WindowsCatalogSetupScript.cifsUserCopyText(""),
+        )
+        assertEquals(
+            "MINI_IT13\\MediaManager",
+            WindowsCatalogSetupScript.cifsUserCopyText("MINI_IT13\\MediaManager"),
+        )
+        assertEquals(
+            WindowsCatalogSetupScript.CIFS_FOLDER_EMPTY,
+            "",
+        )
     }
 
     @Test

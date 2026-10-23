@@ -10,6 +10,13 @@ object WindowsCatalogSetupScript {
     const val DEFAULT_USER = "MediaManager"
     const val DEFAULT_SHARE = "MediaManagerCatalog"
     const val DEFAULT_FOLDER = "C:\\MediaManager\\Catalogo"
+    /**
+     * Segnaposto nome PC nel formato User CIFS (`NOMEPC\utente`), allineato a
+     * «Utente SMB» nella finestra Tutto pronto. Il nome reale arriva in app in seguito.
+     */
+    const val CIFS_USER_PC_PLACEHOLDER = "NOMEPC"
+    /** Folder CIFS: vuoto → elenco share; non il percorso Windows della cartella. */
+    const val CIFS_FOLDER_EMPTY = ""
     /** File da avviare (doppio clic). Nome PPT: CONFIGURA. */
     const val CMD_FILE_NAME = "CONFIGURA.cmd"
     /** Supporto interno (non aprire). Nome PPT: sup. */
@@ -24,6 +31,9 @@ object WindowsCatalogSetupScript {
     )
     const val RESULT_FILE_NAME = "MediaManager_setup_result.json"
     const val LOG_FILE_NAME = "MediaManager_setup.log"
+    /** Porte annuncio dopo Tutto pronto (allineate a [SetupLanAnnounce]). */
+    const val SETUP_ANNOUNCE_UDP_PORT = SetupLanAnnounce.UDP_PORT
+    const val SETUP_ANNOUNCE_HTTP_PORT = SetupLanAnnounce.HTTP_PORT
 
     private val pathRegex =
         Regex("""^[A-Za-z]:\\(?:[^<>:"/\\|?*\r\n]+\\)*[^<>:"/\\|?*\r\n]*$""")
@@ -35,6 +45,8 @@ object WindowsCatalogSetupScript {
         val shareName: String = DEFAULT_SHARE,
         val userName: String = DEFAULT_USER,
         val temporaryPassword: String,
+        /** Token sessione wizard: collega «Tutto pronto» all’ascolto in app. */
+        val setupToken: String = "",
     )
 
     data class Package(
@@ -53,11 +65,16 @@ object WindowsCatalogSetupScript {
         }
     }
 
+    /**
+     * Percorso Windows assoluto su qualsiasi lettera disco (interno o esterno
+     * collegato al PC: USB, SATA, chiavetta, microSD, …).
+     * [requireDriveC] resta solo per test/legacy; il wizard PC non lo usa più.
+     */
     fun validateFolderPath(path: String, requireDriveC: Boolean = false): String? {
         val trimmed = path.trim()
         if (trimmed.isEmpty()) return "Indica il percorso della cartella sul PC"
         if (!pathRegex.matches(trimmed)) {
-            return "Percorso non valido. Esempio: C:\\MediaManager\\Catalogo"
+            return "Percorso non valido. Esempio: C:\\MediaManager\\Catalogo oppure E:\\MediaManager\\Catalogo"
         }
         if (requireDriveC && !trimmed.uppercase().startsWith("C:\\")) {
             return "In questa fase la cartella deve essere sul disco C: (esempio: C:\\MediaManager\\Catalogo)"
@@ -81,11 +98,23 @@ object WindowsCatalogSetupScript {
         return null
     }
 
+    /**
+     * Testo User da mostrare/copiare in CIFS: `NOMEPC\MediaManager` (o già
+     * qualificato). Il nome PC reale è quello in «Utente SMB» su Tutto pronto.
+     */
+    fun cifsUserCopyText(userName: String): String {
+        val user = userName.trim().ifBlank { DEFAULT_USER }
+        return if ('\\' in user) user else "$CIFS_USER_PC_PLACEHOLDER\\$user"
+    }
+
     fun build(params: Params): Package {
         validateFolderPath(params.folderPath)?.let { error(it) }
         validateShareName(params.shareName)?.let { error(it) }
         validateUserName(params.userName)?.let { error(it) }
         require(params.temporaryPassword.length >= 8) { "Password troppo corta" }
+        require(params.setupToken.matches(Regex("^[A-Za-z0-9_-]{8,64}$"))) {
+            "Token setup non valido"
+        }
 
         val pkg = Package(
             params = params,
@@ -138,6 +167,89 @@ object WindowsCatalogSetupScript {
             if (it.endsWith("\r\n")) it else it + "\r\n"
         }
 
+    /**
+     * Script secondario avviato a Tutto pronto: HTTP + UDP con placeholder
+     * `__PVM_PAYLOAD__` / `__PVM_UDP__` / `__PVM_HTTP__`.
+     */
+    internal fun buildAnnouncerScript(): String {
+        val s = "${'$'}"
+        // TcpListener (no URL ACL) + UDP broadcast: l'app recupera IP/User in LAN.
+        return """
+            ${s}ErrorActionPreference = 'SilentlyContinue'
+            ${s}payload = '__PVM_PAYLOAD__'
+            ${s}udpPort = __PVM_UDP__
+            ${s}httpPort = __PVM_HTTP__
+            try {
+              New-NetFirewallRule -DisplayName 'MediaManager Setup HTTP' -Direction Inbound -Action Allow -Protocol TCP -LocalPort ${s}httpPort -Profile Any -ErrorAction SilentlyContinue | Out-Null
+              New-NetFirewallRule -DisplayName 'MediaManager Setup UDP' -Direction Inbound -Action Allow -Protocol UDP -LocalPort ${s}udpPort -Profile Any -ErrorAction SilentlyContinue | Out-Null
+            } catch {}
+            ${s}tcp = ${s}null
+            try {
+              ${s}tcp = New-Object System.Net.Sockets.TcpListener ([System.Net.IPAddress]::Any, ${s}httpPort)
+              ${s}tcp.Start()
+            } catch { ${s}tcp = ${s}null }
+            ${s}udp = New-Object System.Net.Sockets.UdpClient
+            ${s}udp.EnableBroadcast = ${s}true
+            ${s}bytes = [System.Text.Encoding]::UTF8.GetBytes(${s}payload)
+            ${s}end = (Get-Date).AddMinutes(5)
+            function Send-UdpAll {
+              try {
+                ${s}epAll = New-Object System.Net.IPEndPoint ([System.Net.IPAddress]::Broadcast, ${s}udpPort)
+                [void]${s}udp.Send(${s}bytes, ${s}bytes.Length, ${s}epAll)
+              } catch {}
+              try {
+                Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+                  Where-Object { ${s}_.IPAddress -notlike '127.*' -and ${s}_.IPAddress -notlike '169.254.*' } |
+                  ForEach-Object {
+                    ${s}parts = ${s}_.IPAddress.Split('.')
+                    if (${s}parts.Count -eq 4) {
+                      ${s}bcast = ('{0}.{1}.{2}.255' -f ${s}parts[0], ${s}parts[1], ${s}parts[2])
+                      ${s}ep = New-Object System.Net.IPEndPoint ([System.Net.IPAddress]::Parse(${s}bcast), ${s}udpPort)
+                      [void]${s}udp.Send(${s}bytes, ${s}bytes.Length, ${s}ep)
+                    }
+                  }
+              } catch {}
+            }
+            ${s}lastUdp = Get-Date
+            while ((Get-Date) -lt ${s}end) {
+              if (((Get-Date) - ${s}lastUdp).TotalMilliseconds -ge 250) {
+                Send-UdpAll
+                ${s}lastUdp = Get-Date
+              }
+              if (${s}tcp -ne ${s}null) {
+                try {
+                  if (${s}tcp.Pending()) {
+                    ${s}client = ${s}tcp.AcceptTcpClient()
+                    try {
+                      ${s}stream = ${s}client.GetStream()
+                      ${s}req = New-Object byte[] 4096
+                      try { [void]${s}stream.Read(${s}req, 0, ${s}req.Length) } catch {}
+                      ${s}body = [System.Text.Encoding]::UTF8.GetBytes(${s}payload)
+                      ${s}hdr = [System.Text.Encoding]::ASCII.GetBytes(
+                        ('HTTP/1.1 200 OK' + [char]13 + [char]10 +
+                         'Content-Type: application/json; charset=utf-8' + [char]13 + [char]10 +
+                         ('Content-Length: {0}' -f ${s}body.Length) + [char]13 + [char]10 +
+                         'Connection: close' + [char]13 + [char]10 + [char]13 + [char]10)
+                      )
+                      ${s}stream.Write(${s}hdr, 0, ${s}hdr.Length)
+                      ${s}stream.Write(${s}body, 0, ${s}body.Length)
+                      ${s}stream.Flush()
+                    } finally {
+                      try { ${s}client.Close() } catch {}
+                    }
+                  } else {
+                    Start-Sleep -Milliseconds 40
+                  }
+                } catch { Start-Sleep -Milliseconds 40 }
+              } else {
+                Start-Sleep -Milliseconds 250
+              }
+            }
+            try { if (${s}tcp -ne ${s}null) { ${s}tcp.Stop() } } catch {}
+            try { ${s}udp.Close() } catch {}
+        """.trimIndent().replace("\n", "\r\n") + "\r\n"
+    }
+
     private fun buildCmd(): String = crlf(
         """
         @echo off
@@ -160,10 +272,12 @@ object WindowsCatalogSetupScript {
           echo  Configurazione NON completata. Codice: %ERR%
           echo  10=cartella 20=utente 30=condivisione 40=NTFS 50=rete/firewall 60=verifica
         ) else (
-          echo  Tutto pronto. Puoi chiudere questa finestra e tornare all'app.
+          echo  Tutto pronto. Lascia questa finestra aperta qualche minuto:
+          echo  l'app recupera da sola IP e utente. Poi puoi chiuderla.
         )
         echo.
         pause
+        del "%~dp0$PS1_FILE_NAME" >nul 2>&1
         exit /b %ERR%
         """.trimIndent(),
     )
@@ -176,8 +290,14 @@ object WindowsCatalogSetupScript {
         val share = psQuote(params.shareName.trim())
         val user = psQuote(params.userName.trim())
         val password = psQuote(params.temporaryPassword)
+        val setupToken = psQuote(params.setupToken.trim())
         val resultName = psQuote(RESULT_FILE_NAME)
         val logName = psQuote(LOG_FILE_NAME)
+        val announceUdp = SETUP_ANNOUNCE_UDP_PORT
+        val announceHttp = SETUP_ANNOUNCE_HTTP_PORT
+        val announceMagic = SetupLanAnnounce.MAGIC
+        val announcerB64 = java.util.Base64.getEncoder()
+            .encodeToString(buildAnnouncerScript().toByteArray(Charsets.US_ASCII))
         val d = "${'$'}"
 
         // PowerShell body: keep parameters at top; exit codes 10/20/30/40/50/60.
@@ -194,8 +314,12 @@ ${d}FolderPath     = $folder
 ${d}ShareName      = $share
 ${d}UserName       = $user
 ${d}PlainPassword  = $password
+${d}SetupToken     = $setupToken
 ${d}ResultFileName = $resultName
 ${d}LogFileName    = $logName
+${d}AnnounceUdp    = $announceUdp
+${d}AnnounceHttp   = $announceHttp
+${d}AnnounceMagic  = '$announceMagic'
 ${d}FirewallGroup  = '@FirewallAPI.dll,-28502'
 ${d}ExitCode       = 1
 
@@ -237,6 +361,9 @@ function Record(${d}name, ${d}ok, ${d}detail) {
 try {
   Write-Host ""
   Write-Host "=== MediaManager: configurazione Catalogo ===" -ForegroundColor Cyan
+  Write-Host "ATTESA: la routine puo richiedere alcuni minuti." -ForegroundColor Yellow
+  Write-Host "Non chiudere questa finestra e non interrompere finche non compare Tutto pronto." -ForegroundColor Yellow
+  Write-Host ""
   Write-Host "Passo 1 di 6 - Controlli preliminari" -ForegroundColor Cyan
   Write-Host ""
 
@@ -369,7 +496,11 @@ try {
 
   ${d}pc = ${d}env:COMPUTERNAME
   ${d}primaryIp = ${d}null
+  ${d}allIps = @()
   try {
+    ${d}allIps = @(Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+      Where-Object { ${d}_.IPAddress -notlike '127.*' -and ${d}_.IPAddress -notlike '169.254.*' } |
+      Select-Object -ExpandProperty IPAddress -Unique)
     ${d}defaultRoute = Get-NetRoute -DestinationPrefix '0.0.0.0/0' -ErrorAction SilentlyContinue |
       Sort-Object RouteMetric, InterfaceMetric |
       Select-Object -First 1
@@ -377,6 +508,10 @@ try {
       ${d}primaryIp = Get-NetIPAddress -InterfaceIndex ${d}defaultRoute.InterfaceIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue |
         Where-Object { ${d}_.IPAddress -notlike '127.*' -and ${d}_.IPAddress -notlike '169.254.*' } |
         Select-Object -ExpandProperty IPAddress -First 1
+    }
+    if (-not ${d}primaryIp -and ${d}allIps.Count -gt 0) { ${d}primaryIp = ${d}allIps[0] }
+    if (${d}primaryIp -and (${d}allIps -notcontains ${d}primaryIp)) {
+      ${d}allIps = @(${d}primaryIp) + ${d}allIps
     }
   } catch {}
 
@@ -402,10 +537,13 @@ try {
   Record 'verify' ${d}true 'ok'
 
   ${d}userHint = ("{0}\{1}" -f ${d}pc, ${d}UserName)
+  ${d}ipText = $(if (${d}primaryIp) { [string]${d}primaryIp } else { '' })
+  # Memorizza IP/User a Tutto pronto (file locale + annuncio Wi-Fi per l'app).
   ${d}result = [pscustomobject]@{
     app = 'MediaManager'
     version = 1
     status = 'completed'
+    setupToken = ${d}SetupToken
     computerName = ${d}pc
     folderPath = ${d}FolderPath
     shareName = ${d}ShareName
@@ -427,25 +565,42 @@ try {
   Write-Host ("Cartella:      {0}" -f ${d}FolderPath)
   # Build UNC with [char]92 so backslashes are never doubled by escaping.
   Write-Host ("Condivisione:  " + [string][char]92 + [char]92 + ${d}pc + [char]92 + ${d}ShareName)
-  if (${d}primaryIp) { Write-Host ("IP:            {0}" -f ${d}primaryIp) }
-  Write-Host ("Utente SMB:    {0}" -f ${d}userHint)
+  if (${d}primaryIp) { Write-Host ("IP:            {0}" -f ${d}primaryIp) } else { Write-Host "IP:            (non rilevato; l'app usera il nome PC)" }
+  Write-Host ("Utente:        {0}" -f ${d}userHint)
   Write-Host ("Password:      {0}" -f ${d}PlainPassword) -ForegroundColor Yellow
   Write-Host ""
   Write-Host "Password PROVVISORIA: cambiala in Windows e aggiorna Archivio sul tablet."
-  Write-Host ("Esito (fuori dalla condivisione): {0}" -f ${d}ResultPath)
-  Write-Host ("Log: {0}" -f ${d}LogPath)
   Write-Host "AVVISO: se il PC va in sospensione, la cartella sparisce dalla rete."
-  Write-Host "Torna all'app MediaManager e continua il Wizard."
+  Write-Host "Lascia questa finestra aperta. Torna all'app e continua: recupera IP e utente da sola."
   Write-Host ""
 
-  # Rimuove lo .ps1 (contiene la password) dopo successo.
+  # Servizio locale HTTP+UDP (~5 min) con i dati memorizzati a Tutto pronto.
   try {
-    ${d}self = ${d}MyInvocation.MyCommand.Path
-    if (${d}self -and (Test-Path -LiteralPath ${d}self)) {
-      Remove-Item -LiteralPath ${d}self -Force -ErrorAction SilentlyContinue
-      Write-Step "File di supporto eliminato dal PC (conteneva la password)."
+    ${d}ipsText = (${d}allIps -join ',')
+    # ConvertTo-Json: niente concatenazione di virgolette (piu sicuro per ParseFile / Studio).
+    ${d}payload = ([ordered]@{
+      v = 1
+      m = ${d}AnnounceMagic
+      t = ${d}SetupToken
+      ip = ${d}ipText
+      user = ${d}userHint
+      share = ${d}ShareName
+      pc = ${d}pc
+      ips = ${d}ipsText
+    } | ConvertTo-Json -Compress)
+    ${d}announcerPs1 = Join-Path ([System.IO.Path]::GetTempPath()) ('MediaManager_announce_' + ${d}SetupToken + '.ps1')
+    ${d}annTpl = [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String('$announcerB64'))
+    ${d}annBody = ${d}annTpl.Replace('__PVM_PAYLOAD__', ${d}payload).Replace('__PVM_UDP__', [string]${d}AnnounceUdp).Replace('__PVM_HTTP__', [string]${d}AnnounceHttp)
+    Set-Content -LiteralPath ${d}announcerPs1 -Value ${d}annBody -Encoding ASCII
+    ${d}annProc = Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-WindowStyle','Hidden','-File', ${d}announcerPs1) -WindowStyle Hidden -PassThru
+    if (${d}annProc) {
+      Write-Step ('Servizio dati per app avviato (rete locale). IP=' + ${d}ipText)
+    } else {
+      Write-Step 'Servizio dati rete non avviato.'
     }
-  } catch {}
+  } catch {
+    Write-Step 'Servizio dati rete non avviato.'
+  }
 
   ${d}ExitCode = 0
   exit 0

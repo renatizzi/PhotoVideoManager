@@ -17,6 +17,11 @@ La verifica di **0.16.2 è KO**: priorità assoluta correggere i criteri non rec
 
 ## 1. Riferimenti al progetto e regole vincolanti condivise
 
+### 0. Regole di collaborazione (permanenti — prevalgono sul metodo di lavoro)
+**Obbligatorio all’avvio di ogni sessione:**  
+`docs/REGOLE_COLLABORAZIONE_MEDIAMANAGER.md` e `AGENTS.md` (radice repo).  
+Adottate 23/10/2026. Comunicazione semplice, niente ricicli, controllo prima del codice, test telefono unitari con istruzioni complete. In contrasto sul *metodo di lavoro*, prevalgono quei documenti.
+
 ### 1.1 Repository e branch
 - Repo: `renatizzi/PhotoVideoManager` (anche URL legacy `photovideomanager`)
 - Branch di lavoro tipico: `cursor/m02-architettura-applicativa-e02a` (base PR verso `main`)
@@ -26,6 +31,7 @@ La verifica di **0.16.2 è KO**: priorità assoluta correggere i criteri non rec
 ### 1.2 Documenti vincolanti (leggere per intero prima di modificare codice)
 | Documento | Percorso | Perché |
 |---|---|---|
+| **Regole collaborazione** | `docs/REGOLE_COLLABORAZIONE_MEDIAMANAGER.md` + `AGENTS.md` | Metodo di lavoro permanente (23/10/2026) |
 | **Nota Integrata (documento unico)** | `docs/PVM_Nota_Integrata.md` (v5.3) | Requisiti, UI congelata §5.6, roadmap §7, backlog §7.3 |
 | **Terminologia UI** | `docs/TERMINOLOGIA_UI.md` | Catalogo / File del dispositivo; conferme SÌ/NO stile BoxManager |
 | **Shell parity** | `docs/SHELL_PARITY.md` | Coerenza shell con BoxManager |

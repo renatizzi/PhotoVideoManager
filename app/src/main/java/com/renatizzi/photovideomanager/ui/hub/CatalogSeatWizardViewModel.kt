@@ -8,16 +8,25 @@ import androidx.lifecycle.viewModelScope
 import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.data.hub.WindowsCatalogSetupScript
 import com.renatizzi.photovideomanager.data.hub.WindowsSetupExportResult
+import com.renatizzi.photovideomanager.data.hub.SetupLanAnnounce
+import com.renatizzi.photovideomanager.data.hub.WindowsSetupResult
+import com.renatizzi.photovideomanager.data.hub.WindowsSetupResultParser
 import com.renatizzi.photovideomanager.data.hub.WindowsSetupScriptExporter
 import com.renatizzi.photovideomanager.data.hub.WizardDraftStore
 import com.renatizzi.photovideomanager.data.storage.NetworkDriveAssistant
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeat
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -34,6 +43,7 @@ enum class CifsCopyField {
     PORT,
     USERNAME,
     PASSWORD,
+    FOLDER,
 }
 
 /** Esito prova lettura/scrittura + fascicolo (S6). */
@@ -70,6 +80,15 @@ data class CatalogSeatWizardUiState(
     val statusMessage: String? = null,
     val cifsInstalled: Boolean = false,
     val verification: SeatVerificationUi = SeatVerificationUi.NONE,
+    /** Dopo Scegli cartella: mostra domanda SI/NO (revisione4). */
+    val awaitAccessOutcome: Boolean = false,
+    /** Host/User recuperati a «Tutto pronto» (annuncio Wi‑Fi). */
+    val pcHostIp: String = "",
+    val cifsUserQualified: String = "",
+    val setupResultImported: Boolean = false,
+    val setupToken: String = "",
+    /** Ascolto rete in corso dopo OK Passo 4. */
+    val recoveringPcData: Boolean = false,
 )
 
 /**
@@ -89,7 +108,7 @@ enum class WizardStep {
     PC_COPY_FILES,
     /** Passo 4 — Avvio script (doppio clic + UAC + Tutto pronto). */
     PC_RUN_SCRIPT,
-    /** Passo 5 — Scheda CIFS con Copia. */
+    /** Passo 5 — Scheda CIFS + collegamento Catalogo (revisione4). */
     W2_CIFS,
     W2_PICK,
     W3_GUIDE,
@@ -121,10 +140,19 @@ class CatalogSeatWizardViewModel(
     val state: StateFlow<CatalogSeatWizardUiState> = _state.asStateFlow()
 
     private var lastExport: WindowsSetupExportResult? = null
+    /** Ascolto LAN già dal Passo 4 (mentre CONFIGURA gira sul PC). */
+    private var lanCancel: AtomicBoolean? = null
+    private val cachedLan = AtomicReference<SetupLanAnnounce.Payload?>(null)
+    private var lanJob: Job? = null
 
     init {
         refreshCifsInstalled()
         loadEntryState()
+    }
+
+    override fun onCleared() {
+        stopBackgroundLanListen()
+        super.onCleared()
     }
 
     private fun loadEntryState() {
@@ -222,12 +250,24 @@ class CatalogSeatWizardViewModel(
                 scriptPrepared = draft.scriptPrepared,
                 usbCopiedDeclared = draft.usbCopiedDeclared,
                 scriptRanDeclared = draft.scriptRanDeclared,
+                setupToken = draft.setupToken,
+                pcHostIp = draft.pcHostIp,
+                cifsUserQualified = draft.cifsUserQualified,
+                setupResultImported = draft.pcHostIp.isNotBlank() || draft.cifsUserQualified.isNotBlank(),
                 canResumeDraft = false,
                 errorMessage = null,
                 statusMessage = null,
                 completedSeat = null,
             )
         }
+        val needLan = draft.setupToken.isNotBlank() &&
+            draft.pcHostIp.isBlank() &&
+            (
+                step == WizardStep.PC_RUN_SCRIPT ||
+                    step == WizardStep.W2_CIFS ||
+                    step == WizardStep.W2_PICK
+                )
+        if (needLan) startBackgroundLanListen()
     }
 
     fun discardDraftAndStayOnS0() {
@@ -261,10 +301,7 @@ class CatalogSeatWizardViewModel(
         val current = _state.value
         val kind = current.selectedKind
         if (kind == CatalogSeatKind.PC_NOTEBOOK) {
-            val pathErr = WindowsCatalogSetupScript.validateFolderPath(
-                current.folderPath,
-                requireDriveC = true,
-            )
+            val pathErr = WindowsCatalogSetupScript.validateFolderPath(current.folderPath)
             if (pathErr != null) {
                 _state.update { it.copy(errorMessage = pathErr) }
                 return
@@ -289,7 +326,7 @@ class CatalogSeatWizardViewModel(
         persistDraft()
     }
 
-    /** Passo 2 OK → esporta CONFIGURA/sup in Download, poi passo 3. */
+    /** Passo 2 OK → esporta CONFIGURA/sup in Download, poi passo 3 (copia). */
     fun confirmUsbAndPrepareFiles() {
         prepareWindowsScript()
     }
@@ -305,6 +342,46 @@ class CatalogSeatWizardViewModel(
             )
         }
         persistDraft()
+        // Ascolto subito: quando sul PC compare Tutto pronto l'app puo gia ricevere IP/User.
+        startBackgroundLanListen()
+    }
+
+    private fun startBackgroundLanListen() {
+        val token = _state.value.setupToken.trim()
+        if (token.isBlank()) return
+        stopBackgroundLanListen()
+        val cancel = AtomicBoolean(false)
+        lanCancel = cancel
+        lanJob = viewModelScope.launch(Dispatchers.IO) {
+            // Continua finché non abbiamo IPv4 + utente (non fermarsi al solo User).
+            while (isActive && !cancel.get() && cachedLan.get()?.isComplete != true) {
+                val payload = runCatching {
+                    SetupLanAnnounce.discover(
+                        context = appContext,
+                        expectedToken = token,
+                        cancelled = cancel,
+                        discoverMs = 45_000L,
+                    )
+                }.getOrNull()
+                if (payload != null) {
+                    val merged = SetupLanAnnounce.mergePayloads(cachedLan.get(), payload)
+                    cachedLan.set(merged)
+                    withContext(Dispatchers.Main.immediate) {
+                        applyLanPayload(merged)
+                    }
+                    if (merged.isComplete) return@launch
+                }
+                if (cancel.get()) break
+                delay(500)
+            }
+        }
+    }
+
+    private fun stopBackgroundLanListen() {
+        lanCancel?.set(true)
+        lanCancel = null
+        lanJob?.cancel()
+        lanJob = null
     }
 
     fun goStep(step: WizardStep) {
@@ -319,6 +396,7 @@ class CatalogSeatWizardViewModel(
         persistDraft()
     }
 
+    @Suppress("DEPRECATION")
     fun normalizeLegacyStep(step: WizardStep): WizardStep = when (step) {
         WizardStep.W2_CHOICE,
         WizardStep.W2_ROUTINE_PARAMS,
@@ -335,6 +413,7 @@ class CatalogSeatWizardViewModel(
         WizardStep.W2_PREPARE,
         WizardStep.W2_HELP,
         WizardStep.W2_PASSWORD_HELP,
+        WizardStep.W2_PICK,
         -> WizardStep.W2_CIFS
         else -> step
     }
@@ -359,6 +438,9 @@ class CatalogSeatWizardViewModel(
                     SetupMode.MODIFY -> WizardDraftStore.MODE_MODIFY
                     SetupMode.CREATE -> WizardDraftStore.MODE_CREATE
                 },
+                setupToken = s.setupToken,
+                pcHostIp = s.pcHostIp,
+                cifsUserQualified = s.cifsUserQualified,
             ),
         )
     }
@@ -374,11 +456,80 @@ class CatalogSeatWizardViewModel(
         return when (field) {
             CifsCopyField.NAME -> s.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
             CifsCopyField.STORAGE -> "SMB2,3 (jCIFS NG)"
-            CifsCopyField.HOST -> "" // IP solo dal PC; non inventare
+            CifsCopyField.HOST -> s.pcHostIp.trim()
             CifsCopyField.PORT -> "445"
-            CifsCopyField.USERNAME -> s.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER }
+            CifsCopyField.USERNAME ->
+                s.cifsUserQualified.trim().ifBlank {
+                    WindowsCatalogSetupScript.cifsUserCopyText(s.userName)
+                }
             CifsCopyField.PASSWORD -> s.temporaryPassword
+            // Folder CIFS: lasciare vuoto (elenco share), non il path Windows.
+            CifsCopyField.FOLDER -> WindowsCatalogSetupScript.CIFS_FOLDER_EMPTY
         }
+    }
+
+    /** Riprova ascolto Wi‑Fi (stesso token della sessione). */
+    fun retryRecoverPcData() {
+        val token = _state.value.setupToken
+        if (token.isBlank()) {
+            _state.update {
+                it.copy(errorMessage = "Sessione setup non pronta. Torna al passo USB e genera di nuovo i file.")
+            }
+            return
+        }
+        viewModelScope.launch { recoverPcDataAndOpenCifs(token, alreadyOnCifs = true) }
+    }
+
+    private fun applyLanPayload(payload: SetupLanAnnounce.Payload) {
+        val ipv4 = payload.hostForCifs // solo IPv4, mai il solo nome PC
+        val user = payload.userQualified.ifBlank {
+            if (payload.computerName.isNotBlank()) {
+                "${payload.computerName}\\${WindowsCatalogSetupScript.DEFAULT_USER}"
+            } else {
+                ""
+            }
+        }
+        _state.update {
+            val host = when {
+                ipv4.isNotBlank() -> ipv4
+                SetupLanAnnounce.isIpv4(it.pcHostIp) -> it.pcHostIp
+                else -> "" // non usare DESKTOP-xxx come Host CIFS
+            }
+            val userOut = user.ifBlank { it.cifsUserQualified }
+            val complete = SetupLanAnnounce.isIpv4(host) && userOut.isNotBlank()
+            it.copy(
+                cifsUserQualified = userOut,
+                pcHostIp = host,
+                shareName = payload.shareName.ifBlank { it.shareName },
+                setupResultImported = complete,
+                recoveringPcData = !complete,
+                errorMessage = null,
+                statusMessage = when {
+                    complete -> null
+                    userOut.isNotBlank() && host.isBlank() ->
+                        "Utente ricevuto; cerco ancora l'IP del PC sulla Wi‑Fi…"
+                    else -> null
+                },
+            )
+        }
+        persistDraft()
+    }
+
+    private fun applySetupResult(result: WindowsSetupResult) {
+        val user = WindowsSetupResultParser.resolvedUser(result)
+        val ip = result.primaryIpv4
+        _state.update {
+            it.copy(
+                cifsUserQualified = user,
+                pcHostIp = ip,
+                shareName = result.shareName.ifBlank { it.shareName },
+                setupResultImported = true,
+                recoveringPcData = false,
+                errorMessage = null,
+                statusMessage = null,
+            )
+        }
+        persistDraft()
     }
 
     fun refreshCifsInstalled() {
@@ -386,25 +537,98 @@ class CatalogSeatWizardViewModel(
         _state.update { it.copy(cifsInstalled = installed) }
     }
 
-    /** Passo 4 OK: Tutto pronto → scrub Download → passo 5 CIFS. */
+    /** Passo 4 OK: ascolto Wi‑Fi dei dati memorizzati a Tutto pronto → passo 5 CIFS. */
     fun confirmScriptRanOnPc() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val n = runCatching { exporter.scrubDownloadsScripts() }.getOrDefault(0)
-            refreshCifsInstalled()
-            _state.update {
-                it.copy(
-                    step = WizardStep.W2_CIFS,
-                    scriptRanDeclared = true,
-                    statusMessage = if (n > 0) {
-                        "File di supporto rimosso da Download sul telefono (conteneva la password)."
-                    } else {
-                        null
-                    },
-                    errorMessage = null,
-                )
-            }
-            persistDraft()
+        val token = _state.value.setupToken
+        viewModelScope.launch {
+            runCatching { withContext(Dispatchers.IO) { exporter.scrubDownloadsScripts() } }
+            recoverPcDataAndOpenCifs(token, alreadyOnCifs = false)
         }
+    }
+
+    private suspend fun recoverPcDataAndOpenCifs(token: String, alreadyOnCifs: Boolean) {
+        refreshCifsInstalled()
+        _state.update {
+            it.copy(
+                busy = true,
+                recoveringPcData = true,
+                scriptRanDeclared = true,
+                step = if (alreadyOnCifs) it.step else WizardStep.W2_CIFS,
+                statusMessage = null,
+                errorMessage = null,
+            )
+        }
+        persistDraft()
+
+        // Gia completo mentre eri al Passo 4?
+        val early = cachedLan.get()
+        if (early?.isComplete == true) {
+            applyLanPayload(early)
+            stopBackgroundLanListen()
+            _state.update { it.copy(busy = false, recoveringPcData = false) }
+            persistDraft()
+            return
+        }
+
+        val cancelled = AtomicBoolean(false)
+        val lan = if (token.isNotBlank()) {
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    SetupLanAnnounce.discover(appContext, token, cancelled)
+                }.getOrNull()
+            }
+        } else {
+            null
+        }
+
+        if (lan != null) {
+            val merged = SetupLanAnnounce.mergePayloads(cachedLan.get(), lan)
+            cachedLan.set(merged)
+            applyLanPayload(merged)
+            if (merged.isComplete) {
+                stopBackgroundLanListen()
+                _state.update { it.copy(busy = false, recoveringPcData = false) }
+                persistDraft()
+                return
+            }
+        }
+
+        // Riserva silenziosa: JSON in Download (senza chiedere copia al cliente).
+        val fileResult = withContext(Dispatchers.IO) {
+            runCatching { exporter.findSetupResultInDownloads() }.getOrNull()
+        }
+        if (fileResult != null && fileResult.isCompleted) {
+            applySetupResult(fileResult)
+            val ip = fileResult.primaryIpv4
+            if (SetupLanAnnounce.isIpv4(ip)) {
+                stopBackgroundLanListen()
+                _state.update { it.copy(busy = false, recoveringPcData = false) }
+                persistDraft()
+                return
+            }
+        }
+
+        // Continua ascolto: manca ancora IPv4 e/o utente.
+        if (token.isNotBlank() && lanJob?.isActive != true) {
+            startBackgroundLanListen()
+        }
+
+        val partialUser = _state.value.cifsUserQualified.isNotBlank()
+        _state.update {
+            it.copy(
+                busy = false,
+                recoveringPcData = true,
+                setupResultImported = false,
+                errorMessage = if (partialUser) {
+                    "Utente ricevuto ma manca l'IP. Lascia aperta «Tutto pronto» sul PC " +
+                        "(stessa Wi‑Fi); riprovo in automatico, oppure «Riprova recupero dati»."
+                } else {
+                    "Dati del PC non ricevuti. Lascia aperta la finestra «Tutto pronto» " +
+                        "sul PC (stessa Wi‑Fi del telefono) e tocca «Riprova recupero dati»."
+                },
+            )
+        }
+        persistDraft()
     }
 
     /** @deprecated bozze: usa [confirmCopyChecked]. */
@@ -431,10 +655,7 @@ class CatalogSeatWizardViewModel(
     fun prepareWindowsScript() {
         viewModelScope.launch {
             val current = _state.value
-            val pathErr = WindowsCatalogSetupScript.validateFolderPath(
-                current.folderPath,
-                requireDriveC = true,
-            )
+            val pathErr = WindowsCatalogSetupScript.validateFolderPath(current.folderPath)
             val shareErr = WindowsCatalogSetupScript.validateShareName(current.shareName)
             val userErr = WindowsCatalogSetupScript.validateUserName(current.userName)
             if (pathErr != null || shareErr != null || userErr != null) {
@@ -448,6 +669,9 @@ class CatalogSeatWizardViewModel(
             val password = current.temporaryPassword.ifBlank {
                 WindowsCatalogSetupScript.generatePassword()
             }
+            val setupToken = current.setupToken.ifBlank {
+                UUID.randomUUID().toString().replace("-", "")
+            }
             val result = withContext(Dispatchers.IO) {
                 runCatching {
                     val pkg = WindowsCatalogSetupScript.build(
@@ -456,6 +680,7 @@ class CatalogSeatWizardViewModel(
                             shareName = current.shareName.trim(),
                             userName = current.userName.trim(),
                             temporaryPassword = password,
+                            setupToken = setupToken,
                         ),
                     )
                     exporter.export(pkg)
@@ -464,24 +689,17 @@ class CatalogSeatWizardViewModel(
             result.fold(
                 onSuccess = { export ->
                     lastExport = export
-                    val status = buildString {
-                        if (export.downloadsSaved) {
-                            append("File CONFIGURA e sup salvati in Download. ")
-                        }
-                        if (export.usbCopiedTo != null) {
-                            append("Copiati anche su USB («${export.usbCopiedTo}»). ")
-                        } else {
-                            append("Ora copiali sul Desktop del PC come da istruzioni. ")
-                        }
-                    }.trim()
+                    // Nessun statusMessage sotto i bottoni del Passo 3: le istruzioni
+                    // sono nella checklist; «Quando pronto clicca su OK» sta sopra Indietro/OK.
                     _state.update {
                         it.copy(
                             busy = false,
                             temporaryPassword = password,
+                            setupToken = setupToken,
                             scriptPrepared = true,
                             downloadsSaved = export.downloadsSaved,
                             usbCopiedTo = export.usbCopiedTo,
-                            statusMessage = status,
+                            statusMessage = null,
                             step = WizardStep.PC_COPY_FILES,
                         )
                     }
@@ -507,16 +725,21 @@ class CatalogSeatWizardViewModel(
     fun credentialsClipboardText(): String {
         val s = _state.value
         val share = s.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
-        val user = s.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER }
+        val user = s.cifsUserQualified.trim().ifBlank {
+            WindowsCatalogSetupScript.cifsUserCopyText(s.userName)
+        }
+        val host = s.pcHostIp.trim().ifBlank { "(IP del PC dalla finestra Tutto pronto)" }
         return buildString {
             append("Name: $share\n")
             append("Storage: SMB2,3 (jCIFS NG)\n")
             append("Domain: (lascia vuoto)\n")
-            append("Host: (IP del PC dalla finestra Tutto pronto)\n")
+            append("Host: $host\n")
             append("Port: 445\n")
             append("Enable DFS: (lascia deselezionato)\n")
             append("User: $user\n")
-            append("Password: ${s.temporaryPassword}")
+            append("Password: ${s.temporaryPassword}\n")
+            append("Anonymous: (lascia deselezionato)\n")
+            append("Folder: (lascia vuoto)")
         }
     }
 
@@ -563,7 +786,9 @@ class CatalogSeatWizardViewModel(
                     errorMessage = null,
                     statusMessage = null,
                     verification = SeatVerificationUi.IN_PROGRESS,
-                    step = if (kind == CatalogSeatKind.LOCAL_DEVICE) it.step else WizardStep.W2_PICK,
+                    awaitAccessOutcome = false,
+                    // Ramo PC: resta sulla pagina CIFS (revisione4 SI/NO).
+                    step = if (kind == CatalogSeatKind.LOCAL_DEVICE) it.step else WizardStep.W2_CIFS,
                 )
             }
             val seat = CatalogSeat(
@@ -578,10 +803,16 @@ class CatalogSeatWizardViewModel(
                     it.copy(
                         busy = false,
                         completedSeat = result.getOrNull(),
-                        step = WizardStep.DONE,
+                        // Locale: esito diretto. PC: domanda SI/NO prima di Acquisisci.
+                        step = if (kind == CatalogSeatKind.LOCAL_DEVICE) {
+                            WizardStep.DONE
+                        } else {
+                            WizardStep.W2_CIFS
+                        },
                         seatConfigured = true,
                         seatLabel = label,
                         verification = SeatVerificationUi.VERIFIED,
+                        awaitAccessOutcome = kind != CatalogSeatKind.LOCAL_DEVICE,
                         errorMessage = null,
                         statusMessage = null,
                     )
@@ -597,18 +828,42 @@ class CatalogSeatWizardViewModel(
                         } else {
                             SeatVerificationUi.FAILED
                         },
+                        awaitAccessOutcome = kind != CatalogSeatKind.LOCAL_DEVICE,
                         errorMessage = friendlySeatError(raw, unreachable),
-                        // Resta su S6 (o W1); non azzera path/script/dichiarazioni.
                         step = if (kind == CatalogSeatKind.LOCAL_DEVICE) {
                             WizardStep.W1_CONFIRM
                         } else {
-                            WizardStep.W2_PICK
+                            WizardStep.W2_CIFS
                         },
                     )
                 }
                 persistDraft()
             }
         }
+    }
+
+    /** revisione4: SI → chiude il wizard (navigazione verso Acquisisci dal caller). */
+    fun acceptAccessYes() {
+        _state.update {
+            it.copy(
+                step = WizardStep.DONE,
+                awaitAccessOutcome = false,
+                errorMessage = null,
+                statusMessage = null,
+            )
+        }
+    }
+
+    /** revisione4: NO → stub procedura problemi (da sviluppare). */
+    fun acceptAccessNo() {
+        _state.update {
+            it.copy(
+                awaitAccessOutcome = true,
+                statusMessage = null,
+                errorMessage = null,
+            )
+        }
+        // Messaggio UI via stringa dedicata; resta su W2_CIFS.
     }
 
     private fun isUnreachableSeatError(message: String): Boolean {

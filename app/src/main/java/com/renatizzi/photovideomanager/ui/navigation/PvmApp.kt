@@ -291,13 +291,22 @@ fun PvmApp(
                         onConfirmUsbAndPrepare = wizardVm::confirmUsbAndPrepareFiles,
                         onConfirmCopy = wizardVm::confirmCopyChecked,
                         onConfirmScriptRan = wizardVm::confirmScriptRanOnPc,
+                        onRetryRecoverPcData = wizardVm::retryRecoverPcData,
                         onCredentialsText = wizardVm::credentialsClipboardText,
                         onPasswordText = wizardVm::passwordClipboardText,
                         onFieldText = wizardVm::fieldClipboardText,
                         onRefreshCifs = wizardVm::refreshCifsInstalled,
                         onRetryVerify = wizardVm::retryPendingFolderVerification,
                         onFolderPicked = wizardVm::onFolderPicked,
+                        onAccessYes = wizardVm::acceptAccessYes,
+                        onAccessNo = wizardVm::acceptAccessNo,
                         onDone = { navController.popBackStack() },
+                        onGoToAcquire = {
+                            navController.popBackStack()
+                            navController.navigate(PvmDestination.Acquire.route) {
+                                launchSingleTop = true
+                            }
+                        },
                         onCancel = { navController.popBackStack() },
                     )
                 }

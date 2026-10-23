@@ -1,9 +1,23 @@
 # Backlog UX — Wizard Setup Catalogo (PC)
 
-**Aggiornato:** 20/10/2026 — UIX 0.16.37: videate utente da `videate-utente-setup-catalogo-pc.md` (PPT V2 + Q1–Q7).  
+**Aggiornato:** 23/10/2026 — proposta unica visibilità fonti; IP recovery parcheggiato.  
 **Specifica UI:** `docs/reference/videate-utente-setup-catalogo-pc.md`  
 **PPT V2:** `docs/reference/revisione_guida_V2.pptx`  
-**Non usare come specifica:** `docs/reference/template-videate-wizard-pc.md`
+**Non usare come specifica:** `docs/reference/template-videate-wizard-pc.md`  
+**Proposta blocco P0 Acquisisci (convalidata → 0.16.51):** `docs/PROPOSTA_VISIBILITA_FONTI_ACQUISISCI.md` · prova: `docs/GUIDA_TEST_0.16.51_ACQUISISCI.md`
+
+---
+
+## P0 — Bloccante prodotto (Acquisisci / fonti) — Renato 22/10
+
+**Sintomo (S25):** in **Acquisisci** si vedono solo le cartelle del telefono, quelle di Drive e quelle di CIFS. **Nessuna visibilità** sugli altri dispositivi dove ci sono foto/video da importare nel Catalogo.
+
+**Impatto:** senza questa funzione l’app **non regge più**.
+
+**Obiettivo:** prevedere un **censimento dei dispositivi** con cui si può interagire **prima** di parlare di Catalogo (oppure un meccanismo equivalente con lo stesso risultato). Quando si apre Acquisisci devono essere visibili **tutti i dispositivi** (ambito Nota W1–W4) e quindi le **cartelle disponibili** utilizzabili come fonti.
+
+**Stato:** proposta convalidata 23/10 → implementata in **0.16.51** (raggruppamento dispositivi, Aggiungi W1–W4, stati disponibilità). In verifica telefono.  
+**Fuori blocco:** recupero automatico IP CIFS (parcheggio; IP manuale ok).
 
 ---
 
@@ -28,22 +42,28 @@
 
 ## Aperto — da fare prima/durante lo sviluppo UIX
 
-### P0 — Bloccanti di metodo
+### P0 — Bloccanti di metodo (Wizard)
 1. **Help contestuale (nuovo)** — repository what/if (da catalogo Claude W-xxx + Nota §5.6), ingresso per passo, niente gestione errori lunga sulle pagine operative. *Non in 0.16.36.*
 
-### P1 — Da implementare (decisioni già prese)
-3. **Slide 0 condizionale** — ✅ 0.16.36: menu a tendina + campi PC/locale/stub Cloud-NAS.  
-4. **Password usabilità** — ✅ CIFS con **Copia password** + Mostra/Nascondi.  
-5. **Prepara file sull’OK** — ✅ export sull’OK del passo 2 (checklist USB).  
-6. **Rinomina file** `CONFIGURA` / `sup` — ✅ 0.16.36.  
-7. **Messaggio attesa** — ✅ in checklist app (voce «Tutto pronto»); in-script = opzionale.  
-8. **Istruzione avvio** — ✅ doppio clic + UAC.  
-9. **Chrome titolo/sottotitolo** — ✅ passi PPT 0–5 (non «Passo N di 10»).
+### P1 — Tranche attiva (22–23/10): visibilità share + routine→app
+2. **Visibilità cartella condivisa (Passo 5)** — ✅ Folder vuoto, share `MediaManagerCatalog`, testi Attiva collegamento.  
+3. **User + Host senza impatto cliente** — ⏸ **PARCHEGGIATO (Renato 23/10):** KO fino a 0.16.49 (IP assente / Riprova sparito con `recoveringPcData`). Non riprendere finché non richiesto.  
+4. **Script:** ✅ attesa; finestra resta con pause; annuncio rete; niente cleanup CONFIGURA a metà esecuzione.
+
+### P1 — Già implementato
+5. **Slide 0 condizionale** — ✅ 0.16.36: menu a tendina + campi PC/locale/stub Cloud-NAS.  
+6. **Password usabilità** — ✅ CIFS con **Copia password** + Mostra/Nascondi.  
+7. **Prepara file sull’OK** — ✅ export sull’OK del passo 2 (checklist USB).  
+8. **Rinomina file** `CONFIGURA` / `sup` — ✅ 0.16.36.  
+9. **Messaggio attesa** — ✅ in checklist app (voce «Tutto pronto»); in-script = voce 4 sopra.  
+10. **Istruzione avvio** — ✅ doppio clic + UAC.  
+11. **Chrome titolo/sottotitolo** — ✅ passi PPT 0–5 (non «Passo N di 10»).
 
 ### P2 — Fuori Wizard PC immediato
-9. Pagina **Configura** «stile Utility» (slide 2 PPT).  
-10. Completare rami Cloud/NAS (oggi stub).  
-11. Funzione stampa/PDF scheda dati (nice-to-have; printscreen utente resta fallback).
+12. Pagina **Configura** «stile Utility» (slide 2 PPT).  
+13. Completare rami Cloud/NAS (oggi stub).  
+14. Funzione stampa/PDF scheda dati (nice-to-have; printscreen utente resta fallback).  
+15. **Disco esterno su secondo PC** — verificare cosa succede se lo stesso volume (stessa lettera + percorso) configurato su un PC viene usato su un altro PC (share SMB / CIFS / MediaManager). Annotato Renato 22/10.
 
 ---
 

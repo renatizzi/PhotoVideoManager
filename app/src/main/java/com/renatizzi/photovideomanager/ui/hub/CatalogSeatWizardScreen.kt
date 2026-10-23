@@ -6,6 +6,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,6 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -67,13 +69,17 @@ fun CatalogSeatWizardScreen(
     onConfirmUsbAndPrepare: () -> Unit,
     onConfirmCopy: () -> Unit,
     onConfirmScriptRan: () -> Unit,
+    onRetryRecoverPcData: () -> Unit,
     onCredentialsText: () -> String,
     onPasswordText: () -> String,
     onFieldText: (CifsCopyField) -> String,
     onRefreshCifs: () -> Unit,
     onRetryVerify: () -> Unit,
     onFolderPicked: (uri: String, label: String) -> Unit,
+    onAccessYes: () -> Unit,
+    onAccessNo: () -> Unit,
     onDone: () -> Unit,
+    onGoToAcquire: () -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -173,6 +179,7 @@ fun CatalogSeatWizardScreen(
                 busy = state.busy,
             )
             WizardStep.W2_CIFS,
+            WizardStep.W2_PICK,
             WizardStep.W2_CIFS_BRIDGE,
             WizardStep.W2_SUMMARY,
             WizardStep.W2_CIFS_METHOD,
@@ -189,7 +196,7 @@ fun CatalogSeatWizardScreen(
                     val pwd = onPasswordText()
                     if (pwd.isNotBlank()) copyToClipboard(context, pwd)
                 },
-                onCopyAll = { copyToClipboard(context, onCredentialsText()) },
+                onRetryRecoverPcData = onRetryRecoverPcData,
                 onOpenCifs = {
                     onRefreshCifs()
                     if (NetworkDriveAssistant.isHelperInstalled(context)) {
@@ -200,16 +207,14 @@ fun CatalogSeatWizardScreen(
                         NetworkDriveAssistant.openHelperStore(context)
                     }
                 },
-                onRefresh = onRefreshCifs,
-                onContinue = { onGoStep(WizardStep.W2_PICK) },
-                onBack = { onGoStep(WizardStep.PC_RUN_SCRIPT) },
-            )
-            WizardStep.W2_PICK -> W2VerifyPickStep(
-                state = state,
                 onChooseFolder = { if (!state.busy) openTree.launch(null) },
                 onRetry = onRetryVerify,
-                onBackCifs = { onGoStep(WizardStep.W2_CIFS) },
-                onBack = { onGoStep(WizardStep.W2_CIFS) },
+                onAccessYes = {
+                    onAccessYes()
+                    onGoToAcquire()
+                },
+                onAccessNo = onAccessNo,
+                onBack = { onGoStep(WizardStep.PC_RUN_SCRIPT) },
             )
             WizardStep.W3_GUIDE -> SimpleGuide(
                 body = stringResource(R.string.hub_w3_body),
@@ -378,7 +383,12 @@ private fun IntroStep(
                 value = folderPath,
                 onValueChange = onFolderPathChange,
                 label = { Text(stringResource(R.string.hub_w2_folder_path_label)) },
-                supportingText = { Text(stringResource(R.string.hub_s0_valori_modificabili)) },
+                supportingText = {
+                    Text(
+                        "${stringResource(R.string.hub_s0_valori_modificabili)}. " +
+                            stringResource(R.string.hub_s2_pc_path_hint),
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 enabled = !busy,
@@ -533,12 +543,12 @@ private fun AvailabilityChecklistStep(
     busy: Boolean,
 ) {
     Text(stringResource(R.string.hub_pc1_intro))
-    val labels = listOf(
-        stringResource(R.string.hub_pc1_item_phone),
-        stringResource(R.string.hub_pc1_item_pc),
-        stringResource(R.string.hub_pc1_item_cable),
+    val items = listOf(
+        WizardChecklistItem(stringResource(R.string.hub_pc1_item_phone)),
+        WizardChecklistItem(stringResource(R.string.hub_pc1_item_pc)),
+        WizardChecklistItem(stringResource(R.string.hub_pc1_item_cable)),
     )
-    ChecklistOkBlock(labels = labels, onOk = onOk, onBack = onBack, busy = busy)
+    ChecklistOkBlock(items = items, onOk = onOk, onBack = onBack, busy = busy)
 }
 
 @Composable
@@ -548,17 +558,20 @@ private fun UsbPrepareChecklistStep(
     busy: Boolean,
 ) {
     Text(stringResource(R.string.hub_pc2_intro))
-    Text(
-        stringResource(R.string.hub_pc2_usb_how),
-        style = MaterialTheme.typography.bodySmall,
+    val items = listOf(
+        WizardChecklistItem(stringResource(R.string.hub_pc2_item_unlocked)),
+        WizardChecklistItem(stringResource(R.string.hub_pc2_item_connect)),
+        WizardChecklistItem(
+            label = stringResource(R.string.hub_pc2_item_transfer),
+            nestedBullets = listOf(
+                WizardNestedBullet(stringResource(R.string.hub_pc2_bullet_notif)),
+                WizardNestedBullet(stringResource(R.string.hub_pc2_bullet_tap)),
+                WizardNestedBullet(stringResource(R.string.hub_pc2_bullet_choose)),
+                WizardNestedBullet(stringResource(R.string.hub_pc2_bullet_allow)),
+            ),
+        ),
     )
-    val labels = listOf(
-        stringResource(R.string.hub_pc2_item_connect),
-        stringResource(R.string.hub_pc2_item_unlocked),
-        stringResource(R.string.hub_pc2_item_transfer),
-        stringResource(R.string.hub_pc2_item_allow),
-    )
-    ChecklistOkBlock(labels = labels, onOk = onOk, onBack = onBack, busy = busy)
+    ChecklistOkBlock(items = items, onOk = onOk, onBack = onBack, busy = busy)
 }
 
 @Composable
@@ -569,21 +582,49 @@ private fun CopyFilesChecklistStep(
     scriptPrepared: Boolean,
 ) {
     Text(stringResource(R.string.hub_pc3_intro))
-    Text(
-        stringResource(R.string.hub_pc3_howto),
-        style = MaterialTheme.typography.bodySmall,
-    )
-    val labels = listOf(
-        stringResource(R.string.hub_pc3_item_download),
-        stringResource(R.string.hub_pc3_item_copy),
-        stringResource(R.string.hub_pc3_item_verify),
+    val items = listOf(
+        WizardChecklistItem(
+            label = stringResource(R.string.hub_pc3_item_download),
+            nestedBullets = listOf(
+                WizardNestedBullet(stringResource(R.string.hub_pc3_b_explorer)),
+                WizardNestedBullet(stringResource(R.string.hub_pc3_b_thispc)),
+                WizardNestedBullet(stringResource(R.string.hub_pc3_b_phone)),
+                WizardNestedBullet(stringResource(R.string.hub_pc3_b_dbl)),
+                WizardNestedBullet(stringResource(R.string.hub_pc3_b_mem)),
+            ),
+        ),
+        WizardChecklistItem(
+            label = stringResource(R.string.hub_pc3_item_copy),
+            nestedBullets = listOf(
+                WizardNestedBullet(stringResource(R.string.hub_pc3_b_search)),
+                WizardNestedBullet(
+                    text = stringResource(R.string.hub_pc3_b_file1),
+                    marker = "✓",
+                    extraStart = 16.dp,
+                ),
+                WizardNestedBullet(
+                    text = stringResource(R.string.hub_pc3_b_file2),
+                    marker = "✓",
+                    extraStart = 16.dp,
+                ),
+                WizardNestedBullet(stringResource(R.string.hub_pc3_b_ctrlc)),
+                WizardNestedBullet(stringResource(R.string.hub_pc3_b_ctrlv)),
+            ),
+        ),
+        WizardChecklistItem(
+            label = stringResource(R.string.hub_pc3_item_verify),
+            nestedBullets = listOf(
+                WizardNestedBullet(stringResource(R.string.hub_pc3_b_verify)),
+            ),
+        ),
     )
     ChecklistOkBlock(
-        labels = labels,
+        items = items,
         onOk = onOk,
         onBack = onBack,
         busy = busy,
         okEnabledExtra = scriptPrepared,
+        showWhenReadyHint = true,
     )
 }
 
@@ -594,48 +635,51 @@ private fun ScriptChecklistStep(
     busy: Boolean,
 ) {
     Text(stringResource(R.string.hub_pc4_intro))
-    Text(
-        stringResource(R.string.hub_pc4_howto),
-        style = MaterialTheme.typography.bodySmall,
+    val items = listOf(
+        WizardChecklistItem(stringResource(R.string.hub_pc4_item_1)),
+        WizardChecklistItem(stringResource(R.string.hub_pc4_item_2)),
+        WizardChecklistItem(stringResource(R.string.hub_pc4_item_3)),
     )
-    val labels = listOf(
-        stringResource(R.string.hub_pc4_item_doubleclick),
-        stringResource(R.string.hub_pc4_item_uac),
-        stringResource(R.string.hub_pc4_item_wait),
-    )
-    ChecklistOkBlock(labels = labels, onOk = onOk, onBack = onBack, busy = busy)
+    ChecklistOkBlock(items = items, onOk = onOk, onBack = onBack, busy = busy)
 }
 
 @Composable
 private fun ChecklistOkBlock(
-    labels: List<String>,
+    items: List<WizardChecklistItem>,
     onOk: () -> Unit,
     onBack: () -> Unit,
     busy: Boolean,
     okEnabledExtra: Boolean = true,
+    showWhenReadyHint: Boolean = true,
+    showOk: Boolean = true,
 ) {
-    var flags by remember(labels.size) { mutableStateOf(BooleanArray(labels.size) { false }) }
+    var flags by remember(items.size) { mutableStateOf(BooleanArray(items.size) { false }) }
     WizardChecklistBlock(
-        items = labels.mapIndexed { i, label -> label to flags[i] },
+        items = items,
+        checked = flags,
         onToggle = { index ->
             flags = flags.copyOf().also { it[index] = !it[index] }
         },
         enabled = !busy,
     )
-    Text(
-        stringResource(R.string.hub_s0_when_ready),
-        style = MaterialTheme.typography.bodyMedium,
-    )
+    if (showWhenReadyHint) {
+        Text(
+            stringResource(R.string.hub_s0_when_ready),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+    }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedButton(onClick = onBack, enabled = !busy, modifier = Modifier.weight(1f)) {
             Text(stringResource(R.string.hub_indietro))
         }
-        Button(
-            onClick = onOk,
-            enabled = !busy && okEnabledExtra && allChecklistChecked(flags),
-            modifier = Modifier.weight(1f),
-        ) {
-            Text(stringResource(R.string.hub_checklist_ok))
+        if (showOk) {
+            Button(
+                onClick = onOk,
+                enabled = !busy && okEnabledExtra && allChecklistChecked(flags),
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(stringResource(R.string.hub_checklist_ok))
+            }
         }
     }
 }
@@ -645,24 +689,72 @@ private fun CifsCardStep(
     state: CatalogSeatWizardUiState,
     onCopyField: (CifsCopyField) -> Unit,
     onCopyPassword: () -> Unit,
-    onCopyAll: () -> Unit,
+    onRetryRecoverPcData: () -> Unit,
     onOpenCifs: () -> Unit,
-    onRefresh: () -> Unit,
-    onContinue: () -> Unit,
+    onChooseFolder: () -> Unit,
+    onRetry: () -> Unit,
+    onAccessYes: () -> Unit,
+    onAccessNo: () -> Unit,
     onBack: () -> Unit,
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
+    // Name, Storage, Host, Port, User, Password, Anonymous, Folder
+    var rowFlags by remember { mutableStateOf(BooleanArray(8) { false }) }
+    var cifsSavedConfirmed by remember { mutableStateOf(false) }
+    var showProblemsStub by remember { mutableStateOf(false) }
     val share = state.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
-    val user = state.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER }
+    val user = state.cifsUserQualified.trim().ifBlank {
+        WindowsCatalogSetupScript.cifsUserCopyText(state.userName)
+    }
+    val hostValue = state.pcHostIp.trim().ifBlank {
+        stringResource(R.string.hub_b5b_host_placeholder)
+    }
     val password = state.temporaryPassword
     val hasPassword = password.isNotBlank()
+    val hostCopyable = state.pcHostIp.isNotBlank()
+    val readyForPick = state.cifsInstalled && hasPassword && cifsSavedConfirmed
 
     Text(stringResource(R.string.hub_pc5_intro))
+    Text(
+        stringResource(R.string.hub_pc5_share_visibility),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+    )
+    when {
+        state.recoveringPcData -> {
+            Text(
+                stringResource(R.string.hub_pc5_recovering),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+        state.setupResultImported -> {
+            Text(
+                stringResource(R.string.hub_pc5_result_imported),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+        else -> {
+            Text(
+                stringResource(R.string.hub_pc5_result_missing),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+            )
+            OutlinedButton(
+                onClick = onRetryRecoverPcData,
+                enabled = !state.busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.hub_pc5_retry_recover))
+            }
+        }
+    }
     Text(
         stringResource(R.string.hub_b5b_card_title),
         fontWeight = FontWeight.Medium,
     )
-    // Ordine = form CIFS «Connection» (screenshot PPT V2)
+    // Ordine = form CIFS «Connection» (screenshot completo)
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -673,52 +765,101 @@ private fun CifsCardStep(
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_id),
             value = stringResource(R.string.hub_b5b_id_value),
-            onCopy = null,
+            actionLabel = null,
+            onAction = null,
+            checked = null,
+            onCheckedChange = null,
             hint = stringResource(R.string.hub_b5b_id_hint),
+            enabled = !state.busy,
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_name),
             value = share,
-            onCopy = { onCopyField(CifsCopyField.NAME) },
+            actionLabel = stringResource(R.string.hub_copy),
+            onAction = { onCopyField(CifsCopyField.NAME) },
+            checked = rowFlags[0],
+            onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[0] = !it[0] } },
+            hint = stringResource(R.string.hub_b5b_name_hint),
+            enabled = !state.busy,
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_storage),
             value = stringResource(R.string.hub_b5b_storage_value),
-            onCopy = { onCopyField(CifsCopyField.STORAGE) },
+            actionLabel = stringResource(R.string.hub_pc5_confirm),
+            onAction = { rowFlags = rowFlags.copyOf().also { it[1] = true } },
+            checked = rowFlags[1],
+            onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[1] = !it[1] } },
+            enabled = !state.busy,
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_domain),
             value = stringResource(R.string.hub_b5b_domain_value),
-            onCopy = null,
+            actionLabel = null,
+            onAction = null,
+            checked = null,
+            onCheckedChange = null,
             hint = stringResource(R.string.hub_b5b_domain_hint),
+            enabled = !state.busy,
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_host),
-            value = stringResource(R.string.hub_b5b_host_placeholder),
-            onCopy = null,
-            hint = stringResource(R.string.hub_b5b_host_hint),
+            value = hostValue,
+            actionLabel = stringResource(R.string.hub_copy),
+            onAction = if (hostCopyable) {
+                { onCopyField(CifsCopyField.HOST) }
+            } else {
+                null
+            },
+            checked = rowFlags[2],
+            onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[2] = !it[2] } },
+            hint = stringResource(
+                if (hostCopyable) R.string.hub_b5b_host_hint_ready else R.string.hub_b5b_host_hint,
+            ),
+            enabled = !state.busy,
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_port),
             value = "445",
-            onCopy = { onCopyField(CifsCopyField.PORT) },
+            actionLabel = stringResource(R.string.hub_copy),
+            onAction = { onCopyField(CifsCopyField.PORT) },
+            checked = rowFlags[3],
+            onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[3] = !it[3] } },
+            enabled = !state.busy,
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_dfs),
             value = stringResource(R.string.hub_b5b_dfs_value),
-            onCopy = null,
+            actionLabel = null,
+            onAction = null,
+            checked = null,
+            onCheckedChange = null,
             hint = stringResource(R.string.hub_b5b_dfs_hint),
+            enabled = !state.busy,
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_user),
             value = user,
-            onCopy = { onCopyField(CifsCopyField.USERNAME) },
+            actionLabel = stringResource(R.string.hub_copy),
+            onAction = { onCopyField(CifsCopyField.USERNAME) },
+            checked = rowFlags[4],
+            onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[4] = !it[4] } },
+            hint = stringResource(R.string.hub_b5b_user_hint),
+            enabled = !state.busy,
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
+            Checkbox(
+                checked = rowFlags[5],
+                onCheckedChange = {
+                    if (!state.busy) {
+                        rowFlags = rowFlags.copyOf().also { it[5] = !it[5] }
+                    }
+                },
+                enabled = !state.busy,
+            )
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     stringResource(R.string.hub_b5b_label_password),
@@ -736,14 +877,17 @@ private fun CifsCardStep(
                 )
             }
             if (hasPassword) {
-                TextButton(onClick = { passwordVisible = !passwordVisible }) {
+                TextButton(
+                    onClick = { passwordVisible = !passwordVisible },
+                    enabled = !state.busy,
+                ) {
                     Text(
                         stringResource(
                             if (passwordVisible) R.string.hub_hide else R.string.hub_show,
                         ),
                     )
                 }
-                TextButton(onClick = onCopyPassword) {
+                TextButton(onClick = onCopyPassword, enabled = !state.busy) {
                     Text(stringResource(R.string.hub_copy))
                 }
             }
@@ -755,9 +899,34 @@ private fun CifsCardStep(
                 color = MaterialTheme.colorScheme.error,
             )
         }
+        CifsFieldRow(
+            label = stringResource(R.string.hub_b5b_label_anonymous),
+            value = stringResource(R.string.hub_b5b_anonymous_value),
+            actionLabel = stringResource(R.string.hub_pc5_confirm),
+            onAction = { rowFlags = rowFlags.copyOf().also { it[6] = true } },
+            checked = rowFlags[6],
+            onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[6] = !it[6] } },
+            hint = stringResource(R.string.hub_b5b_anonymous_hint),
+            enabled = !state.busy,
+        )
+        CifsFieldRow(
+            label = stringResource(R.string.hub_b5b_label_folder),
+            value = stringResource(R.string.hub_b5b_folder_value),
+            actionLabel = stringResource(R.string.hub_pc5_confirm),
+            onAction = { rowFlags = rowFlags.copyOf().also { it[7] = true } },
+            checked = rowFlags[7],
+            onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[7] = !it[7] } },
+            hint = stringResource(R.string.hub_b5b_folder_hint),
+            enabled = !state.busy,
+        )
+        Text(
+            stringResource(R.string.hub_pc5_options_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+        )
     }
 
-    Button(onClick = onOpenCifs, modifier = Modifier.fillMaxWidth()) {
+    Button(onClick = onOpenCifs, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
         Text(
             if (state.cifsInstalled) {
                 stringResource(R.string.hub_cifs_open)
@@ -766,80 +935,37 @@ private fun CifsCardStep(
             },
         )
     }
-    TextButton(onClick = onCopyAll) {
-        Text(stringResource(R.string.hub_w2_copy_credentials))
-    }
-    TextButton(onClick = onRefresh) {
-        Text(stringResource(R.string.hub_cifs_refresh))
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = !state.busy) { cifsSavedConfirmed = !cifsSavedConfirmed },
+        verticalAlignment = Alignment.Top,
+    ) {
+        Checkbox(
+            checked = cifsSavedConfirmed,
+            onCheckedChange = { if (!state.busy) cifsSavedConfirmed = it },
+            enabled = !state.busy,
+        )
+        Text(
+            text = stringResource(R.string.hub_pc5_item_saved),
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(start = 4.dp, top = 12.dp),
+        )
     }
 
     Text(
-        stringResource(R.string.hub_pc5_checklist_title),
-        fontWeight = FontWeight.Medium,
+        stringResource(R.string.hub_pc5_ultima_azione),
+        style = MaterialTheme.typography.bodyMedium,
     )
-    val checklistLabels = listOf(
-        stringResource(R.string.hub_pc5_item_open),
-        stringResource(R.string.hub_pc5_item_id),
-        stringResource(R.string.hub_pc5_item_name),
-        stringResource(R.string.hub_pc5_item_storage),
-        stringResource(R.string.hub_pc5_item_domain),
-        stringResource(R.string.hub_pc5_item_host),
-        stringResource(R.string.hub_pc5_item_port),
-        stringResource(R.string.hub_pc5_item_dfs),
-        stringResource(R.string.hub_pc5_item_user),
-        stringResource(R.string.hub_pc5_item_password),
-        stringResource(R.string.hub_pc5_item_save),
-        stringResource(R.string.hub_pc5_item_outcome),
-    )
-    ChecklistOkBlock(
-        labels = checklistLabels,
-        onOk = onContinue,
-        onBack = onBack,
-        busy = state.busy,
-        okEnabledExtra = state.cifsInstalled && hasPassword,
-    )
-}
-
-@Composable
-private fun CifsFieldRow(
-    label: String,
-    value: String,
-    onCopy: (() -> Unit)?,
-    hint: String? = null,
-) {
-    Row(
+    Button(
+        onClick = onChooseFolder,
+        enabled = !state.busy && readyForPick,
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(label, style = MaterialTheme.typography.labelMedium)
-            Text(value, fontFamily = FontFamily.Monospace)
-            if (hint != null) {
-                Text(
-                    hint,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                )
-            }
-        }
-        if (onCopy != null) {
-            TextButton(onClick = onCopy) {
-                Text(stringResource(R.string.hub_copy))
-            }
-        }
+        Text(stringResource(R.string.hub_pc5_activate_link))
     }
-}
 
-@Composable
-private fun W2VerifyPickStep(
-    state: CatalogSeatWizardUiState,
-    onChooseFolder: () -> Unit,
-    onRetry: () -> Unit,
-    onBackCifs: () -> Unit,
-    onBack: () -> Unit,
-) {
-    Text(stringResource(R.string.hub_s6_pick_body))
     val statusText = when (state.verification) {
         SeatVerificationUi.NONE -> stringResource(R.string.hub_s6_status_idle)
         SeatVerificationUi.IN_PROGRESS -> stringResource(R.string.hub_s6_status_progress)
@@ -854,20 +980,15 @@ private fun W2VerifyPickStep(
         -> MaterialTheme.colorScheme.error
         else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
     }
-    Text(statusText, color = statusColor, fontWeight = FontWeight.Medium)
+    if (state.verification != SeatVerificationUi.NONE) {
+        Text(statusText, color = statusColor, fontWeight = FontWeight.Medium)
+    }
     if (state.pendingLabel.isNotBlank() && state.verification != SeatVerificationUi.NONE) {
         Text(
             text = state.pendingLabel,
             style = MaterialTheme.typography.bodySmall,
             fontFamily = FontFamily.Monospace,
         )
-    }
-    Button(
-        onClick = onChooseFolder,
-        enabled = !state.busy,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Text(stringResource(R.string.hub_choose_folder))
     }
     if (state.pendingTreeUri != null &&
         (state.verification == SeatVerificationUi.FAILED ||
@@ -881,11 +1002,90 @@ private fun W2VerifyPickStep(
             Text(stringResource(R.string.hub_s6_retry))
         }
     }
-    TextButton(onClick = onBackCifs, enabled = !state.busy) {
-        Text(stringResource(R.string.hub_s6_back_cifs))
+
+    if (state.awaitAccessOutcome) {
+        Text(
+            stringResource(R.string.hub_pc5_access_question),
+            fontWeight = FontWeight.SemiBold,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(
+                onClick = {
+                    showProblemsStub = false
+                    onAccessYes()
+                },
+                enabled = !state.busy && state.verification == SeatVerificationUi.VERIFIED,
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(stringResource(R.string.hub_pc5_access_yes))
+            }
+            OutlinedButton(
+                onClick = {
+                    showProblemsStub = true
+                    onAccessNo()
+                },
+                enabled = !state.busy,
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(stringResource(R.string.hub_pc5_access_no))
+            }
+        }
     }
-    TextButton(onClick = onBack, enabled = !state.busy) {
+    if (showProblemsStub) {
+        Text(
+            stringResource(R.string.hub_pc5_problems_stub),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.error,
+        )
+    }
+
+    OutlinedButton(onClick = onBack, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.hub_indietro))
+    }
+}
+
+@Composable
+private fun CifsFieldRow(
+    label: String,
+    value: String,
+    actionLabel: String?,
+    onAction: (() -> Unit)?,
+    checked: Boolean?,
+    onCheckedChange: (() -> Unit)?,
+    hint: String? = null,
+    enabled: Boolean = true,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        if (checked != null && onCheckedChange != null) {
+            Checkbox(
+                checked = checked,
+                onCheckedChange = { if (enabled) onCheckedChange() },
+                enabled = enabled,
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(label, style = MaterialTheme.typography.labelMedium)
+            Text(value, fontFamily = FontFamily.Monospace)
+            if (hint != null) {
+                Text(
+                    hint,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                )
+            }
+        }
+        if (actionLabel != null) {
+            TextButton(
+                onClick = { onAction?.invoke() },
+                enabled = enabled && onAction != null,
+            ) {
+                Text(actionLabel)
+            }
+        }
     }
 }
 

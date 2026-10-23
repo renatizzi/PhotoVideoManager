@@ -23,6 +23,7 @@ Consentire la condivisione all'interno della famiglia.
 Produrre album, PDF, stampe ed esportazioni.
 Proteggere i contenuti attraverso backup e meccanismi di recupero.
 ## 1.2 Regole per la implementazione con Cursor
+- **Regole di collaborazione permanenti (23/10/2026):** testo completo in `docs/REGOLE_COLLABORAZIONE_MEDIAMANAGER.md`; ingresso agenti in `AGENTS.md`. Valgono per tutte le sessioni (comunicazione semplice, niente ricicli, controllo prima del codice, test telefono unitari con istruzioni complete).
 - La progettazione concettuale viene completata prima della roadmap tecnica definitiva e dell'implementazione.
 - ChatGPT definisce analisi, requisiti, decisioni architetturali, criteri di accettazione e piano di lavoro.
 - Cursor viene coinvolto sulla base di una specifica consolidata e, quando richiesto, per approfondimenti tecnici separati dalla Nota Integrata.

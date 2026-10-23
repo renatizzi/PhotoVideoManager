@@ -18,6 +18,9 @@ class WizardDraftStore(context: Context) {
         val usbCopiedDeclared: Boolean,
         val scriptRanDeclared: Boolean,
         val setupMode: String,
+        val setupToken: String = "",
+        val pcHostIp: String = "",
+        val cifsUserQualified: String = "",
     )
 
     fun load(): Draft? {
@@ -36,6 +39,9 @@ class WizardDraftStore(context: Context) {
             usbCopiedDeclared = prefs.getBoolean(KEY_USB_COPIED, false),
             scriptRanDeclared = prefs.getBoolean(KEY_SCRIPT_RAN, false),
             setupMode = prefs.getString(KEY_MODE, MODE_CREATE) ?: MODE_CREATE,
+            setupToken = prefs.getString(KEY_SETUP_TOKEN, "").orEmpty(),
+            pcHostIp = prefs.getString(KEY_PC_HOST_IP, "").orEmpty(),
+            cifsUserQualified = prefs.getString(KEY_CIFS_USER, "").orEmpty(),
         )
     }
 
@@ -51,6 +57,9 @@ class WizardDraftStore(context: Context) {
             .putBoolean(KEY_USB_COPIED, draft.usbCopiedDeclared)
             .putBoolean(KEY_SCRIPT_RAN, draft.scriptRanDeclared)
             .putString(KEY_MODE, draft.setupMode)
+            .putString(KEY_SETUP_TOKEN, draft.setupToken)
+            .putString(KEY_PC_HOST_IP, draft.pcHostIp)
+            .putString(KEY_CIFS_USER, draft.cifsUserQualified)
             .apply()
     }
 
@@ -73,5 +82,8 @@ class WizardDraftStore(context: Context) {
         private const val KEY_USB_COPIED = "usb_copied"
         private const val KEY_SCRIPT_RAN = "script_ran"
         private const val KEY_MODE = "mode"
+        private const val KEY_SETUP_TOKEN = "setup_token"
+        private const val KEY_PC_HOST_IP = "pc_host_ip"
+        private const val KEY_CIFS_USER = "cifs_user_qualified"
     }
 }

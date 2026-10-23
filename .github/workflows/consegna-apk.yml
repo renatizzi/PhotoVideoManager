@@ -1,0 +1,48 @@
+name: Consegna APK (debug)
+
+on:
+  push:
+    branches:
+      - "cursor/**"
+    paths:
+      - "app/**"
+      - "gradle/**"
+      - "*.gradle*"
+      - "gradle.properties"
+      - ".github/workflows/consegna-apk.yml"
+
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools platforms;android-35 build-tools;35.0.0
+
+      - name: Assemble debug APK
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug --no-daemon
+          VERSION=$(sed -n 's/.*versionName = "\([^"]*\)"/\1/p' app/build.gradle.kts | head -1)
+          CODE=$(sed -n 's/.*versionCode = \([0-9]*\)/\1/p' app/build.gradle.kts | head -1)
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "VCODE=$CODE" >> "$GITHUB_ENV"
+          cp app/build/outputs/apk/debug/app-debug.apk \
+            "MediaManager-${VERSION}-code${CODE}-debug.apk"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MediaManager-${{ env.VERSION }}-code${{ env.VCODE }}-debug
+          path: MediaManager-*-debug.apk
+          if-no-files-found: error
+          retention-days: 14

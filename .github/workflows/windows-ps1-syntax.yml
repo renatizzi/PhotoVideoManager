@@ -24,35 +24,37 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      # "tools" package was removed from SDK; do not let setup-android install it.
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools platforms;android-35 build-tools;35.0.0
 
       - name: Generate sample scripts via unit test helper
         shell: pwsh
         run: |
-          # Emit scripts using a small inline Kotlin is heavy; instead extract from
-          # a committed golden generator run via Gradle test that writes artifacts.
           ./gradlew :app:testDebugUnitTest --tests "com.renatizzi.photovideomanager.data.hub.WindowsCatalogSetupScriptTest.emitScriptsForCi"
-          if (-not (Test-Path "app/build/windows_setup_ci/_non_aprire_supporto_setup.ps1")) {
-            # Unit tests run with cwd = app/
-            if (-not (Test-Path "build/windows_setup_ci/_non_aprire_supporto_setup.ps1")) {
-              throw "PS1 artifact missing"
-            }
-          }
+          $candidates = @(
+            "app/build/windows_setup_ci/sup.ps1",
+            "build/windows_setup_ci/sup.ps1"
+          )
+          $found = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $found) { throw "PS1 artifact missing (sup.ps1)" }
+          Write-Host "PS1 at $found"
 
       - name: ParseFile .ps1 and validate .cmd encoding
         shell: pwsh
         run: |
-          $ps1 = if (Test-Path "app/build/windows_setup_ci/_non_aprire_supporto_setup.ps1") {
-            "app/build/windows_setup_ci/_non_aprire_supporto_setup.ps1"
-          } else {
-            "build/windows_setup_ci/_non_aprire_supporto_setup.ps1"
-          }
-          $cmd = if (Test-Path "app/build/windows_setup_ci/AVVIA_Configurazione_Catalogo.cmd") {
-            "app/build/windows_setup_ci/AVVIA_Configurazione_Catalogo.cmd"
-          } else {
-            "build/windows_setup_ci/AVVIA_Configurazione_Catalogo.cmd"
-          }
+          $ps1 = @(
+            "app/build/windows_setup_ci/sup.ps1",
+            "build/windows_setup_ci/sup.ps1"
+          ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+          $cmd = @(
+            "app/build/windows_setup_ci/CONFIGURA.cmd",
+            "build/windows_setup_ci/CONFIGURA.cmd"
+          ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $ps1) { throw "PS1 missing" }
+          if (-not $cmd) { throw "CMD missing" }
           $bytes = [System.IO.File]::ReadAllBytes($ps1)
           if ($bytes.Length -lt 3 -or $bytes[0] -ne 0xEF -or $bytes[1] -ne 0xBB -or $bytes[2] -ne 0xBF) {
             throw "PS1 must start with UTF-8 BOM"

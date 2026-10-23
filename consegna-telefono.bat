@@ -7,10 +7,11 @@ REM  MediaManager — UNICO script per le prove sul telefono
 REM
 REM  Doppio clic su QUESTO file. Fa tutto in sequenza:
 REM    1) scarica da GitHub l'ultima build di consegna
-REM    2) compila l'APK di test
+REM    2) prepara Java/SDK e compila l'APK di test
 REM    3) apre la cartella dell'APK (pronto da copiare/inviare)
 REM
 REM  Non usare altri .bat per aggiornare o compilare.
+REM  Log errori: build-consegna.log (nella cartella del progetto)
 REM ============================================================
 
 cd /d "%~dp0"
@@ -43,6 +44,7 @@ REM --- Java / SDK ---
 call :ensure_java
 if errorlevel 1 goto :end
 call :ensure_android_sdk
+if errorlevel 1 goto :end
 
 echo === 1/3  Aggiornamento da GitHub ===
 git fetch origin --prune
@@ -83,6 +85,7 @@ if errorlevel 1 (
   git checkout -b "!BEST_BRANCH!" "origin/!BEST_BRANCH!"
   if errorlevel 1 (
     echo ERRORE: impossibile passare al branch !BEST_BRANCH!.
+    echo Chiudi Android Studio e file aperti nel progetto, poi riprova.
     goto :end
   )
 )
@@ -123,16 +126,28 @@ if defined JAVA_HOME (
 ) else (
   echo Java: PATH di sistema
 )
+if defined ANDROID_HOME echo ANDROID_HOME=%ANDROID_HOME%
+echo Log: %CD%\build-consegna.log
 echo.
-call gradlew.bat :app:assembleDebug
+
+call :compile_once
 if errorlevel 1 (
   echo.
-  echo ERRORE: compilazione fallita.
-  echo Se vedi errori su mergeDebugResources / FileSystemException:
-  echo   1^) Chiudi Android Studio
-  echo   2^) Doppio clic su pulisci-build.bat
-  echo   3^) Riesegui consegna-telefono.bat
-  goto :end
+  echo Prima compilazione fallita. Pulisco e riprovo una volta...
+  echo.
+  call gradlew.bat --stop >nul 2>&1
+  if exist "app\build" rd /s /q "app\build" 2>nul
+  if exist "build" rd /s /q "build" 2>nul
+  timeout /t 2 /nobreak >nul
+  call :compile_once
+  if errorlevel 1 (
+    echo.
+    echo ERRORE: compilazione fallita anche al secondo tentativo.
+    echo Apri e invia SOLO il file: build-consegna.log
+    echo ^(ultime righe con "e:" o "FAILED"^)
+    if exist "build-consegna.log" start "" notepad.exe "build-consegna.log"
+    goto :end
+  )
 )
 
 set "APK_DIR=%CD%\app\build\outputs\apk\debug"
@@ -158,6 +173,19 @@ start "" explorer.exe "%APK_DIR%"
 echo.
 pause
 endlocal
+exit /b 0
+
+REM ============================================================
+:compile_once
+REM Scrive tutto il log Gradle in build-consegna.log
+call gradlew.bat --no-daemon :app:assembleDebug > "build-consegna.log" 2>&1
+set "ERR=!errorlevel!"
+if not "!ERR!"=="0" (
+  echo --- Ultime righe del log ---
+  powershell -NoProfile -Command "Get-Content -Path 'build-consegna.log' -Tail 40 -ErrorAction SilentlyContinue"
+  exit /b 1
+)
+echo Compilazione OK.
 exit /b 0
 
 REM ============================================================
@@ -241,26 +269,38 @@ exit /b 1
 
 REM ============================================================
 :ensure_android_sdk
-if defined ANDROID_HOME if exist "%ANDROID_HOME%\platform-tools" exit /b 0
-if defined ANDROID_SDK_ROOT if exist "%ANDROID_SDK_ROOT%\platform-tools" (
-  set "ANDROID_HOME=%ANDROID_SDK_ROOT%"
-  exit /b 0
-)
-if exist "local.properties" (
+set "SDK_FOUND="
+if defined ANDROID_HOME if exist "%ANDROID_HOME%\platform-tools" set "SDK_FOUND=%ANDROID_HOME%"
+if not defined SDK_FOUND if defined ANDROID_SDK_ROOT if exist "%ANDROID_SDK_ROOT%\platform-tools" set "SDK_FOUND=%ANDROID_SDK_ROOT%"
+if not defined SDK_FOUND if exist "%LOCALAPPDATA%\Android\Sdk\platform-tools" set "SDK_FOUND=%LOCALAPPDATA%\Android\Sdk"
+if not defined SDK_FOUND if exist "%USERPROFILE%\AppData\Local\Android\Sdk\platform-tools" set "SDK_FOUND=%USERPROFILE%\AppData\Local\Android\Sdk"
+
+if not defined SDK_FOUND if exist "local.properties" (
   for /f "usebackq tokens=1,* delims==" %%A in ("local.properties") do (
     if /I "%%A"=="sdk.dir" set "SDK_RAW=%%B"
   )
 )
-if defined SDK_RAW (
+if not defined SDK_FOUND if defined SDK_RAW (
   set "SDK_RAW=!SDK_RAW:\\=\!"
   set "SDK_RAW=!SDK_RAW:/=\!"
-  if exist "!SDK_RAW!\platform-tools" (
-    set "ANDROID_HOME=!SDK_RAW!"
-    exit /b 0
-  )
+  if exist "!SDK_RAW!\platform-tools" set "SDK_FOUND=!SDK_RAW!"
 )
-if exist "%LOCALAPPDATA%\Android\Sdk\platform-tools" (
-  set "ANDROID_HOME=%LOCALAPPDATA%\Android\Sdk"
-  exit /b 0
+
+if not defined SDK_FOUND (
+  echo ERRORE: Android SDK non trovato.
+  echo Apri Android Studio una volta ^(Sync del progetto^), poi riesegui questo .bat.
+  exit /b 1
 )
+
+set "ANDROID_HOME=!SDK_FOUND!"
+set "ANDROID_SDK_ROOT=!SDK_FOUND!"
+
+REM Gradle legge sdk.dir da local.properties (obbligatorio su molti PC Windows).
+set "SDK_PROP=!SDK_FOUND:\=/!"
+(
+  echo ## Generato da consegna-telefono.bat — non committare
+  echo sdk.dir=!SDK_PROP!
+) > "local.properties"
+echo SDK: !SDK_FOUND!
+echo local.properties aggiornato.
 exit /b 0

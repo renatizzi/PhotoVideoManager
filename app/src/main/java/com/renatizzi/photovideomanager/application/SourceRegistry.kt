@@ -33,6 +33,8 @@ class SourceRegistry(
     private val permissionGate: PermissionGate,
     private val personalRoot: java.io.File,
     private val labelStore: SourceLabelStore,
+    /** Etichetta Posizione Catalogo: se coincide con l’alias tablet, non usarla come gruppo fonti. */
+    private val catalogSeatLabel: () -> String = { "" },
 ) {
     suspend fun bootstrapPersonalArchiveIfNeeded() {
         require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
@@ -211,8 +213,20 @@ class SourceRegistry(
         labelStore.setDeviceAlias(alias)
     }
 
-    fun deviceAliasOrDefault(): String =
-        labelStore.deviceAlias() ?: SafPathLabels.deviceLabel(appContext)
+    fun deviceAliasOrDefault(): String = localDeviceLabelForGrouping()
+
+    /**
+     * Nome del **tablet/telefono** per i gruppi Acquisisci (non la Posizione del Catalogo).
+     * Se l’utente ha rinominato l’alias uguale al Catalogo (caso tipico), torna il nome sistema.
+     */
+    fun localDeviceLabelForGrouping(): String {
+        val system = SafPathLabels.deviceLabel(appContext).ifBlank { "Questo tablet" }
+        val alias = labelStore.deviceAlias()
+        if (alias.isNullOrBlank()) return system
+        val seat = catalogSeatLabel().trim()
+        if (seat.isNotBlank() && alias.equals(seat, ignoreCase = true)) return system
+        return alias
+    }
 
     suspend fun removeSource(locationId: String) {
         require(locationId != PERSONAL_LOCATION_ID) { "La sorgente personale integrata non è rimovibile" }
@@ -273,19 +287,29 @@ class SourceRegistry(
         StorageAdapterKind.LOCAL_FS -> "Catalogo"
         StorageAdapterKind.SAF_TREE -> {
             if (location.opaqueLocator.isBlank()) {
-                deviceAliasOrDefault()
+                localDeviceLabelForGrouping()
             } else {
                 runCatching {
-                    SafPathLabels.deviceLabelForTree(
-                        appContext,
-                        Uri.parse(location.opaqueLocator),
-                        deviceAliasOrDefault(),
-                    )
-                }.getOrDefault(deviceAliasOrDefault())
+                    val uri = Uri.parse(location.opaqueLocator)
+                    when (SafPathLabels.providerOf(uri)) {
+                        SafPathLabels.SafProvider.NETWORK_NAS ->
+                            SafPathLabels.networkDeviceLabel(uri, location.displayName)
+                        else ->
+                            SafPathLabels.deviceLabelForTree(
+                                appContext,
+                                uri,
+                                localDeviceLabelForGrouping(),
+                            )
+                    }
+                }.getOrDefault(localDeviceLabelForGrouping())
             }
         }
-        StorageAdapterKind.MEDIA_STORE -> "Galleria di sistema"
-        StorageAdapterKind.SMB -> "Rete / NAS"
+        StorageAdapterKind.MEDIA_STORE -> localDeviceLabelForGrouping()
+        StorageAdapterKind.SMB -> SafPathLabels.networkDeviceLabelFromHints(
+            displayHint = location.displayName,
+            path = "",
+            uriString = location.opaqueLocator,
+        )
     }
 
     private fun pathLabelFor(location: StorageLocation): String {
