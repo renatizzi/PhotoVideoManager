@@ -86,7 +86,20 @@ Non modificare funzioni o interfacce estranee alla richiesta.
 - Riprendere dal punto raggiunto, senza riaprire analisi concluse.
 - Applicare gli stessi criteri di comunicazione, verifica e test.
 
-## 9. Documenti collegati
+## 9. Gate di consegna — niente prove telefono a vuoto (anti-spreco crediti)
+
+Vietato chiedere a Renato installazione o prova sul telefono se manca anche uno solo di questi punti:
+
+1. `versionCode` **univoco e più alto** di tutti i branch `cursor/*` (così `consegna-telefono.bat` prende questo codice).
+2. Compilazione interna OK: `:app:assembleDebug` (e test automatici pertinenti).
+3. APK pronto in `/opt/cursor/artifacts/` **oppure** artifact CI «Consegna APK».
+4. Per bug di rete/recupero dati: prova simulata in ambiente agente (socket/unit) **prima** del telefono; non chiedere «riprova e spera».
+
+Se `consegna-telefono.bat` fallisce: chiedere **solo** il file `build-consegna.log` (o le righe `FAILED` / `e:`), non un nuovo ciclo di ipotesi senza log.
+
+Dopo un KO telefono sullo **stesso** difetto: non rilasciare un’altra build «di speranza»; isolare la causa in ambiente agente, poi una sola build correttiva.
+
+## 10. Documenti collegati
 
 | Documento | Ruolo |
 |---|---|
@@ -95,3 +108,4 @@ Non modificare funzioni o interfacce estranee alla richiesta.
 | `docs/PVM_Nota_Integrata.md` | Requisiti e decisioni di prodotto |
 | `docs/BACKLOG_WIZARD_UX.md` | Backlog Setup Catalogo / Acquisisci |
 | `docs/TERMINOLOGIA_UI.md` | Terminologia UI |
+| `consegna-telefono.bat` | Unico percorso PC → APK di prova |

@@ -17,3 +17,4 @@ gen/
 out/
 .kotlin/
 .cursor-agent-probe/
+build-consegna.log

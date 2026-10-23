@@ -11,8 +11,9 @@ Adottate il 23/10/2026. Valgono per tutte le sessioni. Non basta dichiararle com
 1. **Comunicazione:** italiano semplice verso Renato; niente gergo inutile; istruzioni con cosa / dove / risultato.
 2. **Prima del codice:** coerenza con requisiti e piano; in caso di dubbio che cambia il risultato → chiarire; niente ricicli di analisi, niente scope creep.
 3. **Test telefono:** non frammentare; una sessione finale per gruppo di lavoro; ogni test con obiettivo, preparazione, passi numerati, atteso, errori, riscontro.
-4. **Piano:** non alterare ciò che non è richiesto; riprendere dallo stato già raggiunto.
-5. **Documentazione vincolante di prodotto:** `docs/PVM_Nota_Integrata.md`, `docs/TERMINOLOGIA_UI.md`, backlog pertinenti (es. `docs/BACKLOG_WIZARD_UX.md`).
+4. **Gate consegna (anti-spreco):** niente richiesta prova telefono senza `versionCode` massimo univoco, `assembleDebug` OK, APK in artifact, e (se rete) simulazione interna. Percorso PC: `consegna-telefono.bat` → in caso di KO solo `build-consegna.log`.
+5. **Piano:** non alterare ciò che non è richiesto; riprendere dallo stato già raggiunto.
+6. **Documentazione vincolante di prodotto:** `docs/PVM_Nota_Integrata.md`, `docs/TERMINOLOGIA_UI.md`, backlog pertinenti (es. `docs/BACKLOG_WIZARD_UX.md`).
 
 ## Handoff storico
 

@@ -27,4 +27,6 @@
 
 **0.16.49:** payload annuncio via ConvertTo-Json; CI ParseFile aggiornato (nomi CONFIGURA/sup + SDK); APK pronto senza compilare in Studio.
 
-**Stato:** `0.16.49-preview`
+**0.16.50:** `consegna-telefono.bat` scrive `local.properties`, log `build-consegna.log`, ritenta dopo pulizia; CI Consegna APK; gate anti-spreco in REGOLE §9.
+
+**Stato:** `0.16.50-preview`
