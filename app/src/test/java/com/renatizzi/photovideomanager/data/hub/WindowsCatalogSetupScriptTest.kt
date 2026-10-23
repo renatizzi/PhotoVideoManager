@@ -178,8 +178,8 @@ class WindowsCatalogSetupScriptTest {
         assertTrue(ps1.contains("PVMSETUP1"))
         assertTrue(ps1.contains("FromBase64String"))
         assertTrue(ps1.contains("Servizio dati per app avviato"))
+        assertTrue(ps1.contains("ConvertTo-Json -Compress"))
         assertTrue(ps1.contains("ips"))
-        assertTrue(ps1.contains("""'{"v":1,"m":"'""") || ps1.contains("\"ips\""))
         assertFalse(ps1.contains("Esito (fuori dalla condivisione)"))
         assertFalse(
             ps1.lines().any {

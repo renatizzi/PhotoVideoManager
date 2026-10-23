@@ -25,4 +25,6 @@
 **KO 0.16.47 (Renato 23/10):** dopo 5 tentativi User sì, IP no. Causa: accept del primo UDP parziale (nome PC come Host).  
 **0.16.48:** discover completo solo con IPv4+User; IP da peer HTTP/sorgente UDP; merge; simulazioni localhost.
 
-**Stato:** `0.16.48-preview`
+**0.16.49:** payload annuncio via ConvertTo-Json; CI ParseFile aggiornato (nomi CONFIGURA/sup + SDK); APK pronto senza compilare in Studio.
+
+**Stato:** `0.16.49-preview`

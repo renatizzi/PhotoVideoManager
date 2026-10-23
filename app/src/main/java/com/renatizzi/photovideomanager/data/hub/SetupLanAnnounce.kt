@@ -314,7 +314,7 @@ object SetupLanAnnounce {
             return emptyList()
         }
         // Priorità: indirizzi locali noti, poi .1 (router spesso vicino), poi resto subnet.
-        val out = LinkedHashSet<String>()
+        val out = linkedSetOf<String>()
         out.addAll(self)
         for (base in bases) {
             out.add("${base}1")

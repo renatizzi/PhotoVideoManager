@@ -576,10 +576,18 @@ try {
 
   # Servizio locale HTTP+UDP (~5 min) con i dati memorizzati a Tutto pronto.
   try {
-    ${d}userJson = ${d}userHint.Replace([string][char]92, ([string][char]92 + [char]92))
     ${d}ipsText = (${d}allIps -join ',')
-    # Concatenazione (no -f): evita amnesia di IP con caratteri speciali nel formato.
-    ${d}payload = '{"v":1,"m":"' + ${d}AnnounceMagic + '","t":"' + ${d}SetupToken + '","ip":"' + ${d}ipText + '","user":"' + ${d}userJson + '","share":"' + ${d}ShareName + '","pc":"' + ${d}pc + '","ips":"' + ${d}ipsText + '"}'
+    # ConvertTo-Json: niente concatenazione di virgolette (piu sicuro per ParseFile / Studio).
+    ${d}payload = ([ordered]@{
+      v = 1
+      m = ${d}AnnounceMagic
+      t = ${d}SetupToken
+      ip = ${d}ipText
+      user = ${d}userHint
+      share = ${d}ShareName
+      pc = ${d}pc
+      ips = ${d}ipsText
+    } | ConvertTo-Json -Compress)
     ${d}announcerPs1 = Join-Path ([System.IO.Path]::GetTempPath()) ('MediaManager_announce_' + ${d}SetupToken + '.ps1')
     ${d}annTpl = [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String('$announcerB64'))
     ${d}annBody = ${d}annTpl.Replace('__PVM_PAYLOAD__', ${d}payload).Replace('__PVM_UDP__', [string]${d}AnnounceUdp).Replace('__PVM_HTTP__', [string]${d}AnnounceHttp)
