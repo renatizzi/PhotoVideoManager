@@ -15,6 +15,7 @@ class WindowsCatalogSetupScriptTest {
             shareName = "MediaManagerCatalog",
             userName = "MediaManager",
             temporaryPassword = "TempPass!23456",
+            setupToken = "abc123def456",
         ),
     )
 
@@ -51,6 +52,7 @@ class WindowsCatalogSetupScriptTest {
                 shareName = "MediaManagerCatalog",
                 userName = "MediaManager",
                 temporaryPassword = "TempPass!23456",
+                setupToken = "tokdrive01",
             ),
         )
         assertTrue(pkg.ps1Content.contains("'E:\\MediaManager\\Catalogo'"))
@@ -119,7 +121,7 @@ class WindowsCatalogSetupScriptTest {
         assertTrue(ps1.contains("Fail-Step"))
         assertTrue(ps1.contains("Fail-Step 60") || ps1.contains("60"))
         assertTrue(ps1.contains("Tutto pronto"))
-        assertTrue(ps1.contains("Remove-Item"))
+        assertTrue(ps1.contains("Start-Process"))
         assertTrue(ps1.contains("Test-NetConnection"))
         assertTrue(ps1.contains("0.0.0.0/0"))
     }
@@ -166,13 +168,21 @@ class WindowsCatalogSetupScriptTest {
     }
 
     @Test
-    fun build_containsWaitBannerAndDesktopCleanup() {
-        val ps1 = samplePkg().ps1Content
+    fun build_containsWaitBannerAndLanAnnounce() {
+        val pkg = samplePkg()
+        val ps1 = pkg.ps1Content
+        val cmd = pkg.cmdContent
         assertTrue(ps1.contains("ATTESA: la routine puo richiedere alcuni minuti."))
-        assertTrue(ps1.contains("CONFIGURA.cmd"))
-        assertTrue(ps1.contains("CONFIGURA rimosso dal Desktop"))
         assertTrue(ps1.contains("MediaManager_setup_result.json"))
-        assertTrue(ps1.contains("Copia dal Desktop sul telefono"))
+        assertTrue(ps1.contains("SetupToken"))
+        assertTrue(ps1.contains("abc123def456"))
+        assertTrue(ps1.contains("PVMSETUP1"))
+        assertTrue(ps1.contains("EnableBroadcast"))
+        assertTrue(ps1.contains("Annuncio rete avviato"))
+        assertFalse(ps1.contains("CONFIGURA rimosso dal Desktop"))
+        assertFalse(ps1.contains("Copia dal Desktop sul telefono"))
+        assertTrue(cmd.contains("Lascia questa finestra aperta"))
+        assertTrue(cmd.contains("pause"))
     }
 
     @Test

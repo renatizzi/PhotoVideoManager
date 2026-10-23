@@ -291,7 +291,7 @@ fun PvmApp(
                         onConfirmUsbAndPrepare = wizardVm::confirmUsbAndPrepareFiles,
                         onConfirmCopy = wizardVm::confirmCopyChecked,
                         onConfirmScriptRan = wizardVm::confirmScriptRanOnPc,
-                        onImportSetupResult = wizardVm::importSetupResultFromDownloads,
+                        onRetryRecoverPcData = wizardVm::retryRecoverPcData,
                         onCredentialsText = wizardVm::credentialsClipboardText,
                         onPasswordText = wizardVm::passwordClipboardText,
                         onFieldText = wizardVm::fieldClipboardText,

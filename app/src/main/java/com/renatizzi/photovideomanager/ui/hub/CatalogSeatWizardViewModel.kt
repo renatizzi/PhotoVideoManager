@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.data.hub.WindowsCatalogSetupScript
 import com.renatizzi.photovideomanager.data.hub.WindowsSetupExportResult
+import com.renatizzi.photovideomanager.data.hub.SetupLanAnnounce
 import com.renatizzi.photovideomanager.data.hub.WindowsSetupResult
 import com.renatizzi.photovideomanager.data.hub.WindowsSetupResultParser
 import com.renatizzi.photovideomanager.data.hub.WindowsSetupScriptExporter
@@ -15,6 +16,8 @@ import com.renatizzi.photovideomanager.data.hub.WizardDraftStore
 import com.renatizzi.photovideomanager.data.storage.NetworkDriveAssistant
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeat
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -75,10 +78,13 @@ data class CatalogSeatWizardUiState(
     val verification: SeatVerificationUi = SeatVerificationUi.NONE,
     /** Dopo Scegli cartella: mostra domanda SI/NO (revisione4). */
     val awaitAccessOutcome: Boolean = false,
-    /** Da `MediaManager_setup_result.json` (Download). */
+    /** Host/User recuperati a «Tutto pronto» (annuncio Wi‑Fi). */
     val pcHostIp: String = "",
     val cifsUserQualified: String = "",
     val setupResultImported: Boolean = false,
+    val setupToken: String = "",
+    /** Ascolto rete in corso dopo OK Passo 4. */
+    val recoveringPcData: Boolean = false,
 )
 
 /**
@@ -231,6 +237,10 @@ class CatalogSeatWizardViewModel(
                 scriptPrepared = draft.scriptPrepared,
                 usbCopiedDeclared = draft.usbCopiedDeclared,
                 scriptRanDeclared = draft.scriptRanDeclared,
+                setupToken = draft.setupToken,
+                pcHostIp = draft.pcHostIp,
+                cifsUserQualified = draft.cifsUserQualified,
+                setupResultImported = draft.pcHostIp.isNotBlank() || draft.cifsUserQualified.isNotBlank(),
                 canResumeDraft = false,
                 errorMessage = null,
                 statusMessage = null,
@@ -367,6 +377,9 @@ class CatalogSeatWizardViewModel(
                     SetupMode.MODIFY -> WizardDraftStore.MODE_MODIFY
                     SetupMode.CREATE -> WizardDraftStore.MODE_CREATE
                 },
+                setupToken = s.setupToken,
+                pcHostIp = s.pcHostIp,
+                cifsUserQualified = s.cifsUserQualified,
             ),
         )
     }
@@ -394,25 +407,31 @@ class CatalogSeatWizardViewModel(
         }
     }
 
-    /** Rilegge l’esito script da Download (User + Host). */
-    fun importSetupResultFromDownloads() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val result = exporter.findSetupResultInDownloads()
-            withContext(Dispatchers.Main) {
-                if (result == null || !result.isCompleted) {
-                    _state.update {
-                        it.copy(
-                            statusMessage = null,
-                            errorMessage = "Esito non trovato in Download. Copia " +
-                                "MediaManager_setup_result.json dal Desktop del PC nella " +
-                                "cartella Download del telefono, poi riprova.",
-                        )
-                    }
-                    return@withContext
-                }
-                applySetupResult(result)
+    /** Riprova ascolto Wi‑Fi (stesso token della sessione). */
+    fun retryRecoverPcData() {
+        val token = _state.value.setupToken
+        if (token.isBlank()) {
+            _state.update {
+                it.copy(errorMessage = "Sessione setup non pronta. Torna al passo USB e genera di nuovo i file.")
             }
+            return
         }
+        viewModelScope.launch { recoverPcDataAndOpenCifs(token, alreadyOnCifs = true) }
+    }
+
+    private fun applyLanPayload(payload: SetupLanAnnounce.Payload) {
+        _state.update {
+            it.copy(
+                cifsUserQualified = payload.userQualified.ifBlank { it.cifsUserQualified },
+                pcHostIp = payload.hostIp.ifBlank { it.pcHostIp },
+                shareName = payload.shareName.ifBlank { it.shareName },
+                setupResultImported = true,
+                recoveringPcData = false,
+                errorMessage = null,
+                statusMessage = null,
+            )
+        }
+        persistDraft()
     }
 
     private fun applySetupResult(result: WindowsSetupResult) {
@@ -424,6 +443,7 @@ class CatalogSeatWizardViewModel(
                 pcHostIp = ip,
                 shareName = result.shareName.ifBlank { it.shareName },
                 setupResultImported = true,
+                recoveringPcData = false,
                 errorMessage = null,
                 statusMessage = null,
             )
@@ -436,32 +456,66 @@ class CatalogSeatWizardViewModel(
         _state.update { it.copy(cifsInstalled = installed) }
     }
 
-    /** Passo 4 OK: Tutto pronto → scrub script Download → import esito → passo 5 CIFS. */
+    /** Passo 4 OK: ascolto Wi‑Fi dei dati memorizzati a Tutto pronto → passo 5 CIFS. */
     fun confirmScriptRanOnPc() {
-        viewModelScope.launch(Dispatchers.IO) {
-            runCatching { exporter.scrubDownloadsScripts() }
-            val result = runCatching { exporter.findSetupResultInDownloads() }.getOrNull()
-            refreshCifsInstalled()
-            _state.update { current ->
-                val withResult = if (result != null && result.isCompleted) {
-                    current.copy(
-                        cifsUserQualified = WindowsSetupResultParser.resolvedUser(result),
-                        pcHostIp = result.primaryIpv4,
-                        shareName = result.shareName.ifBlank { current.shareName },
-                        setupResultImported = true,
-                    )
-                } else {
-                    current.copy(setupResultImported = false)
-                }
-                withResult.copy(
-                    step = WizardStep.W2_CIFS,
-                    scriptRanDeclared = true,
-                    statusMessage = null,
-                    errorMessage = null,
-                )
-            }
-            persistDraft()
+        val token = _state.value.setupToken
+        viewModelScope.launch {
+            runCatching { withContext(Dispatchers.IO) { exporter.scrubDownloadsScripts() } }
+            recoverPcDataAndOpenCifs(token, alreadyOnCifs = false)
         }
+    }
+
+    private suspend fun recoverPcDataAndOpenCifs(token: String, alreadyOnCifs: Boolean) {
+        refreshCifsInstalled()
+        _state.update {
+            it.copy(
+                busy = true,
+                recoveringPcData = true,
+                scriptRanDeclared = true,
+                step = if (alreadyOnCifs) it.step else WizardStep.W2_CIFS,
+                statusMessage = null,
+                errorMessage = null,
+            )
+        }
+        persistDraft()
+
+        val cancelled = AtomicBoolean(false)
+        val lan = if (token.isNotBlank()) {
+            withContext(Dispatchers.IO) {
+                runCatching { SetupLanAnnounce.listenForToken(token, cancelled) }.getOrNull()
+            }
+        } else {
+            null
+        }
+
+        if (lan != null) {
+            applyLanPayload(lan)
+            _state.update { it.copy(busy = false, recoveringPcData = false) }
+            persistDraft()
+            return
+        }
+
+        // Riserva silenziosa: JSON in Download (senza chiedere copia al cliente).
+        val fileResult = withContext(Dispatchers.IO) {
+            runCatching { exporter.findSetupResultInDownloads() }.getOrNull()
+        }
+        if (fileResult != null && fileResult.isCompleted) {
+            applySetupResult(fileResult)
+            _state.update { it.copy(busy = false, recoveringPcData = false) }
+            persistDraft()
+            return
+        }
+
+        _state.update {
+            it.copy(
+                busy = false,
+                recoveringPcData = false,
+                setupResultImported = false,
+                errorMessage = "Dati del PC non ricevuti. Lascia aperta la finestra «Tutto pronto» " +
+                    "sul PC (stessa Wi‑Fi del telefono) e tocca «Riprova recupero dati».",
+            )
+        }
+        persistDraft()
     }
 
     /** @deprecated bozze: usa [confirmCopyChecked]. */
@@ -502,6 +556,9 @@ class CatalogSeatWizardViewModel(
             val password = current.temporaryPassword.ifBlank {
                 WindowsCatalogSetupScript.generatePassword()
             }
+            val setupToken = current.setupToken.ifBlank {
+                UUID.randomUUID().toString().replace("-", "")
+            }
             val result = withContext(Dispatchers.IO) {
                 runCatching {
                     val pkg = WindowsCatalogSetupScript.build(
@@ -510,6 +567,7 @@ class CatalogSeatWizardViewModel(
                             shareName = current.shareName.trim(),
                             userName = current.userName.trim(),
                             temporaryPassword = password,
+                            setupToken = setupToken,
                         ),
                     )
                     exporter.export(pkg)
@@ -524,6 +582,7 @@ class CatalogSeatWizardViewModel(
                         it.copy(
                             busy = false,
                             temporaryPassword = password,
+                            setupToken = setupToken,
                             scriptPrepared = true,
                             downloadsSaved = export.downloadsSaved,
                             usbCopiedTo = export.usbCopiedTo,

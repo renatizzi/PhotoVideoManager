@@ -69,7 +69,7 @@ fun CatalogSeatWizardScreen(
     onConfirmUsbAndPrepare: () -> Unit,
     onConfirmCopy: () -> Unit,
     onConfirmScriptRan: () -> Unit,
-    onImportSetupResult: () -> Unit,
+    onRetryRecoverPcData: () -> Unit,
     onCredentialsText: () -> String,
     onPasswordText: () -> String,
     onFieldText: (CifsCopyField) -> String,
@@ -196,7 +196,7 @@ fun CatalogSeatWizardScreen(
                     val pwd = onPasswordText()
                     if (pwd.isNotBlank()) copyToClipboard(context, pwd)
                 },
-                onImportSetupResult = onImportSetupResult,
+                onRetryRecoverPcData = onRetryRecoverPcData,
                 onOpenCifs = {
                     onRefreshCifs()
                     if (NetworkDriveAssistant.isHelperInstalled(context)) {
@@ -639,7 +639,6 @@ private fun ScriptChecklistStep(
         WizardChecklistItem(stringResource(R.string.hub_pc4_item_1)),
         WizardChecklistItem(stringResource(R.string.hub_pc4_item_2)),
         WizardChecklistItem(stringResource(R.string.hub_pc4_item_3)),
-        WizardChecklistItem(stringResource(R.string.hub_pc4_item_4)),
     )
     ChecklistOkBlock(items = items, onOk = onOk, onBack = onBack, busy = busy)
 }
@@ -690,7 +689,7 @@ private fun CifsCardStep(
     state: CatalogSeatWizardUiState,
     onCopyField: (CifsCopyField) -> Unit,
     onCopyPassword: () -> Unit,
-    onImportSetupResult: () -> Unit,
+    onRetryRecoverPcData: () -> Unit,
     onOpenCifs: () -> Unit,
     onChooseFolder: () -> Unit,
     onRetry: () -> Unit,
@@ -721,24 +720,34 @@ private fun CifsCardStep(
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
     )
-    if (state.setupResultImported) {
-        Text(
-            stringResource(R.string.hub_pc5_result_imported),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.primary,
-        )
-    } else {
-        Text(
-            stringResource(R.string.hub_pc5_result_missing),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
-        )
-        OutlinedButton(
-            onClick = onImportSetupResult,
-            enabled = !state.busy,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(stringResource(R.string.hub_pc5_import_result))
+    when {
+        state.recoveringPcData -> {
+            Text(
+                stringResource(R.string.hub_pc5_recovering),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+        state.setupResultImported -> {
+            Text(
+                stringResource(R.string.hub_pc5_result_imported),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+        else -> {
+            Text(
+                stringResource(R.string.hub_pc5_result_missing),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+            )
+            OutlinedButton(
+                onClick = onRetryRecoverPcData,
+                enabled = !state.busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.hub_pc5_retry_recover))
+            }
         }
     }
     Text(

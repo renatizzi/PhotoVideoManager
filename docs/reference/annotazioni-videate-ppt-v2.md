@@ -8,22 +8,15 @@
 - Sopra i bottoni: «Quando pronto clicca su OK».  
 - **Non** mostrare sotto i bottoni lo status «File CONFIGURA e sup salvati…».
 
-**Passo 4:** checklist CONFIGURA / UAC / Tutto pronto / copia `MediaManager_setup_result.json` in Download.
+**Passo 4:** checklist CONFIGURA / UAC / Tutto pronto (finestra resta aperta; niente copia JSON sul telefono).
 
-**Passo 5 (revisione4 + CIFS 0.16.44/45):**  
-- Eliminati: «ricontrolla», bullet «Clicca qui» / «Consenti…», status sotto Indietro.  
-- Unico blocco + bottone **Attiva collegamento** (ex Scegli cartella).  
-- SI → Acquisisci; NO → stub.  
+**Passo 5 (revisione4 + CIFS 0.16.46):**  
+- **User/Host:** memorizzati a «Tutto pronto» sul PC e inviati in Wi‑Fi all’app (form già compilato).  
 - **Visibilità share:** Folder vuoto → elenco share; aprire `MediaManagerCatalog`.  
-- **User/Host:** da import esito JSON in Download (fallback `NOMEPC\…` + IP da Tutto pronto).  
-- Script: messaggio attesa + cleanup CONFIGURA dal Desktop.
+- Niente passo «copia file esito» per il cliente.
 
-**Disco esterno PC:** percorso Windows su qualsiasi lettera (non solo C:); default resta `C:\MediaManager\Catalogo`.
-
-**Da verificare (test / follow-up):** stesso disco esterno configurato su un PC (stessa lettera + stesso percorso) collegato poi a un **altro** PC — esito SMB/share/CIFS/MediaManager (forse nessun problema; va confermato sul campo).
+**KO 0.16.45 (Renato 23/10):** finestra chiusa; copia JSON inutile/complicata; CIFS non testabile. Superato da 0.16.46.
 
 **P0 Acquisisci (Renato 22/10):** su S25 solo telefono/Drive/CIFS — manca censimento altri dispositivi/fonti. Vedi `docs/BACKLOG_WIZARD_UX.md`.
 
-**Test filiera 0.16.43 — KO poi OK manuale (Renato 22/10):** User `MINI_IT13\MediaManager` + Folder vuoto + `MediaManagerCatalog` → verificato. Fix app 0.16.44/45.
-
-**Stato:** `0.16.45-preview` (visibilità share + import esito; da riconvalidare sul campo)
+**Stato:** `0.16.46-preview` (recupero automatico IP/User; da convalida sul campo)

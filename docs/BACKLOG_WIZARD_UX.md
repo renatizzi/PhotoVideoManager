@@ -43,10 +43,10 @@
 ### P0 — Bloccanti di metodo (Wizard)
 1. **Help contestuale (nuovo)** — repository what/if (da catalogo Claude W-xxx + Nota §5.6), ingresso per passo, niente gestione errori lunga sulle pagine operative. *Non in 0.16.36.*
 
-### P1 — Tranche attiva (22/10): visibilità share + routine→app
-2. **Visibilità cartella condivisa (Passo 5)** — ✅ 0.16.45: Folder vuoto, share `MediaManagerCatalog`, testi Attiva collegamento.  
-3. **Import esito script → User + Host IP** — ✅ 0.16.45: `MediaManager_setup_result.json` da Download.  
-4. **Script:** ✅ 0.16.45 messaggio attesa + cleanup `CONFIGURA` dal Desktop dopo «Tutto pronto».
+### P1 — Tranche attiva (22–23/10): visibilità share + routine→app
+2. **Visibilità cartella condivisa (Passo 5)** — ✅ Folder vuoto, share `MediaManagerCatalog`, testi Attiva collegamento.  
+3. **User + Host senza impatto cliente** — ✅ 0.16.46: memorizzati a Tutto pronto + annuncio Wi‑Fi (niente copia JSON sul telefono).  
+4. **Script:** ✅ attesa; finestra resta con pause; annuncio rete; niente cleanup CONFIGURA a metà esecuzione.
 
 ### P1 — Già implementato
 5. **Slide 0 condizionale** — ✅ 0.16.36: menu a tendina + campi PC/locale/stub Cloud-NAS.  

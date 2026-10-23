@@ -31,6 +31,8 @@ object WindowsCatalogSetupScript {
     )
     const val RESULT_FILE_NAME = "MediaManager_setup_result.json"
     const val LOG_FILE_NAME = "MediaManager_setup.log"
+    /** Porta UDP annuncio Wi‑Fi dopo Tutto pronto (allineata a [SetupLanAnnounce.PORT]). */
+    const val SETUP_ANNOUNCE_PORT = SetupLanAnnounce.PORT
 
     private val pathRegex =
         Regex("""^[A-Za-z]:\\(?:[^<>:"/\\|?*\r\n]+\\)*[^<>:"/\\|?*\r\n]*$""")
@@ -42,6 +44,8 @@ object WindowsCatalogSetupScript {
         val shareName: String = DEFAULT_SHARE,
         val userName: String = DEFAULT_USER,
         val temporaryPassword: String,
+        /** Token sessione wizard: collega «Tutto pronto» all’ascolto in app. */
+        val setupToken: String = "",
     )
 
     data class Package(
@@ -107,6 +111,9 @@ object WindowsCatalogSetupScript {
         validateShareName(params.shareName)?.let { error(it) }
         validateUserName(params.userName)?.let { error(it) }
         require(params.temporaryPassword.length >= 8) { "Password troppo corta" }
+        require(params.setupToken.matches(Regex("^[A-Za-z0-9_-]{8,64}$"))) {
+            "Token setup non valido"
+        }
 
         val pkg = Package(
             params = params,
@@ -181,10 +188,12 @@ object WindowsCatalogSetupScript {
           echo  Configurazione NON completata. Codice: %ERR%
           echo  10=cartella 20=utente 30=condivisione 40=NTFS 50=rete/firewall 60=verifica
         ) else (
-          echo  Tutto pronto. Puoi chiudere questa finestra e tornare all'app.
+          echo  Tutto pronto. Lascia questa finestra aperta qualche minuto:
+          echo  l'app recupera da sola IP e utente. Poi puoi chiuderla.
         )
         echo.
         pause
+        del "%~dp0$PS1_FILE_NAME" >nul 2>&1
         exit /b %ERR%
         """.trimIndent(),
     )
@@ -197,8 +206,11 @@ object WindowsCatalogSetupScript {
         val share = psQuote(params.shareName.trim())
         val user = psQuote(params.userName.trim())
         val password = psQuote(params.temporaryPassword)
+        val setupToken = psQuote(params.setupToken.trim())
         val resultName = psQuote(RESULT_FILE_NAME)
         val logName = psQuote(LOG_FILE_NAME)
+        val announcePort = SETUP_ANNOUNCE_PORT
+        val announceMagic = SetupLanAnnounce.MAGIC
         val d = "${'$'}"
 
         // PowerShell body: keep parameters at top; exit codes 10/20/30/40/50/60.
@@ -215,8 +227,11 @@ ${d}FolderPath     = $folder
 ${d}ShareName      = $share
 ${d}UserName       = $user
 ${d}PlainPassword  = $password
+${d}SetupToken     = $setupToken
 ${d}ResultFileName = $resultName
 ${d}LogFileName    = $logName
+${d}AnnouncePort   = $announcePort
+${d}AnnounceMagic  = '$announceMagic'
 ${d}FirewallGroup  = '@FirewallAPI.dll,-28502'
 ${d}ExitCode       = 1
 
@@ -426,10 +441,13 @@ try {
   Record 'verify' ${d}true 'ok'
 
   ${d}userHint = ("{0}\{1}" -f ${d}pc, ${d}UserName)
+  ${d}ipText = $(if (${d}primaryIp) { [string]${d}primaryIp } else { '' })
+  # Memorizza IP/User a Tutto pronto (file locale + annuncio Wi-Fi per l'app).
   ${d}result = [pscustomobject]@{
     app = 'MediaManager'
     version = 1
     status = 'completed'
+    setupToken = ${d}SetupToken
     computerName = ${d}pc
     folderPath = ${d}FolderPath
     shareName = ${d}ShareName
@@ -459,31 +477,37 @@ try {
   Write-Host ("Esito (fuori dalla condivisione): {0}" -f ${d}ResultPath)
   Write-Host ("Log: {0}" -f ${d}LogPath)
   Write-Host "AVVISO: se il PC va in sospensione, la cartella sparisce dalla rete."
-  Write-Host "Copia dal Desktop sul telefono (Download) il file MediaManager_setup_result.json"
-  Write-Host "poi torna all'app MediaManager e continua il Wizard."
+  Write-Host "Lascia questa finestra aperta: l'app recupera da sola IP e utente (Wi-Fi)."
+  Write-Host "Poi torna all'app MediaManager e continua il Wizard."
   Write-Host ""
 
-  # Rimuove lo .ps1 (contiene la password) dopo successo.
+  # Annuncio Wi-Fi (processo separato, ~3 minuti) con i dati memorizzati qui.
   try {
-    ${d}self = ${d}MyInvocation.MyCommand.Path
-    if (${d}self -and (Test-Path -LiteralPath ${d}self)) {
-      Remove-Item -LiteralPath ${d}self -Force -ErrorAction SilentlyContinue
-      Write-Step "File di supporto eliminato dal PC (conteneva la password)."
-    }
-  } catch {}
-
-  # Cleanup CONFIGURA dal Desktop (l'esito JSON resta sul Desktop).
-  try {
-    if (${d}desktop) {
-      foreach (${d}n in @('CONFIGURA.cmd', 'CONFIGURA.CMD', 'sup.ps1')) {
-        ${d}p = Join-Path ${d}desktop ${d}n
-        if (Test-Path -LiteralPath ${d}p) {
-          Remove-Item -LiteralPath ${d}p -Force -ErrorAction SilentlyContinue
-        }
-      }
-      Write-Step "CONFIGURA rimosso dal Desktop (esito JSON lasciato)."
-    }
-  } catch {}
+    ${d}userJson = ${d}userHint.Replace('\', '\\')
+    ${d}payload = ('{{"v":1,"m":"{0}","t":"{1}","ip":"{2}","user":"{3}","share":"{4}","pc":"{5}"}}' -f ${d}AnnounceMagic, ${d}SetupToken, ${d}ipText, ${d}userJson, ${d}ShareName, ${d}pc)
+    ${d}announcerPs1 = Join-Path ([System.IO.Path]::GetTempPath()) ('MediaManager_announce_' + ${d}SetupToken + '.ps1')
+    ${d}payloadLine = ('${d}payload = ''{0}''' -f ${d}payload.Replace("'", "''"))
+    ${d}annLines = @(
+      '${d}ErrorActionPreference = ''SilentlyContinue'''
+      ${d}payloadLine
+      ('${d}port = {0}' -f ${d}AnnouncePort)
+      '${d}udp = New-Object System.Net.Sockets.UdpClient'
+      '${d}udp.EnableBroadcast = ${d}true'
+      '${d}ep = New-Object System.Net.IPEndPoint ([System.Net.IPAddress]::Broadcast, ${d}port)'
+      '${d}bytes = [System.Text.Encoding]::UTF8.GetBytes(${d}payload)'
+      '${d}end = (Get-Date).AddMinutes(3)'
+      'while ((Get-Date) -lt ${d}end) {'
+      '  try { [void]${d}udp.Send(${d}bytes, ${d}bytes.Length, ${d}ep) } catch {}'
+      '  Start-Sleep -Seconds 2'
+      '}'
+      'try { ${d}udp.Close() } catch {}'
+    )
+    ${d}annLines | Set-Content -LiteralPath ${d}announcerPs1 -Encoding ASCII
+    Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-WindowStyle','Hidden','-File', ${d}announcerPs1) -WindowStyle Hidden | Out-Null
+    Write-Step 'Annuncio rete avviato per l''app MediaManager.'
+  } catch {
+    Write-Step 'Annuncio rete non avviato (l''app potra usare i dati a video).'
+  }
 
   ${d}ExitCode = 0
   exit 0
