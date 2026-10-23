@@ -62,6 +62,7 @@ class AppContainer(context: Context) {
         permissionGate = permissionGate,
         personalRoot = personalRoot,
         labelStore = sourceLabelStore,
+        catalogSeatLabel = { catalogSeatStore.seat().displayLabel },
     )
 
     val censusService: CensusService = CensusService(

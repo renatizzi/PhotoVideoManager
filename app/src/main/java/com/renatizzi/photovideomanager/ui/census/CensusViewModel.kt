@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.renatizzi.photovideomanager.application.CatalogFacade
+import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind
+import com.renatizzi.photovideomanager.domain.model.DashboardSnapshot
 import com.renatizzi.photovideomanager.domain.model.DeviceSourceGroup
 import com.renatizzi.photovideomanager.domain.model.SourceCensusSelection
 import com.renatizzi.photovideomanager.domain.model.SourceSortMode
@@ -27,7 +29,14 @@ data class CensusUiState(
     val acquiredCount: Long = 0,
     /** Byte delle sole copie acquisite (spazio app catalogato), non orfani su disco. */
     val acquiredUsedBytes: Long = 0,
+    /** Nome «questo tablet» per rinomina / intestazione gruppi locali. */
     val deviceAlias: String = "",
+    /** Posizione del Catalogo (distinct dalle fonti Acquisisci). */
+    val catalogSeatConfigured: Boolean = false,
+    val catalogSeatLabel: String = "",
+    val catalogSeatKindLabel: String = "",
+    /** null = non ancora verificato in questo refresh. */
+    val catalogSeatReachable: Boolean? = null,
     val message: String? = null,
 ) {
     val visibleSources: List<SourceSummary>
@@ -79,10 +88,22 @@ class CensusViewModel(
             runCatching {
                 val sources = catalogFacade.listSources(refresh = true)
                 val snap = catalogFacade.dashboardSnapshot()
-                Triple(sources, snap, catalogFacade.deviceAliasOrDefault())
-            }.onSuccess { (sources, snap, deviceAlias) ->
+                val deviceAlias = catalogFacade.deviceAliasOrDefault()
+                val seat = catalogFacade.catalogSeat()
+                val seatReachable =
+                    if (seat.isConfigured) catalogFacade.catalogSeatReachable() else null
+                CensusRefreshPayload(
+                    sources = sources,
+                    snap = snap,
+                    deviceAlias = deviceAlias,
+                    seatConfigured = seat.isConfigured,
+                    seatLabel = seat.displayLabel,
+                    seatKindLabel = seatKindLabel(seat.kind),
+                    seatReachable = seatReachable,
+                )
+            }.onSuccess { payload ->
                 _state.update { current ->
-                    val censableIds = sources
+                    val censableIds = payload.sources
                         .filterNot { it.isBuiltInPersonal }
                         .map { it.locationId }
                         .toSet()
@@ -96,12 +117,16 @@ class CensusViewModel(
                         }
                     }
                     current.copy(
-                        sources = sources,
+                        sources = payload.sources,
                         selection = selection,
-                        catalogCount = snap.catalogPhotoCount + snap.catalogVideoCount,
-                        acquiredCount = snap.acquiredPhotoCount + snap.acquiredVideoCount,
-                        acquiredUsedBytes = snap.acquiredPhotoBytes + snap.acquiredVideoBytes,
-                        deviceAlias = deviceAlias,
+                        catalogCount = payload.snap.catalogPhotoCount + payload.snap.catalogVideoCount,
+                        acquiredCount = payload.snap.acquiredPhotoCount + payload.snap.acquiredVideoCount,
+                        acquiredUsedBytes = payload.snap.acquiredPhotoBytes + payload.snap.acquiredVideoBytes,
+                        deviceAlias = payload.deviceAlias,
+                        catalogSeatConfigured = payload.seatConfigured,
+                        catalogSeatLabel = payload.seatLabel,
+                        catalogSeatKindLabel = payload.seatKindLabel,
+                        catalogSeatReachable = payload.seatReachable,
                         loading = false,
                     )
                 }
@@ -115,6 +140,25 @@ class CensusViewModel(
             }
         }
     }
+
+    private fun seatKindLabel(kind: CatalogSeatKind): String =
+        when (kind) {
+            CatalogSeatKind.LOCAL_DEVICE -> "Su questo dispositivo"
+            CatalogSeatKind.PC_NOTEBOOK -> "Su PC / notebook"
+            CatalogSeatKind.CLOUD_DRIVE -> "Su Google Drive / cloud"
+            CatalogSeatKind.NETWORK_NAS -> "Su disco di rete / NAS"
+            CatalogSeatKind.NONE -> ""
+        }
+
+    private data class CensusRefreshPayload(
+        val sources: List<SourceSummary>,
+        val snap: DashboardSnapshot,
+        val deviceAlias: String,
+        val seatConfigured: Boolean,
+        val seatLabel: String,
+        val seatKindLabel: String,
+        val seatReachable: Boolean?,
+    )
 
     fun renameSource(locationId: String, newName: String) {
         viewModelScope.launch {

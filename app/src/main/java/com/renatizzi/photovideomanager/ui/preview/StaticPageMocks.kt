@@ -155,6 +155,55 @@ fun AcquisisciStaticScreen(
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
         )
 
+        // Catalogo di riferimento ≠ fonti sotto (Posizione vs dispositivi da cui acquisire).
+        Text(
+            text = stringResource(R.string.acquisisci_catalog_ref_title),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Medium,
+        )
+        if (state.catalogSeatConfigured || seatConfigured) {
+            val seatName = state.catalogSeatLabel.ifBlank { "—" }
+            val kind = state.catalogSeatKindLabel.ifBlank { "Posizione impostata" }
+            Text(
+                text = stringResource(R.string.acquisisci_catalog_ref_line, seatName, kind),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            val reach = when (state.catalogSeatReachable) {
+                true -> stringResource(R.string.acquisisci_catalog_ref_reachable)
+                false -> stringResource(R.string.acquisisci_catalog_ref_unreachable)
+                null -> stringResource(R.string.acquisisci_catalog_ref_unknown)
+            }
+            Text(
+                text = reach,
+                style = MaterialTheme.typography.labelMedium,
+                color = when (state.catalogSeatReachable) {
+                    true -> MaterialTheme.colorScheme.secondary
+                    false -> MaterialTheme.colorScheme.error
+                    null -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
+                },
+            )
+            TextButton(
+                onClick = onOpenCatalogUpdate,
+                enabled = !busy,
+            ) {
+                Text(stringResource(R.string.hub_update_title))
+            }
+        } else {
+            Text(
+                text = stringResource(R.string.acquisisci_catalog_ref_missing),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+            )
+            Button(
+                onClick = onOpenCatalogSeatWizard,
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.hub_acquire_needs_setup_action))
+            }
+        }
+
         Text(
             text = stringResource(R.string.acquisisci_elenco_fonti),
             style = MaterialTheme.typography.titleMedium,
@@ -218,31 +267,6 @@ fun AcquisisciStaticScreen(
                     Text(stringResource(R.string.acquisisci_conferma))
                 }
             }
-        }
-        if (!seatConfigured) {
-            Text(
-                text = stringResource(R.string.hub_acquire_needs_setup_title),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = stringResource(R.string.hub_acquire_needs_setup_body),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-            )
-            Button(
-                onClick = onOpenCatalogSeatWizard,
-                enabled = !busy,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(R.string.hub_acquire_needs_setup_action))
-            }
-        }
-        TextButton(
-            onClick = onOpenCatalogUpdate,
-            enabled = !busy,
-        ) {
-            Text(stringResource(R.string.hub_update_title))
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {

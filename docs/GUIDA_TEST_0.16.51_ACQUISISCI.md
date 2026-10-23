@@ -1,8 +1,10 @@
-# Guida prova telefono — 0.16.51 Acquisisci (dispositivi / fonti)
+# Guida prova telefono — Acquisisci dispositivi / fonti (0.16.51 → 0.16.52)
 
-**Versione APK:** `0.16.51-preview` · **versionCode:** `92`  
+**Versione APK:** `0.16.52-preview` · **versionCode:** `93` (sostituisce 0.16.51)  
 **Obiettivo:** una sola prova (REGOLE §9). Criteri da `docs/PROPOSTA_VISIBILITA_FONTI_ACQUISISCI.md` §5.  
 **Fuori prova:** recupero automatico IP Wizard CIFS (parcheggio; IP manuale ok).
+
+**0.16.52 (chiarimento UI):** in alto **Catalogo di riferimento** (Posizione + raggiungibile sì/no); sotto i gruppi fonti. Il gruppo locali è **Questo tablet** (non il nome G:/GeeKom).
 
 ---
 
@@ -16,14 +18,15 @@
 
 ## Percorso obbligatorio (ordine)
 
-### 1) Elenco per dispositivo (telefono)
+### 1) Catalogo di riferimento + elenco per dispositivo
 
 1. Apri **Acquisisci**.  
-2. In alto: intro + azioni Refresh / **+** / **CONFERMA**.  
-3. Sotto «Dispositivi e cartelle» deve comparire un **intestazione dispositivo** (nome tablet/telefono o alias), non solo una lista piatta di cartelle.  
-4. Sotto quell’intestazione: le cartelle già note (es. Camera, DCIM) con riquadro ✓/vuoto/X e riga **Disponibile** / **Non in rete**.
+2. In alto: blocco **Catalogo di riferimento** con nome Posizione (es. ssd extreme / GeeKom) e **Raggiungibile** / **Non raggiungibile**.  
+3. Sotto: «Dispositivi e cartelle (fonti)» + Refresh / **+** / **CONFERMA**.  
+4. Gruppo locali = nome **tablet** (o «Questo tablet: …»), **non** lo stesso testo del Catalogo di riferimento.  
+5. Sotto quell’intestazione: cartelle locali con riquadro ✓/vuoto/X e **Disponibile** / **Non disponibile**.
 
-**OK se:** vedi almeno un gruppo «questo dispositivo» con fonti sotto.
+**OK se:** Catalogo e fonti sono due zone distinte; il gruppo tablet non si chiama come la Posizione Catalogo.
 
 ### 2) Aggiungi W1–W4 (menu +)
 

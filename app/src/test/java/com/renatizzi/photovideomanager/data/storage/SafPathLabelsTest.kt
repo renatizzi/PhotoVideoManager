@@ -78,9 +78,9 @@ class SafPathLabelsTest {
     }
 
     @Test
-    fun networkDeviceLabel_mediaManagerShareIsPc() {
+    fun networkDeviceLabel_mediaManagerShareIsPcWithHost() {
         assertEquals(
-            SafPathLabels.DEVICE_PC_NOTEBOOK,
+            "${SafPathLabels.DEVICE_PC_NOTEBOOK} · pc",
             SafPathLabels.networkDeviceLabelFromHints(
                 displayHint = "MediaManagerCatalog",
                 path = "",
@@ -93,7 +93,7 @@ class SafPathLabelsTest {
     fun networkDeviceLabel_synologyIsNas() {
         assertEquals(
             SafPathLabels.DEVICE_NETWORK_NAS,
-            SafPathLabels.networkDeviceLabelFromHints(
+            SafPathLabels.networkDeviceKindFromHints(
                 displayHint = "photos",
                 path = "",
                 uriString = "content://com.synology.dsfile.documents/tree/share",
@@ -105,10 +105,20 @@ class SafPathLabelsTest {
     fun networkDeviceLabel_genericShareDefaultsToPc() {
         assertEquals(
             SafPathLabels.DEVICE_PC_NOTEBOOK,
-            SafPathLabels.networkDeviceLabelFromHints(
+            SafPathLabels.networkDeviceKindFromHints(
                 displayHint = "Foto",
-                path = "Foto",
+                path = "",
                 uriString = "content://com.wa2c.android.cifsdocumentsprovider.documents/tree/smb",
+            ),
+        )
+    }
+
+    @Test
+    fun extractNetworkHostHint_fromSmbUri() {
+        assertEquals(
+            "192.168.1.20",
+            SafPathLabels.extractNetworkHostHint(
+                "content://x/tree/smb%3A%2F%2F192.168.1.20%2FFoto",
             ),
         )
     }

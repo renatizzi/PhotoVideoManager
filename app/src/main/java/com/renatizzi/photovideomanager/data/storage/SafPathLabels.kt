@@ -59,6 +59,16 @@ object SafPathLabels {
         path: String,
         uriString: String,
     ): String {
+        val kind = networkDeviceKindFromHints(displayHint, path, uriString)
+        val host = extractNetworkHostHint(uriString, displayHint, path)
+        return if (host.isNullOrBlank()) kind else "$kind · $host"
+    }
+
+    fun networkDeviceKindFromHints(
+        displayHint: String?,
+        path: String,
+        uriString: String,
+    ): String {
         val blob = listOfNotNull(displayHint, path, uriString)
             .joinToString(" ")
             .lowercase()
@@ -70,6 +80,38 @@ object SafPathLabels {
                 blob.contains("truenas") ||
                 Regex("""\bnas\b""").containsMatchIn(blob) -> DEVICE_NETWORK_NAS
             else -> DEVICE_PC_NOTEBOOK // target basso profilo: share di rete = di solito il PC
+        }
+    }
+
+    /**
+     * Host/share tipico da URI CIFS (`smb://HOST/share`) o dal path, per spezzare i gruppi PC.
+     */
+    fun extractNetworkHostHint(
+        uriString: String,
+        displayHint: String? = null,
+        path: String = "",
+    ): String? {
+        val decoded = decode(uriString)
+        val smbHost = Regex("""smb://([^/]+)""", RegexOption.IGNORE_CASE)
+            .find(decoded)
+            ?.groupValues
+            ?.getOrNull(1)
+            ?.trim()
+            ?.trim('/')
+        if (!smbHost.isNullOrBlank() && !looksIllegible(smbHost)) {
+            return smbHost
+        }
+        // Fallback: primo segmento path tipo HOST/share
+        val candidate = path.ifBlank { displayHint.orEmpty() }
+            .trim()
+            .trim('/')
+            .substringBefore('/')
+            .trim()
+        return candidate.takeIf {
+            it.isNotBlank() &&
+                !it.equals("Cartella di rete", ignoreCase = true) &&
+                !looksIllegible(it) &&
+                it.length in 2..48
         }
     }
 

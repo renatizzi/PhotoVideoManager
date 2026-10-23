@@ -78,15 +78,25 @@ class AcquisitionService(
         return when (location.adapterKind) {
             StorageAdapterKind.LOCAL_FS -> "Catalogo"
             StorageAdapterKind.MEDIA_STORE -> "Galleria di sistema"
-            StorageAdapterKind.SMB -> SafPathLabels.DEVICE_PC_NOTEBOOK
+            StorageAdapterKind.SMB -> SafPathLabels.networkDeviceLabelFromHints(
+                displayHint = location.displayName,
+                path = "",
+                uriString = location.opaqueLocator,
+            )
             StorageAdapterKind.SAF_TREE -> {
                 if (location.opaqueLocator.isBlank()) return location.displayName
                 runCatching {
-                    SafPathLabels.deviceLabelForTree(
-                        appContext,
-                        Uri.parse(location.opaqueLocator),
-                        SafPathLabels.deviceLabel(appContext),
-                    )
+                    val uri = Uri.parse(location.opaqueLocator)
+                    when (SafPathLabels.providerOf(uri)) {
+                        SafPathLabels.SafProvider.NETWORK_NAS ->
+                            SafPathLabels.networkDeviceLabel(uri, location.displayName)
+                        else ->
+                            SafPathLabels.deviceLabelForTree(
+                                appContext,
+                                uri,
+                                SafPathLabels.deviceLabel(appContext),
+                            )
+                    }
                 }.getOrDefault(location.displayName)
             }
         }

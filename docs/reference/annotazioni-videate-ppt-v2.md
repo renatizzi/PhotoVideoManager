@@ -33,4 +33,6 @@
 **KO 0.16.49:** Riprova sparito con `recoveringPcData`.  
 **Ripresa (23/10):** visibilità dispositivi/fonti Acquisisci — proposta OK Renato → **0.16.51** (gruppi per dispositivo, Aggiungi W1–W4 sui flussi già presenti, stati Disponibile/Non in rete).
 
-**Stato:** IP auto = parcheggiato · Acquisisci P0 = **0.16.51 in verifica telefono**.
+**0.16.52:** Acquisisci — blocco **Catalogo di riferimento** distinto dalle fonti; «Questo tablet» non riusa il nome Posizione Catalogo; share rete con host in intestazione gruppo.
+
+**Stato:** IP auto = parcheggiato · Acquisisci P0 = **0.16.52 in verifica telefono**.
