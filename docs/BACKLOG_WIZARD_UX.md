@@ -45,7 +45,7 @@
 
 ### P1 — Tranche attiva (22–23/10): visibilità share + routine→app
 2. **Visibilità cartella condivisa (Passo 5)** — ✅ Folder vuoto, share `MediaManagerCatalog`, testi Attiva collegamento.  
-3. **User + Host senza impatto cliente** — ✅ 0.16.46: memorizzati a Tutto pronto + annuncio Wi‑Fi (niente copia JSON sul telefono).  
+3. **User + Host senza impatto cliente** — ⏸ **PARCHEGGIATO (Renato 23/10):** KO fino a 0.16.49 (IP assente / Riprova sparito con `recoveringPcData`). Non riprendere finché non richiesto.  
 4. **Script:** ✅ attesa; finestra resta con pause; annuncio rete; niente cleanup CONFIGURA a metà esecuzione.
 
 ### P1 — Già implementato

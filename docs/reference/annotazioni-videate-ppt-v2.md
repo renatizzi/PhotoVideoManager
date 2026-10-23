@@ -29,4 +29,7 @@
 
 **0.16.50:** `consegna-telefono.bat` scrive `local.properties`, log `build-consegna.log`, ritenta dopo pulizia; CI Consegna APK; gate anti-spreco in REGOLE §9.
 
-**Stato:** `0.16.50-preview`
+**STOP lavori (Renato 23/10):** basta ricicli/crediti.  
+**KO 0.16.49 (e filiera correlata):** Passo 5 senza bottone «Riprova recupero dati» (UI: se `recoveringPcData` il ramo nasconde Riprova). Compilazione BAT OK dopo fix ambiente; non riprendere finché non richiesto.
+
+**Stato:** **PARCHEGGIATO** — non chiedere nuove prove telefono su questo filo.
