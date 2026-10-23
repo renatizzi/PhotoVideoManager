@@ -203,7 +203,7 @@
     <string name="hub_b5b_dfs_hint">Lascia deselezionato</string>
     <string name="hub_b5b_host_placeholder">IP del PC</string>
     <string name="hub_b5b_host_hint">IP recuperato automaticamente dal PC a «Tutto pronto»</string>
-    <string name="hub_b5b_host_hint_ready">IP dal file esito (Copia disponibile)</string>
+    <string name="hub_b5b_host_hint_ready">IP ricevuto dal PC (Copia disponibile)</string>
     <string name="hub_b5b_storage_value">SMB2,3 (jCIFS NG)</string>
     <string name="hub_password_missing_hint">Password non disponibile in memoria (es. dopo ripresa bozza). Torna al passo di collegamento USB e conferma di nuovo con OK per rigenerare i file.</string>
     <string name="hub_cifs_install">Installa CIFS Documents Provider</string>

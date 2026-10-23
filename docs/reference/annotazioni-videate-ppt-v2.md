@@ -19,4 +19,7 @@
 
 **P0 Acquisisci (Renato 22/10):** su S25 solo telefono/Drive/CIFS — manca censimento altri dispositivi/fonti. Vedi `docs/BACKLOG_WIZARD_UX.md`.
 
-**Stato:** `0.16.46-preview` (recupero automatico IP/User; da convalida sul campo)
+**KO 0.16.46 (Renato 23/10):** UDP non ha riempito Host/User; messaggio PC ancora citava JSON (`MediaManager_setup_result.json` — file tecnico interno, non per il cliente).  
+**0.16.47:** TCP+UDP dal PC, scansione HTTP in app già dal Passo 4; messaggi Tutto pronto senza path JSON/log.
+
+**Stato:** `0.16.47-preview`

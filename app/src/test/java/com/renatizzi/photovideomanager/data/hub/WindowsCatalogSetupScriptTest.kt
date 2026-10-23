@@ -173,16 +173,30 @@ class WindowsCatalogSetupScriptTest {
         val ps1 = pkg.ps1Content
         val cmd = pkg.cmdContent
         assertTrue(ps1.contains("ATTESA: la routine puo richiedere alcuni minuti."))
-        assertTrue(ps1.contains("MediaManager_setup_result.json"))
         assertTrue(ps1.contains("SetupToken"))
         assertTrue(ps1.contains("abc123def456"))
         assertTrue(ps1.contains("PVMSETUP1"))
-        assertTrue(ps1.contains("EnableBroadcast"))
-        assertTrue(ps1.contains("Annuncio rete avviato"))
-        assertFalse(ps1.contains("CONFIGURA rimosso dal Desktop"))
+        assertTrue(ps1.contains("FromBase64String"))
+        assertTrue(ps1.contains("Servizio dati per app avviato"))
+        assertFalse(ps1.contains("Esito (fuori dalla condivisione)"))
+        assertFalse(
+            ps1.lines().any {
+                it.contains("Write-Host") && it.contains("MediaManager_setup_result.json")
+            },
+        )
+        assertFalse(
+            ps1.lines().any {
+                it.contains("Write-Host") && it.contains("MediaManager_setup.log")
+            },
+        )
         assertFalse(ps1.contains("Copia dal Desktop sul telefono"))
         assertTrue(cmd.contains("Lascia questa finestra aperta"))
         assertTrue(cmd.contains("pause"))
+        val ann = WindowsCatalogSetupScript.buildAnnouncerScript()
+        assertTrue(ann.contains("TcpListener"))
+        assertTrue(ann.contains("__PVM_PAYLOAD__"))
+        assertTrue(ann.contains("EnableBroadcast"))
+        assertFalse(ann.contains("HttpListener"))
     }
 
     @Test

@@ -31,8 +31,9 @@ object WindowsCatalogSetupScript {
     )
     const val RESULT_FILE_NAME = "MediaManager_setup_result.json"
     const val LOG_FILE_NAME = "MediaManager_setup.log"
-    /** Porta UDP annuncio Wi‑Fi dopo Tutto pronto (allineata a [SetupLanAnnounce.PORT]). */
-    const val SETUP_ANNOUNCE_PORT = SetupLanAnnounce.PORT
+    /** Porte annuncio dopo Tutto pronto (allineate a [SetupLanAnnounce]). */
+    const val SETUP_ANNOUNCE_UDP_PORT = SetupLanAnnounce.UDP_PORT
+    const val SETUP_ANNOUNCE_HTTP_PORT = SetupLanAnnounce.HTTP_PORT
 
     private val pathRegex =
         Regex("""^[A-Za-z]:\\(?:[^<>:"/\\|?*\r\n]+\\)*[^<>:"/\\|?*\r\n]*$""")
@@ -166,6 +167,87 @@ object WindowsCatalogSetupScript {
             if (it.endsWith("\r\n")) it else it + "\r\n"
         }
 
+    /**
+     * Script secondario avviato a Tutto pronto: HTTP + UDP con placeholder
+     * `__PVM_PAYLOAD__` / `__PVM_UDP__` / `__PVM_HTTP__`.
+     */
+    internal fun buildAnnouncerScript(): String {
+        val s = "${'$'}"
+        // TcpListener (no URL ACL) + UDP broadcast: l'app recupera IP/User in LAN.
+        return """
+            ${s}ErrorActionPreference = 'SilentlyContinue'
+            ${s}payload = '__PVM_PAYLOAD__'
+            ${s}udpPort = __PVM_UDP__
+            ${s}httpPort = __PVM_HTTP__
+            try {
+              New-NetFirewallRule -DisplayName 'MediaManager Setup HTTP' -Direction Inbound -Action Allow -Protocol TCP -LocalPort ${s}httpPort -Profile Any -ErrorAction SilentlyContinue | Out-Null
+              New-NetFirewallRule -DisplayName 'MediaManager Setup UDP' -Direction Inbound -Action Allow -Protocol UDP -LocalPort ${s}udpPort -Profile Any -ErrorAction SilentlyContinue | Out-Null
+            } catch {}
+            ${s}tcp = ${s}null
+            try {
+              ${s}tcp = New-Object System.Net.Sockets.TcpListener ([System.Net.IPAddress]::Any, ${s}httpPort)
+              ${s}tcp.Start()
+            } catch { ${s}tcp = ${s}null }
+            ${s}udp = New-Object System.Net.Sockets.UdpClient
+            ${s}udp.EnableBroadcast = ${s}true
+            ${s}bytes = [System.Text.Encoding]::UTF8.GetBytes(${s}payload)
+            ${s}end = (Get-Date).AddMinutes(5)
+            function Send-UdpAll {
+              try {
+                ${s}epAll = New-Object System.Net.IPEndPoint ([System.Net.IPAddress]::Broadcast, ${s}udpPort)
+                [void]${s}udp.Send(${s}bytes, ${s}bytes.Length, ${s}epAll)
+              } catch {}
+              try {
+                Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+                  Where-Object { ${s}_.IPAddress -notlike '127.*' -and ${s}_.IPAddress -notlike '169.254.*' } |
+                  ForEach-Object {
+                    ${s}parts = ${s}_.IPAddress.Split('.')
+                    if (${s}parts.Count -eq 4) {
+                      ${s}bcast = ('{0}.{1}.{2}.255' -f ${s}parts[0], ${s}parts[1], ${s}parts[2])
+                      ${s}ep = New-Object System.Net.IPEndPoint ([System.Net.IPAddress]::Parse(${s}bcast), ${s}udpPort)
+                      [void]${s}udp.Send(${s}bytes, ${s}bytes.Length, ${s}ep)
+                    }
+                  }
+              } catch {}
+            }
+            while ((Get-Date) -lt ${s}end) {
+              Send-UdpAll
+              if (${s}tcp -ne ${s}null) {
+                try {
+                  ${s}waitEnd = (Get-Date).AddSeconds(1)
+                  while (-not ${s}tcp.Pending() -and (Get-Date) -lt ${s}waitEnd -and (Get-Date) -lt ${s}end) {
+                    Start-Sleep -Milliseconds 50
+                  }
+                  if (${s}tcp.Pending()) {
+                    ${s}client = ${s}tcp.AcceptTcpClient()
+                    try {
+                      ${s}stream = ${s}client.GetStream()
+                      ${s}req = New-Object byte[] 4096
+                      try { [void]${s}stream.Read(${s}req, 0, ${s}req.Length) } catch {}
+                      ${s}body = [System.Text.Encoding]::UTF8.GetBytes(${s}payload)
+                      ${s}hdr = [System.Text.Encoding]::ASCII.GetBytes(
+                        ('HTTP/1.1 200 OK' + [char]13 + [char]10 +
+                         'Content-Type: application/json; charset=utf-8' + [char]13 + [char]10 +
+                         ('Content-Length: {0}' -f ${s}body.Length) + [char]13 + [char]10 +
+                         'Connection: close' + [char]13 + [char]10 + [char]13 + [char]10)
+                      )
+                      ${s}stream.Write(${s}hdr, 0, ${s}hdr.Length)
+                      ${s}stream.Write(${s}body, 0, ${s}body.Length)
+                      ${s}stream.Flush()
+                    } finally {
+                      try { ${s}client.Close() } catch {}
+                    }
+                  }
+                } catch {}
+              } else {
+                Start-Sleep -Milliseconds 500
+              }
+            }
+            try { if (${s}tcp -ne ${s}null) { ${s}tcp.Stop() } } catch {}
+            try { ${s}udp.Close() } catch {}
+        """.trimIndent().replace("\n", "\r\n") + "\r\n"
+    }
+
     private fun buildCmd(): String = crlf(
         """
         @echo off
@@ -209,8 +291,11 @@ object WindowsCatalogSetupScript {
         val setupToken = psQuote(params.setupToken.trim())
         val resultName = psQuote(RESULT_FILE_NAME)
         val logName = psQuote(LOG_FILE_NAME)
-        val announcePort = SETUP_ANNOUNCE_PORT
+        val announceUdp = SETUP_ANNOUNCE_UDP_PORT
+        val announceHttp = SETUP_ANNOUNCE_HTTP_PORT
         val announceMagic = SetupLanAnnounce.MAGIC
+        val announcerB64 = java.util.Base64.getEncoder()
+            .encodeToString(buildAnnouncerScript().toByteArray(Charsets.US_ASCII))
         val d = "${'$'}"
 
         // PowerShell body: keep parameters at top; exit codes 10/20/30/40/50/60.
@@ -230,7 +315,8 @@ ${d}PlainPassword  = $password
 ${d}SetupToken     = $setupToken
 ${d}ResultFileName = $resultName
 ${d}LogFileName    = $logName
-${d}AnnouncePort   = $announcePort
+${d}AnnounceUdp    = $announceUdp
+${d}AnnounceHttp   = $announceHttp
 ${d}AnnounceMagic  = '$announceMagic'
 ${d}FirewallGroup  = '@FirewallAPI.dll,-28502'
 ${d}ExitCode       = 1
@@ -469,44 +555,31 @@ try {
   Write-Host ("Cartella:      {0}" -f ${d}FolderPath)
   # Build UNC with [char]92 so backslashes are never doubled by escaping.
   Write-Host ("Condivisione:  " + [string][char]92 + [char]92 + ${d}pc + [char]92 + ${d}ShareName)
-  if (${d}primaryIp) { Write-Host ("IP:            {0}" -f ${d}primaryIp) }
-  Write-Host ("Utente SMB:    {0}" -f ${d}userHint)
+  if (${d}primaryIp) { Write-Host ("IP:            {0}" -f ${d}primaryIp) } else { Write-Host "IP:            (non rilevato; l'app usera il nome PC)" }
+  Write-Host ("Utente:        {0}" -f ${d}userHint)
   Write-Host ("Password:      {0}" -f ${d}PlainPassword) -ForegroundColor Yellow
   Write-Host ""
   Write-Host "Password PROVVISORIA: cambiala in Windows e aggiorna Archivio sul tablet."
-  Write-Host ("Esito (fuori dalla condivisione): {0}" -f ${d}ResultPath)
-  Write-Host ("Log: {0}" -f ${d}LogPath)
   Write-Host "AVVISO: se il PC va in sospensione, la cartella sparisce dalla rete."
-  Write-Host "Lascia questa finestra aperta: l'app recupera da sola IP e utente (Wi-Fi)."
-  Write-Host "Poi torna all'app MediaManager e continua il Wizard."
+  Write-Host "Lascia questa finestra aperta. Torna all'app e continua: recupera IP e utente da sola."
   Write-Host ""
 
-  # Annuncio Wi-Fi (processo separato, ~3 minuti) con i dati memorizzati qui.
+  # Servizio locale HTTP+UDP (~5 min) con i dati memorizzati a Tutto pronto.
   try {
-    ${d}userJson = ${d}userHint.Replace('\', '\\')
+    ${d}userJson = ${d}userHint.Replace([string][char]92, ([string][char]92 + [char]92))
     ${d}payload = ('{{"v":1,"m":"{0}","t":"{1}","ip":"{2}","user":"{3}","share":"{4}","pc":"{5}"}}' -f ${d}AnnounceMagic, ${d}SetupToken, ${d}ipText, ${d}userJson, ${d}ShareName, ${d}pc)
     ${d}announcerPs1 = Join-Path ([System.IO.Path]::GetTempPath()) ('MediaManager_announce_' + ${d}SetupToken + '.ps1')
-    ${d}payloadLine = ('${d}payload = ''{0}''' -f ${d}payload.Replace("'", "''"))
-    ${d}annLines = @(
-      '${d}ErrorActionPreference = ''SilentlyContinue'''
-      ${d}payloadLine
-      ('${d}port = {0}' -f ${d}AnnouncePort)
-      '${d}udp = New-Object System.Net.Sockets.UdpClient'
-      '${d}udp.EnableBroadcast = ${d}true'
-      '${d}ep = New-Object System.Net.IPEndPoint ([System.Net.IPAddress]::Broadcast, ${d}port)'
-      '${d}bytes = [System.Text.Encoding]::UTF8.GetBytes(${d}payload)'
-      '${d}end = (Get-Date).AddMinutes(3)'
-      'while ((Get-Date) -lt ${d}end) {'
-      '  try { [void]${d}udp.Send(${d}bytes, ${d}bytes.Length, ${d}ep) } catch {}'
-      '  Start-Sleep -Seconds 2'
-      '}'
-      'try { ${d}udp.Close() } catch {}'
-    )
-    ${d}annLines | Set-Content -LiteralPath ${d}announcerPs1 -Encoding ASCII
-    Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-WindowStyle','Hidden','-File', ${d}announcerPs1) -WindowStyle Hidden | Out-Null
-    Write-Step 'Annuncio rete avviato per l''app MediaManager.'
+    ${d}annTpl = [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String('$announcerB64'))
+    ${d}annBody = ${d}annTpl.Replace('__PVM_PAYLOAD__', ${d}payload).Replace('__PVM_UDP__', [string]${d}AnnounceUdp).Replace('__PVM_HTTP__', [string]${d}AnnounceHttp)
+    Set-Content -LiteralPath ${d}announcerPs1 -Value ${d}annBody -Encoding ASCII
+    ${d}annProc = Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-WindowStyle','Hidden','-File', ${d}announcerPs1) -WindowStyle Hidden -PassThru
+    if (${d}annProc) {
+      Write-Step 'Servizio dati per app avviato (rete locale).'
+    } else {
+      Write-Step 'Servizio dati rete non avviato.'
+    }
   } catch {
-    Write-Step 'Annuncio rete non avviato (l''app potra usare i dati a video).'
+    Write-Step 'Servizio dati rete non avviato.'
   }
 
   ${d}ExitCode = 0

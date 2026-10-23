@@ -18,11 +18,15 @@ import com.renatizzi.photovideomanager.domain.hub.CatalogSeat
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -136,10 +140,19 @@ class CatalogSeatWizardViewModel(
     val state: StateFlow<CatalogSeatWizardUiState> = _state.asStateFlow()
 
     private var lastExport: WindowsSetupExportResult? = null
+    /** Ascolto LAN già dal Passo 4 (mentre CONFIGURA gira sul PC). */
+    private var lanCancel: AtomicBoolean? = null
+    private val cachedLan = AtomicReference<SetupLanAnnounce.Payload?>(null)
+    private var lanJob: Job? = null
 
     init {
         refreshCifsInstalled()
         loadEntryState()
+    }
+
+    override fun onCleared() {
+        stopBackgroundLanListen()
+        super.onCleared()
     }
 
     private fun loadEntryState() {
@@ -247,6 +260,14 @@ class CatalogSeatWizardViewModel(
                 completedSeat = null,
             )
         }
+        val needLan = draft.setupToken.isNotBlank() &&
+            draft.pcHostIp.isBlank() &&
+            (
+                step == WizardStep.PC_RUN_SCRIPT ||
+                    step == WizardStep.W2_CIFS ||
+                    step == WizardStep.W2_PICK
+                )
+        if (needLan) startBackgroundLanListen()
     }
 
     fun discardDraftAndStayOnS0() {
@@ -321,6 +342,45 @@ class CatalogSeatWizardViewModel(
             )
         }
         persistDraft()
+        // Ascolto subito: quando sul PC compare Tutto pronto l'app puo gia ricevere IP/User.
+        startBackgroundLanListen()
+    }
+
+    private fun startBackgroundLanListen() {
+        val token = _state.value.setupToken.trim()
+        if (token.isBlank()) return
+        stopBackgroundLanListen()
+        cachedLan.set(null)
+        val cancel = AtomicBoolean(false)
+        lanCancel = cancel
+        lanJob = viewModelScope.launch(Dispatchers.IO) {
+            while (isActive && !cancel.get() && cachedLan.get() == null) {
+                val payload = runCatching {
+                    SetupLanAnnounce.discover(
+                        context = appContext,
+                        expectedToken = token,
+                        cancelled = cancel,
+                        discoverMs = 30_000L,
+                    )
+                }.getOrNull()
+                if (payload != null) {
+                    cachedLan.set(payload)
+                    withContext(Dispatchers.Main.immediate) {
+                        applyLanPayload(payload)
+                    }
+                    return@launch
+                }
+                if (cancel.get()) break
+                delay(1_000)
+            }
+        }
+    }
+
+    private fun stopBackgroundLanListen() {
+        lanCancel?.set(true)
+        lanCancel = null
+        lanJob?.cancel()
+        lanJob = null
     }
 
     fun goStep(step: WizardStep) {
@@ -420,12 +480,20 @@ class CatalogSeatWizardViewModel(
     }
 
     private fun applyLanPayload(payload: SetupLanAnnounce.Payload) {
+        val host = payload.hostForCifs
+        val user = payload.userQualified.ifBlank {
+            if (payload.computerName.isNotBlank()) {
+                "${payload.computerName}\\${WindowsCatalogSetupScript.DEFAULT_USER}"
+            } else {
+                ""
+            }
+        }
         _state.update {
             it.copy(
-                cifsUserQualified = payload.userQualified.ifBlank { it.cifsUserQualified },
-                pcHostIp = payload.hostIp.ifBlank { it.pcHostIp },
+                cifsUserQualified = user.ifBlank { it.cifsUserQualified },
+                pcHostIp = host.ifBlank { it.pcHostIp },
                 shareName = payload.shareName.ifBlank { it.shareName },
-                setupResultImported = true,
+                setupResultImported = host.isNotBlank() || user.isNotBlank(),
                 recoveringPcData = false,
                 errorMessage = null,
                 statusMessage = null,
@@ -479,17 +547,31 @@ class CatalogSeatWizardViewModel(
         }
         persistDraft()
 
+        // Gia ricevuto mentre eri al Passo 4?
+        val early = cachedLan.get()
+        if (early != null) {
+            applyLanPayload(early)
+            stopBackgroundLanListen()
+            _state.update { it.copy(busy = false, recoveringPcData = false) }
+            persistDraft()
+            return
+        }
+
         val cancelled = AtomicBoolean(false)
         val lan = if (token.isNotBlank()) {
             withContext(Dispatchers.IO) {
-                runCatching { SetupLanAnnounce.listenForToken(token, cancelled) }.getOrNull()
+                runCatching {
+                    SetupLanAnnounce.discover(appContext, token, cancelled)
+                }.getOrNull()
             }
         } else {
             null
         }
 
         if (lan != null) {
+            cachedLan.set(lan)
             applyLanPayload(lan)
+            stopBackgroundLanListen()
             _state.update { it.copy(busy = false, recoveringPcData = false) }
             persistDraft()
             return
@@ -504,6 +586,11 @@ class CatalogSeatWizardViewModel(
             _state.update { it.copy(busy = false, recoveringPcData = false) }
             persistDraft()
             return
+        }
+
+        // Continua ascolto in background: Riprova puo bastare pochi secondi dopo.
+        if (token.isNotBlank() && lanJob?.isActive != true) {
+            startBackgroundLanListen()
         }
 
         _state.update {
