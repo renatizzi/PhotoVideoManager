@@ -31,6 +31,6 @@
 
 **STOP filiera IP/CIFS auto (Renato 23/10):** recupero Host automatico parcheggiato; IP manuale in CIFS accettato.  
 **KO 0.16.49:** Riprova sparito con `recoveringPcData`.  
-**Ripresa prodotto (23/10):** priorità **visibilità dispositivi/fonti in Acquisisci** — proposta unica in `docs/PROPOSTA_VISIBILITA_FONTI_ACQUISISCI.md` (in convalida).
+**Ripresa (23/10):** visibilità dispositivi/fonti Acquisisci — proposta OK Renato → **0.16.51** (gruppi per dispositivo, Aggiungi W1–W4 sui flussi già presenti, stati Disponibile/Non in rete).
 
-**Stato:** IP auto = parcheggiato · Acquisisci P0 = in convalida proposta.
+**Stato:** IP auto = parcheggiato · Acquisisci P0 = **0.16.51 in verifica telefono**.

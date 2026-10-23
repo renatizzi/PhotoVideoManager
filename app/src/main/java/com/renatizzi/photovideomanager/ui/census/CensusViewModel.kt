@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.renatizzi.photovideomanager.application.CatalogFacade
+import com.renatizzi.photovideomanager.domain.model.DeviceSourceGroup
 import com.renatizzi.photovideomanager.domain.model.SourceCensusSelection
 import com.renatizzi.photovideomanager.domain.model.SourceSortMode
 import com.renatizzi.photovideomanager.domain.model.SourceSummary
@@ -18,7 +19,8 @@ import kotlinx.coroutines.launch
 data class CensusUiState(
     val sources: List<SourceSummary> = emptyList(),
     val selection: Map<String, SourceCensusSelection> = emptyMap(),
-    val sortMode: SourceSortMode = SourceSortMode.NAME,
+    /** Default: per dispositivo (visibilità fonti P0). */
+    val sortMode: SourceSortMode = SourceSortMode.DEVICE,
     val loading: Boolean = true,
     val censusBusyLocationIds: Set<String> = emptySet(),
     val catalogCount: Long = 0,
@@ -33,10 +35,29 @@ data class CensusUiState(
             val censable = sources.filterNot { it.isBuiltInPersonal }
             return when (sortMode) {
                 SourceSortMode.NAME -> censable.sortedBy { it.displayName.lowercase() }
-                SourceSortMode.DEVICE -> censable.sortedBy { it.deviceLabel.lowercase() }
-                SourceSortMode.AVAILABILITY -> censable.sortedBy { it.availability.name }
+                SourceSortMode.DEVICE ->
+                    censable.sortedWith(
+                        compareBy({ it.deviceLabel.lowercase() }, { it.displayName.lowercase() }),
+                    )
+                SourceSortMode.AVAILABILITY ->
+                    censable.sortedWith(
+                        compareBy({ it.availability.name }, { it.displayName.lowercase() }),
+                    )
             }
         }
+
+    /** Elenco Acquisisci a due livelli: dispositivo → cartelle/fonti. */
+    val deviceGroups: List<DeviceSourceGroup>
+        get() = visibleSources
+            .groupBy { it.deviceLabel.ifBlank { "Altro dispositivo" } }
+            .entries
+            .sortedBy { it.key.lowercase() }
+            .map { (label, list) ->
+                DeviceSourceGroup(
+                    deviceLabel = label,
+                    sources = list.sortedBy { it.displayName.lowercase() },
+                )
+            }
 
     fun selectionOf(locationId: String): SourceCensusSelection =
         selection[locationId] ?: SourceCensusSelection.NOT_SELECTED

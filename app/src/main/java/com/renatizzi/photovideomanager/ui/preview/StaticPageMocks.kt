@@ -124,6 +124,8 @@ fun AcquisisciStaticScreen(
     var renameDeviceOpen by remember { mutableStateOf(false) }
     var pcGuideOpen by remember { mutableStateOf(false) }
     var pcHelpOpen by remember { mutableStateOf(false) }
+    var addDeviceOpen by remember { mutableStateOf(false) }
+    var addTip by remember { mutableStateOf<String?>(null) }
     var renameText by remember { mutableStateOf("") }
 
     fun cycleSourceSelection(source: SourceSummary) {
@@ -179,7 +181,7 @@ fun AcquisisciStaticScreen(
             Text(stringResource(R.string.acquisisci_rename_device, state.deviceAlias.ifBlank { "…" }))
         }
 
-        // Azioni in alto (layout congelato): refresh, +, CONFERMA
+        // Azioni in alto (layout congelato): refresh, Aggiungi, CONFERMA
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -189,7 +191,7 @@ fun AcquisisciStaticScreen(
                 Icon(Icons.Outlined.Refresh, contentDescription = stringResource(R.string.refresh_sources))
             }
             IconButton(
-                onClick = { openTree.launch(null) },
+                onClick = { addDeviceOpen = true },
                 enabled = !busy,
                 modifier = Modifier
                     .clip(CircleShape)
@@ -197,7 +199,7 @@ fun AcquisisciStaticScreen(
             ) {
                 Icon(
                     Icons.Outlined.Add,
-                    contentDescription = stringResource(R.string.add_source),
+                    contentDescription = stringResource(R.string.acquisisci_add_device_title),
                     tint = MaterialTheme.colorScheme.onPrimary,
                 )
             }
@@ -237,22 +239,10 @@ fun AcquisisciStaticScreen(
             }
         }
         TextButton(
-            onClick = onOpenCatalogSeatWizard,
-            enabled = !busy,
-        ) {
-            Text(stringResource(R.string.hub_wizard_entry))
-        }
-        TextButton(
             onClick = onOpenCatalogUpdate,
             enabled = !busy,
         ) {
             Text(stringResource(R.string.hub_update_title))
-        }
-        TextButton(
-            onClick = { pcGuideOpen = true },
-            enabled = !busy,
-        ) {
-            Text(stringResource(R.string.acquisisci_da_pc_rete))
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -286,25 +276,144 @@ fun AcquisisciStaticScreen(
                     modifier = Modifier.padding(vertical = 12.dp),
                 )
             } else {
-                sources.forEach { source ->
+                state.deviceGroups.forEach { group ->
                     HorizontalDivider()
-                    SourceRow(
-                        source = source,
-                        selection = state.selectionOf(source.locationId),
-                        busy = source.locationId in state.censusBusyLocationIds,
-                        enabled = !busy,
-                        onToggle = { cycleSourceSelection(source) },
-                        onBrowse = { onBrowse(source.locationId) },
-                        onLongPress = {
-                            renameTarget = source
-                            renameText = source.displayName
-                        },
+                    Text(
+                        text = group.deviceLabel,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(top = 10.dp, bottom = 2.dp),
                     )
+                    Text(
+                        text = stringResource(
+                            R.string.acquisisci_device_header_available,
+                            group.availableCount,
+                        ),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+                        modifier = Modifier.padding(bottom = 4.dp),
+                    )
+                    group.sources.forEach { source ->
+                        SourceRow(
+                            source = source,
+                            selection = state.selectionOf(source.locationId),
+                            busy = source.locationId in state.censusBusyLocationIds,
+                            enabled = !busy,
+                            showDeviceLabel = false, // già nell'intestazione gruppo
+                            onToggle = { cycleSourceSelection(source) },
+                            onBrowse = { onBrowse(source.locationId) },
+                            onLongPress = {
+                                renameTarget = source
+                                renameText = source.displayName
+                            },
+                        )
+                    }
                 }
                 HorizontalDivider()
             }
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+
+    if (addDeviceOpen) {
+        AlertDialog(
+            onDismissRequest = { addDeviceOpen = false },
+            title = { Text(stringResource(R.string.acquisisci_add_device_title)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = stringResource(R.string.acquisisci_add_device_body),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+                    TextButton(
+                        onClick = {
+                            addDeviceOpen = false
+                            openTree.launch(null)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.acquisisci_add_this_device))
+                    }
+                    TextButton(
+                        onClick = {
+                            addDeviceOpen = false
+                            pcGuideOpen = true
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.acquisisci_add_pc))
+                    }
+                    TextButton(
+                        onClick = {
+                            addDeviceOpen = false
+                            addTip = "drive"
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.acquisisci_add_drive))
+                    }
+                    TextButton(
+                        onClick = {
+                            addDeviceOpen = false
+                            addTip = "nas"
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.acquisisci_add_nas))
+                    }
+                    TextButton(
+                        onClick = {
+                            addDeviceOpen = false
+                            onOpenCatalogSeatWizard()
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.acquisisci_open_catalog_seat))
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { addDeviceOpen = false }) {
+                    Text(stringResource(R.string.importa_annulla))
+                }
+            },
+        )
+    }
+
+    if (addTip != null) {
+        val tipText = when (addTip) {
+            "drive" -> stringResource(R.string.acquisisci_add_drive_tip)
+            else -> stringResource(R.string.acquisisci_add_nas_tip)
+        }
+        AlertDialog(
+            onDismissRequest = { addTip = null },
+            title = {
+                Text(
+                    if (addTip == "drive") {
+                        stringResource(R.string.acquisisci_add_drive)
+                    } else {
+                        stringResource(R.string.acquisisci_add_nas)
+                    },
+                )
+            },
+            text = { Text(tipText) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        addTip = null
+                        openTree.launch(null)
+                    },
+                ) {
+                    Text(stringResource(R.string.acquisisci_da_pc_choose))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { addTip = null }) {
+                    Text(stringResource(R.string.importa_annulla))
+                }
+            },
+        )
     }
 
     if (pcGuideOpen) {
@@ -479,6 +588,7 @@ private fun SourceRow(
     selection: SourceCensusSelection,
     busy: Boolean,
     enabled: Boolean,
+    showDeviceLabel: Boolean = true,
     onToggle: () -> Unit,
     onBrowse: () -> Unit,
     onLongPress: () -> Unit,
@@ -510,7 +620,7 @@ private fun SourceRow(
                 source.displayName.ifBlank { stringResource(R.string.external_source_default_name) },
                 fontWeight = FontWeight.SemiBold,
             )
-            if (source.deviceLabel.isNotBlank()) {
+            if (showDeviceLabel && source.deviceLabel.isNotBlank()) {
                 Text(source.deviceLabel, style = MaterialTheme.typography.labelMedium)
             }
             if (source.pathLabel.isNotBlank()) {

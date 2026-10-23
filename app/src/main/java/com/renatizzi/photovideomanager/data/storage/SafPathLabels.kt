@@ -16,7 +16,9 @@ object SafPathLabels {
     const val ROOT_FOLDER_TITLE = "Tutta la memoria"
     const val DEVICE_GOOGLE_DRIVE = "Google Drive"
     const val DEVICE_DOWNLOADS = "Download"
-    const val DEVICE_NETWORK_NAS = "Rete / NAS"
+    /** Share Catalogo / PC Windows tipico (CIFS Documents Provider). */
+    const val DEVICE_PC_NOTEBOOK = "PC / notebook"
+    const val DEVICE_NETWORK_NAS = "Disco di rete / NAS"
     const val DEVICE_CLOUD_OTHER = "Cloud / altro archivio"
 
     private const val AUTH_EXTERNAL = "com.android.externalstorage.documents"
@@ -31,15 +33,45 @@ object SafPathLabels {
         return Build.MODEL.ifBlank { "Questo dispositivo" }
     }
 
-    /** Dispositivo / provider per un albero SAF (telefono vs Drive vs rete vs altro). */
+    /** Dispositivo / provider per un albero SAF (telefono vs Drive vs PC/NAS vs altro). */
     fun deviceLabelForTree(context: Context, treeUri: Uri, localDeviceAlias: String): String =
         when (providerOf(treeUri)) {
-            SafProvider.LOCAL_STORAGE -> localDeviceAlias
+            SafProvider.LOCAL_STORAGE -> localDeviceAlias.ifBlank { "Questo telefono o tablet" }
             SafProvider.GOOGLE_DRIVE -> DEVICE_GOOGLE_DRIVE
             SafProvider.DOWNLOADS -> DEVICE_DOWNLOADS
-            SafProvider.NETWORK_NAS -> DEVICE_NETWORK_NAS
+            SafProvider.NETWORK_NAS -> networkDeviceLabel(treeUri, displayHint = null)
             SafProvider.OTHER -> DEVICE_CLOUD_OTHER
         }
+
+    /**
+     * Distingue PC/notebook (es. share MediaManager) da NAS generico sulla stessa app CIFS.
+     */
+    fun networkDeviceLabel(treeUri: Uri, displayHint: String?): String =
+        networkDeviceLabelFromHints(
+            displayHint = displayHint,
+            path = humanPath(treeUri).orEmpty(),
+            uriString = treeUri.toString(),
+        )
+
+    /** Classificazione testabile senza Android Uri (unit JVM). */
+    fun networkDeviceLabelFromHints(
+        displayHint: String?,
+        path: String,
+        uriString: String,
+    ): String {
+        val blob = listOfNotNull(displayHint, path, uriString)
+            .joinToString(" ")
+            .lowercase()
+        return when {
+            blob.contains("mediamanager") ||
+                blob.contains("mediamanagercatalog") -> DEVICE_PC_NOTEBOOK
+            blob.contains("synology") ||
+                blob.contains("qnap") ||
+                blob.contains("truenas") ||
+                Regex("""\bnas\b""").containsMatchIn(blob) -> DEVICE_NETWORK_NAS
+            else -> DEVICE_PC_NOTEBOOK // target basso profilo: share di rete = di solito il PC
+        }
+    }
 
     fun providerOf(treeUri: Uri): SafProvider = providerOfAuthority(treeUri.authority)
 
@@ -163,8 +195,10 @@ object SafPathLabels {
         val prefixes = listOf(
             DEVICE_GOOGLE_DRIVE,
             DEVICE_DOWNLOADS,
+            DEVICE_PC_NOTEBOOK,
             DEVICE_NETWORK_NAS,
             DEVICE_CLOUD_OTHER,
+            "Rete / NAS", // etichetta legacy pre-0.16.51
             "Disco di Rete",
             "Network Storage",
         )

@@ -1,6 +1,6 @@
 # Proposta unica — Visibilità dispositivi/fonti in Acquisisci (P0)
 
-**Stato:** in attesa di convalida Renato (poi implementazione in un solo blocco, senza ricicli)  
+**Stato:** **CONVALIDATA** Renato 23/10 (OK + integrazione con Acquisisci esistente) — implementata in **0.16.51**  
 **Data:** 23/10/2026  
 **Ambito Nota:** W1–W4 (§7.1octies) — telefono/tablet, PC/notebook (disco interno/esterno sul PC), Google Drive/cloud, disco di rete/NAS. **Esclusi:** smart TV e altri IoT Wi‑Fi.  
 **Congelato fuori ambito:** recupero automatico IP Host in Wizard CIFS (parcheggio 23/10; IP manuale in CIFS accettato).
@@ -103,11 +103,7 @@ Escluso (non toccare in questo blocco):
 
 ---
 
-## 7. Convalida richiesta
+## 7. Convalida
 
-Rispondere con una di:
-
-- **OK** — implementa l’intero blocco come da questo documento; oppure  
-- **OK con modifiche:** elenco puntuale (max punti numerati) da integrare prima del codice.
-
-Finché non c’è OK, **nessun codice** su questo blocco.
+**Chiusa 23/10:** OK Renato (tablet, integrazione con Acquisisci esistente).  
+Implementazione: **0.16.51** · prova unica: `docs/GUIDA_TEST_0.16.51_ACQUISISCI.md`.

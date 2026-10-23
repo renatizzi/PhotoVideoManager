@@ -276,16 +276,22 @@ class SourceRegistry(
                 deviceAliasOrDefault()
             } else {
                 runCatching {
-                    SafPathLabels.deviceLabelForTree(
-                        appContext,
-                        Uri.parse(location.opaqueLocator),
-                        deviceAliasOrDefault(),
-                    )
+                    val uri = Uri.parse(location.opaqueLocator)
+                    when (SafPathLabels.providerOf(uri)) {
+                        SafPathLabels.SafProvider.NETWORK_NAS ->
+                            SafPathLabels.networkDeviceLabel(uri, location.displayName)
+                        else ->
+                            SafPathLabels.deviceLabelForTree(
+                                appContext,
+                                uri,
+                                deviceAliasOrDefault(),
+                            )
+                    }
                 }.getOrDefault(deviceAliasOrDefault())
             }
         }
-        StorageAdapterKind.MEDIA_STORE -> "Galleria di sistema"
-        StorageAdapterKind.SMB -> "Rete / NAS"
+        StorageAdapterKind.MEDIA_STORE -> deviceAliasOrDefault()
+        StorageAdapterKind.SMB -> SafPathLabels.DEVICE_PC_NOTEBOOK
     }
 
     private fun pathLabelFor(location: StorageLocation): String {

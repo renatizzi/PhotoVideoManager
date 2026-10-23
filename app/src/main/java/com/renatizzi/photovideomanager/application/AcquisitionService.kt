@@ -78,7 +78,7 @@ class AcquisitionService(
         return when (location.adapterKind) {
             StorageAdapterKind.LOCAL_FS -> "Catalogo"
             StorageAdapterKind.MEDIA_STORE -> "Galleria di sistema"
-            StorageAdapterKind.SMB -> SafPathLabels.DEVICE_NETWORK_NAS
+            StorageAdapterKind.SMB -> SafPathLabels.DEVICE_PC_NOTEBOOK
             StorageAdapterKind.SAF_TREE -> {
                 if (location.opaqueLocator.isBlank()) return location.displayName
                 runCatching {

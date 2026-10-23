@@ -56,6 +56,14 @@ enum class SourceSortMode {
     AVAILABILITY,
 }
 
+/** Gruppo UI: un dispositivo con le sue fonti (Acquisisci Grado 1). */
+data class DeviceSourceGroup(
+    val deviceLabel: String,
+    val sources: List<SourceSummary>,
+) {
+    val availableCount: Int get() = sources.count { it.availability == Availability.AVAILABLE }
+}
+
 enum class MediaBrowseSortMode {
     NAME,
     KIND,

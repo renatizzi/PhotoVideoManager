@@ -73,7 +73,44 @@ class SafPathLabelsTest {
             SafPathLabels.SafProvider.OTHER,
             SafPathLabels.providerOfAuthority("com.example.unknown.cloud"),
         )
-        assertEquals("Rete / NAS", SafPathLabels.DEVICE_NETWORK_NAS)
+        assertEquals("Disco di rete / NAS", SafPathLabels.DEVICE_NETWORK_NAS)
+        assertEquals("PC / notebook", SafPathLabels.DEVICE_PC_NOTEBOOK)
+    }
+
+    @Test
+    fun networkDeviceLabel_mediaManagerShareIsPc() {
+        assertEquals(
+            SafPathLabels.DEVICE_PC_NOTEBOOK,
+            SafPathLabels.networkDeviceLabelFromHints(
+                displayHint = "MediaManagerCatalog",
+                path = "",
+                uriString = "content://com.wa2c.android.cifsdocumentsprovider.documents/tree/smb%3A%2F%2Fpc%2FMediaManagerCatalog",
+            ),
+        )
+    }
+
+    @Test
+    fun networkDeviceLabel_synologyIsNas() {
+        assertEquals(
+            SafPathLabels.DEVICE_NETWORK_NAS,
+            SafPathLabels.networkDeviceLabelFromHints(
+                displayHint = "photos",
+                path = "",
+                uriString = "content://com.synology.dsfile.documents/tree/share",
+            ),
+        )
+    }
+
+    @Test
+    fun networkDeviceLabel_genericShareDefaultsToPc() {
+        assertEquals(
+            SafPathLabels.DEVICE_PC_NOTEBOOK,
+            SafPathLabels.networkDeviceLabelFromHints(
+                displayHint = "Foto",
+                path = "Foto",
+                uriString = "content://com.wa2c.android.cifsdocumentsprovider.documents/tree/smb",
+            ),
+        )
     }
 
     @Test

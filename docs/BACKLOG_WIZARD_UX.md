@@ -4,7 +4,7 @@
 **Specifica UI:** `docs/reference/videate-utente-setup-catalogo-pc.md`  
 **PPT V2:** `docs/reference/revisione_guida_V2.pptx`  
 **Non usare come specifica:** `docs/reference/template-videate-wizard-pc.md`  
-**Proposta blocco P0 Acquisisci (in convalida):** `docs/PROPOSTA_VISIBILITA_FONTI_ACQUISISCI.md`
+**Proposta blocco P0 Acquisisci (convalidata → 0.16.51):** `docs/PROPOSTA_VISIBILITA_FONTI_ACQUISISCI.md` · prova: `docs/GUIDA_TEST_0.16.51_ACQUISISCI.md`
 
 ---
 
@@ -16,7 +16,7 @@
 
 **Obiettivo:** prevedere un **censimento dei dispositivi** con cui si può interagire **prima** di parlare di Catalogo (oppure un meccanismo equivalente con lo stesso risultato). Quando si apre Acquisisci devono essere visibili **tutti i dispositivi** (ambito Nota W1–W4) e quindi le **cartelle disponibili** utilizzabili come fonti.
 
-**Stato:** proposta in `docs/PROPOSTA_VISIBILITA_FONTI_ACQUISISCI.md` — **in attesa OK Renato**, poi implementazione in un solo blocco.  
+**Stato:** proposta convalidata 23/10 → implementata in **0.16.51** (raggruppamento dispositivi, Aggiungi W1–W4, stati disponibilità). In verifica telefono.  
 **Fuori blocco:** recupero automatico IP CIFS (parcheggio; IP manuale ok).
 
 ---
