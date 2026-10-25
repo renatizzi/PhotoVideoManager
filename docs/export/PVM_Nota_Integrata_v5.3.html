@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Photo&amp;VideoManager — Nota Integrata v5.3</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Photo&amp;VideoManager — Nota Integrata v5.3</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#photovideomanager-nota-integrata"
+id="toc-photovideomanager-nota-integrata">Photo&amp;VideoManager — NOTA
+INTEGRATA</a></li>
+<li><a href="#scopo-del-progetto-e-regole-operative"
+id="toc-scopo-del-progetto-e-regole-operative">1. Scopo del progetto e
+regole operative</a>
+<ul>
+<li><a href="#scopo" id="toc-scopo">1.1 Scopo</a></li>
+</ul></li>
+<li><a href="#navigazione-e-struttura-ui"
+id="toc-navigazione-e-struttura-ui">5. Navigazione e struttura UI</a>
+<ul>
+<li><a href="#principi" id="toc-principi">5.0 Principi</a></li>
+<li><a href="#home-page" id="toc-home-page">5.1 Home Page</a></li>
+<li><a href="#top-bar" id="toc-top-bar">5.2 Top Bar</a></li>
+<li><a href="#bottom-bar" id="toc-bottom-bar">5.3 Bottom Bar</a></li>
+<li><a href="#albero-delle-macroaree-v5.2"
+id="toc-albero-delle-macroaree-v5.2">5.4 Albero delle macroaree
+(v5.2)</a>
+<ul>
+<li><a href="#organizza" id="toc-organizza">5.4.1 ORGANIZZA</a></li>
+<li><a href="#componi" id="toc-componi">5.4.2 COMPONI</a></li>
+<li><a href="#utility" id="toc-utility">5.4.3 UTILITY</a></li>
+<li><a href="#configura" id="toc-configura">5.4.4 CONFIGURA</a></li>
+</ul></li>
+<li><a href="#stati-ui" id="toc-stati-ui">5.5 Stati UI</a></li>
+<li><a href="#congelamento-layout-ui-v5.3"
+id="toc-congelamento-layout-ui-v5.3">5.6 Congelamento layout UI
+(v5.3)</a></li>
+</ul></li>
+<li><a href="#macrofunzioni-principali"
+id="toc-macrofunzioni-principali">6. Macrofunzioni principali</a>
+<ul>
+<li><a href="#analisi-preventiva-dei-rischi"
+id="toc-analisi-preventiva-dei-rischi">6.1 Analisi preventiva dei
+rischi</a></li>
+</ul></li>
+<li><a href="#roadmap-delle-macro-attività"
+id="toc-roadmap-delle-macro-attività">Roadmap delle macro-attività</a>
+<ul>
+<li><a href="#quater-decisioni-renato-11102026-questionario"
+id="toc-quater-decisioni-renato-11102026-questionario">7.1quater
+Decisioni Renato 11/10/2026 (questionario)</a></li>
+<li><a
+href="#sexies-pivot-catalogo-condiviso-a-monte-wizard-target-basso-profilo-12102026"
+id="toc-sexies-pivot-catalogo-condiviso-a-monte-wizard-target-basso-profilo-12102026">7.1sexies
+Pivot — Catalogo condiviso a monte + wizard (target basso profilo) —
+12/10/2026</a></li>
+<li><a
+href="#octies-consolidato-catalogo-personale-unico-h1-wizard-bl-17-12102026"
+id="toc-octies-consolidato-catalogo-personale-unico-h1-wizard-bl-17-12102026">7.1octies
+CONSOLIDATO — Catalogo personale unico (H1) + Wizard BL-17 —
+12/10/2026</a></li>
+<li><a
+href="#septies-bozza-wizard-dove-tengo-il-catalogo-bl-17-12102026-storico-sostituita-da-7.1octies-interlocuzione-7.24"
+id="toc-septies-bozza-wizard-dove-tengo-il-catalogo-bl-17-12102026-storico-sostituita-da-7.1octies-interlocuzione-7.24">7.1septies
+Bozza wizard «Dove tengo il Catalogo» (BL-17) — 12/10/2026 <em>(storico;
+sostituita da §7.1octies / interlocuzione §7.24)</em></a></li>
+<li><a
+href="#quinquies-approfondimento-bl-09-pc-nas-in-rete-senza-cloud-obbligatorio"
+id="toc-quinquies-approfondimento-bl-09-pc-nas-in-rete-senza-cloud-obbligatorio">7.1quinquies
+Approfondimento BL-09 — PC / NAS in rete (senza cloud
+obbligatorio)</a></li>
+<li><a
+href="#bis-checkpoint-urgente-catalogo-unico-utente-vs-dispositivi-11102026"
+id="toc-bis-checkpoint-urgente-catalogo-unico-utente-vs-dispositivi-11102026">7.1bis
+Checkpoint urgente — Catalogo unico utente vs dispositivi
+(11/10/2026)</a></li>
+<li><a
+href="#ter-analisi-tecnica-bl-16-sync-catalogo-evoluzione-archivio-condiviso-11102026"
+id="toc-ter-analisi-tecnica-bl-16-sync-catalogo-evoluzione-archivio-condiviso-11102026">7.1ter
+Analisi tecnica BL-16 — Sync Catalogo (evoluzione Archivio Condiviso) —
+11/10/2026</a></li>
+<li><a href="#backlog-future-implementazioni-non-consolidato"
+id="toc-backlog-future-implementazioni-non-consolidato">7.3 Backlog —
+future implementazioni (non consolidato)</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="photovideomanager-nota-integrata">Photo&amp;VideoManager — NOTA
+INTEGRATA</h1>
+<p>Documento tecnico, architetturale e funzionale di riferimento
+(<strong>documento unico</strong>).</p>
+<ul>
+<li><strong>File:</strong> PVM_Nota_Integrata_v5.3 (fonte operativa:
+<code>docs/PVM_Nota_Integrata.md</code>)</li>
+<li><strong>Versione:</strong> 5.3</li>
+<li><strong>Data ultima modifica:</strong> 10/10/2026</li>
+<li><strong>Responsabile:</strong> Renato Stefanizzi</li>
+<li><strong>Delta v5.1 → v5.2:</strong> recepita la revisione di
+navigazione (proposta Navigazione11 + interlocuzione 08/10/2026).
+Aggiornati §5 e chiarimenti di collocazione in §6. Nessun nuovo
+requisito di dominio inventato.</li>
+<li><strong>Delta v5.2 → v5.3:</strong> <strong>congelamento layout
+UI</strong> anteprima <code>0.14.6-preview</code> (Dashboard densità
+BoxManager; Accesso rapido Home fissato; albero §5 confermato). Nessun
+nuovo requisito di dominio. Affinamenti estetici minori (es. spessore
+ombre) ammessi in seguito senza riaprire la struttura.</li>
+<li><strong>HOLD 0.15.4–0.15.12 chiuso (09–10/10/2026):</strong> Renato
+ha convalidato KPI/Importa/navigazione; ripresa sviluppo dietro UI
+congelata da <strong>0.16.0</strong>.</li>
+</ul>
+<h1 id="scopo-del-progetto-e-regole-operative">1. Scopo del progetto e
+regole operative</h1>
+<h2 id="scopo">1.1 Scopo</h2>
+<p>REQUISITI: Photo&amp;VideoManager è un’applicazione Android per la
+gestione dell’archivio personale e familiare di fotografie e video. E’
+concepita per: Censire fotografie e video distribuiti tra più sorgenti.
+Raccogliere e consolidare i contenuti in un Archivio Condiviso
+configurabile. Individuare e gestire duplicati e contenuti simili.
+Ottimizzare con semplici funzioni di editing foto e video Costruire un
+Catalogo logico indipendente dalla collocazione fisica dei file.
+Organizzare, cercare, raggruppare e comporre contenuti. Consentire la
+condivisione all’interno della famiglia. Produrre album, PDF, stampe ed
+esportazioni. Proteggere i contenuti attraverso backup e meccanismi di
+recupero. ## 1.2 Regole per la implementazione con Cursor - La
+progettazione concettuale viene completata prima della roadmap tecnica
+definitiva e dell’implementazione. - ChatGPT definisce analisi,
+requisiti, decisioni architetturali, criteri di accettazione e piano di
+lavoro. - Cursor viene coinvolto sulla base di una specifica consolidata
+e, quando richiesto, per approfondimenti tecnici separati dalla Nota
+Integrata. - Cursor non deve inventare requisiti, modificare decisioni
+vincolanti, introdurre backend/cloud obbligatori o modificare
+l’architettura senza una decisione esplicita. - <strong>Comunicazione
+con Renato (vincolante, 10/10/2026):</strong> linguaggio sempre
+comprensibile a un non addetto ai lavori; niente gergo tecnico. Per ogni
+prova dell’app sul telefono: istruzioni passo-passo dettagliate (cosa
+toccare, cosa deve apparire, cosa segnalare se non torna). -
+<strong>Terminologia UI (vincolante, 10/10/2026):</strong> legenda in
+<code>docs/TERMINOLOGIA_UI.md</code> — usare <strong>Catalogo</strong>
+(non «spazio app»), <strong>File del dispositivo</strong> (non «file
+interno»); conferme stile BoxManager (<code>Conferma …?</code> +
+<strong>SÌ</strong> / <strong>NO</strong>). - <strong>Metodo agenti
+(vincolante, 11/10/2026):</strong> di norma <strong>un solo agente
+operativo</strong> per tranche di codice. Se durante lo sviluppo
+l’agente ritiene utile attivare <strong>più agenti</strong> (es. analisi
+/ revisione / implementazione separati), deve <strong>dirlo
+esplicitamente a Renato e attendere conferma</strong> — non avviare
+multi-agente di propria iniziativa. - Il lavoro procede per
+macro-attività: obiettivi → input → decisioni → output → criteri di
+completamento. - Le idee che emergono fuori dal percorso corrente
+vengono registrate nel Backlog e non interrompono la macro-attività in
+corso. - Evitare divagazioni, fughe in avanti, assunzioni non
+autorizzate, duplicazioni e regressioni concettuali. - ChatGPT fornisce
+a Cursor una specifica consolidata e vincolante e fa confluire nella
+Nota Integrata esclusivamente le decisioni consolidate. - Cursor viene
+coinvolto quando la specifica della macro-attività è sufficientemente
+definita e quando è necessario un approfondimento tecnico. - Per ogni
+macro-attività sono definiti obiettivo, input necessari, decisioni,
+output e criteri di completamento. # 2. Modello concettuale di
+riferimento ## 2.1 Modello REQUISITI: Il modello concettuale di
+Photo&amp;VideoManager si basa sul seguente processo logico: ARCHIVI E
+SORGENTI DISPONIBILI → ACQUISIZIONE/CENSIMENTO E CONFRONTO →
+AGGIORNAMENTO DEL CATALOGO LOGICO → ORGANIZZAZIONE / RICERCA /
+COMPOSIZIONE / PUBBLICAZIONE / GESTIONE → EVENTUALE CONSOLIDAMENTO
+NELL’ARCHIVIO CONDIVISO. VINCOLI: Nessuna funzione deve introdurre
+operazioni distruttive automatiche sui contenuti originali. ## 2.2
+Legenda — terminologia convenzionale File fisico Singolo file
+effettivamente presente su una specifica sorgente o unità di storage,
+identificabile attraverso la propria collocazione fisica e le proprie
+caratteristiche tecniche. Più file fisici possono rappresentare copie
+dello stesso contenuto logico. Archivio personale Insieme logicamente
+definito di contenuti personali e delle relative copie fisiche che
+appartengono alla sfera personale di un utente e che sono gestiti
+autonomamente dall’utente stesso. Può risiedere su uno o più
+dispositivi, dischi, cartelle o altri storage disponibili. Archivio
+Condiviso Archivio esplicitamente destinato alla gestione e alla
+condivisione di contenuti appartenenti al dominio familiare
+dell’applicazione. Il passaggio di un contenuto dal dominio personale al
+dominio familiare avviene a seguito di una decisione esplicita
+dell’utente di condividere/consolidare il contenuto nell’Archivio
+Condiviso. Il salvataggio verificato della copia nell’Archivio Condiviso
+costituisce la ratifica operativa del passaggio al dominio familiare.
+Catalogo logico Rappresentazione strutturata e persistente delle
+informazioni relative ai contenuti e alle loro copie, indipendente dalla
+collocazione fisica dei file. Il Catalogo può raccogliere informazioni
+provenienti da più archivi e sorgenti, anche appartenenti a dispositivi
+diversi, mantenendo distinta l’identità logica del contenuto dalle sue
+copie fisiche. Il Catalogo è persistito localmente sul dispositivo che
+lo gestisce; può tuttavia contenere informazioni relative a contenuti e
+copie presenti su più archivi e sorgenti, anche appartenenti a
+dispositivi diversi, quando tali informazioni sono state acquisite o
+rese disponibili nell’ambito delle operazioni effettuate dall’utente.
+Relazioni organizzative Informazioni che collegano i contenuti del
+Catalogo a persone, luoghi, eventi, album, tag, categorie e ad altre
+strutture utilizzate per organizzarli, ricercarli, raggrupparli,
+comporli o pubblicarli. Le relazioni organizzative non implicano
+necessariamente modifiche o duplicazioni dei file fisici. # 3.
+Architettura logica e principi funzionali REQUISITI: I file fisici, gli
+archivi/sorgenti, il Catalogo logico e le relazioni organizzative devono
+essere concettualmente separati. L’Archivio Condiviso è uno degli
+archivi gestiti e non deve essere assunto come passaggio obbligatorio
+del modello generale. L’accesso ai diversi tipi di archivio/storage deve
+essere mediato da uno StorageAdapter che espone capacità esplicite e non
+necessariamente uniformi tra i diversi tipi di storage. La progettazione
+tecnica deve definire la matrice di capacità e vincoli almeno per:
+storage locale/filesystem; MediaStore/SAF Android; CIFS/SMB/NAS;
+storage/cloud accessibili tramite provider; eventuali ulteriori adapter
+futuri. Le principali capability comprendono almeno LIST, READ, WRITE,
+CREATE_DIRECTORY, RENAME, MOVE, DELETE, RANDOM_READ, SEQUENTIAL_READ,
+METADATA, FINGERPRINT_STREAM e AVAILABILITY. Per ogni adapter devono
+inoltre essere valutati disponibilità offline, gestione degli errori,
+performance, integrità e recuperabilità. Non devono essere assunte
+capacità uniformi né atomicità di move/write su SAF o SMB/CIFS. Quando
+una capability manca, l’operazione deve degradare in modo esplicito e
+sicuro. UI: Home, navigazione, schermate, componenti e dialoghi.
+Presentation: ViewModel e stato della UI. Domain: media, Catalogo,
+acquisizione, deduplicazione, concetti logici di archivio e copia,
+ricerca, condivisione, album, backup e gestione. Il termine “storage”
+nel Domain indica esclusivamente il concetto logico di archivi, sorgenti
+e copie; l’accesso fisico ai file e ai dispositivi/storage è
+esclusivamente responsabilità degli appositi Port/StorageAdapter.
+L’accesso fisico agli archivi e alle sorgenti è mediato da uno
+StorageAdapter che espone capacità esplicite e non necessariamente
+uniformi tra i diversi tipi di storage. Le capability devono essere
+verificate prima dell’esecuzione delle operazioni che le richiedono. Le
+principali capability dello StorageAdapter comprendono almeno LIST,
+READ, WRITE, CREATE_DIRECTORY, RENAME, MOVE, DELETE, RANDOM_READ,
+SEQUENTIAL_READ, METADATA, FINGERPRINT_STREAM e AVAILABILITY. L’assenza
+di una capability deve essere gestita esplicitamente e in modo sicuro,
+senza assumere capacità uniformi tra filesystem, SAF/MediaStore,
+SMB/CIFS e altri adapter. Data: database locale, filesystem locale,
+storage Archivio Condiviso, SMB/CIFS e sorgenti/provider supportati.
+VINCOLI: La progettazione concettuale precede la scelta definitiva di
+classi, package, librerie e implementazioni. CONTRATTI ARCHITETTURALI
+CONSOLIDATI: - Il Domain non accede direttamente a path, filesystem,
+SMB/NAS o altre tecnologie fisiche; l’accesso allo storage avviene
+esclusivamente attraverso Port/StorageAdapter. - I permessi logici
+dell’app sono separati dall’accesso fisico allo storage. - Il
+PermissionGate gestisce l’autorizzazione dell’utente rispetto alle
+operazioni applicative; lo StorageAdapter gestisce l’accesso fisico e le
+capability della sorgente/storage; l’AuthPort costituisce la porta
+astratta per l’eventuale autenticazione richiesta dalla risorsa, senza
+introdurre autenticazione obbligatoria nella versione local-first. - Le
+permission del sistema operativo restano distinte dai tre livelli
+precedenti. - È predisposto un AuthPort sostituibile, senza
+autenticazione obbligatoria nella versione local-first. - I confini
+Domain/Application/Adapter/Port devono preservare l’evoluzione futura
+verso client desktop, backend e storage remoti senza dipendenze
+obbligatorie. - È possibile predisporre una SyncPort come estensione
+architetturale futura. La presenza della porta non costituisce una
+funzionalità di sincronizzazione dell’attuale versione di
+Photo&amp;VideoManager e non autorizza code, retry o sincronizzazioni
+automatiche. Il protocollo e la relativa implementazione sono fuori
+scope v1 e potranno essere definiti solo a seguito di una futura
+decisione progettuale. ## 3.1 Principi architetturali vincolanti
+Local-first: l’app deve poter funzionare senza backend, Internet, cloud
+o NAS. L’architettura deve consentire la gestione di più archivi e
+sorgenti indipendenti. L’Archivio Condiviso è configurabile e opzionale
+e non costituisce una dipendenza obbligatoria né un archivio
+privilegiato rispetto agli altri archivi gestiti dall’applicazione.
+NAS/CIFS/SMB è supportato come possibilità di condivisione
+dell’archivio, non come dipendenza obbligatoria. Il cloud è opzionale e
+deve essere trattato come categoria generica di sorgenti/storage, non
+come sinonimo di Google Drive. Non è previsto un backend proprietario
+obbligatorio. I dati personali, le fotografie e i video non devono
+essere inviati a terze parti per riconoscimento o classificazione;
+privilegiare elaborazioni locali/on-device. Archivio Condiviso e Backup
+sono concetti distinti. Il <strong>Catalogo personale</strong> è unico
+sul piano logico e riferito all’<strong>utente</strong>, non al singolo
+dispositivo (<strong>H1</strong>, convalida Renato 12/10/2026 —
+§7.1octies). Ogni installazione mantiene una <strong>copia di lavoro
+locale</strong> (local-first, uso offline). La <strong>sede di
+riferimento</strong> è scelta dall’utente (Wizard BL-17); l’allineamento
+delle schede verso/da la sede avviene solo su <strong>azione
+esplicita</strong> («Aggiorna Catalogo»), senza code né retry
+automatici. Non è obbligatorio backend, cloud o NAS. L’<strong>Archivio
+Condiviso familiare</strong> resta distinto e opzionale.
+Photo&amp;VideoManager facilita il confronto, la pulizia e
+l’acquisizione/consolidamento di contenuti scelti dall’utente. Eventuali
+sincronizzazioni native del sistema operativo o di altre app possono
+produrre copie che Photo&amp;VideoManager dovrà saper riconoscere e
+gestire. L’indisponibilità temporanea di un archivio o di una sorgente
+non costituisce di per sé un errore funzionale dell’applicazione. Le
+funzioni che non dipendono dalla risorsa indisponibile devono rimanere
+utilizzabili; le operazioni che la richiedono devono essere bloccate o
+non avviate con un’indicazione esplicita dello stato della risorsa. Non
+introdurre code automatiche di operazioni differite. Prima di ogni
+funzione complessa devono essere valutati privacy, sicurezza, integrità,
+offline, conflitti, performance, storage, compatibilità, manutenzione,
+recuperabilità e scalabilità. ## 3.2. Separazione file fisici, Catalogo
+e relazioni REQUISITI: Il Catalogo deve descrivere i contenuti senza
+confondere il file fisico con l’identità logica del contenuto. Un
+MediaItem rappresenta il contenuto logico. Il dominio di appartenenza
+del contenuto è una proprietà del MediaItem e non della singola
+MediaCopy. Un contenuto può quindi essere rappresentato da più MediaCopy
+appartenenti a sorgenti o archivi differenti, mantenendo un’unica
+identità logica e un unico dominio di appartenenza. Il passaggio del
+MediaItem dal dominio PERSONAL al dominio FAMILY deve essere modellato
+come effetto della condivisione/consolidamento esplicitamente deciso
+dall’utente. La presenza della copia fisica nell’Archivio Condiviso, una
+volta completato e verificato il consolidamento, ratifica tale
+passaggio, ma non costituisce di per sé una nuova identità del contenuto
+né una nuova proprietà riferita alla sola MediaCopy. Le copie fisiche
+devono poter essere rappresentate separatamente. Devono essere
+tracciabili origine, collocazione, fingerprint/hash e metadati. Le
+relazioni con persone, luoghi, eventi, album, tag e membri familiari
+sono dati del Catalogo. ## 3.3 Modello concettuale dei dati REQUISITI:
+Le entità concettuali, le relazioni e le invarianti definite nella
+presente Nota costituiscono il riferimento vincolante per
+l’implementazione del modello dati. Lo schema tecnico, la cardinalità,
+la persistenza, gli indici, le migrazioni e la tecnologia del database
+sono definiti nell’implementazione di M03, nel rispetto del modello
+concettuale e delle relative invarianti. MediaItem, Photo, Video
+MediaCopy / StorageLocation MediaFingerprint Person, Place, Event Album,
+Tag, Category FamilyMember, Share Backup ScanSession, ImportSession,
+OperationLog Il modello deve distinguere tra identità logica del
+contenuto, copie fisiche e dominio di appartenenza. Il dominio (PERSONAL
+/ FAMILY) è riferito al MediaItem. La MediaCopy descrive invece una
+specifica copia fisica e la relativa collocazione, senza costituire
+autonomamente un’entità di proprietà familiare. MediaItem.domainScope
+rappresenta il dominio logico di appartenenza del contenuto: - PERSONAL:
+contenuto appartenente alla sfera personale dell’utente; - FAMILY:
+contenuto esplicitamente condiviso/consolidato nel dominio familiare. La
+transizione PERSONAL → FAMILY è un effetto dell’operazione di
+condivisione/consolidamento e non una conseguenza automatica della
+semplice esistenza di una MediaCopy nell’Archivio Condiviso.
+StorageLocation rappresenta nel Catalogo la collocazione concreta di una
+MediaCopy mediante un riferimento logico/opaco al livello Domain; non
+rappresenta direttamente il filesystem, il path o la tecnologia fisica
+sottostante. ArchiveRef rappresenta il riferimento logico all’archivio
+cui appartiene una StorageLocation. La sorgente rappresenta invece una
+risorsa effettivamente disponibile e selezionabile nell’ambito di una
+specifica operazione. ArchiveRef, sorgente e StorageLocation devono
+rimanere concettualmente distinti anche nella progettazione tecnica. La
+disponibilità di un archivio o di una sorgente non coincide con la
+disponibilità delle singole MediaCopy in esso collocate. Il Catalogo può
+conservare informazioni relative a copie precedentemente censite anche
+quando la relativa sorgente non è attualmente raggiungibile. VINCOLI: Lo
+schema tecnico definitivo, la cardinalità, la persistenza, gli indici,
+le migrazioni e la tecnologia del database sono definiti nell’ambito di
+M03, nel rispetto del modello concettuale e delle relative invarianti. #
+4. Dispositivi fruibili REQUISITI: L’app deve poter censire sorgenti
+eterogenee. Smartphone/tablet. PC e dischi locali. Dischi esterni.
+NAS/storage di rete tramite SMB/CIFS. Cloud/provider supportati, senza
+rendere obbligatorio uno specifico provider. Le operazioni che
+richiedono il confronto o l’acquisizione di contenuti devono operare
+sulle sorgenti effettivamente disponibili nella sessione corrente.
+Flusso concettuale: l’utente attiva esplicitamente l’operazione;
+l’applicazione individua e analizza le sorgenti attualmente disponibili;
+l’applicazione presenta all’utente le sorgenti individuate; l’utente
+seleziona dispositivi, cartelle o archivi da coinvolgere
+nell’operazione; l’utente avvia esplicitamente l’operazione. La
+disponibilità delle sorgenti deve essere verificata nell’ambito della
+sessione corrente. Una sorgente può risultare AVAILABLE, UNAVAILABLE o
+UNKNOWN. L’indisponibilità della sorgente non comporta la perdita delle
+informazioni già presenti nel Catalogo e non costituisce un errore
+funzionale. Non devono essere generati automaticamente retry, code di
+operazioni o sincronizzazioni differite.</p>
+<h1 id="navigazione-e-struttura-ui">5. Navigazione e struttura UI</h1>
+<p><strong>STATO:</strong> albero navigazione consolidato il 08/10/2026
+(v5.2); <strong>layout UI congelato</strong> il 09/10/2026 (v5.3, build
+<code>0.14.6-preview</code>). I requisiti di dominio restano
+sostanzialmente inalterati rispetto a v5.1; cambia solo collocazione UI
+(v5.2) e densità/struttura visuale Home (v5.3).</p>
+<h2 id="principi">5.0 Principi</h2>
+<ul>
+<li>Una funzione ha un solo punto di accesso principale.</li>
+<li>Le voci sotto i riquadri hub indicano <strong>funzionalità da
+gestire</strong>, non necessariamente voci di menu.</li>
+<li>I passi di workflow (Seleziona, Importa, Modifica, Allinea, …) non
+costituiscono livelli di navigazione.</li>
+<li>Home, Top Bar e Bottom Bar restano componenti globali.</li>
+<li>CONFIGURA resta distinta dalle macro operative.</li>
+<li>Accesso rapido in Home: stesso modello già definito; può variare
+solo il numero di link. Non è un secondo sistema di navigazione.</li>
+<li>Selezione elenchi: per <strong>Acquisisci/Aggiorna</strong> vale il
+riquadro a <strong>3 stati</strong> (BL-03 / decisione 10–11/10/2026);
+altri elenchi restano on/off salvo diversa specifica.</li>
+</ul>
+<h2 id="home-page">5.1 Home Page</h2>
+<p>La Home Page è la pagina di atterraggio e il principale hub
+operativo.</p>
+<p>Contiene: - KPI di sintesi (due colonne Foto / Video, densità
+tipografica allineata a BoxManager; senza card separate per ogni
+metrica); - <strong>Ricerca nel Catalogo</strong> — motore unico,
+<strong>un solo riquadro</strong>, valido per foto/video e per
+album/raccolte; lo stesso motore è riusabile in tutte le pagine dove è
+prevista la ricerca; - <strong>Accesso rapido</strong> (congelato v5.3):
+<strong>Acquisisci</strong>, <strong>Aggiorna</strong>,
+<strong>Crea</strong>, <strong>Edita</strong>, <strong>Backup</strong>,
+<strong>Ripristina</strong>. Griglia 2×3 a tessere che riempiono lo
+spazio restante del viewport. Non duplica le macro già presenti in
+Bottom Bar. Non include Archivio Condiviso né scorciatoie a macro Bottom
+Bar.</p>
+<p><strong>Semantica KPI Home (requisito condiviso — modello A; BL-14 in
+0.16.8, ritocco Renato 0.16.9):</strong> - <strong>Foto/Video
+originali</strong> = file conosciuti sulle <strong>fonti
+dispositivo</strong> (copie non-personali <strong>ACTIVE</strong>), e
+comunque <strong>≥ Catalogo</strong> (se un elemento è solo nello spazio
+app resta contato). <strong>Il Cestino app non conta</strong> (non è la
+cartella Cestino del telefono). - <strong>di cui in Catalogo</strong> =
+elementi con almeno una copia <strong>ACTIVE</strong> (= elenco
+<strong>Aggiorna</strong>); - <strong>Momento di ingresso in
+Catalogo:</strong> <strong>CONFERMA</strong>, non Importa. - Con
+ingresso alla CONFERMA e Cestino escluso, dopo un censimento completo i
+due numeri tendono a coincidere; un gap utile richiederebbe censimento
+senza catalogazione immediata (valutare in <strong>BL-13</strong>).</p>
+<p>La navigazione mantiene la distinzione tra Home, macrofunzioni e
+CONFIGURA. Home <strong>senza scrolling</strong> sul viewport
+tipico.</p>
+<p>Le schermate devono mantenere coerenza con struttura e principi UI
+già consolidati in BoxManager (shared shell), adattando branding e
+contenuti PVM.</p>
+<p>La UI deve gestire esplicitamente almeno: stato iniziale;
+caricamento; contenuto vuoto; operazione in corso; completamento;
+errore; indisponibilità della sorgente/storage; richiesta di
+autorizzazione; conferma delle operazioni distruttive.</p>
+<p><strong>VINCOLI:</strong> - La UI non deve introdurre comportamenti
+funzionali non definiti nelle rispettive macro-attività. - Top Bar e
+Bottom Bar devono rimanere componenti globali. - Operazioni su
+sorgenti/storage indisponibili: mostrare lo stato senza retry
+automatici. - Funzioni sensibili: privacy e sicurezza come definiti
+nella Nota. - Accessibilità, leggibilità, navigazione coerente e
+gestione dello stato UI.</p>
+<h2 id="top-bar">5.2 Top Bar</h2>
+<p><strong>REQUISITI:</strong> struttura e comportamento come shared
+shell BoxManager: - Identità dell’app e versione; - Indicazione
+dell’utente; - Data e ora; - Accesso alla Guida; - Controllo Light/Dark
+Mode.</p>
+<p><strong>VINCOLI:</strong> componente globale, non duplicata nelle
+singole schermate.</p>
+<p><strong>STATO FUNZIONALE:</strong> FUNZIONE CONGELATA. Adattamenti
+PVM limitati a branding, risorse grafiche, dimensionamenti e contenuti
+coerenti con gli slot definiti (dettaglio grafico in M18).</p>
+<h2 id="bottom-bar">5.3 Bottom Bar</h2>
+<p><strong>REQUISITI (v5.2):</strong> Bottom Bar globale con
+destinazioni:</p>
+<ul>
+<li><strong>Home</strong> — ritorno alla Home Page;</li>
+<li><strong>Organizza</strong> — hub Catalogo;</li>
+<li><strong>Componi</strong> — hub composizioni (include Pubblica come
+funzione);</li>
+<li><strong>Utility</strong> — backup, ripristino, spazio, revisione
+sorgenti;</li>
+<li><strong>Impostazioni</strong> — accesso a CONFIGURA (solo icona,
+senza etichetta testuale).</li>
+</ul>
+<p><strong>VINCOLI:</strong> - Non inserire scorciatoie aggiuntive oltre
+a queste destinazioni. - Non riportare in Bottom Bar la macro «Pubblica»
+(è funzione di Componi). - Il nome ufficiale della quarta macro
+operativa è <strong>Utility</strong> (non «Gestisci»).</p>
+<blockquote>
+<p>Nota storica v5.1: Bottom Bar solo Home + Impostazioni. La presente
+revisione, convalidata in interlocuzione, aggiorna la shell UI per
+fluidità operativa; i requisiti di dominio non cambiano nel merito.</p>
+</blockquote>
+<h2 id="albero-delle-macroaree-v5.2">5.4 Albero delle macroaree
+(v5.2)</h2>
+<h3 id="organizza">5.4.1 ORGANIZZA</h3>
+<p>Ambito: Catalogo logico.</p>
+<p><strong>Acquisisci</strong> — alimentazione del Catalogo da fonti
+esterne. <strong>Unico processo</strong> (censimento e acquisizione non
+sono separati in menu): 1. pagina <strong>Acquisisci</strong>: elenco
+fonti (dispositivo + percorso), <strong>riquadro selezione a 3
+stati</strong> (BL-03: ✓ selezionata · vuoto non usata ·
+<strong>X</strong> tolta dall’elenco — niente icona cestino separata),
+riepilogo → <strong>Conferma</strong>; 2. pagina
+<strong>Importa</strong> (schermata successiva del medesimo processo,
+non voce hub): selezione file → Importa → esito →
+<strong>Aggiorna</strong> (Catalogo).</p>
+<p>Niente chip/passi di navigazione «1. Fonti / 2. Importa» come livelli
+di menu.</p>
+<p><strong>Aggiorna</strong> — gestione del Catalogo. Elenco sempre
+visibile; <strong>riquadro a 3 stati</strong> (stesso criterio di
+Acquisisci, default diverso): - default <strong>deselezionato</strong>
+(riquadro vuoto) per consentire l’uso dei filtri Tutti/Foto/Video
+sull’elenco completo; - ciclo: vuoto → ✓ selezionata →
+<strong>X</strong> = Elimina dal Catalogo → Cestino (conferma SÌ/NO;
+file del dispositivo intatti); - menu contestuale ⋮: Modifica, Rinomina,
+Copia su dispositivo (<strong>senza</strong> voce Elimina — ridondante
+rispetto alla X); - <strong>regola multiselezione + menu (convalidata
+11/10/2026, opzione A):</strong> il menu ⋮ agisce <strong>solo sulla
+riga</strong> aperta; la selezione ✓ multipla serve a
+<strong>Pulisci</strong>, non al menu. Include: -
+<strong>Pulisci</strong> — doppia funzione (convalidata 11/10/2026;
+implementazione a tranche): (1) eliminazione degli elementi
+<strong>selezionati</strong> (✓) in Aggiorna; (2) analisi/eliminazione
+<strong>duplicati</strong> secondo criteri (v1: esatti; estensioni in
+BL-11). UI duplicati: un solo sottotitolo, bottone <strong>Analizza
+duplicati</strong>, niente box di aiuto sparsi (<em>fatto testi
+0.16.5</em>); - <strong>Allinea</strong> — controllo/explore da app
+delle sorgenti.</p>
+<p><strong>Mappatura ex-voci v5.1 sotto Organizza:</strong> -
+<strong>Archivia</strong> (come hub): non presente. L’Archivio Condiviso
+è un disco/sorgente individuabile in scansione; setup in CONFIGURA;
+operazioni di protezione in Utility. - <strong>Raggruppa</strong> (come
+hub): non presente. La selezione/raggruppamento degli elementi avviene
+nel flusso di Componi. - <strong>Ricerca</strong>: motore unico (vedi
+§5.1), non voce hub obbligatoria.</p>
+<h3 id="componi">5.4.2 COMPONI</h3>
+<p>Creazione, gestione e produzione di album e raccolte (uniche due
+tipologie: album fotografico; raccolta di foto e video).</p>
+<p>Funzioni hub: <strong>Crea</strong>, <strong>Edita</strong>.</p>
+<p><strong>Pubblica</strong> è funzione interna a Componi (non macro né
+voce Bottom Bar) e consente: stampa; condivisione interna (Archivio
+Condiviso); condivisione esterna (social / terze parti).</p>
+<p>Editing delle singole foto/video di Catalogo: raggiungibile dal menu
+contestuale di Organizza → Aggiorna e da Componi. Editing delle
+composizioni: in Componi.</p>
+<h3 id="utility">5.4.3 UTILITY</h3>
+<p>Sostituisce in navigazione l’etichetta «Gestisci».</p>
+<ul>
+<li><strong>Backup</strong> — backup manuale dell’Archivio Condiviso;
+salvataggi contestuali; non è sincronizzazione.</li>
+<li><strong>Ripristina</strong> — ripristino da backup e recupero dal
+<strong>Cestino</strong>.</li>
+<li><strong>Revisione / Elimina</strong> — svecchiamento delle sorgenti
+(non deduplica).</li>
+<li><strong>Verifica spazio</strong> — controllo spazio nel
+workflow.</li>
+</ul>
+<p><strong>Distinzione obbligatoria:</strong> - <strong>Pulisci</strong>
+(Organizza → Aggiorna) = pulizia Catalogo: elementi selezionati (✓)
+<strong>e</strong> duplicati (criteri); non è svecchiamento sorgenti; -
+<strong>Revisione/Elimina</strong> = svecchiamento sorgenti (Utility); -
+<strong>Cestino</strong> = solo recupero di elementi eliminati
+involontariamente dal Catalogo e dall’Archivio Condiviso (<strong>unico
+ingresso</strong> via Utility → Ripristina; non da Pulisci né da
+scorciatoie in Aggiorna).</p>
+<p>«Salva» della v5.1 corrisponde a Backup / Ripristina / spazio in
+Utility (non è una quarta voce hub).</p>
+<h3 id="configura">5.4.4 CONFIGURA</h3>
+<p>Rami: - <strong>Impostazioni</strong> — preferenze generali; -
+<strong>Sicurezza e Privacy</strong>; - <strong>Setup archivio
+condiviso</strong> — configurazione tecnica dell’Archivio Condiviso; -
+<strong>Accessi all’Archivio</strong> — individuazione di chi è
+autorizzato ad accedere all’Archivio Condiviso (membri e
+amministratore). Sostituisce l’etichetta «Famiglia» per evitare
+fraintendimenti; - <strong>Parametri Play Store</strong> — in scope (app
+gratuita; bonus/distribuzione in continuità con BoxManager).</p>
+<h2 id="stati-ui">5.5 Stati UI</h2>
+<p>Come in v5.1: INITIAL, LOADING, EMPTY, IN_PROGRESS, COMPLETED, ERROR,
+SOURCE_UNAVAILABLE, NEEDS_AUTHORIZATION, CONFIRM_DESTRUCTIVE.</p>
+<h2 id="congelamento-layout-ui-v5.3">5.6 Congelamento layout UI
+(v5.3)</h2>
+<p><strong>STATO FUNZIONALE:</strong> layout delle schermate di
+anteprima <strong>congelato</strong> a partire da MediaManager
+<code>0.14.6-preview</code> (commit di riferimento densità
+Dashboard).</p>
+<p><strong>Cosa è congelato (non modificare senza decisione esplicita di
+Renato):</strong> - Bottom Bar: Home · Organizza · Componi · Utility ·
+Impostazioni (solo icona); - Home: struttura sezioni (titolo, KPI a
+colonne, ricerca, Accesso rapido 2×3) e densità complessiva; -
+Acquisisci → Importa: unico processo, azioni in alto, riquadro selezione
+fonti (3 stati BL-03 nello stesso slot), niente chip di passo; - Componi
+landing: elenco Album/Raccolte + azioni +Album/+Raccolta/⋮; - Aggiorna
+(layout): ricerca + elenco + Pulisci in alto (Allinea = refresh).</p>
+<p><strong>Cosa resta liberamente evolutivo dietro il layout:</strong> -
+collegamento a ViewModel/servizi di dominio (dati reali al posto dei
+mock); - stati LOADING/EMPTY/ERROR e messaggi; - affinamenti estetici
+minori (ombre, radius, padding ± pochi dp) senza cambiare gerarchia o
+contenuti delle sezioni; - CONFIGURA e feature ancora stub
+(Crea/Edita/Pubblica/Backup/…) quando M11/M14/M15 saranno in
+sviluppo.</p>
+<p><strong>VINCOLO per Cursor:</strong> dopo il congelamento, lo
+sviluppo procede <strong>senza riaprire la struttura UI</strong>;
+eventuale feedback estetico si raccoglie in backlog e si applica a
+tranche dedicate.</p>
+<h1 id="macrofunzioni-principali">6. Macrofunzioni principali</h1>
+<p>Le macrofunzioni di dominio (Censimento, Acquisizione, Archivio
+Condiviso, Deduplicazione, Organizzazione, Ricerca, Editing/Produzione,
+Backup, …) restano definite nel merito come in v5.1.</p>
+<p><strong>Recepimento navigazione v5.2 (chiarimenti di collocazione,
+non nuovi requisiti di dominio):</strong> - Censimento +
+acquisizione/importazione: percorso UI unico Organizza → Acquisisci (due
+fasi). - Pulisci (selezionati ✓ + duplicati): UI sotto Organizza →
+Aggiorna; non sotto Utility. - Cestino: recupero involontario; UI sotto
+Utility → Ripristina. - Condivisione familiare / accessi: CONFIGURA →
+Accessi all’Archivio (membri + amministratore); setup tecnico in Setup
+archivio condiviso. - Pubblicazione/social/produzione output: funzione
+Pubblica in Componi. - Backup/spazio: Utility.</p>
+<h2 id="analisi-preventiva-dei-rischi">6.1 Analisi preventiva dei
+rischi</h2>
+<p>REQUISITI: Prima di introdurre una funzione significativa deve essere
+analizzato il suo impatto almeno sui seguenti aspetti: Privacy.
+Sicurezza. Integrità e rischio di perdita dati. Funzionamento offline.
+Conflitti e copie. Performance. Spazio di archiviazione. Compatibilità
+Android/filesystem/SMB. Manutenibilità e dipendenze. Recuperabilità.
+Scalabilità. VINCOLI: La complessità tecnica non deve essere eliminata
+automaticamente se una funzione offre valore significativo; deve essere
+valutata rispetto a valore, rischio, privacy e costo di manutenzione. ##
+6.2 Classificazione delle funzionalità Ogni funzionalità dovrà essere
+classificata, quando il progetto entrerà nella fase di pianificazione,
+come: CORE SUPPORTO AVANZATA OPZIONALE BACKLOG VINCOLI: Le funzionalità
+non necessarie alla macro-attività corrente non devono interrompere il
+percorso di progettazione; vengono registrate nel Backlog. Dalla mappa
+dell’albero di navigazione si evincono le principali macro funzioni
+dell’app che costituiscono comunque una prima bozza progettuale
+dell’app: ## 6.3 Censimento (SUPPORTO)</p>
+<blockquote>
+<p>Il dettaglio esteso di §6.3 e seguenti della v5.1 resta in vigore nel
+merito funzionale; in caso di conflitto sulla sola collocazione UI
+prevale il §5 v5.2.</p>
+</blockquote>
+<h1 id="roadmap-delle-macro-attività">Roadmap delle macro-attività</h1>
+<p>I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi
+all’Archivio, Pubblica in Componi). La sequenza delle macro-attività di
+dominio resta quella della roadmap. - La presente sezione costituisce lo
+strumento unico di monitoraggio dello stato del progetto. La roadmap
+integra analisi, approfondimenti tecnici e sviluppo, mantenendo separati
+i rispettivi ruoli di ChatGPT e Cursor. - Per ogni macro-attività
+ChatGPT definisce requisiti, vincoli, decisioni progettuali, criteri di
+accettazione e punti da approfondire. Cursor, prima dello sviluppo,
+analizza le criticità tecniche indicate, evidenzia eventuali ulteriori
+criticità rilevanti e propone soluzioni tecniche compatibili con la
+specifica consolidata. Lo sviluppo inizia solo dopo la chiusura della
+fase di approfondimento della relativa macro-attività. - Come precisato,
+Cursor non può trasformare autonomamente una proposta tecnica in
+requisito consolidato. - Stati: DA AVVIARE; ANALISI; SPECIFICA
+CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA. ## 7.1 FASE CORRENTE: BL-17 /
+H1 Catalogo personale unico + Wizard sede MACRO-ATTIVITÀ DI RIFERIMENTO:
+M02 + vertical slice M03–M07 / M09 / M16 (v1) + <strong>M18 layout
+congelato (v5.3)</strong> + <strong>BL-17 / H1</strong>. STATO ATTUALE
+(15/10/2026): <strong>0.16.26-preview</strong> (versionCode 67). Wizard
+sede: (1) scelta dispositivo (2) PC→script+CIFS Documents Provider+SAF
+(3) ripresa Catalogo. Stesso modello BoxManager
+<code>NetworkDriveAssistant</code>. Ordine operativo: 1.
+<strong>P1</strong> — verifica Renato su telefono/tablet (Wizard +
+Aggiorna Catalogo multi-dispositivo). 2. <strong>P2</strong> — BL-09
+assorbito in W2; BL-02/BL-11 non ora. 3. <strong>Componi</strong> — non
+riprendere finché non chiusa specifica M11 vs landing congelata.</p>
+<h3 id="quater-decisioni-renato-11102026-questionario">7.1quater
+Decisioni Renato 11/10/2026 (questionario)</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Tema</th>
+<th>Decisione</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>BL-16 Sync</td>
+<td><strong>A</strong> — solo schede; <strong>superata/assorbita da
+H1</strong> (12/10): hub a cartella, non sync cloud obbligatoria</td>
+<td>Vedi §7.1octies</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>BL-07 Sposta</td>
+<td><strong>A</strong> — non aggiungere</td>
+<td>Chiuso</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>BL-01 Scarti</td>
+<td><strong>A</strong> — sezione «Possibili scarti» in Pulisci</td>
+<td><strong>SVILUPPO 0.16.17</strong></td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>BL-11 Simili</td>
+<td><strong>A</strong> — restano solo duplicati esatti</td>
+<td>Non ora</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>BL-02 Ombre</td>
+<td><strong>A</strong> — lasciare ora; poi stile BoxManager</td>
+<td>Non ora</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>BL-09 Rete</td>
+<td><strong>A</strong> — restare sul «+»; approfondimento subito</td>
+<td>Vedi sotto</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td>PC in Wi‑Fi</td>
+<td><strong>A</strong> — cartella condivisa sul PC…</td>
+<td><strong>Riaperta 12/10:</strong> troppo difficile in prova reale →
+§7.1sexies</td>
+</tr>
+</tbody>
+</table>
+<h3
+id="sexies-pivot-catalogo-condiviso-a-monte-wizard-target-basso-profilo-12102026">7.1sexies
+Pivot — Catalogo condiviso a monte + wizard (target basso profilo) —
+12/10/2026</h3>
+<p><strong>Correzione Renato (sera 12/10):</strong> non tarare la
+soluzione sul contesto personale (NAS / cloud). Il <strong>target di
+basso profilo</strong> conserva le foto su <strong>dispositivi
+mobili</strong> (telefono, tablet, notebook che funge da desktop). Non
+presupporre NAS né cloud.</p>
+<p><strong>Obiettivo:</strong> aiutare l’utente a <strong>decidere dove
+tenere il Catalogo condiviso</strong> (sede unica a monte). I
+dispositivi si collegano a quella sede; non si “espongono” uno per uno
+senza guida.</p>
+<p><strong>Mezzo:</strong> un <strong>wizard</strong> in app che: 1.
+spiega in parole semplici le sedi possibili; 2. fa scegliere
+<strong>dove</strong> vive il Catalogo condiviso; 3. se la scelta è
+<strong>PC/notebook</strong>, <strong>continua nello stesso
+wizard</strong> e guida passo-passo la configurazione della condivisione
+(non lasciare l’utente solo in Archivio Samsung / impostazioni
+Windows).</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Ramo wizard (proposta)</th>
+<th>Per chi</th>
+<th>Cosa fa il wizard</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>W1 — Questo telefono/tablet</strong></td>
+<td>Foto già qui; un solo dispositivo per ora</td>
+<td>Imposta Catalogo su questo dispositivo; spiega come aggiungere altri
+dispositivi dopo</td>
+</tr>
+<tr class="even">
+<td><strong>W2 — PC / notebook</strong></td>
+<td>Notebook = archivio principale</td>
+<td>Guida: crea cartella Foto → condividi su Windows → stessa Wi‑Fi →
+collega da Archivio/SMB → scegli cartella in MediaManager</td>
+</tr>
+<tr class="odd">
+<td><strong>W3 — Google Drive (o simile)</strong></td>
+<td>Chi già usa il cloud foto</td>
+<td>Guida a scegliere la cartella Drive con <strong>+</strong> (opt-in,
+non obbligatorio)</td>
+</tr>
+<tr class="even">
+<td><strong>W4 — Disco di rete / NAS</strong></td>
+<td>Chi ce l’ha già</td>
+<td>Guida breve al selettore «Disco di rete» (ramo avanzato, non
+default)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Decisione Renato (12/10/2026):</strong> i <strong>quattro
+rami W1–W4 sono obbligatori in v1</strong>. Non ridurli a solo
+telefono/PC: altrimenti si perdono gli utenti che già usano cloud e/o
+NAS. In UI si possono comunque <strong>evidenziare</strong> W1/W2 come
+tipici del target basso profilo, ma W3 e W4 restano scelte di primo
+livello (non nascoste in un menu “avanzato” che nessuno apre).</p>
+<p><strong>Stato:</strong> assorbito e <strong>consolidato</strong> in
+§7.1octies (H1 + Wizard §7.24 convalida Renato 12/10/2026).</p>
+<h3
+id="octies-consolidato-catalogo-personale-unico-h1-wizard-bl-17-12102026">7.1octies
+CONSOLIDATO — Catalogo personale unico (H1) + Wizard BL-17 —
+12/10/2026</h3>
+<p><strong>Fonte di dettaglio funzionale:</strong>
+<code>docs/PVM_Interlocuzione_Cursor_v3.9.md</code> §7.21–§7.24
+(convalida Renato). Qui i requisiti recepiti in Nota.</p>
+<p><strong>Requisiti consolidati</strong> 1. Catalogo personale
+<strong>unico sul piano logico</strong>, riferito
+all’<strong>utente</strong> (non all’installazione). 2. Distinto
+dall’<strong>Archivio Condiviso familiare</strong>. 3. Meccanismo
+<strong>H1</strong>: sede di riferimento scelta dall’utente +
+<strong>fascicolo schede</strong> in sede + <strong>copie di
+lavoro</strong> locali; allineamento solo con azione esplicita
+<strong>«Aggiorna Catalogo»</strong>. 4. Niente sovrascrittura
+silenziosa in conflitto: segnale + scelta esplicita. Riepilogo
+preventivo pubblicherò / recepirò / conflitti; Annulla senza perdita
+delle modifiche locali non pubblicate. 5. Wizard <strong>BL-17</strong>
+con combo <strong>W1–W4</strong> tutti obbligatori in v1; ingresso
+«Imposta Catalogo personale». 6. <strong>W2:</strong> cartella sul
+PC/notebook anche su dischi esterni USB/SATA, chiavette, microSD o altre
+memorie di massa <strong>collegate al PC</strong> e condivise (non solo
+C:). 7. Limite W1 in v1: telefono/tablet-sede = riferimento principale;
+multi-dispositivo pieno preferibile via W2/W3/W4. 8. Fuori v1 H1: client
+Windows, sync automatica/background, merge campo-per-campo, scan LAN,
+H2/H3.</p>
+<p><strong>Criteri di accettazione v1:</strong> checklist interlocuzione
+§7.24 §6 (10+1 punti, incl. portata W2 memorie di massa).</p>
+<p><strong>Stato roadmap:</strong> SPECIFICA FUNZIONALE CONSOLIDATA →
+approfondimento tecnico implementativo Cursor → SVILUPPO.</p>
+<h3
+id="septies-bozza-wizard-dove-tengo-il-catalogo-bl-17-12102026-storico-sostituita-da-7.1octies-interlocuzione-7.24">7.1septies
+Bozza wizard «Dove tengo il Catalogo» (BL-17) — 12/10/2026 <em>(storico;
+sostituita da §7.1octies / interlocuzione §7.24)</em></h3>
+<p><strong>Stato:</strong> <strong>SUPERATA</strong> dalla definizione
+conclusiva §7.24 (convalida Renato). Conservata sotto come bozza storica
+dei testi.</p>
+<p><strong>Ingresso UI (proposta):</strong> Organizza → Acquisisci →
+voce <strong>«Imposta Catalogo condiviso»</strong> (anche al primo avvio
+se nessuna sede impostata). Può sostituire/assorbire «Da PC o rete».</p>
+<p><strong>Controllo di scelta (decisione Renato):</strong>
+<strong>combo box</strong> (elenco a discesa) con le sole 4 soluzioni
+principali — così la casistica resta chiusa e leggibile.</p>
+<hr />
+<h4 id="schermata-s0-introduzione">Schermata S0 — Introduzione</h4>
+<ul>
+<li><strong>Titolo:</strong> Dove vuoi tenere il Catalogo?</li>
+<li><strong>Testo:</strong> Il Catalogo è l’elenco delle tue foto e dei
+tuoi video. Scegli <strong>un posto principale</strong> dove tenerlo:
+gli altri dispositivi potranno collegarsi a quello. Non serve avere un
+NAS o il cloud: molti tengono tutto sul telefono o sul PC.</li>
+<li><strong>Combo — etichetta:</strong> Tengo il Catalogo…</li>
+<li><strong>Voci combo (ordine):</strong>
+<ol type="1">
+<li><code>Su questo telefono o tablet</code> → W1<br />
+</li>
+<li><code>Su un PC o notebook</code> → W2<br />
+</li>
+<li><code>Su Google Drive (o cloud)</code> → W3<br />
+</li>
+<li><code>Su un disco di rete o NAS</code> → W4<br />
+</li>
+</ol></li>
+<li><strong>Default combo:</strong> voce 1 (W1).<br />
+</li>
+<li><strong>Pulsanti:</strong> Annulla · <strong>Avanti</strong>
+(abilitato se c’è una voce selezionata)</li>
+</ul>
+<hr />
+<h4 id="ramo-w1-questo-telefono-o-tablet">Ramo W1 — Questo telefono o
+tablet</h4>
+<p><strong>S1a — Conferma sede</strong> - <strong>Titolo:</strong>
+Catalogo su questo dispositivo - <strong>Testo:</strong> Le foto e i
+video che acquisisci resteranno legati a questo telefono/tablet. Potrai
+aggiungere altre cartelle (galleria, SD) con +. In seguito potrai
+collegare un altro dispositivo allo stesso Catalogo quando avremo la
+sincronizzazione schede. - <strong>Pulsanti:</strong> Indietro ·
+<strong>Usa questo dispositivo</strong> - <strong>Azione:</strong> marca
+sede = LOCAL_DEVICE; chiudi wizard; resta in Acquisisci (nessun
+OpenDocumentTree obbligatorio).</p>
+<hr />
+<h4 id="ramo-w2-pc-o-notebook">Ramo W2 — PC o notebook</h4>
+<p><strong>S2a — Cosa fare sul PC</strong> - <strong>Titolo:</strong>
+Prepara una cartella sul PC - <strong>Testo (passi
+numerati):</strong><br />
+1. Sul PC crea una cartella, es. <code>Foto Catalogo</code>.<br />
+2. Tasto destro sulla cartella → Proprietà → Condivisione →
+Condividi.<br />
+3. Annota il <strong>nome del PC</strong> oppure l’<strong>indirizzo
+IP</strong> (Impostazioni Windows → Rete → Wi‑Fi → proprietà →
+IPv4).<br />
+4. PC e questo tablet/telefono sulla <strong>stessa Wi‑Fi</strong>; il
+PC resta acceso. - <strong>Pulsanti:</strong> Indietro · <strong>Ho
+creato la cartella</strong></p>
+<p><strong>S2b — Collega dal tablet</strong> - <strong>Titolo:</strong>
+Collega il PC da questo dispositivo - <strong>Testo:</strong> Apri l’app
+<strong>Archivio</strong> (o Gestione file) → Spazio di archiviazione di
+rete → Aggiungi → <strong>Unità di rete (SMB)</strong>. Host = IP o nome
+PC. Utente e password = <strong>account Windows</strong> (non la mail
+Google, salvo che sia proprio l’account Microsoft di accesso a Windows).
+Quando vedi la cartella <code>Foto Catalogo</code>, torna qui. -
+<strong>Link testo:</strong> Non riesco a collegarmi (apre S2d aiuto) -
+<strong>Pulsanti:</strong> Indietro · <strong>Ho collegato il
+PC</strong></p>
+<p><strong>S2c — Scegli la cartella in MediaManager</strong> -
+<strong>Titolo:</strong> Scegli la cartella del Catalogo -
+<strong>Testo:</strong> Tocca <strong>Scegli cartella</strong>. Nel
+selettore apri lo spazio di rete / il PC e seleziona
+<code>Foto Catalogo</code>. Conferma con Usa questa cartella. -
+<strong>Pulsanti:</strong> Indietro · <strong>Scegli cartella</strong> →
+<code>OpenDocumentTree</code> → sede = SAF tree scelto; fine wizard.</p>
+<p><strong>S2d — Aiuto collegamento (opzionale)</strong> -
+<strong>Titolo:</strong> Se il PC non si collega -
+<strong>Testo:</strong> Prova utente
+<code>MicrosoftAccount\tua@email</code> oppure solo il nome corto da
+<code>whoami</code> sul PC. Rete Wi‑Fi del PC = Privata. In alternativa
+crea sul PC un utente locale semplice (es. <code>foto</code>) e
+condividigli la cartella. Oppure scegli un’altra sede dal combo
+(telefono, Drive, NAS). - <strong>Pulsanti:</strong> Torna al
+collegamento · Cambia sede (→ S0)</p>
+<hr />
+<h4 id="ramo-w3-google-drive-o-cloud">Ramo W3 — Google Drive (o
+cloud)</h4>
+<p><strong>S3a — Guida Drive</strong> - <strong>Titolo:</strong>
+Catalogo su Google Drive - <strong>Testo:</strong> Serve un account
+Google già sul dispositivo. Tocca <strong>Scegli cartella</strong>, apri
+<strong>Google Drive</strong>, crea o seleziona una cartella (es.
+<code>Foto Catalogo</code>) e conferma con Usa questa cartella. I file
+restano nel cloud; MediaManager li elenca nel Catalogo dopo
+Acquisisci/Importa. - <strong>Nota piccola:</strong> Non è obbligatorio
+usare il cloud: puoi tornare indietro e scegliere telefono o PC. -
+<strong>Pulsanti:</strong> Indietro · <strong>Scegli cartella</strong> →
+<code>OpenDocumentTree</code> → sede Drive; fine wizard.</p>
+<hr />
+<h4 id="ramo-w4-disco-di-rete-nas">Ramo W4 — Disco di rete / NAS</h4>
+<p><strong>S4a — Guida NAS</strong> - <strong>Titolo:</strong> Catalogo
+su disco di rete - <strong>Testo:</strong> Se il NAS (o disco di rete) è
+già visibile in Archivio come «Disco di rete», tocca <strong>Scegli
+cartella</strong>, aprilo e seleziona la cartella delle foto (es. quella
+condivisa in famiglia). Se non lo vedi ancora, aggiungilo prima in
+Archivio → Spazio di archiviazione di rete, poi torna qui. -
+<strong>Pulsanti:</strong> Indietro · <strong>Scegli cartella</strong> →
+<code>OpenDocumentTree</code> → sede NAS; fine wizard.</p>
+<hr />
+<h4 id="schermata-s5-fine-comune-dopo-scelta-cartella-w2w3w4">Schermata
+S5 — Fine comune (dopo scelta cartella W2/W3/W4)</h4>
+<ul>
+<li><strong>Titolo:</strong> Catalogo impostato</li>
+<li><strong>Testo:</strong> Sede: «%1$s». Ora puoi usare
+<strong>CONFERMA</strong> in Acquisisci per censire le foto, poi
+Importa. Per cambiare sede: Imposta Catalogo condiviso.</li>
+<li><strong>Pulsante:</strong> OK → Acquisisci</li>
+</ul>
+<p><strong>Persistenza (proposta tecnica, da implementare):</strong>
+preferenza <code>catalog_seat_kind</code> = LOCAL | PC_SMB | DRIVE | NAS
++ <code>catalog_seat_location_id</code> / tree URI se SAF. Non
+sincronizza ancora le schede tra dispositivi (BL-16).</p>
+<p><strong>Criteri di accettazione bozza (per convalida):</strong> 1.
+Combo mostra solo W1–W4, tutte raggiungibili in un tap+Avanti.<br />
+2. W2 non scarica l’utente su Windows/SMB senza i passi S2a–S2c.<br />
+3. W3 e W4 sono scelte di primo livello nel combo (non in sotto-menu
+nascosto).<br />
+4. Linguaggio senza gergo (no «SAF», no «SMB» in etichette principali;
+SMB solo dove serve nel passo tecnico W2).</p>
+<h3
+id="quinquies-approfondimento-bl-09-pc-nas-in-rete-senza-cloud-obbligatorio">7.1quinquies
+Approfondimento BL-09 — PC / NAS in rete (senza cloud obbligatorio)</h3>
+<p><strong>Decisione Renato (11/10/2026):</strong> acquisire dal
+<strong>PC in Wi‑Fi</strong> tramite <strong>cartella condivisa</strong>
+(soluzione A), <strong>senza vincolarsi al cloud</strong>. Requisito:
+percorso operativo <strong>comprensibile anche a utenti di basso
+profilo</strong>.</p>
+<p><strong>Perché non “magia Wi‑Fi”:</strong> il tablet non apre da solo
+il disco del PC. Il PC deve <strong>mostrare una cartella</strong> in
+rete; il tablet la sceglie una volta con <strong>+</strong> (come per il
+NAS).</p>
+<p><strong>Modello operativo da progettare (facile):</strong> 1.
+<strong>Una tantum sul PC</strong> — condividere <em>una</em> cartella
+foto (es. «Foto famiglia»), con passi minimi e linguaggio semplice
+(guida in Guida / dialog in Acquisisci). 2. <strong>Una tantum sul
+tablet</strong> — stessa Wi‑Fi → in Acquisisci un ingresso chiaro tipo
+«Da PC o rete» che spiega in 3 righe e apre il selettore cartelle
+(stesso meccanismo del <strong>+</strong>). 3. <strong>Uso
+quotidiano</strong> — CONFERMA / Importa come oggi; PC acceso e in rete
+solo quando acquisisci da lì.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Opzione UX in app</th>
+<th>Cosa fa</th>
+<th>Pro</th>
+<th>Contro</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>U1 — Decisione Renato + SVILUPPO 0.16.18</strong></td>
+<td>Pulsante «Da PC o rete» + dialog 3 passi, poi «Scegli cartella» =
+stesso OpenDocumentTree del <strong>+</strong>.</td>
+<td>Adatto a utenti poco esperti; niente cloud; riusa il
+<strong>+</strong></td>
+<td>Serve ancora condivisione Windows/NAS una tantum</td>
+</tr>
+<tr class="even">
+<td><strong>U2</strong></td>
+<td>Solo testo in Guida</td>
+<td>Zero UI nuova</td>
+<td>Non scelta</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Quando si attiverà l’aiuto in rete (R1 vs R2):</strong>
+preferire <strong>R1</strong> (aiuto al selettore / provider già
+presenti), non scanner LAN (<strong>R2</strong>).</p>
+<p><strong>Cosa non fare:</strong> obbligo cloud; sync automatica dal
+PC; salvataggio password di rete senza specifica AuthPort; scansione
+aggressiva della Wi‑Fi.</p>
+<h3
+id="bis-checkpoint-urgente-catalogo-unico-utente-vs-dispositivi-11102026">7.1bis
+Checkpoint urgente — Catalogo unico utente vs dispositivi
+(11/10/2026)</h3>
+<p><strong>Domanda Renato:</strong> il Catalogo è unico per utente (non
+per dispositivo); la struttura regge un unico Catalogo alimentato dai
+dispositivi/fonti selezionati?</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Aspetto</th>
+<th>Stato</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Modello di dominio</strong></td>
+<td><strong>Sì.</strong> <code>MediaItem</code> = identità logica unica;
+<code>MediaCopy</code> +
+<code>StorageLocation</code>/<code>ArchiveRef</code> = copie su
+fonti/dispositivi diversi. Un solo Catalogo raccoglie più sorgenti
+scelte dall’utente (§2 / §3.2).</td>
+</tr>
+<tr class="even">
+<td><strong>Implementazione attuale (v1 local-first)</strong></td>
+<td><strong>Sì, sul dispositivo che esegue l’app.</strong> Room persiste
+un Catalogo locale; Acquisisci aggiunge cartelle SAF da
+telefoni/Drive/disco; Aggiorna elenca l’universo unico. Alias
+dispositivo e path distinguono le fonti in UI.</td>
+</tr>
+<tr class="odd">
+<td><strong>Catalogo “roaming” tra più telefoni dello stesso
+account</strong></td>
+<td><strong>Non ancora.</strong> Nota §3.1: nessuna sync proprietaria
+obbligatoria; ogni installazione ha il proprio Catalogo locale. Porte
+<code>AuthPort</code> / <code>SyncPort</code> predisposte ma non
+operative. «Utente locale» in Top Bar ≠ account cloud.</td>
+</tr>
+<tr class="even">
+<td><strong>Vincolo distruttività</strong></td>
+<td>Eliminazione automatica degli originali <strong>vietata</strong> (§1
+VINCOLI). Oggi Elimina/Cestino/Pulisci toccano solo il Catalogo (e copie
+nello spazio app). Cancellazione file in sorgente = solo con scelta
+esplicita → <strong>BL-15</strong>.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Assicurazione onesta:</strong> la struttura <strong>è
+adatta</strong> a un Catalogo unico per l’utente <em>di questa
+installazione</em>, alimentato da tutti i dispositivi/fonti che
+seleziona. Non posso assicurare oggi un Catalogo cloud unico che segua
+l’utente su più installazioni senza una futura tranche sync/account.</p>
+<h3
+id="ter-analisi-tecnica-bl-16-sync-catalogo-evoluzione-archivio-condiviso-11102026">7.1ter
+Analisi tecnica BL-16 — Sync Catalogo (evoluzione Archivio Condiviso) —
+11/10/2026</h3>
+<p><strong>Stato:</strong> ANALISI (Cursor). <strong>Non è specifica
+consolidata.</strong> Nessuna implementazione sync finché ChatGPT/Renato
+non chiudono i punti aperti.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Tema</th>
+<th>Proposta tecnica (da consolidare)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Inquadramento</td>
+<td>Evoluzione dell’<strong>Archivio Condiviso</strong> (M04/M15), non
+un silo parallelo: riuso <code>ArchiveRef</code> /
+<code>StorageLocation</code> / capability; dominio
+<strong>PERSONAL</strong> (Catalogo utente) distinto da
+<strong>FAMILY</strong> finché M13/M15 non unificano.</td>
+</tr>
+<tr class="even">
+<td>Cosa sincronizzare (ipotesi)</td>
+<td><strong>Metadati Catalogo</strong> (MediaItem, relazioni,
+fingerprint, esclusioni) su area personale cloud opt-in. <strong>File
+fisici</strong> restano sulle fonti; copie Importa/Backup restano locali
+salvo scelta esplicita.</td>
+</tr>
+<tr class="odd">
+<td>Porte già predisposte</td>
+<td><code>SyncPort</code> (oggi disabilitata), <code>AuthPort</code>
+(fiducia locale). Estendere solo dopo specifica; niente code/retry
+automatici (§3.1).</td>
+</tr>
+<tr class="even">
+<td>Local-first</td>
+<td>L’app resta usabile offline; sync opt-in e non blocca
+Acquisisci/Aggiorna/Pulisci.</td>
+</tr>
+<tr class="odd">
+<td>Conflitti</td>
+<td>Da decidere: last-write-wins vs merge per campo vs «dispositivo di
+verità».</td>
+</tr>
+<tr class="even">
+<td>Provider</td>
+<td>Da decidere: Drive personale / altro; cifratura a riposo sì/no in
+v1.</td>
+</tr>
+<tr class="odd">
+<td>Perimetro v1 sync (proposta)</td>
+<td>Solo metadati PERSONAL; niente FAMIGLIA; niente cancellazione remota
+automatica degli originali.</td>
+</tr>
+<tr class="even">
+<td>Dipendenze macro</td>
+<td>M03 (modello), M04 (storage), M13 (identità se FAMILY), M15
+(backup), M17 (privacy).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Decisione Renato 11/10/2026:</strong> sincronizzare
+<strong>solo le schede</strong> (opzione A), non i file delle copie
+Importa.</p>
+<p><strong>Aggiornamento 12/10/2026:</strong> il «provider» per le
+schede in v1 è la <strong>sede H1</strong> scelta dall’utente (cartella
+W1–W4), non un backend obbligatorio. Conflitti: gestione esplicita
+(§7.1octies). Cifratura a riposo e rapporto con Backup restano TBD non
+bloccanti l’avvio Wizard/H1.</p>
+<p>Documenti di sessione: <code>docs/TERMINOLOGIA_UI.md</code>; prompt
+di continuità <code>docs/PROMPT_CONTINUITA_AGENTE.md</code>. Nota: Le
+dipendenze riportate per ciascuna macro-attività della Roadmap devono
+indicare esclusivamente le dipendenze dirette da macro-attività
+precedenti, ossia quelle il cui output costituisce un input necessario
+alla macro-attività corrente. Le dipendenze transitive non devono essere
+ripetute. Regola di aggiornamento della roadmap La tabella costituisce
+l’unico riferimento operativo per lo stato di avanzamento. Non viene
+creato un file Excel parallelo come fonte di riferimento. Ogni decisione
+consolidata, criticità emersa, modifica dello stato o chiusura di una
+macro-attività deve essere recepita nella Nota Integrata. Una
+macro-attività può passare a SVILUPPO solo dopo che ChatGPT ha
+consolidato requisiti e criteri di accettazione e che Cursor ha
+completato l’approfondimento tecnico preliminare. Le criticità che
+richiedono una decisione progettuale vengono riportate nella Nota e
+risolte prima dell’avvio dello sviluppo interessato ## 7.2 Roadmap
+aggiornata al 01/10/2026</p>
+<h2 id="backlog-future-implementazioni-non-consolidato">7.3 Backlog —
+future implementazioni (non consolidato)</h2>
+<p>Elenco di idee/esigenze emerse in interlocuzione, <strong>non ancora
+requisiti consolidati</strong>. Non interrompono lo sviluppo corrente;
+da recepire in specifica quando ChatGPT le valorizza.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>ID</th>
+<th>Area</th>
+<th>Nota</th>
+<th>Origine</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>BL-01</td>
+<td><strong>Pulisci — possibili scarti</strong></td>
+<td><strong>Decisione A + SVILUPPO 0.16.17:</strong> sezione in Pulisci;
+criteri v1 = nome tipico di scarto (thumbs/albumart/folder…) o file &lt;
+2 KB; conferma → Cestino; default non tocca il file del dispositivo
+(BL-15).</td>
+<td>Renato 09–11/10/2026</td>
+</tr>
+<tr class="even">
+<td>BL-02</td>
+<td>Estetica Home</td>
+<td><strong>Decisione A:</strong> lasciare ora; in seguito ombre stile
+BoxManager (senza riaprire layout).</td>
+<td>Renato 09–11/10/2026</td>
+</tr>
+<tr class="odd">
+<td>BL-03</td>
+<td><strong>Acquisisci — selezione fonti a 3 stati</strong></td>
+<td><strong>OK</strong> prova Renato 0.16.15. Acquisisci: riquadro
+<strong>vuoto ↔︎ X</strong> (✓ solo con Tutti); Aggiorna resta vuoto→✓→X;
+X = Elimina→Cestino; niente cestino separato.</td>
+<td>Renato 09–11/10/2026</td>
+</tr>
+<tr class="even">
+<td>BL-04</td>
+<td><strong>Eliminazione multi-selezione</strong></td>
+<td><strong>OK</strong> 0.16.15: deselezione multi in Importa;
+deselezionati scartati dal Catalogo; conteggio «nuovi selezionati».</td>
+<td>Renato 09–11/10/2026</td>
+</tr>
+<tr class="odd">
+<td>BL-05</td>
+<td><strong>Acquisisci — nascondere «Spazio interno app»</strong></td>
+<td><del>Pleonastica in elenco fonti</del> — <em>fatto 0.16.0</em> (già
+filtrata in Acquisisci; nascosta anche in CONFIGURA fonti).</td>
+<td>Renato 09/10/2026</td>
+</tr>
+<tr class="even">
+<td>BL-06</td>
+<td><strong>Aggiorna — menu contestuale «Rinomina»</strong></td>
+<td><del>Aggiungere Rinomina</del> — <em>fatto 0.16.0</em> (insieme a
+Elimina→Cestino e Copia su dispositivo).</td>
+<td>Renato 09/10/2026</td>
+</tr>
+<tr class="odd">
+<td>BL-07</td>
+<td><strong>Aggiorna — «Sposta» nel menu contestuale</strong></td>
+<td><strong>CHIUSA (decisione A 11/10/2026):</strong> non aggiungere
+Sposta.</td>
+<td>Renato 09–11/10/2026</td>
+</tr>
+<tr class="even">
+<td>BL-08</td>
+<td><strong>Copia da Catalogo → dispositivo</strong></td>
+<td><del>Export esplicito SAF CreateDocument</del> — <em>fatto
+0.16.0</em> (menu Aggiorna «Copia su dispositivo»; preferisce copia
+spazio app). Sposta resta BL-07.</td>
+<td>Renato 09/10/2026</td>
+</tr>
+<tr class="odd">
+<td>BL-09</td>
+<td><strong>PC / NAS in rete</strong></td>
+<td>Guida «Da PC o rete» in 0.16.18–19. <strong>Assorbita in BL-17
+W2</strong> (sede PC, anche memorie di massa sul PC).</td>
+<td>Renato 10–12/10/2026</td>
+</tr>
+<tr class="even">
+<td>BL-17</td>
+<td><strong>Wizard sede Catalogo personale (H1)</strong></td>
+<td><strong>SVILUPPO 0.16.20–0.16.21:</strong> Wizard W1–W4, fascicolo
+<code>catalog_hub.json</code>, Aggiorna Catalogo; W2 routine PC Windows
+(script T1 + utente <code>MediaManager</code> + S6-A). §7.1octies;
+interlocuzione §7.26–§7.27.</td>
+<td>Renato 12–14/10/2026</td>
+</tr>
+<tr class="odd">
+<td>BL-10</td>
+<td><strong>Fonti apparire senza scelta utente</strong></td>
+<td><strong>OK</strong> (diagnosi + dedupe SAF 0.16.10; prove 0.16.15).
+Fonti solo da «+»; residui togliibili con X.</td>
+<td>Renato 10–11/10/2026</td>
+</tr>
+<tr class="even">
+<td>BL-11</td>
+<td><strong>Pulisci — criteri duplicati avanzati (tipo
+Krokiet)</strong></td>
+<td><strong>Decisione A 11/10/2026:</strong> restano solo duplicati
+esatti. Simili = versione successiva.</td>
+<td>Renato 11/10/2026</td>
+</tr>
+<tr class="odd">
+<td>BL-12</td>
+<td><strong>Pulisci — doppia funzione (selezionati +
+duplicati)</strong></td>
+<td>Convalidato 11/10/2026. <strong>0.16.6–0.16.7</strong>: (1) ✓ da
+Aggiorna → Pulisci; (2) Analizza duplicati. Fix navigazione ✓ in 0.16.7.
+Prova Renato OK su selezione.</td>
+<td>Renato 11/10/2026</td>
+</tr>
+<tr class="even">
+<td>BL-13</td>
+<td><strong>Home — revisione KPI</strong></td>
+<td>Tenere per ora il modello A (originali=dispositivi · di cui in
+Catalogo=Catalogo). <strong>In seguito</strong>, con feedback concreto
+sul <em>peso del gap</em> in uso reale, valutare revisione/sostituzione
+dei KPI Home (senza obbligo di mantenere il gap). Non fare ora.</td>
+<td>Renato 11/10/2026</td>
+</tr>
+<tr class="odd">
+<td>BL-14</td>
+<td><strong>Home — allineare KPI al modello A</strong></td>
+<td><strong>0.16.8–0.16.9</strong>: di cui in Catalogo = Aggiorna;
+originali = fonti ACTIVE (no Cestino app) e ≥ Catalogo; ingresso =
+<strong>CONFERMA</strong>. <strong>OK</strong> prova Renato
+11/10/2026.</td>
+<td>Renato 11/10/2026</td>
+</tr>
+<tr class="even">
+<td>BL-15</td>
+<td><strong>Pulisci — opzione elimina originali in sorgente + anti
+re-import</strong></td>
+<td><strong>OK</strong> prove 0.16.11–0.16.15 (punti 5–9). Checkbox
+sorgente; esclusioni anti re-import; default solo Catalogo.</td>
+<td>Renato 11/10/2026</td>
+</tr>
+<tr class="odd">
+<td>BL-16</td>
+<td><strong>Sync Catalogo personale</strong></td>
+<td><strong>Assorbita/precisata da H1</strong> (§7.1octies): solo
+schede; trasporto = sede utente (cartella), non cloud obbligatorio;
+conflitti espliciti. Implementazione nel perimetro BL-17 / Aggiorna
+Catalogo.</td>
+<td>Renato 11–12/10/2026</td>
+</tr>
+</tbody>
+</table>
+<p>Fine documento</p>
+<p>=== TABLE 1 === ID | Macro-attività | Obiettivo / perimetro | ChatGPT
+— analisi e requisiti | Cursor — approfondimenti prima dello sviluppo |
+Cursor — sviluppo | Stato M01 | Roadmap e pianificazione | Definire e
+consolidare il percorso progettuale, le dipendenze, il metodo di lavoro
+e i criteri di completamento delle macro-attività. | Roadmap, metodo,
+dipendenze e criteri di avanzamento. La fase concettuale è conclusa; la
+Nota Integrata corrente è consolidata. | Verifica preliminare di
+fattibilità generale e dipendenze tecniche; la verifica tecnica
+preliminare di Cursor ha escluso blocchi all’avvio di M02. | Nessuno. |
+SPECIFICA CONSOLIDATA M02 | Architettura applicativa | Tradurre i
+vincoli della Nota in architettura implementabile. | Criticità e
+dipendenze; Domain/Application/Adapter/Port, PermissionGate e AuthPort
+predisposto. | Criticità, dipendenze, performance, manutenzione e
+compatibilità. | Struttura tecnica del progetto. | SPECIFICA CONSOLIDATA
+M03 | Modello dati e Catalogo | Definire il modello dati e il Catalogo
+logico: identità dei contenuti, dominio PERSONAL/FAMILY, copie fisiche,
+sorgenti e archivi logici, StorageLocation, metadati, fingerprint,
+relazioni strutturali, persistenza, consistenza, migrazioni e
+scalabilità. / Dipendenze: M03 -&gt; M04, M05, M06, M07, M08, M09, M10,
+M11, M12, M15, M16. | Entità, relazioni, invarianti, significato e
+requisiti del Catalogo logico. / Modello MediaItem / MediaCopy /
+StorageLocation / MediaFingerprint / ArchiveRef; dominio PERSONAL /
+FAMILY e transizione PERSONAL → FAMILY; cardinalità, invarianti,
+persistenza, consistenza, migrazioni, indici e criteri di scalabilità. |
+Persistenza, cardinalità, indici, scalabilità, consistenza, migrazioni e
+criticità tecniche. / Verifica tecnica della separazione tra identità
+logica, copie fisiche, collocazioni concrete e archivi logici. | Modello
+dati, persistenza e infrastruttura del Catalogo. | SPECIFICA CONSOLIDATA
+M04 | Storage e Archivio Condiviso | Definire Archivio Condiviso,
+archivi e sorgenti, StorageLocation, capability degli adapter,
+disponibilità e comportamento offline. / Dipendenze: M04 -&gt; M13, M15,
+M16, M17; / M03 -&gt; M04 utilizza il modello di
+ArchiveRef/StorageLocation e gli stati di disponibilità. | Modello
+Archivio/Sorgente/StorageLocation; contratto StorageAdapter; capability
+matrix; stati AVAILABLE/UNAVAILABLE/UNKNOWN; distinzione tra
+disponibilità dello storage e disponibilità delle MediaCopy;
+comportamento offline; assenza di retry, queue e sincronizzazione
+automatica. | Eventuali criticità tecniche residue relative a
+filesystem, SAF/MediaStore, SMB/CIFS, capability, disponibilità, errori
+di accesso e recuperabilità. | Accesso e gestione storage. | SPECIFICA
+CONSOLIDATA M05 | Censimento sorgenti | Individuare e analizzare i media
+senza modificare le sorgenti. / Dipendenze: M03 -&gt; M05 aggiorna il
+Catalogo sulla base del censimento. | Workflow di censimento;
+disponibilità delle sorgenti; individuazione media; metadati; origine;
+fingerprint; identità logica e copie fisiche; idempotenza; gestione dei
+censimenti completi, parziali e interrotti; aggiornamento del Catalogo
+senza cancellazioni automatiche; separazione tra evidenze tecniche e
+decisioni di deduplicazione, acquisizione e pulizia. | Performance,
+permessi, provider e grandi archivi. | Scanner e censimento. | SPECIFICA
+CONSOLIDATA M06 | Acquisisci e consolidamento | Scansione, selezione,
+acquisizione, duplicati e consolidamento nell’Archivio Condiviso. /
+Dipendenze: M06 -&gt; M13; / M03 -&gt; M06 utilizza le regole di
+consistenza e commit delle MediaCopy | Workflow a stati; preflight;
+disponibilità e capability; spazio; staging; verifica integrità; commit;
+gestione errori e interruzioni; recovery esplicito; assenza di
+retry/queue automatici; conservazione delle copie sorgenti;
+parallelismo, margine di spazio e fail-fast/continue. |
+Errori/interruzioni, spazio, conflitti e atomicità. | Workflow di
+acquisizione e consolidamento. | SPECIFICA CONSOLIDATA M07 |
+Deduplicazione | Gestire duplicati esatti e relazioni tra copie/versioni
+secondo la scelta dell’utente. / Dipendenze: M07 -&gt; M12 / M03 -&gt;
+M07 utilizza MediaFingerprint e relativi indici. | Categorie, confronto,
+decisioni e sicurezza. | Fingerprint/hash, costi computazionali,
+accuratezza e grandi volumi. | Rilevazione e gestione interattiva. |
+SPECIFICA CONSOLIDATA M08 | Organizzazione dei contenuti | Definire e
+implementare le funzioni di organizzazione dei contenuti mediante le
+informazioni e le relazioni organizzative presenti nel Catalogo,
+mantenendo separati e autonomi gli elementi oggetto di archiviazione. /
+Dipendenze: M08 -&gt; M09, M10, M12. / M03 -&gt; M08 utilizza le
+relazioni organizzative. | Modello di organizzazione logica; distinzione
+tra organizzazione del Catalogo e gestione fisica delle copie; requisiti
+per Archivia e Raggruppa; relazioni con persone, luoghi, eventi, tag,
+categorie e altri criteri; autonomia e indipendenza dei MediaItem;
+coerenza e persistenza delle relazioni; esclusione di modifiche fisiche
+o cambi di domainScope non esplicitamente richiesti. | Impatto sulle
+query, persistenza e indicizzazione delle relazioni, prestazioni,
+consistenza e gestione delle associazioni multiple. | Funzioni di
+organizzazione e gestione delle relazioni organizzative. | SPECIFICA
+CONSOLIDATA M09 | Ricerca | Recuperare contenuti dal Catalogo secondo i
+criteri definiti. Dipendenze: M09 -&gt; M10; / M03 -&gt; M09 utilizza il
+Catalogo logico; / M08 -&gt; M09 utilizza le relazioni organizzative. |
+Criteri strutturati e combinati; ricerca per data, persona, animale,
+oggetto, luogo, evento, contesto, tipo, testo/semantica e relazioni
+organizzative; risultati basati su MediaItem; indipendenza dalla
+disponibilità delle copie fisiche; ricerca non modificativa;
+local-first; separazione tra ricerca e riconoscimento M10; criteri di
+completamento. / Indicizzazione, performance, offline, full-text,
+semantica locale, grandi volumi e tecnologia di | Indicizzazione,
+performance, offline, full-text, semantica locale, grandi volumi e
+tecnologia di ricerca. | Motori di ricerca e UI. | SPECIFICA CONSOLIDATA
+M10 | Persone, luoghi ed eventi | Associare e raggruppare contenuti
+mediante persone, luoghi, eventi e altre entità riconoscibili,
+mantenendo separata l’identità del MediaItem dalle relazioni
+organizzative. / Dipendenze: M10 → M17; / M03 -&gt; M10 utilizza il
+Catalogo per la persistenza delle entità e delle associazioni; / M08
+-&gt; M10 integra le relazioni organizzative; / M09 -&gt; M10 integra le
+funzioni di ricerca. | Modello delle entità e delle associazioni;
+associazioni manuali e automatiche; distinzione tra informazione,
+proposta e associazione confermata; conferma/correzione/rifiuto;
+provenienza e stato delle associazioni; persistenza nel Catalogo;
+indipendenza dalle copie fisiche; integrazione con M08 e M09; privacy e
+local-first. | Tecnologie locali, accuratezza, soglie, costi
+computazionali, modelli on-device, compatibilità Android, scalabilità e
+gestione delle associazioni | Funzioni e strutture dati. | SPECIFICA
+CONSOLIDATA M11 | Album e Componi | Creare e gestire strutture logiche
+per album, ricordi, eventi e composizioni, mantenendo separati e
+autonomi i MediaItem dalle strutture e dalle relazioni di composizione.
+/ Dipendenze: M11 -&gt; M14 / M03 -&gt; M11 utilizza il Catalogo logico
+e le identità dei MediaItem. | Modello funzionale di album, ricordi,
+eventi e composizioni; relazioni con il Catalogo; autonomia e
+indipendenza dei MediaItem; appartenenza multipla; creazione, modifica,
+aggiunta, rimozione e riordinamento degli elementi; distinzione tra
+evento e album; persistenza delle relazioni anche in caso di
+indisponibilità delle MediaCopy; assenza di duplicazione fisica; nessuna
+modifica automatica del domainScope; separazione da editing M12 e
+pubblicazione/produzione M14; criteri di accettazione. | Modello dati,
+cardinalità, ordinamento, versioni, prestazioni, gestione
+anteprime/cache e struttura delle composizioni | Implementazione
+funzioni. | SPECIFICA CONSOLIDATA M12 | Editing e derivati | Gestire
+editing fotografico e video secondo un modello non distruttivo,
+preservando l’originale e generando versioni derivate collegate
+logicamente al contenuto originale. / Dipendenze: M12 -&gt; M14; / M03
+-&gt; M12 utilizza il modello MediaItem / MediaCopy; / M07 -&gt; M12
+utilizza le regole di distinzione tra duplicati e versioni; / M08 -&gt;
+M12 utilizza i principi di gestione fisica delle MediaCopy. | Perimetro
+dell’editing fotografico e video; modello originale/derivato; identità e
+persistenza dei derivati nel Catalogo; rapporto tra MediaItem, derivati
+e MediaCopy; comportamento in caso di indisponibilità delle copie
+fisiche; criteri di accettazione e vincoli di non distruttività;
+integrazione con il modello MediaItem/MediaCopy di M03; distinzione dei
+derivati dai duplicati e dalle versioni secondo le regole di M07;
+separazione tra generazione logica del derivato e gestione fisica delle
+MediaCopy secondo i principi di M08. | approfondimenti prima dello
+sviluppo: Librerie e tecnologie di editing; formati; risoluzione;
+qualità; compressione; gestione delle versioni derivate; performance;
+compatibilità Android; persistenza e pipeline tecnica. | Pipeline di
+editing e generazione/gestione dei derivati. | SPECIFICA CONSOLIDATA M13
+| Condivisione familiare | Gestire identità dei membri familiari, ruoli,
+autorizzazioni, dispositivi autorizzati e accesso ai contenuti
+dell’Archivio Condiviso, mantenendo separati identità, diritti logici e
+accesso fisico allo storage. / Dipendenze: M13 -&gt; M14, M15, M17; /
+M04 -&gt; M13 utilizza l’Archivio Condiviso e le relative modalità di
+accesso; / M06 -&gt; M13 integra le regole e il risultato del
+consolidamento nell’Archivio C | Modello del membro familiare e dei
+dispositivi associati; distinzione autenticazione/autorizzazione; ruoli
+e granularità dei permessi; ciclo di vita di membri, dispositivi e
+autorizzazioni; comportamento offline e gestione di revoche/modifiche;
+distinzione tra accesso ai contenuti condivisi e sincronizzazione dei
+Cataloghi locali; integrazione con M04/M06 e separazione da M17; criteri
+di accettazione. | Meccanismi di autenticazione e autorizzazione;
+gestione delle identità; persistenza dei ruoli e dei permessi; gestione
+dei dispositivi autorizzati; sessioni/accesso; revoca e aggiornamento
+delle autorizzazioni; integrazione con storage condiviso; sicurezza
+tecnica e compatibilità Android. | Meccanismi di accesso, gestione
+membri, autorizzazioni e dispositivi autorizzati. | SPECIFICA
+CONSOLIDATA M14 | Pubblicazione e produzione | Condividere, inviare e
+produrre album/PDF/stampe/esportazioni. / Dipendenze: M11 -&gt; M14
+utilizza album, ricordi, eventi e composizioni come strutture logiche di
+input; / M12 -&gt; M14 utilizza il modello di originali e derivati per
+la produzione degli output; / M13 -&gt; M14 utilizza il modello di
+membri, ruoli e autorizzazioni per le funzioni di condivisione. |
+Perimetro della condivisione, dell’invio e della produzione; album,
+eventi e composizioni come input; distinzione tra produzione e editing;
+gestione di originali, derivati e output; formati, risoluzione, qualità,
+compressione e layout; esportazione; stampa; invio a social e servizi
+esterni; gestione delle MediaCopy non disponibili; errori e
+interruzioni; privacy e sicurezza; criteri di accettazione. | API
+Android, compatibilità, privacy e gestione file. | Implementazione
+funzioni. | SPECIFICA CONSOLIDATA M15 | Backup e recupero | Proteggere
+esclusivamente l’Archivio Condiviso mediante backup manuali e salvataggi
+contestuali di protezione, con possibilità di recupero controllato dello
+stato fisico e logico dell’archivio. / M03 → M15 per il Catalogo e lo
+stato logico da proteggere e recuperare; / M04 → M15 per l’Archivio
+Condiviso, lo storage e le modalità di accesso fisico ai contenuti; /
+M13 → M15 per l’eventuale stato logico di membri, ruoli e autorizzazioni
+dell’Archivio Condiviso che debba essere preservato dal
+backup/ripristino. | Perimetro del backup; distinzione tra Archivio
+Condiviso e contenuti personali; protezione del contenuto fisico e dello
+stato logico; gestione dello spazio; versionamento e conservazione;
+verifica di integrità; gestione di errori e interruzioni; ripristino e
+reversibilità; rapporto con il Cestino; criteri di accettazione.
+Valutazione del possibile riuso/adattamento delle funzioni di backup e
+ripristino già sviluppate in BoxManager. / Implementazione M15: riuso
+selettivo di componenti/pattern BoxManager; formato, manifest,
+consistenza, gestione file, compatibilità e ripristino. Backup v1
+esclusivamente completo; incrementale/differenziale fuori scope v1. |
+Formato, incrementale/differenziale, consistenza e ripristino. | Backup
+e restore dell’Archivio Condiviso. | SPECIFICA CONSOLIDATA M16 | Cestino
+e cancellazioni | Gestire il Cestino e le cancellazioni dei contenuti
+consolidati nell’Archivio Condiviso. / / M03 → M16 per il modello di
+MediaItem/MediaCopy e le informazioni necessarie a distinguere le copie;
+/ M04 → M16 per Archivio Condiviso, storage e capability necessarie alle
+operazioni sul Cestino; / M15 → M16 per le regole consolidate relative
+al rapporto tra Cestino e Backup. | Cestino esclusivamente per contenuti
+consolidati nell’Archivio Condiviso; distinzione DeletePersonalCopy /
+SoftDeleteShared / PurgeShared; area dedicata; metadati per il
+ripristino; integrità; protezione dell’unica copia; recupero
+controllato; gestione di errori, interruzioni e collisioni; separazione
+dal Backup; retention di 30 giorni; svuotamento/cancellazione permanente
+sempre espliciti; Cestino escluso dal Backup per impostazione
+predefinita; criteri di accettazione. | Retention, spazio, lifecycle,
+atomicità delle operazioni, gestione filesystem/storage, collisioni di
+ripristino e rapporto tecnico Cestino/Backup. | Cestino e cancellazioni.
+| SPECIFICA CONSOLIDATA M17 | Sicurezza e Privacy | Applicare
+privacy-by-design e protezione delle operazioni sensibili. / / M02 → M17
+per i confini architetturali e i Port/Adapter da proteggere; / M04 → M17
+per accesso, capability e disponibilità degli storage; / M10 → M17 per
+le funzioni di riconoscimento e trattamento locale dei dati; / M13 → M17
+per identità, ruoli, autorizzazioni e accesso all’Archivio Condiviso. |
+Gate privacy/security anticipato per M02/M04/M10/M13; requisiti
+trasversali di privacy e sicurezza; threat model; protezione dei dati,
+delle credenziali e delle operazioni sensibili; criteri di accettazione.
+| Threat model/STRIDE, least privilege, protezione credenziali, logging
+limitato, conferme delle operazioni distruttive, separazione
+autorizzazione/capability, protezione backup/restore/purge/export; DB
+locale non obbligatoriamente cifrato in v1, predisposto a evoluzione
+futura. | Misure tecniche di sicurezza. | SPECIFICA CONSOLIDATA M18 | UI
+e navigazione | Implementare Home, macroaree, Top Bar, Bottom Bar e
+schermate. | Struttura funzionale e UX; Home e macroaree; shared shell
+BoxManager; Top Bar; Bottom Bar; CONFIGURA; stati UI; errori;
+indisponibilità delle sorgenti; autorizzazioni; conferme; accessibilità;
+criteri di accettazione. | Compatibilità, stato UI, navigazione,
+accessibilità, riuso dei componenti e convenzioni BoxManager, gestione
+degli stati e comportamento in caso di risorse indisponibili. | Layout,
+componenti e navigazione. | SPECIFICA CONSOLIDATA M19 | Integrazione e
+qualità | Verificare coerenza complessiva, assenza di regressioni e
+rispetto dei requisiti consolidati. / Dipendenze: M19 → M20; / M16 → M19
+per verificare l’integrazione di Cestino e cancellazioni; / M17 → M19
+per verificare l’integrazione dei requisiti di sicurezza e privacy; /
+M18 → M19 per verificare l’integrazione della UI e della navigazione. |
+Criteri di verifica; casi limite; matrice dei test funzionali e di
+integrazione; verifica dei flussi tra moduli; gestione delle
+sorgenti/storage disponibili e indisponibili; verifica di errori,
+interruzioni, recuperabilità, privacy, sicurezza, performance,
+compatibilità e assenza di regressioni. | Integrazione, performance,
+compatibilità, disponibilità storage × sorgenti, errori/interruzioni,
+gestione degli stati e verifica dei contratti architetturali. | Test,
+debugging e correzioni. | SPECIFICA CONSOLIDATA M20 | Rilascio |
+Preparare il prodotto alla distribuzione. / Dipendenze: M19 → M20 per
+utilizzare l’esito della verifica di integrazione e qualità come
+prerequisito per il rilascio. | Checklist e criteri di release. | Build,
+configurazione, sicurezza e packaging. | Release build e distribuzione.
+| SPECIFICA CONSOLIDATA</p>
+</body>
+</html>
