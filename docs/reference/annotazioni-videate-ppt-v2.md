@@ -36,3 +36,5 @@
 **0.16.52:** Acquisisci — blocco **Catalogo di riferimento** distinto dalle fonti; «Questo tablet» non riusa il nome Posizione Catalogo; share rete con host in intestazione gruppo.
 
 **Stato:** IP auto = parcheggiato · Acquisisci P0 = **0.16.52 in verifica telefono**.
+
+**0.16.53 (F1–F4 confermate 25/10):** riga Posizione Catalogo su Dashboard/Organizza/Acquisisci/Aggiorna; W2 domanda share pronta; assistenza IP (§D) con Host editabile e Riprova sempre. Branch `cursor/catalogo-sede-ux-ip-b602` da tip 0.16.52.

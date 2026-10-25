@@ -50,6 +50,15 @@
     <string name="acquisisci_catalog_ref_reachable">Raggiungibile ora</string>
     <string name="acquisisci_catalog_ref_unreachable">Non raggiungibile ora (PC spento, Wi‑Fi o share)</string>
     <string name="acquisisci_catalog_ref_unknown">Stato non verificato</string>
+    <string name="catalog_seat_row_title">Posizione del Catalogo</string>
+    <string name="catalog_seat_row_missing">Nessuna Posizione impostata (tocca per configurare)</string>
+    <string name="catalog_seat_row_compact">Catalogo: %1$s</string>
+    <string name="hub_pc_share_ready_intro">Se la cartella condivisa del Catalogo sul PC è già pronta e la vedi dal tablet (Disco di rete / CIFS), puoi andare subito al collegamento. Altrimenti segui la preparazione guidata (USB e script).</string>
+    <string name="hub_pc_share_ready_question">La cartella condivisa del Catalogo è già pronta e raggiungibile da questo tablet?</string>
+    <string name="hub_pc_share_ready_yes">Sì, vai al collegamento CIFS</string>
+    <string name="hub_pc_share_ready_no">No, prepara la condivisione</string>
+    <string name="hub_b5b_host_edit_label">Host (IP del PC) — modificabile</string>
+    <string name="hub_b5b_host_edit_hint">Solo IPv4, es. 192.168.1.20. Puoi correggere o digitare a mano.</string>
     <string name="acquisisci_elenco_fonti">Dispositivi e cartelle (fonti)</string>
     <string name="acquisisci_add_device_title">Aggiungi dispositivo o cartella</string>
     <string name="acquisisci_add_device_body">Scegli il tipo (come nel Wizard Catalogo). Poi seleziona la cartella con le foto.</string>

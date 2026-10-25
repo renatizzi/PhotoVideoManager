@@ -64,8 +64,10 @@ import com.renatizzi.photovideomanager.ui.common.formatBytes
 @Composable
 fun HomeScreen(
     snapshot: DashboardSnapshot?,
+    seatStatus: com.renatizzi.photovideomanager.domain.hub.CatalogSeatStatus? = null,
     onOpenTab: (com.renatizzi.photovideomanager.ui.shell.ShellTab) -> Unit,
     onOpenFeature: (String) -> Unit,
+    onOpenCatalogSeat: () -> Unit = {},
     onSearchCatalog: (String) -> Unit = { onOpenFeature("ricerca") },
     modifier: Modifier = Modifier,
 ) {
@@ -100,6 +102,12 @@ fun HomeScreen(
             text = stringResource(R.string.dashboard_subtitle),
             style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
             color = labelColor,
+        )
+        com.renatizzi.photovideomanager.ui.common.CatalogSeatStatusRow(
+            status = seatStatus,
+            onOpenSeat = onOpenCatalogSeat,
+            compact = true,
+            modifier = Modifier.padding(top = 4.dp),
         )
 
         Spacer(modifier = Modifier.height(10.dp))

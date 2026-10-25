@@ -19,6 +19,7 @@ object WizardStepChrome {
             WizardStep.S0_START -> Subtitle("Inizio")
             WizardStep.INTRO -> Subtitle(pc[0])
             WizardStep.W1_CONFIRM -> Subtitle("Su questo dispositivo")
+            WizardStep.PC_SHARE_READY -> Subtitle("Cartella condivisa già pronta?")
             WizardStep.PC_AVAILABILITY -> Subtitle(pc[1])
             WizardStep.PC_USB_PREPARE -> Subtitle(pc[2])
             WizardStep.PC_COPY_FILES -> Subtitle(pc[3])

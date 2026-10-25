@@ -100,6 +100,8 @@ enum class WizardStep {
     /** Passo 0 — Dove tenere il Catalogo (menu a tendina). */
     INTRO,
     W1_CONFIRM,
+    /** Domanda contestuale: share già pronta? (F3) — prima dei passi 1–4. */
+    PC_SHARE_READY,
     /** Passo 1 — Verifica disponibilità. */
     PC_AVAILABILITY,
     /** Passo 2 — USB / collegamento; OK esporta CONFIGURA + sup. */
@@ -309,12 +311,34 @@ class CatalogSeatWizardViewModel(
         }
         val step = when (kind) {
             CatalogSeatKind.LOCAL_DEVICE -> WizardStep.W1_CONFIRM
-            CatalogSeatKind.PC_NOTEBOOK -> WizardStep.PC_AVAILABILITY
+            CatalogSeatKind.PC_NOTEBOOK -> WizardStep.PC_SHARE_READY
             CatalogSeatKind.CLOUD_DRIVE -> WizardStep.W3_GUIDE
             CatalogSeatKind.NETWORK_NAS -> WizardStep.W4_GUIDE
             CatalogSeatKind.NONE -> WizardStep.INTRO
         }
         _state.update { it.copy(step = step, errorMessage = null, statusMessage = null) }
+        persistDraft()
+    }
+
+    /** F3: share già pronta → CIFS + pick (stesse verifiche finali). */
+    fun onPcShareAlreadyReady() {
+        refreshCifsInstalled()
+        _state.update {
+            it.copy(
+                step = WizardStep.W2_CIFS,
+                recoveringPcData = false,
+                errorMessage = null,
+                statusMessage = "Inserisci Host (IP) e User se non già compilati, poi collega CIFS e scegli la cartella.",
+            )
+        }
+        persistDraft()
+    }
+
+    /** F3: share non pronta → preparazione guidata Passo 1. */
+    fun onPcShareNeedsPrepare() {
+        _state.update {
+            it.copy(step = WizardStep.PC_AVAILABILITY, errorMessage = null, statusMessage = null)
+        }
         persistDraft()
     }
 
@@ -468,16 +492,34 @@ class CatalogSeatWizardViewModel(
         }
     }
 
-    /** Riprova ascolto Wi‑Fi (stesso token della sessione). */
+    /** Riprova ascolto Wi‑Fi (stesso token della sessione). Sempre invocabile (§D / F2). */
     fun retryRecoverPcData() {
         val token = _state.value.setupToken
         if (token.isBlank()) {
             _state.update {
-                it.copy(errorMessage = "Sessione setup non pronta. Torna al passo USB e genera di nuovo i file.")
+                it.copy(
+                    recoveringPcData = false,
+                    errorMessage = "Nessun annuncio PC in corso. Digita l'IP del PC nel campo Host " +
+                        "(modificabile), oppure torna indietro e completa «Tutto pronto» sul PC.",
+                )
             }
             return
         }
         viewModelScope.launch { recoverPcDataAndOpenCifs(token, alreadyOnCifs = true) }
+    }
+
+    /** Host CIFS sempre modificabile a mano (§D). */
+    fun setPcHostIp(value: String) {
+        val trimmed = value.trim()
+        _state.update {
+            it.copy(
+                pcHostIp = trimmed,
+                setupResultImported = SetupLanAnnounce.isIpv4(trimmed) &&
+                    it.cifsUserQualified.isNotBlank(),
+                errorMessage = null,
+            )
+        }
+        persistDraft()
     }
 
     private fun applyLanPayload(payload: SetupLanAnnounce.Payload) {
