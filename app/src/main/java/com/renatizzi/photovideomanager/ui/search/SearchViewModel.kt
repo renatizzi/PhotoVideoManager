@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.renatizzi.photovideomanager.application.CatalogFacade
+import com.renatizzi.photovideomanager.domain.hub.CatalogSeatStatus
 import com.renatizzi.photovideomanager.domain.model.CatalogSearchEntry
 import com.renatizzi.photovideomanager.domain.model.MediaKind
 import com.renatizzi.photovideomanager.domain.model.SearchKindFilter
@@ -27,6 +28,7 @@ data class SearchUiState(
      * così i filtri lavorano sull’elenco completo.
      */
     val selection: Map<String, SourceCensusSelection> = emptyMap(),
+    val seatStatus: CatalogSeatStatus? = null,
     val loading: Boolean = true,
     val message: String? = null,
 ) {
@@ -168,8 +170,10 @@ class SearchViewModel(
             _state.update { it.copy(loading = true, message = null) }
             runCatching {
                 catalogFacade.bootstrapPersonalArchiveIfNeeded()
-                catalogFacade.searchCatalog(query = query, kindFilter = filter)
-            }.onSuccess { entries ->
+                val entries = catalogFacade.searchCatalog(query = query, kindFilter = filter)
+                val seat = catalogFacade.catalogSeatStatus()
+                entries to seat
+            }.onSuccess { (entries, seat) ->
                 _state.update { current ->
                     // Default Aggiorna: deselezionato; conserva solo stati già scelti dall’utente.
                     val selection = buildMap {
@@ -184,6 +188,7 @@ class SearchViewModel(
                     current.copy(
                         entries = entries,
                         selection = selection,
+                        seatStatus = seat,
                         loading = false,
                     )
                 }

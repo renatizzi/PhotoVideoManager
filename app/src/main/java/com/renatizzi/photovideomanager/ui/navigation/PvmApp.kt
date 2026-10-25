@@ -153,8 +153,12 @@ fun PvmApp(
                     LaunchedEffect(Unit) { homeViewModel.refresh() }
                     HomeScreen(
                         snapshot = homeState.snapshot,
+                        seatStatus = homeState.seatStatus,
                         onOpenTab = ::navigateTab,
                         onOpenFeature = ::openFeature,
+                        onOpenCatalogSeat = {
+                            navController.navigate(PvmDestination.CatalogSeatWizard.route)
+                        },
                         onSearchCatalog = { query ->
                             pendingSearchQuery = query
                             navController.navigate(PvmDestination.Search.route)
@@ -163,9 +167,19 @@ fun PvmApp(
                     )
                 }
                 composable(PvmDestination.Organizza.route) {
+                    var organizaSeat by remember {
+                        mutableStateOf<com.renatizzi.photovideomanager.domain.hub.CatalogSeatStatus?>(null)
+                    }
+                    LaunchedEffect(Unit) {
+                        organizaSeat = runCatching { catalogFacade.catalogSeatStatus() }.getOrNull()
+                    }
                     MacroHubScreen(
                         area = MacroNavigation.areaFor(ShellTab.ORGANIZZA)!!,
                         onFeatureClick = { openFeature(it.id) },
+                        seatStatus = organizaSeat,
+                        onOpenCatalogSeat = {
+                            navController.navigate(PvmDestination.CatalogSeatWizard.route)
+                        },
                     )
                 }
                 composable(PvmDestination.Componi.route) {
@@ -288,10 +302,13 @@ fun PvmApp(
                         onConfirmLocal = wizardVm::confirmLocalSeat,
                         onFolderPathChange = wizardVm::updateFolderPath,
                         onConfirmAvailability = wizardVm::confirmAvailabilityChecked,
+                        onPcShareAlreadyReady = wizardVm::onPcShareAlreadyReady,
+                        onPcShareNeedsPrepare = wizardVm::onPcShareNeedsPrepare,
                         onConfirmUsbAndPrepare = wizardVm::confirmUsbAndPrepareFiles,
                         onConfirmCopy = wizardVm::confirmCopyChecked,
                         onConfirmScriptRan = wizardVm::confirmScriptRanOnPc,
                         onRetryRecoverPcData = wizardVm::retryRecoverPcData,
+                        onPcHostIpChange = wizardVm::setPcHostIp,
                         onCredentialsText = wizardVm::credentialsClipboardText,
                         onPasswordText = wizardVm::passwordClipboardText,
                         onFieldText = wizardVm::fieldClipboardText,
@@ -382,6 +399,9 @@ fun PvmApp(
                             navController.navigate(
                                 PvmDestination.Clean.create(aggiornaState.selectedMediaIds),
                             )
+                        },
+                        onOpenCatalogSeat = {
+                            navController.navigate(PvmDestination.CatalogSeatWizard.route)
                         },
                         onEdit = { _ ->
                             // Voce menu presente; funzione di editing in preparazione.

@@ -66,10 +66,13 @@ fun CatalogSeatWizardScreen(
     onConfirmLocal: () -> Unit,
     onFolderPathChange: (String) -> Unit,
     onConfirmAvailability: () -> Unit,
+    onPcShareAlreadyReady: () -> Unit,
+    onPcShareNeedsPrepare: () -> Unit,
     onConfirmUsbAndPrepare: () -> Unit,
     onConfirmCopy: () -> Unit,
     onConfirmScriptRan: () -> Unit,
     onRetryRecoverPcData: () -> Unit,
+    onPcHostIpChange: (String) -> Unit,
     onCredentialsText: () -> String,
     onPasswordText: () -> String,
     onFieldText: (CifsCopyField) -> String,
@@ -147,12 +150,18 @@ fun CatalogSeatWizardScreen(
                 onBack = onBackIntro,
                 busy = state.busy,
             )
+            WizardStep.PC_SHARE_READY -> PcShareReadyStep(
+                onYes = onPcShareAlreadyReady,
+                onNo = onPcShareNeedsPrepare,
+                onBack = onBackIntro,
+                busy = state.busy,
+            )
             WizardStep.PC_AVAILABILITY,
             WizardStep.W2_CHOICE,
             WizardStep.W2_ROUTINE_PARAMS,
             -> AvailabilityChecklistStep(
                 onOk = onConfirmAvailability,
-                onBack = onBackIntro,
+                onBack = { onGoStep(WizardStep.PC_SHARE_READY) },
                 busy = state.busy,
             )
             WizardStep.PC_USB_PREPARE -> UsbPrepareChecklistStep(
@@ -197,6 +206,7 @@ fun CatalogSeatWizardScreen(
                     if (pwd.isNotBlank()) copyToClipboard(context, pwd)
                 },
                 onRetryRecoverPcData = onRetryRecoverPcData,
+                onPcHostIpChange = onPcHostIpChange,
                 onOpenCifs = {
                     onRefreshCifs()
                     if (NetworkDriveAssistant.isHelperInstalled(context)) {
@@ -685,11 +695,43 @@ private fun ChecklistOkBlock(
 }
 
 @Composable
+private fun PcShareReadyStep(
+    onYes: () -> Unit,
+    onNo: () -> Unit,
+    onBack: () -> Unit,
+    busy: Boolean,
+) {
+    Text(stringResource(R.string.hub_pc_share_ready_intro))
+    Text(
+        stringResource(R.string.hub_pc_share_ready_question),
+        fontWeight = FontWeight.SemiBold,
+    )
+    Button(
+        onClick = onYes,
+        enabled = !busy,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.hub_pc_share_ready_yes))
+    }
+    OutlinedButton(
+        onClick = onNo,
+        enabled = !busy,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.hub_pc_share_ready_no))
+    }
+    TextButton(onClick = onBack, enabled = !busy) {
+        Text(stringResource(R.string.hub_indietro))
+    }
+}
+
+@Composable
 private fun CifsCardStep(
     state: CatalogSeatWizardUiState,
     onCopyField: (CifsCopyField) -> Unit,
     onCopyPassword: () -> Unit,
     onRetryRecoverPcData: () -> Unit,
+    onPcHostIpChange: (String) -> Unit = {},
     onOpenCifs: () -> Unit,
     onChooseFolder: () -> Unit,
     onRetry: () -> Unit,
@@ -720,36 +762,36 @@ private fun CifsCardStep(
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
     )
-    when {
-        state.recoveringPcData -> {
-            Text(
-                stringResource(R.string.hub_pc5_recovering),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
-        state.setupResultImported -> {
-            Text(
-                stringResource(R.string.hub_pc5_result_imported),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
-        else -> {
-            Text(
-                stringResource(R.string.hub_pc5_result_missing),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
-            )
-            OutlinedButton(
-                onClick = onRetryRecoverPcData,
-                enabled = !state.busy,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(R.string.hub_pc5_retry_recover))
-            }
-        }
+    // Stato recupero IP: Riprova sempre accessibile (§D / F2), anche durante recoveringPcData.
+    Text(
+        text = when {
+            state.recoveringPcData -> stringResource(R.string.hub_pc5_recovering)
+            state.setupResultImported -> stringResource(R.string.hub_pc5_result_imported)
+            else -> stringResource(R.string.hub_pc5_result_missing)
+        },
+        style = MaterialTheme.typography.bodySmall,
+        color = when {
+            state.recoveringPcData || state.setupResultImported ->
+                MaterialTheme.colorScheme.primary
+            else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
+        },
+    )
+    OutlinedButton(
+        onClick = onRetryRecoverPcData,
+        enabled = !state.busy,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.hub_pc5_retry_recover))
     }
+    OutlinedTextField(
+        value = state.pcHostIp,
+        onValueChange = onPcHostIpChange,
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
+        enabled = !state.busy,
+        label = { Text(stringResource(R.string.hub_b5b_host_edit_label)) },
+        supportingText = { Text(stringResource(R.string.hub_b5b_host_edit_hint)) },
+    )
     Text(
         stringResource(R.string.hub_b5b_card_title),
         fontWeight = FontWeight.Medium,

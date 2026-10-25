@@ -37,6 +37,30 @@ class CatalogFacade(
 
     suspend fun catalogSeatReachable(): Boolean = catalogHubService.seatReachable()
 
+    /**
+     * Stato sede per le righe UI (Dashboard / Organizza / Acquisisci / Aggiorna).
+     * Probe solo se già configurata; altrimenti NOT_CONFIGURED senza pretendere raggiungibilità.
+     */
+    suspend fun catalogSeatStatus(): com.renatizzi.photovideomanager.domain.hub.CatalogSeatStatus {
+        val seat = catalogHubService.currentSeat()
+        if (!seat.isConfigured) {
+            return com.renatizzi.photovideomanager.domain.hub.CatalogSeatStatus(
+                seat = seat,
+                reachability = com.renatizzi.photovideomanager.domain.hub.CatalogSeatReachability.NOT_CONFIGURED,
+            )
+        }
+        val ok = runCatching { catalogHubService.seatReachable() }.getOrNull()
+        val reach = when (ok) {
+            true -> com.renatizzi.photovideomanager.domain.hub.CatalogSeatReachability.REACHABLE
+            false -> com.renatizzi.photovideomanager.domain.hub.CatalogSeatReachability.UNREACHABLE
+            null -> com.renatizzi.photovideomanager.domain.hub.CatalogSeatReachability.UNKNOWN
+        }
+        return com.renatizzi.photovideomanager.domain.hub.CatalogSeatStatus(
+            seat = seat,
+            reachability = reach,
+        )
+    }
+
     suspend fun catalogHubPreview() = catalogHubService.buildPreview()
 
     suspend fun applyCatalogHubUpdate(

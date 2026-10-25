@@ -35,6 +35,8 @@ import com.renatizzi.photovideomanager.R
 fun MacroHubScreen(
     area: MacroAreaDefinition,
     onFeatureClick: (MacroFeature) -> Unit,
+    seatStatus: com.renatizzi.photovideomanager.domain.hub.CatalogSeatStatus? = null,
+    onOpenCatalogSeat: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -54,6 +56,13 @@ fun MacroHubScreen(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
         )
+        if (onOpenCatalogSeat != null) {
+            com.renatizzi.photovideomanager.ui.common.CatalogSeatStatusRow(
+                status = seatStatus,
+                onOpenSeat = onOpenCatalogSeat,
+                compact = true,
+            )
+        }
 
         area.features.chunked(2).forEach { row ->
             Row(

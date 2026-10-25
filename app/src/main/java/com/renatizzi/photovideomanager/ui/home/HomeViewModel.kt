@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.renatizzi.photovideomanager.application.CatalogFacade
+import com.renatizzi.photovideomanager.domain.hub.CatalogSeatStatus
 import com.renatizzi.photovideomanager.domain.model.Availability
 import com.renatizzi.photovideomanager.domain.model.DashboardSnapshot
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,6 +15,7 @@ import kotlinx.coroutines.launch
 
 data class HomeUiState(
     val snapshot: DashboardSnapshot? = null,
+    val seatStatus: CatalogSeatStatus? = null,
     val ready: Boolean = false,
     val errorMessage: String? = null,
 )
@@ -31,10 +33,12 @@ class HomeViewModel(
     fun refresh() {
         viewModelScope.launch {
             runCatching {
-                catalogFacade.dashboardSnapshot()
-            }.onSuccess { snapshot ->
+                val snapshot = catalogFacade.dashboardSnapshot()
+                val seat = catalogFacade.catalogSeatStatus()
+                snapshot to seat
+            }.onSuccess { (snapshot, seat) ->
                 _state.update {
-                    HomeUiState(snapshot = snapshot, ready = true)
+                    HomeUiState(snapshot = snapshot, seatStatus = seat, ready = true)
                 }
             }.onFailure { error ->
                 _state.update {

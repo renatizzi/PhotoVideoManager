@@ -886,6 +886,7 @@ fun AggiornaStaticScreen(
     onSetSelection: (String, SourceCensusSelection) -> Unit = { _, _ -> },
     onRefresh: () -> Unit,
     onPulisci: () -> Unit,
+    onOpenCatalogSeat: () -> Unit = {},
     onEdit: (String) -> Unit = {},
     onRename: (String, String) -> Unit = { _, _ -> },
     onTrash: (mediaItemId: String, deleteSourceFiles: Boolean) -> Unit = { _, _ -> },
@@ -928,6 +929,11 @@ fun AggiornaStaticScreen(
             text = stringResource(R.string.aggiorna_static_intro),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+        )
+        com.renatizzi.photovideomanager.ui.common.CatalogSeatStatusRow(
+            status = state.seatStatus,
+            onOpenSeat = onOpenCatalogSeat,
+            compact = true,
         )
 
         CatalogSearchField(query = state.query, onQueryChange = onQueryChange)
