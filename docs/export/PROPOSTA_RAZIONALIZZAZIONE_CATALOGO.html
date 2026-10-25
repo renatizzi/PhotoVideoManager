@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Proposta razionalizzazione Catalogo — in attesa OK Renato</title>
+  <title>Proposta Catalogo — CONFERMATA F1–F4</title>
   <style>
     html {
       color: #1a1a1a;
@@ -166,8 +166,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Proposta razionalizzazione Catalogo — in attesa OK
-Renato</h1>
+<h1 class="title">Proposta Catalogo — CONFERMATA F1–F4</h1>
 </header>
 <nav id="TOC" role="doc-toc">
 <ul>
@@ -190,9 +189,9 @@ IP (CIFS)</a></li>
 <li><a href="#e.-piano-di-intervento-post-approvazione"
 id="toc-e.-piano-di-intervento-post-approvazione">E. Piano di intervento
 (post-approvazione)</a></li>
-<li><a href="#f.-criticità-residue-solo-decisioni-renato"
-id="toc-f.-criticità-residue-solo-decisioni-renato">F. Criticità residue
-(solo decisioni Renato)</a></li>
+<li><a href="#f.-decisioni-renato-chiuse-25102026"
+id="toc-f.-decisioni-renato-chiuse-25102026">F. Decisioni Renato —
+CHIUSE 25/10/2026</a></li>
 <li><a href="#checklist-completezza-proposta-criteri-10-prompt"
 id="toc-checklist-completezza-proposta-criteri-10-prompt">Checklist
 completezza proposta (criteri §10 prompt)</a></li>
@@ -204,15 +203,58 @@ id="toc-autorizzazione">Autorizzazione</a></li>
 <h1
 id="proposta-unica-razionalizzazione-configurazione-catalogo-e-ux-sede">Proposta
 unica — Razionalizzazione configurazione Catalogo e UX sede</h1>
-<p><strong>Stato:</strong> PROPOSTA IN ATTESA DI APPROVAZIONE ESPLICITA
-DI RENATO — <strong>nessuna implementazione autorizzata</strong><br />
-<strong>Data:</strong> 25/10/2026 (Europe/Rome)<br />
+<p><strong>Stato:</strong> <strong>CONFERMATA</strong> Renato 25/10/2026
+(F1–F4) — OK finale Cursor: piano chiuso, <strong>sviluppo
+autorizzato</strong><br />
+<strong>Data proposta:</strong> 25/10/2026 · <strong>Conferma
+decisioni:</strong> 25/10/2026 (Europe/Rome)<br />
 <strong>Autore:</strong> Cursor (analisi AS-IS + proposta TO-BE)<br />
 <strong>Perimetro:</strong> A–D del prompt (sede Catalogo,
 identificazione UI, CIFS/IP, razionalizzazione passi).<br />
 <strong>Fuori perimetro:</strong> riprogettazione
 Acquisisci/Importa/Aggiorna/Pulisci/Ricerca (salvo integrazioni minime
 per la sede).</p>
+<h3 id="branch-di-riferimento-definitivo-f1">Branch di riferimento
+definitivo (F1)</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Campo</th>
+<th>Valore</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Branch</td>
+<td><code>cursor/cifs-user-folder-attiva-b602</code></td>
+</tr>
+<tr class="even">
+<td>Tip verificato</td>
+<td><code>ee88a9a6ab8317e41e4eb2396febf246d62e3d31</code>
+(23/10/2026)</td>
+</tr>
+<tr class="odd">
+<td>Versione</td>
+<td><strong>0.16.52-preview</strong> · versionCode
+<strong>93</strong></td>
+</tr>
+<tr class="even">
+<td>Rapporto con base
+<code>prompt-continuita-allineamento-5311</code></td>
+<td>+24 commit (include Wizard PC e Acquisisci sede/gruppi); merge-base
+<code>e0e0662</code> (0.16.37)</td>
+</tr>
+<tr class="odd">
+<td>Tranche di sviluppo</td>
+<td>nuovo branch <code>cursor/catalogo-sede-ux-ip-b602</code>
+<strong>partendo da</strong> tip 0.16.52 sopra</td>
+</tr>
+</tbody>
+</table>
 <hr />
 <h2 id="premessa-metodologica">Premessa metodologica</h2>
 <ul>
@@ -886,60 +928,54 @@ disponibili.<br />
 Catalogo locale intatto.</li>
 </ul>
 <hr />
-<h2 id="f.-criticità-residue-solo-decisioni-renato">F. Criticità residue
-(solo decisioni Renato)</h2>
+<h2 id="f.-decisioni-renato-chiuse-25102026">F. Decisioni Renato —
+CHIUSE 25/10/2026</h2>
 <table>
 <colgroup>
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
 </colgroup>
 <thead>
 <tr class="header">
 <th>#</th>
-<th>Decisione</th>
-<th>Perché serve Renato</th>
-<th>Alternative tecnicamente sostenibili</th>
+<th>Decisione chiusa</th>
+<th>Impatto sul piano</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td><strong>F1</strong></td>
-<td>Branch di partenza: consolidare <strong>0.16.52</strong> nella base
-prima della tranche, oppure rifare il minimo sede su 0.16.37?</td>
-<td>Evita doppio lavoro e discordanze tablet/CI</td>
-<td>(a) merge/rebase 0.16.52 → base; (b) cherry-pick solo UI sede
-Acquisisci</td>
+<td>Partire da <strong>0.16.52 consolidata</strong>
+(<code>ee88a9a</code> su <code>cifs-user-folder-attiva-b602</code>); non
+rifare Acquisisci</td>
+<td>Branch di lavoro da tip 0.16.52; documentato in testa</td>
 </tr>
 <tr class="even">
 <td><strong>F2</strong></td>
-<td>IP CIFS: adottare §D «assistenza + manuale sempre», oppure
-<strong>lasciare parcheggiato</strong> l’auto‑IP e solo ripristinare
-Riprova/UX Host?</td>
-<td>Auto‑IP ha già consumato molti cicli; il prompt lo richiede di nuovo
-in analisi</td>
-<td>(a) §D completo; (b) parcheggio resta, solo Host editabile chiaro +
-guida «trova IP su Windows»</td>
+<td><strong>Assistenza IP §D</strong>: Host sempre modificabile; manuale
+sempre; <strong>Riprova sempre</strong>; niente scan LAN
+generalizzata</td>
+<td>Implementare §D; togliere il parcheggio “solo manuale”</td>
 </tr>
 <tr class="odd">
 <td><strong>F3</strong></td>
-<td>W2: introdurre la domanda «share già pronta?» (scorciatoia alle
-<strong>stesse</strong> verifiche)?</td>
-<td>Accorcia chi ha già CIFS; rischia di saltare checklist se usata
-male</td>
-<td>(a) sì come in §B.3; (b) no, sempre Passi 1–5</td>
+<td><strong>SÌ</strong> domanda W2 «cartella condivisa già pronta e
+raggiungibile?»: Sì→CIFS+pick; No→preparazione guidata; <strong>stesse
+verifiche finali</strong></td>
+<td>Come §B.3</td>
 </tr>
 <tr class="even">
 <td><strong>F4</strong></td>
-<td>Estendere la riga sede anche ad <strong>Aggiorna</strong> oltre
-Dashboard/Organizza/Acquisisci?</td>
-<td>Prompt cita le tre; Aggiorna aiuta ma aggiunge densità</td>
-<td>(a) sì compatta; (b) solo le tre sedi del prompt</td>
+<td><strong>SÌ</strong> riga sede compatta anche in
+<strong>Aggiorna</strong>, coerente con
+Dashboard/Organizza/Acquisisci</td>
+<td>Contratto UI sede su quattro superfici</td>
 </tr>
 </tbody>
 </table>
-<p>Nessun’altra fork di prodotto in questa proposta.</p>
+<p>Nessuna ulteriore alternativa progettuale: il piano §E si esegue così
+com’è, con queste chiusure.</p>
 <hr />
 <h2 id="checklist-completezza-proposta-criteri-10-prompt">Checklist
 completezza proposta (criteri §10 prompt)</h2>
@@ -971,10 +1007,10 @@ contestuale W2).<br />
 </ol>
 <hr />
 <h2 id="autorizzazione">Autorizzazione</h2>
-<p><strong>STOP.</strong> Attendere revisione e <strong>OK
-esplicito</strong> di Renato (o OK con elenco puntuale di modifiche a
-questa proposta).<br />
-Fino ad allora: nessun commit di codice applicativo, nessun branch di
-implementazione, nessun ciclo sperimentale.</p>
+<p><strong>OK FINALE CURSOR (25/10/2026):</strong> F1–F4 recepite;
+branch di riferimento documentato; piano §E senza ulteriori
+alternative.<br />
+<strong>Sviluppo autorizzato</strong> da Renato subordinato a questo OK
+— si procede con la tranche su branch da 0.16.52.</p>
 </body>
 </html>

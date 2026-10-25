@@ -1,10 +1,20 @@
 # Proposta unica — Razionalizzazione configurazione Catalogo e UX sede
 
-**Stato:** PROPOSTA IN ATTESA DI APPROVAZIONE ESPLICITA DI RENATO — **nessuna implementazione autorizzata**  
-**Data:** 25/10/2026 (Europe/Rome)  
+**Stato:** **CONFERMATA** Renato 25/10/2026 (F1–F4) — OK finale Cursor: piano chiuso, **sviluppo autorizzato**  
+**Data proposta:** 25/10/2026 · **Conferma decisioni:** 25/10/2026 (Europe/Rome)  
 **Autore:** Cursor (analisi AS-IS + proposta TO-BE)  
 **Perimetro:** A–D del prompt (sede Catalogo, identificazione UI, CIFS/IP, razionalizzazione passi).  
 **Fuori perimetro:** riprogettazione Acquisisci/Importa/Aggiorna/Pulisci/Ricerca (salvo integrazioni minime per la sede).
+
+### Branch di riferimento definitivo (F1)
+
+| Campo | Valore |
+|---|---|
+| Branch | `cursor/cifs-user-folder-attiva-b602` |
+| Tip verificato | `ee88a9a6ab8317e41e4eb2396febf246d62e3d31` (23/10/2026) |
+| Versione | **0.16.52-preview** · versionCode **93** |
+| Rapporto con base `prompt-continuita-allineamento-5311` | +24 commit (include Wizard PC e Acquisisci sede/gruppi); merge-base `e0e0662` (0.16.37) |
+| Tranche di sviluppo | nuovo branch `cursor/catalogo-sede-ux-ip-b602` **partendo da** tip 0.16.52 sopra |
 
 ---
 
@@ -288,16 +298,16 @@ Allineare il lavoro su **un solo branch di riferimento** (consigliato: integrare
 
 ---
 
-## F. Criticità residue (solo decisioni Renato)
+## F. Decisioni Renato — CHIUSE 25/10/2026
 
-| # | Decisione | Perché serve Renato | Alternative tecnicamente sostenibili |
-|---|---|---|---|
-| **F1** | Branch di partenza: consolidare **0.16.52** nella base prima della tranche, oppure rifare il minimo sede su 0.16.37? | Evita doppio lavoro e discordanze tablet/CI | (a) merge/rebase 0.16.52 → base; (b) cherry-pick solo UI sede Acquisisci |
-| **F2** | IP CIFS: adottare §D «assistenza + manuale sempre», oppure **lasciare parcheggiato** l’auto‑IP e solo ripristinare Riprova/UX Host? | Auto‑IP ha già consumato molti cicli; il prompt lo richiede di nuovo in analisi | (a) §D completo; (b) parcheggio resta, solo Host editabile chiaro + guida «trova IP su Windows» |
-| **F3** | W2: introdurre la domanda «share già pronta?» (scorciatoia alle **stesse** verifiche)? | Accorcia chi ha già CIFS; rischia di saltare checklist se usata male | (a) sì come in §B.3; (b) no, sempre Passi 1–5 |
-| **F4** | Estendere la riga sede anche ad **Aggiorna** oltre Dashboard/Organizza/Acquisisci? | Prompt cita le tre; Aggiorna aiuta ma aggiunge densità | (a) sì compatta; (b) solo le tre sedi del prompt |
+| # | Decisione chiusa | Impatto sul piano |
+|---|---|---|
+| **F1** | Partire da **0.16.52 consolidata** (`ee88a9a` su `cifs-user-folder-attiva-b602`); non rifare Acquisisci | Branch di lavoro da tip 0.16.52; documentato in testa |
+| **F2** | **Assistenza IP §D**: Host sempre modificabile; manuale sempre; **Riprova sempre**; niente scan LAN generalizzata | Implementare §D; togliere il parcheggio “solo manuale” |
+| **F3** | **SÌ** domanda W2 «cartella condivisa già pronta e raggiungibile?»: Sì→CIFS+pick; No→preparazione guidata; **stesse verifiche finali** | Come §B.3 |
+| **F4** | **SÌ** riga sede compatta anche in **Aggiorna**, coerente con Dashboard/Organizza/Acquisisci | Contratto UI sede su quattro superfici |
 
-Nessun’altra fork di prodotto in questa proposta.
+Nessuna ulteriore alternativa progettuale: il piano §E si esegue così com’è, con queste chiusure.
 
 ---
 
@@ -318,5 +328,5 @@ Nessun’altra fork di prodotto in questa proposta.
 
 ## Autorizzazione
 
-**STOP.** Attendere revisione e **OK esplicito** di Renato (o OK con elenco puntuale di modifiche a questa proposta).  
-Fino ad allora: nessun commit di codice applicativo, nessun branch di implementazione, nessun ciclo sperimentale.
+**OK FINALE CURSOR (25/10/2026):** F1–F4 recepite; branch di riferimento documentato; piano §E senza ulteriori alternative.  
+**Sviluppo autorizzato** da Renato subordinato a questo OK — si procede con la tranche su branch da 0.16.52.
