@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="it" xml:lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Template pagine Setup Catalogo W1–W4</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+
+<div style="font-family:system-ui,sans-serif;background:#fff8e1;border:1px solid #f0c36d;padding:12px 16px;margin:0 0 16px 0;">
+<strong>Download (stessa cartella su GitHub):</strong>
+<a href="PVM_Template_Pagine_Setup_Catalogo_W1-W4.docx">DOCX</a> ·
+<a href="PVM_Template_Pagine_Setup_Catalogo_W1-W4.pdf">PDF</a> ·
+questa pagina HTML
+</div>
+
+<p><strong>Setup Catalogo personale — Template pagine e
+confronto</strong></p>
+<p>Documento di allineamento (sola lettura UI) · senza modifiche al
+codice</p>
+<p>Riferimenti: videate congelate (PPT V2 /
+docs/reference/videate-utente-setup-catalogo-pc.md) · build congelata
+0.16.37 (e0e0662) · build attuale 0.16.53 (f1625f0) · nota Setup
+Catalogo / proposta razionalizzazione F1–F4 (25/10/2026).</p>
+<p>Questo documento riporta solo TITOLO, SOTTOTITOLO e DESCRIZIONE
+(introduzione di pagina) per ogni videata del Setup Catalogo, declinata
+per dispositivo (W1–W4). Non contiene istruzioni operative a checklist
+né riferimenti allo stato runtime dell’app.</p>
+<h1 id="chrome-comune-tutte-le-videate-setup"><strong>1. Chrome comune
+(tutte le videate Setup)</strong></h1>
+<p><strong>TITOLO:</strong> Setup Catalogo personale (fisso su tutte le
+pagine del Wizard)</p>
+<p>Il sottotitolo cambia per pagina. La descrizione è il testo
+introduttivo sotto il sottotitolo. Le risposte chiuse (combo / Sì-No)
+compaiono dove indicato sotto «Elementi di pagina», senza elenco
+operativo.</p>
+<h1 id="punto-di-differenziazione-procedura-rapida-guidata"><strong>2.
+Punto di differenziazione procedura RAPIDA / GUIDATA</strong></h1>
+<p><strong>Esiste una sola biforcazione, ed è solo sul ramo PC (W2). Non
+esiste su W1 (questo dispositivo), W3 (Cloud) né W4 (NAS).</strong></p>
+<h2 id="dove-si-trova"><strong>2.1 Dove si trova</strong></h2>
+<p>Dopo il Passo 0 («Dove tenere il Catalogo») con scelta «Su un
+PC/Notebook Windows», l’attuale 0.16.53 inserisce una pagina intermedia
+assente nella 0.16.37 e assente nelle videate congelate PPT V2.</p>
+<p><strong>TITOLO:</strong> Setup Catalogo personale</p>
+<p><strong>SOTTOTITOLO:</strong> Cartella condivisa già pronta?</p>
+<p><strong>DESCRIZIONE:</strong> Se la cartella condivisa del Catalogo
+sul PC è già pronta e la vedi dal tablet (Disco di rete / CIFS), puoi
+andare subito al collegamento. Altrimenti segui la preparazione guidata
+(USB e script).</p>
+<p><strong>Domanda:</strong> La cartella condivisa del Catalogo è già
+pronta e raggiungibile da questo tablet?</p>
+<p><strong>Risposta A — RAPIDA:</strong> Sì, vai al collegamento CIFS →
+salta i Passi 1–4 → entra al Passo 5 (CIFS)</p>
+<p><strong>Risposta B — GUIDATA:</strong> No, prepara la condivisione →
+sequenza Passi 1 → 2 → 3 → 4 → 5</p>
+<h2 id="conformità-rispetto-ai-riferimenti"><strong>2.2 Conformità
+rispetto ai riferimenti</strong></h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Riferimento</strong></th>
+<th><strong>Pagina «Cartella condivisa già pronta?»</strong></th>
+<th><strong>Esito</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Videate congelate (videate-utente-setup-catalogo-pc.md)</td>
+<td>Assente — dopo Passo 0 PC si va al Passo 1</td>
+<td>Δ EXTRA rispetto al congelato</td>
+</tr>
+<tr class="even">
+<td>Build 0.16.37</td>
+<td>Assente — OK Passo 0 PC → PC_AVAILABILITY (Passo 1)</td>
+<td>Δ EXTRA rispetto al congelato</td>
+</tr>
+<tr class="odd">
+<td>Nota razionalizzazione F3 (25/10)</td>
+<td>Prevista come domanda contestuale W2 (non menu modalità)</td>
+<td>Allineata alla nota F3, non alle videate PPT</td>
+</tr>
+<tr class="even">
+<td>Build 0.16.53</td>
+<td>Presente (PC_SHARE_READY)</td>
+<td>Implementata</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Quindi: la differenziazione RAPIDA/GUIDATA è la causa
+principale per cui 0.16.53 non coincide pagina-per-pagina con il
+congelato 0.16.37 / PPT V2 sul ramo PC. W1, W3, W4 non hanno questa
+biforcazione.</strong></p>
+<h1
+id="confronto-pagine-congelato-0.16.37-videate-ppt-vs-attuale-0.16.53"><strong>3.
+Confronto pagine: congelato 0.16.37 / videate PPT vs attuale
+0.16.53</strong></h1>
+<p>Legenda: CONFORME = stesso TITOLO/SOTTOTITOLO (e descrizione
+equivalente); Δ = differenza rispetto al congelato; EXTRA = pagina non
+presente nel congelato; MERGED = due pagine distinte in 0.16.37 fuse in
+una in 0.16.53.</p>
+<h2 id="sequenza-ramo-pc-w2"><strong>3.1 Sequenza ramo PC
+(W2)</strong></h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Ordine</strong></th>
+<th><strong>Sottotitolo congelato (0.16.37 / PPT)</strong></th>
+<th><strong>Sottotitolo attuale (0.16.53)</strong></th>
+<th><strong>Verdetto</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>E0</td>
+<td>Inizio</td>
+<td>Inizio</td>
+<td>CONFORME</td>
+</tr>
+<tr class="even">
+<td>0</td>
+<td>Dove tenere il Catalogo</td>
+<td>Dove tenere il Catalogo</td>
+<td>CONFORME</td>
+</tr>
+<tr class="odd">
+<td>Δ biforcazione</td>
+<td>— (non esiste)</td>
+<td>Cartella condivisa già pronta?</td>
+<td>EXTRA — biforcazione RAPIDA/GUIDATA</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>1 – Verifica della disponibilità di quanto necessario</td>
+<td>1 – Verifica della disponibilità…</td>
+<td>CONFORME (solo ramo GUIDATA)</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td>2 – Verifica preliminare, preparazione dei file e collegamento</td>
+<td>2 – Verifica preliminare…</td>
+<td>CONFORME (solo ramo GUIDATA)</td>
+</tr>
+<tr class="even">
+<td>3</td>
+<td>3 – Copia manuale dei file di configurazione</td>
+<td>3 – Copia manuale…</td>
+<td>CONFORME (solo ramo GUIDATA)</td>
+</tr>
+<tr class="odd">
+<td>4</td>
+<td>4 – Generazione password e altri dati…</td>
+<td>4 – Generazione password…</td>
+<td>CONFORME (solo ramo GUIDATA)</td>
+</tr>
+<tr class="even">
+<td>5</td>
+<td>5 – Accedere alla cartella del Catalogo mediante CIFS</td>
+<td>5 – Accedere… mediante CIFS</td>
+<td>CONFORME sul sottotitolo</td>
+</tr>
+<tr class="odd">
+<td>Δ pick</td>
+<td>Scegli la cartella del Catalogo (pagina separata dopo CIFS in
+0.16.37)</td>
+<td>Stesso sottotitolo del Passo 5 (CIFS e scelta cartella sulla stessa
+chrome)</td>
+<td>MERGED — Δ rispetto a 0.16.37</td>
+</tr>
+<tr class="even">
+<td>F</td>
+<td>Configurazione completata</td>
+<td>Configurazione completata</td>
+<td>CONFORME</td>
+</tr>
+</tbody>
+</table>
+<h2 id="altri-rami-w1-w3-w4"><strong>3.2 Altri rami (W1 / W3 /
+W4)</strong></h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Ramo</strong></th>
+<th><strong>Dopo Passo 0 →</strong></th>
+<th><strong>Sottotitolo pagina successiva</strong></th>
+<th><strong>Verdetto vs 0.16.37 / videate</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>W1 — Su questo dispositivo</td>
+<td>Conferma locale</td>
+<td>Su questo dispositivo</td>
+<td>CONFORME (stub operativo accettato)</td>
+</tr>
+<tr class="even">
+<td>W3 — Cloud (Google Drive)</td>
+<td>Guida + scelta cartella</td>
+<td>Google Drive</td>
+<td>CONFORME (stub)</td>
+</tr>
+<tr class="odd">
+<td>W4 — Disco di rete / NAS</td>
+<td>Guida + scelta cartella</td>
+<td>NAS / disco di rete</td>
+<td>CONFORME (stub)</td>
+</tr>
+</tbody>
+</table>
+<h2
+id="superfici-fuori-wizard-non-erano-nelle-videate-setup-pc"><strong>3.3
+Superfici fuori Wizard (non erano nelle videate Setup PC)</strong></h2>
+<p>Fuori dal perimetro delle videate Setup Catalogo PC congelate, la
+0.16.53 (da 0.16.52 + F4) mostra anche una riga «Posizione del Catalogo»
+su Dashboard, Organizza, Acquisisci e Aggiorna. Non fanno parte dei
+template Wizard sotto; sono citate solo per completezza del confronto
+versione.</p>
+<h1 id="template-pagine-implementate-per-dispositivo"><strong>4.
+Template pagine implementate — per dispositivo</strong></h1>
+<p>Per ogni pagina: TITOLO · SOTTOTITOLO · DESCRIZIONE. Dove la pagina
+ha una domanda chiusa, è riportata come «Domanda» (non come istruzione
+operativa).</p>
+<h2 id="pagine-comuni-prima-della-scelta-dispositivo"><strong>4.0 Pagine
+comuni (prima della scelta dispositivo)</strong></h2>
+<h3 id="pagina-e0-inizio"><strong>Pagina E0 — Inizio</strong></h3>
+<p><strong>TITOLO:</strong> Setup Catalogo personale</p>
+<p><strong>SOTTOTITOLO:</strong> Inizio</p>
+<p><strong>DESCRIZIONE:</strong> Non acquisisce foto: serve solo a
+definire dove risiede il Catalogo e come accedervi.</p>
+<p><strong>Domanda:</strong> Cosa vuoi fare con la Posizione del
+Catalogo?</p>
+<p>Voci risposta: Creare una nuova Posizione del Catalogo · Modificare
+la Posizione del Catalogo attuale · (eventuale ripresa percorso
+interrotto).</p>
+<h3 id="pagina-0-dove-tenere-il-catalogo"><strong>Pagina 0 — Dove tenere
+il Catalogo</strong></h3>
+<p><strong>TITOLO:</strong> Setup Catalogo personale</p>
+<p><strong>SOTTOTITOLO:</strong> Dove tenere il Catalogo (senza numero
+di passo)</p>
+<p><strong>DESCRIZIONE:</strong> Inizia a scegliere in quale dispositivo
+e cartella vuoi tenere il Catalogo Personale:</p>
+<p><strong>Combo:</strong> Seleziona il dispositivo</p>
+<p>Voci: 1) Su questo dispositivo · 2) Su un PC/Notebook Windows · 3) Su
+Cloud (Google Drive) · 4) Su disco di rete o NAS.</p>
+<p>Blocco variabile dopo la scelta PC — DESCRIZIONE aggiuntiva: «Da
+questa pagina si attiva la procedura guidata per la creazione o modifica
+della cartella condivisa dove tenere il Catalogo. Per motivi di
+sicurezza ci sono delle operazioni che puoi fare solo tu.» Elenco
+previsto della procedura PC (solo etichette dei passi, non istruzioni):
+1 Verifica disponibilità · 2 Verifica preliminare / preparazione file ·
+3 Copia file · 4 Generazione password/dati · 5 Accesso CIFS. Campo
+percorso default: C:\MediaManager\Catalogo · riga «Valori
+modificabili».</p>
+<h2 id="procedura-w1-su-questo-dispositivo"><strong>4.1 Procedura W1 —
+Su questo dispositivo</strong></h2>
+<p>Flusso: Passo 0 (voce 1) → Conferma locale → (scelta cartella) →
+Completata.</p>
+<h3 id="pagina-w1-conferma"><strong>Pagina W1 — Conferma</strong></h3>
+<p><strong>TITOLO:</strong> Setup Catalogo personale</p>
+<p><strong>SOTTOTITOLO:</strong> Su questo dispositivo</p>
+<p><strong>DESCRIZIONE:</strong> Questo dispositivo diventa la Posizione
+di riferimento del Catalogo personale. Un secondo telefono o tablet, in
+questa versione, si collega più facilmente se usi una Posizione su PC,
+Drive o NAS.</p>
+<p><strong>Domanda:</strong> Vuoi usare questo apparecchio come
+Posizione del Catalogo?</p>
+<p><strong>Risposta primaria:</strong> Sì, usa questo dispositivo</p>
+<h3 id="pagina-w1-esito"><strong>Pagina W1 — Esito</strong></h3>
+<p><strong>TITOLO:</strong> Setup Catalogo personale</p>
+<p><strong>SOTTOTITOLO:</strong> Configurazione completata</p>
+<p><strong>DESCRIZIONE:</strong> Posizione del Catalogo: Su questo
+dispositivo.</p>
+<h2 id="procedura-w2-su-un-pcnotebook-windows"><strong>4.2 Procedura W2
+— Su un PC/Notebook Windows</strong></h2>
+<p>Flusso GUIDATA: Passo 0 → [biforcazione] No → Passi 1–4 → Passo 5 →
+Completata.<br />
+Flusso RAPIDA: Passo 0 → [biforcazione] Sì → Passo 5 → Completata.</p>
+<h3
+id="pagina-w2-b-biforcazione-rapida-guidata-solo-0.16.53-non-in-ppt-congelato"><strong>Pagina
+W2-B — Biforcazione RAPIDA / GUIDATA (solo 0.16.53 · non in PPT
+congelato)</strong></h3>
+<p><strong>TITOLO:</strong> Setup Catalogo personale</p>
+<p><strong>SOTTOTITOLO:</strong> Cartella condivisa già pronta?</p>
+<p><strong>DESCRIZIONE:</strong> Se la cartella condivisa del Catalogo
+sul PC è già pronta e la vedi dal tablet (Disco di rete / CIFS), puoi
+andare subito al collegamento. Altrimenti segui la preparazione guidata
+(USB e script).</p>
+<p><strong>Domanda:</strong> La cartella condivisa del Catalogo è già
+pronta e raggiungibile da questo tablet?</p>
+<p><strong>RAPIDA:</strong> Sì, vai al collegamento CIFS → Passo 5</p>
+<p><strong>GUIDATA:</strong> No, prepara la condivisione → Passo 1</p>
+<h3 id="pagina-w2-1-disponibilità"><strong>Pagina W2-1 —
+Disponibilità</strong></h3>
+<p><strong>TITOLO:</strong> Setup Catalogo personale</p>
+<p><strong>SOTTOTITOLO:</strong> 1 – Verifica della disponibilità di
+quanto necessario</p>
+<p><strong>DESCRIZIONE:</strong> Prima di avviare la procedura verifica
+e conferma di avere a disposizione i seguenti strumenti:</p>
+<p>Elementi di pagina (solo etichette, non istruzioni): Telefono/tablet
+con MediaManager · PC/Notebook Windows 10+ · Cavo USB dati.</p>
+<h3 id="pagina-w2-2-verifica-preliminare-e-collegamento"><strong>Pagina
+W2-2 — Verifica preliminare e collegamento</strong></h3>
+<p><strong>TITOLO:</strong> Setup Catalogo personale</p>
+<p><strong>SOTTOTITOLO:</strong> 2 – Verifica preliminare, preparazione
+dei file e collegamento</p>
+<p><strong>DESCRIZIONE:</strong> Esegui ora le seguenti verifiche
+preliminari:</p>
+<p>Elementi di pagina (etichette): PC e telefono accesi/sbloccati ·
+Collegamento USB · Modalità trasferimento file · Consenso accesso
+dati.</p>
+<h3 id="pagina-w2-3-copia-file"><strong>Pagina W2-3 — Copia
+file</strong></h3>
+<p><strong>TITOLO:</strong> Setup Catalogo personale</p>
+<p><strong>SOTTOTITOLO:</strong> 3 – Copia manuale dei file di
+configurazione</p>
+<p><strong>DESCRIZIONE:</strong> Dopo aver collegato il telefono al
+PC/Notebook esegui le seguenti operazioni:</p>
+<p>Elementi di pagina (etichette): Accesso Download del telefono dal PC
+· Copia file CONFIGURA e Sup sul Desktop · Verifica presenza sul
+Desktop.</p>
+<h3 id="pagina-w2-4-generazione-dati-condivisione"><strong>Pagina W2-4 —
+Generazione dati condivisione</strong></h3>
+<p><strong>TITOLO:</strong> Setup Catalogo personale</p>
+<p><strong>SOTTOTITOLO:</strong> 4 – Generazione password e altri dati
+necessari per configurare la cartella condivisa</p>
+<p><strong>DESCRIZIONE:</strong> È tutto pronto per lanciare la routine
+che ti consentirà di creare la cartella dedicata al Catalogo personale.
+Ecco le istruzioni:</p>
+<p>Elementi di pagina (etichette): Doppio clic su CONFIGURA · Conferma
+UAC · Attesa messaggio «Tutto pronto».</p>
+<h3 id="pagina-w2-5-cifs-comune-a-rapida-e-guidata"><strong>Pagina W2-5
+— CIFS (comune a RAPIDA e GUIDATA)</strong></h3>
+<p><strong>TITOLO:</strong> Setup Catalogo personale</p>
+<p><strong>SOTTOTITOLO:</strong> 5 – Accedere alla cartella del Catalogo
+mediante CIFS</p>
+<p><strong>DESCRIZIONE:</strong> L’ultimo passo della procedura prevede
+la configurazione dell’app denominata CIFS Documents Provider
+(scaricabile gratuitamente su Google Play). Ecco i dati da inserire: con
+il bottone «Copia» puoi incollarli uno alla volta sul form di CIFS.</p>
+<p>Elementi di pagina (etichette campi scheda, non procedura): ID · Name
+· Storage · Domain · Host · Port · Enable DFS · User · Password · Folder
+· azioni Apri CIFS / Attiva collegamento / scelta cartella.</p>
+<p>Nota di confronto: in 0.16.37 la scelta cartella aveva sottotitolo
+proprio «Scegli la cartella del Catalogo»; in 0.16.53 resta sotto lo
+stesso sottotitolo del Passo 5.</p>
+<h3 id="pagina-w2-f-esito"><strong>Pagina W2-F — Esito</strong></h3>
+<p><strong>TITOLO:</strong> Setup Catalogo personale</p>
+<p><strong>SOTTOTITOLO:</strong> Configurazione completata</p>
+<p><strong>DESCRIZIONE:</strong> Posizione del Catalogo = PC (con
+riepilogo cartella / condivisione / utente, senza password).</p>
+<h2 id="procedura-w3-su-cloud-google-drive"><strong>4.3 Procedura W3 —
+Su Cloud (Google Drive)</strong></h2>
+<p>Flusso: Passo 0 (voce 3) → Guida Drive → Completata. Nessuna
+biforcazione RAPIDA/GUIDATA.</p>
+<h3 id="pagina-w3-guida"><strong>Pagina W3 — Guida</strong></h3>
+<p><strong>TITOLO:</strong> Setup Catalogo personale</p>
+<p><strong>SOTTOTITOLO:</strong> Google Drive</p>
+<p><strong>DESCRIZIONE:</strong> Serve un account Google sul
+dispositivo. Tocca Scegli cartella, apri Google Drive, crea o seleziona
+una cartella (es. Foto Catalogo) e conferma. Non è obbligatorio usare il
+cloud.</p>
+<p><strong>Azione primaria:</strong> Scegli cartella</p>
+<h3 id="pagina-w3-esito"><strong>Pagina W3 — Esito</strong></h3>
+<p><strong>TITOLO:</strong> Setup Catalogo personale</p>
+<p><strong>SOTTOTITOLO:</strong> Configurazione completata</p>
+<p><strong>DESCRIZIONE:</strong> Posizione del Catalogo: Su Cloud
+(Google Drive).</p>
+<h2 id="procedura-w4-su-disco-di-rete-o-nas"><strong>4.4 Procedura W4 —
+Su disco di rete o NAS</strong></h2>
+<p>Flusso: Passo 0 (voce 4) → Guida NAS → Completata. Nessuna
+biforcazione RAPIDA/GUIDATA.</p>
+<h3 id="pagina-w4-guida"><strong>Pagina W4 — Guida</strong></h3>
+<p><strong>TITOLO:</strong> Setup Catalogo personale</p>
+<p><strong>SOTTOTITOLO:</strong> NAS / disco di rete</p>
+<p><strong>DESCRIZIONE:</strong> Collega il NAS/disco di rete con CIFS
+Documents Provider (Host, porta 445, utente, cartella).</p>
+<p>Testo di supporto in pagina (non checklist): le credenziali restano
+in CIFS; MediaManager sceglie solo la cartella. Quando CIFS mostra la
+cartella, tocca Scegli cartella.</p>
+<p><strong>Azione primaria:</strong> Scegli cartella / Apri CIFS</p>
+<h3 id="pagina-w4-esito"><strong>Pagina W4 — Esito</strong></h3>
+<p><strong>TITOLO:</strong> Setup Catalogo personale</p>
+<p><strong>SOTTOTITOLO:</strong> Configurazione completata</p>
+<p><strong>DESCRIZIONE:</strong> Posizione del Catalogo: Su disco di
+rete o NAS.</p>
+<h1 id="sintesi-cosa-è-corretto-rispetto-al-congelato"><strong>5.
+Sintesi — cosa è «corretto» rispetto al congelato</strong></h1>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Ambito</strong></th>
+<th><strong>Rispetto a 0.16.37 + videate PPT</strong></th>
+<th><strong>Rispetto alla nota F3/F4 (setup catalogo)</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>TITOLO fisso «Setup Catalogo personale»</td>
+<td>CONFORME</td>
+<td>CONFORME</td>
+</tr>
+<tr class="even">
+<td>Passo 0 sottotitolo senza numero + 4 dispositivi</td>
+<td>CONFORME</td>
+<td>CONFORME</td>
+</tr>
+<tr class="odd">
+<td>Passi PC 1–5 (sottotitoli numerati PPT)</td>
+<td>CONFORMI</td>
+<td>CONFORMI (ramo GUIDATA)</td>
+</tr>
+<tr class="even">
+<td>Pagina «Cartella condivisa già pronta?»</td>
+<td>NON CONFORME al congelato (EXTRA)</td>
+<td>CONFORME a F3</td>
+</tr>
+<tr class="odd">
+<td>W2_PICK con sottotitolo proprio</td>
+<td>Δ — fuso nel Passo 5</td>
+<td>Non trattato come pagina separata</td>
+</tr>
+<tr class="even">
+<td>W1 / W3 / W4 stub</td>
+<td>CONFORMI (stub)</td>
+<td>CONFORMI</td>
+</tr>
+<tr class="odd">
+<td>Riga Posizione su Dashboard/Organizza/Aggiorna</td>
+<td>EXTRA vs Setup PPT</td>
+<td>CONFORME a F4</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Per valutare le modifiche di 0.16.53 rispetto a ciò che era
+congelato sulle videate Setup Catalogo: le uniche divergenze strutturali
+sul Wizard sono (1) la pagina di biforcazione RAPIDA/GUIDATA sul PC e
+(2) l’accorpamento della scelta cartella sotto il sottotitolo del Passo
+5. Il resto dei TITOLO/SOTTOTITOLO del ramo guidato PC coincide con
+0.16.37 / PPT V2.</strong></p>
+<h1 id="cosa-questo-documento-non-include-di-proposito"><strong>6. Cosa
+questo documento non include (di proposito)</strong></h1>
+<p>· Checklist operative passo-passo e testi «come fare»<br />
+· Messaggi di stato runtime (raggiungibile / non raggiungibile /
+recupero IP in corso / bozze)<br />
+· Istruzioni di test, installazione APK o procedimento di prova sul
+tablet<br />
+· Modifiche al codice (nessuna in questo turno)</p>
+</body>
+</html>
