@@ -67,3 +67,13 @@
 - File: CONFIGURA / sup  
 
 Non verificato in questa tranche: help contestuale, Configura stile Utility, Cloud/NAS completi.
+
+## BL-UI (28/10/2026) — da proposta editing Albero_template3 / Workflow v2
+
+| ID | Voce | Stato |
+|---|---|---|
+| BL-UI-01 | Rilevamento dispositivi/IP in LAN (oggi escluso: solo Host manuale) | Backlog |
+| BL-UI-02 | Guide setup PC macOS/Linux (Appendici Workflow); prodotto attuale Windows-centrico | Backlog |
+| BL-UI-03 | Riorganizzazione Configura (Sicurezza/Accessi; Archivio vs Catalogo) | Sospeso post-template |
+| BL-UI-04 | Confermare posizione passo «Nome Catalogo» nel wizard | Da chiudere |
+| BL-UI-05 | Fattibilità controlli SMB integrati / CIFS configurabile da terza app (Workflow §8.6) | Da validare |
