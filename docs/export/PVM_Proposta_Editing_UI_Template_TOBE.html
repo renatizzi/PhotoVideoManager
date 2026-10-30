@@ -489,7 +489,11 @@
       </div>
     </div>
   </div>
-  <p class="caption">Il passo «Nome del Catalogo» è introdotto perché il campo non esisteva ancora (chiusura 3); da confermare se va subito dopo la scelta dispositivo o in chiusura F.</p>
+  <div class="decision">
+    <strong>BL-UI-04 chiuso (proposta Cursor, eseguita nei template):</strong> «Nome del Catalogo» va
+    <em>subito dopo</em> «Dove tenere il Catalogo» e <em>prima</em> del ramo dispositivo (locale / Cloud / RAPIDA-GUIDATA).
+    Motivo: un solo passo comune a tutti i rami; il riepilogo finale lo ripete senza chiederlo di nuovo; in modifica sede si può ripropurre precompilato.
+  </div>
 
   <h3>2.1 Telefono / tablet — percorso diretto</h3>
   <div class="grid">
@@ -559,6 +563,7 @@
   </div>
 
   <h3>2.3 PC / notebook — RAPIDA o GUIDATA</h3>
+  <div class="flow-label">Biforcazione (dopo Nome Catalogo)</div>
   <div class="grid">
     <div class="phone">
       <div class="bar"><div class="app">MediaManager</div></div>
@@ -572,15 +577,19 @@
         <div class="actions"><span class="btn wide">CONTINUA</span></div>
       </div>
     </div>
+  </div>
+
+  <div class="flow-label">GUIDATA — Passi 1 → 4 (preparazione)</div>
+  <div class="grid">
     <div class="phone">
       <div class="bar"><div class="app">MediaManager</div></div>
       <div class="body">
         <div class="title">Setup Catalogo personale</div>
-        <div class="subtitle">1 – Disponibilità</div>
-        <div class="desc">Verifica di avere a disposizione quanto necessario.</div>
-        <div class="radio">☑ Telefono/tablet con MediaManager</div>
-        <div class="radio">☑ PC Windows 10+</div>
-        <div class="radio">☑ Cavo USB dati</div>
+        <div class="subtitle">1 – Verifica della disponibilità di quanto necessario</div>
+        <div class="desc">Prima di avviare la procedura verifica e conferma di avere a disposizione i seguenti strumenti:</div>
+        <div class="radio">☑ Telefono Android o tablet con MediaManager</div>
+        <div class="radio">☑ PC/Notebook Windows 10 o superiore</div>
+        <div class="radio">☑ Cavo USB adatto al trasferimento dati</div>
         <div class="actions"><span class="btn wide">OK</span></div>
       </div>
     </div>
@@ -588,9 +597,12 @@
       <div class="bar"><div class="app">MediaManager</div></div>
       <div class="body">
         <div class="title">Setup Catalogo personale</div>
-        <div class="subtitle">2–4 – Preparazione (GUIDATA)</div>
-        <div class="desc">Collegamento USB, copia CONFIGURA/sup, avvio routine sul PC.</div>
-        <p style="font-size:.75rem;color:var(--muted)">Checklist operative come da filiera PC già nota (passi 2–4). Non ripetute qui per non appesantire: restano nel Workflow dettagliato.</p>
+        <div class="subtitle">2 – Verifica preliminare, preparazione dei file e collegamento</div>
+        <div class="desc">Esegui ora le seguenti verifiche preliminari:</div>
+        <div class="radio">☐ PC e telefono accesi e sbloccati</div>
+        <div class="radio">☐ Collegati con cavo USB dati</div>
+        <div class="radio">☐ Modalità USB = Trasferimento di file</div>
+        <div class="radio">☐ Consenso accesso ai dati del telefono</div>
         <div class="actions"><span class="btn wide">OK</span></div>
       </div>
     </div>
@@ -598,34 +610,80 @@
       <div class="bar"><div class="app">MediaManager</div></div>
       <div class="body">
         <div class="title">Setup Catalogo personale</div>
-        <div class="subtitle">Collegamento CIFS (comune RAPIDA/GUIDATA)</div>
-        <div class="desc">Inserisci Host (IP) a mano e completa la scheda dati.</div>
-        <div class="seat">
-          Host (IP): <strong>192.168.1.20</strong> ← modificabile<br/>
-          User: MEDIA-PC\MediaManager<br/>
-          Port: 445 · Name: MediaManagerCatalog
+        <div class="subtitle">3 – Copia manuale dei file di configurazione</div>
+        <div class="desc">Dopo aver collegato il telefono al PC esegui le seguenti operazioni:</div>
+        <div class="radio">☐ Apri Download del telefono da Esplora file</div>
+        <div class="radio">☐ Copia CONFIGURA e Sup sul Desktop</div>
+        <div class="radio">☐ Verifica entrambi i file sul Desktop</div>
+        <div class="actions"><span class="btn wide">OK</span></div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Setup Catalogo personale</div>
+        <div class="subtitle">4 – Generazione password e dati per la cartella condivisa</div>
+        <div class="desc">È tutto pronto per lanciare la routine sul PC.</div>
+        <div class="radio">☐ Doppio clic su CONFIGURA sul Desktop</div>
+        <div class="radio">☐ Conferma UAC se compare</div>
+        <div class="radio">☐ Attendi «Tutto pronto» (non chiudere la finestra)</div>
+        <div class="actions"><span class="btn wide">OK</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-label">Comune RAPIDA e GUIDATA — CIFS + cartella + esito</div>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Setup Catalogo personale</div>
+        <div class="subtitle">5 – Accedere alla cartella del Catalogo mediante CIFS</div>
+        <div class="desc">Configura CIFS Documents Provider. Host (IP) sempre modificabile a mano.</div>
+        <div class="dlg">
+          <div class="subh">Connection (CIFS)</div>
+          <div class="row" style="border:0;padding:4px 0"><span style="width:72px;color:var(--muted)">Name</span><strong>MediaManagerCatalog</strong> <span class="chip">Copia</span></div>
+          <div class="row" style="border:0;padding:4px 0"><span style="width:72px;color:var(--muted)">Host</span><strong>192.168.1.20</strong> <span class="chip">Copia</span></div>
+          <div class="row" style="border:0;padding:4px 0"><span style="width:72px;color:var(--muted)">Port</span>445 <span class="chip">Copia</span></div>
+          <div class="row" style="border:0;padding:4px 0"><span style="width:72px;color:var(--muted)">Domain</span>(lascia vuoto)</div>
+          <div class="row" style="border:0;padding:4px 0"><span style="width:72px;color:var(--muted)">User</span>MEDIA-PC\MediaManager <span class="chip">Copia</span></div>
+          <div class="row" style="border:0;padding:4px 0"><span style="width:72px;color:var(--muted)">Password</span>•••••••• <span class="chip">Mostra</span> <span class="chip">Copia</span></div>
+          <div class="row" style="border:0;padding:4px 0"><span style="width:72px;color:var(--muted)">Storage</span>SMB2,3 (jCIFS NG)</div>
+          <div class="row" style="border:0;padding:4px 0"><span style="width:72px;color:var(--muted)">Folder</span>(lascia vuoto)</div>
         </div>
-        <div class="actions">
+        <div class="actions" style="margin-top:8px">
           <span class="btn outline">Apri CIFS</span>
-          <span class="btn">Copia Host</span>
+          <span class="btn">Attiva collegamento</span>
         </div>
-        <div class="actions"><span class="btn wide">Scegli cartella</span></div>
       </div>
     </div>
     <div class="phone">
       <div class="bar"><div class="app">MediaManager</div></div>
       <div class="body">
         <div class="title">Setup Catalogo personale</div>
-        <div class="subtitle">Esito</div>
+        <div class="subtitle">Scegli la cartella del Catalogo</div>
+        <div class="desc">Nel selettore apri la connessione CIFS e la share del Catalogo, poi «Usa questa cartella».</div>
+        <div class="actions"><span class="btn wide">Scegli cartella</span></div>
+        <div class="seat" style="margin-top:12px">Dopo il consenso: verifica accesso/scrittura se supportata.</div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Setup Catalogo personale</div>
+        <div class="subtitle">Configurazione completata</div>
+        <div class="desc">Sede salvata e verificata.</div>
         <div class="seat">
-          PC / notebook · \\192.168.1.20\MediaManagerCatalog<br/>
-          Nome: Vacanza a Parigi · <span class="st-on">Online</span>
+          Dispositivo: PC / notebook<br/>
+          Percorso: \\192.168.1.20\MediaManagerCatalog<br/>
+          Nome Catalogo: Vacanza a Parigi<br/>
+          Stato: <span class="st-on">Online</span>
         </div>
         <div class="actions"><span class="btn wide">Fine</span></div>
       </div>
     </div>
   </div>
-  <p class="caption">Percorso RAPIDA: dopo la scelta RAPIDA si va direttamente alla schermata CIFS + scelta cartella + stesse verifiche.</p>
+  <p class="caption">Percorso RAPIDA: biforcazione → direttamente scheda CIFS → Scegli cartella → Esito (stesse verifiche). Nessuno scan LAN: Host digitato/incollato a mano.</p>
 
   <h3>2.4 NAS / disco di rete — RAPIDA o GUIDATA</h3>
   <div class="grid">
@@ -643,24 +701,43 @@
       <div class="bar"><div class="app">MediaManager</div></div>
       <div class="body">
         <div class="title">Setup Catalogo personale</div>
-        <div class="subtitle">Accesso NAS</div>
-        <div class="desc">Host solo manuale (IP o nome).</div>
-        <div class="search" style="border-radius:4px">Host: 192.168.1.30</div>
-        <div class="search" style="border-radius:4px">Utente: catalogo</div>
-        <div class="search" style="border-radius:4px">Password: ••••••••</div>
-        <div class="actions"><span class="btn wide">Apri CIFS / scheda dati</span></div>
+        <div class="subtitle">GUIDATA — preparazione NAS</div>
+        <div class="desc">Verifica servizio SMB e utente sul pannello del NAS (guida contestuale).</div>
+        <div class="radio">☐ SMB/CIFS attivo (SMB 2+)</div>
+        <div class="radio">☐ Cartella condivisa creata</div>
+        <div class="radio">☐ Utente con permesso scrittura</div>
+        <div class="actions"><span class="btn wide">OK</span></div>
       </div>
     </div>
     <div class="phone">
       <div class="bar"><div class="app">MediaManager</div></div>
       <div class="body">
         <div class="title">Setup Catalogo personale</div>
-        <div class="subtitle">Cartella e verifica</div>
+        <div class="subtitle">Accesso NAS (Host manuale)</div>
+        <div class="desc">Nessuno scan LAN. Digita IP o nome host.</div>
+        <div class="search" style="border-radius:4px">Host: 192.168.1.30</div>
+        <div class="search" style="border-radius:4px">Utente: catalogo</div>
+        <div class="search" style="border-radius:4px">Password: ••••••••</div>
+        <div class="actions"><span class="btn outline">Apri CIFS</span><span class="btn">Copia Host</span></div>
         <div class="actions"><span class="btn wide">Scegli cartella</span></div>
-        <div class="seat" style="margin-top:12px">Poi: riepilogo · salva · verifica scrittura se supportata · Online/Offline/Non verificabile</div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Setup Catalogo personale</div>
+        <div class="subtitle">Configurazione completata</div>
+        <div class="seat">
+          Dispositivo: Disco di rete / NAS<br/>
+          Percorso: \\192.168.1.30\Catalogo<br/>
+          Nome Catalogo: Vacanza a Parigi<br/>
+          Stato: <span class="st-on">Online</span>
+        </div>
+        <div class="actions"><span class="btn wide">Fine</span></div>
       </div>
     </div>
   </div>
+  <p class="caption">RAPIDA NAS: biforcazione → Accesso NAS / CIFS → Scegli cartella → Esito (salta solo la checklist preparazione).</p>
 </section>
 
 <!-- ===================== PARTE 2 SORGENTI ===================== -->
@@ -709,7 +786,33 @@
     </div>
   </div>
 
-  <h3>3.1 Varianti PC / NAS (Sorgenti)</h3>
+  <h3>3.1 Locale e Cloud (Sorgenti) — diretto</h3>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Aggiungi dispositivo o cartella</div>
+        <div class="subtitle">Questo telefono / tablet</div>
+        <div class="desc">Seleziona la cartella con le foto. Non è la sede del Catalogo.</div>
+        <div class="actions"><span class="btn wide">Scegli cartella</span></div>
+        <div class="search" style="border-radius:4px;margin-top:10px">Nome visualizzato: Camera</div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Aggiungi dispositivo o cartella</div>
+        <div class="subtitle">Esito sorgente</div>
+        <div class="seat">
+          S25 Ultra · Memoria principale/DCIM/Camera<br/>
+          Stato: <span class="st-on">Online</span>
+        </div>
+        <div class="actions"><span class="btn wide">SALVA SORGENTE</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>3.2 PC / NAS (Sorgenti) — RAPIDA o GUIDATA</h3>
   <div class="grid">
     <div class="phone">
       <div class="bar"><div class="app">MediaManager</div></div>
@@ -725,11 +828,36 @@
       <div class="bar"><div class="app">MediaManager</div></div>
       <div class="body">
         <div class="title">Aggiungi dispositivo o cartella</div>
+        <div class="subtitle">GUIDATA — preparazione (solo Sorgente)</div>
+        <div class="desc">Guida breve a condividere la cartella media sul PC/NAS. Non crea la sede Catalogo.</div>
+        <div class="radio">☐ Cartella foto condivisa sul dispositivo</div>
+        <div class="radio">☐ Stessa Wi‑Fi del tablet</div>
+        <div class="actions"><span class="btn wide">OK</span></div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Aggiungi dispositivo o cartella</div>
         <div class="subtitle">Accesso alla sorgente</div>
-        <div class="desc">Host manuale + dati CIFS necessari.</div>
+        <div class="desc">Host manuale + CIFS. Verifica = lettura/lista file (niente test scrittura).</div>
         <div class="search" style="border-radius:4px">Host: 192.168.1.20</div>
+        <div class="search" style="border-radius:4px">Nome visualizzato: Foto PC</div>
         <div class="actions"><span class="btn outline">Apri CIFS</span></div>
         <div class="actions"><span class="btn wide">Scegli cartella</span></div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Aggiungi dispositivo o cartella</div>
+        <div class="subtitle">Esito sorgente</div>
+        <div class="seat">
+          PC-UFFICIO · \\192.168.1.20\Foto<br/>
+          Stato: <span class="st-on">Online</span>
+        </div>
+        <div class="actions"><span class="btn wide">SALVA SORGENTE</span></div>
+        <p style="font-size:.72rem;color:var(--muted)">Disponibile in Acquisisci. Nessuna importazione automatica.</p>
       </div>
     </div>
   </div>
@@ -750,7 +878,7 @@
       <li><strong>BL-UI-01</strong> — Evoluzione Workflow: rilevamento dispositivi/IP in LAN (oggi escluso; solo Host manuale).</li>
       <li><strong>BL-UI-02</strong> — Guide setup PC macOS/Linux (Appendici Workflow); ramo prodotto attuale resta Windows-centrico.</li>
       <li><strong>BL-UI-03</strong> — Riorganizzazione Configura (accorpamento Sicurezza/Accessi; lessico Archivio vs Catalogo) — sospesa post-template.</li>
-      <li><strong>BL-UI-04</strong> — Confermare posizione del passo «Nome Catalogo» (dopo dispositivo vs in chiusura F).</li>
+      <li><strong>BL-UI-04</strong> — Posizione «Nome Catalogo»: <em>chiuso</em> (dopo «Dove tenere», prima del ramo).</li>
       <li><strong>BL-UI-05</strong> — Validare fattibilità controlli SMB integrati / CIFS configurabile da terza app (Workflow §8.6).</li>
     </ul>
   </div>

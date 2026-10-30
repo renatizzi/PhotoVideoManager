@@ -75,5 +75,5 @@ Non verificato in questa tranche: help contestuale, Configura stile Utility, Clo
 | BL-UI-01 | Rilevamento dispositivi/IP in LAN (oggi escluso: solo Host manuale) | Backlog |
 | BL-UI-02 | Guide setup PC macOS/Linux (Appendici Workflow); prodotto attuale Windows-centrico | Backlog |
 | BL-UI-03 | Riorganizzazione Configura (Sicurezza/Accessi; Archivio vs Catalogo) | Sospeso post-template |
-| BL-UI-04 | Confermare posizione passo «Nome Catalogo» nel wizard | Da chiudere |
+| BL-UI-04 | Posizione passo «Nome Catalogo» | **Chiuso in template**: subito dopo «Dove tenere», prima del ramo dispositivo |
 | BL-UI-05 | Fattibilità controlli SMB integrati / CIFS configurabile da terza app (Workflow §8.6) | Da validare |
