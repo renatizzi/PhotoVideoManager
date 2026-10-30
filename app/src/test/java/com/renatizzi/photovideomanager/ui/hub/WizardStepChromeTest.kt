@@ -23,6 +23,30 @@ class WizardStepChromeTest {
     }
 
     @Test
+    fun avvioAndRapida_subtitlesMatchTobe() {
+        assertEquals(
+            "Avvio procedura",
+            WizardStepChrome.subtitle(WizardStep.S0_START, CatalogSeatKind.LOCAL_DEVICE).text,
+        )
+        assertEquals(
+            "Scelta della cartella",
+            WizardStepChrome.subtitle(WizardStep.W1_CONFIRM, CatalogSeatKind.LOCAL_DEVICE).text,
+        )
+        assertEquals(
+            "Configurazione del Catalogo su un PC / Notebook",
+            WizardStepChrome.subtitle(WizardStep.PC_SHARE_READY, CatalogSeatKind.PC_NOTEBOOK).text,
+        )
+        assertEquals(
+            "Configurazione del Catalogo su NAS/DISCO DI RETE",
+            WizardStepChrome.subtitle(WizardStep.PC_SHARE_READY, CatalogSeatKind.NETWORK_NAS).text,
+        )
+        assertEquals(
+            "Configurazione completata correttamente",
+            WizardStepChrome.subtitle(WizardStep.DONE, CatalogSeatKind.LOCAL_DEVICE).text,
+        )
+    }
+
+    @Test
     fun pcPipeline_subtitlesMatchVideateUtente() {
         val kind = CatalogSeatKind.PC_NOTEBOOK
         val expected = WizardUiContract.PC_STEP_SUBTITLES

@@ -59,7 +59,11 @@ fun CatalogSeatWizardScreen(
     onResumeDraft: () -> Unit,
     onDiscardDraft: () -> Unit,
     onSelectKind: (CatalogSeatKind) -> Unit,
+    onCatalogNameChange: (String) -> Unit = {},
+    onDeviceModelChange: (String) -> Unit = {},
+    onProcedureMode: (ProcedureMode) -> Unit = {},
     onAvanti: () -> Unit,
+    onContinuaAvvio: () -> Unit = onAvanti,
     onBackIntro: () -> Unit,
     onBackS0: () -> Unit,
     onGoStep: (WizardStep) -> Unit,
@@ -118,20 +122,23 @@ fun CatalogSeatWizardScreen(
         Text(
             text = WizardStepChrome.subtitle(state.step, state.selectedKind).text,
             style = MaterialTheme.typography.titleMedium,
+            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
         )
 
         when (state.step) {
-            WizardStep.S0_START -> S0StartStep(
-                seatConfigured = state.seatConfigured,
-                seatLabel = state.seatLabel,
-                canResumeDraft = state.canResumeDraft,
-                resumeStepLabel = state.resumeStepLabel,
-                onStartCreate = onStartCreate,
-                onStartModify = onStartModify,
+            WizardStep.S0_START -> AvvioProceduraStep(
+                state = state,
+                onCatalogNameChange = onCatalogNameChange,
+                onSelectKind = onSelectKind,
+                onDeviceModelChange = onDeviceModelChange,
+                onContinua = onContinuaAvvio,
                 onResumeDraft = onResumeDraft,
                 onDiscardDraft = onDiscardDraft,
                 onCancel = onCancel,
+                // compat unused
+                onStartCreate = onStartCreate,
+                onStartModify = onStartModify,
             )
             WizardStep.INTRO -> IntroStep(
                 selected = state.selectedKind,
@@ -142,18 +149,24 @@ fun CatalogSeatWizardScreen(
                 onCancel = onBackS0,
                 busy = state.busy,
             )
-            WizardStep.W1_CONFIRM -> QuestionGuide(
-                intro = stringResource(R.string.hub_w1_body),
-                question = stringResource(R.string.hub_w1_question),
+            WizardStep.W1_CONFIRM -> SimpleGuide(
+                body = stringResource(R.string.hub_w1_body),
                 primary = stringResource(R.string.hub_w1_confirm),
-                onPrimary = onConfirmLocal,
-                onBack = onBackIntro,
+                onPrimary = { if (!state.busy) openTree.launch(null) },
+                onBack = onBackS0,
                 busy = state.busy,
             )
             WizardStep.PC_SHARE_READY -> PcShareReadyStep(
-                onYes = onPcShareAlreadyReady,
-                onNo = onPcShareNeedsPrepare,
-                onBack = onBackIntro,
+                kind = state.selectedKind,
+                procedureMode = state.procedureMode,
+                onProcedureMode = onProcedureMode,
+                onAvvia = {
+                    when (state.procedureMode) {
+                        ProcedureMode.RAPIDA -> onPcShareAlreadyReady()
+                        ProcedureMode.GUIDATA -> onPcShareNeedsPrepare()
+                    }
+                },
+                onBack = onBackS0,
                 busy = state.busy,
             )
             WizardStep.PC_AVAILABILITY,
@@ -224,13 +237,21 @@ fun CatalogSeatWizardScreen(
                     onGoToAcquire()
                 },
                 onAccessNo = onAccessNo,
-                onBack = { onGoStep(WizardStep.PC_RUN_SCRIPT) },
+                onBack = {
+                    onGoStep(
+                        if (state.procedureMode == ProcedureMode.RAPIDA) {
+                            WizardStep.PC_SHARE_READY
+                        } else {
+                            WizardStep.PC_RUN_SCRIPT
+                        },
+                    )
+                },
             )
             WizardStep.W3_GUIDE -> SimpleGuide(
-                body = stringResource(R.string.hub_w3_body),
+                body = stringResource(R.string.hub_folder_choice_desc_cloud),
                 primary = stringResource(R.string.hub_choose_folder),
                 onPrimary = { if (!state.busy) openTree.launch(null) },
-                onBack = onBackIntro,
+                onBack = onBackS0,
                 busy = state.busy,
             )
             WizardStep.W4_GUIDE -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -261,7 +282,7 @@ fun CatalogSeatWizardScreen(
                     body = stringResource(R.string.hub_w4_pick_hint),
                     primary = stringResource(R.string.hub_choose_folder),
                     onPrimary = { if (!state.busy) openTree.launch(null) },
-                    onBack = onBackIntro,
+                    onBack = { onGoStep(WizardStep.PC_SHARE_READY) },
                     busy = state.busy,
                 )
             }
@@ -299,57 +320,77 @@ private fun QuestionText(text: String) {
 }
 
 @Composable
-private fun S0StartStep(
-    seatConfigured: Boolean,
-    seatLabel: String,
-    canResumeDraft: Boolean,
-    resumeStepLabel: String,
-    onStartCreate: () -> Unit,
-    onStartModify: () -> Unit,
+private fun AvvioProceduraStep(
+    state: CatalogSeatWizardUiState,
+    onCatalogNameChange: (String) -> Unit,
+    onSelectKind: (CatalogSeatKind) -> Unit,
+    onDeviceModelChange: (String) -> Unit,
+    onContinua: () -> Unit,
     onResumeDraft: () -> Unit,
     onDiscardDraft: () -> Unit,
     onCancel: () -> Unit,
+    @Suppress("UNUSED_PARAMETER") onStartCreate: () -> Unit,
+    @Suppress("UNUSED_PARAMETER") onStartModify: () -> Unit,
 ) {
-    QuestionText(stringResource(R.string.hub_s0_question))
-    Text(stringResource(R.string.hub_s0_body))
-    if (seatConfigured) {
+    Text(
+        text = stringResource(R.string.hub_avvio_desc),
+        style = MaterialTheme.typography.bodyMedium,
+    )
+    if (state.seatConfigured) {
         Text(
-            text = stringResource(R.string.hub_s0_current_seat, seatLabel.ifBlank { "—" }),
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        Text(
-            text = stringResource(R.string.hub_s0_modify_note),
+            text = stringResource(
+                R.string.hub_s0_current_seat,
+                state.catalogName.ifBlank { state.seatLabel }.ifBlank { "—" },
+            ),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
         )
-    } else {
-        Text(
-            text = stringResource(R.string.hub_s0_no_seat),
-            style = MaterialTheme.typography.bodyMedium,
-        )
     }
-    if (canResumeDraft) {
-        Text(stringResource(R.string.hub_s0_resume_hint, resumeStepLabel))
-        Button(onClick = onResumeDraft, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.hub_s0_resume, resumeStepLabel))
+    if (state.canResumeDraft) {
+        Text(stringResource(R.string.hub_s0_resume_hint, state.resumeStepLabel))
+        OutlinedButton(onClick = onResumeDraft, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.hub_s0_resume, state.resumeStepLabel))
         }
         TextButton(onClick = onDiscardDraft) {
             Text(stringResource(R.string.hub_s0_discard_draft))
         }
         Spacer(modifier = Modifier.height(4.dp))
     }
-    Button(onClick = onStartCreate, modifier = Modifier.fillMaxWidth()) {
-        Text(stringResource(R.string.hub_s0_create))
-    }
-    OutlinedButton(
-        onClick = onStartModify,
+
+    QuestionText(stringResource(R.string.hub_avvio_name_q))
+    OutlinedTextField(
+        value = state.catalogName,
+        onValueChange = onCatalogNameChange,
         modifier = Modifier.fillMaxWidth(),
-        enabled = seatConfigured,
+        singleLine = true,
+        placeholder = { Text(stringResource(R.string.hub_avvio_name_default)) },
+    )
+
+    QuestionText(stringResource(R.string.hub_avvio_device_q))
+    DeviceKindDropdown(
+        selected = state.selectedKind,
+        onSelectKind = onSelectKind,
+        enabled = !state.busy,
+    )
+
+    QuestionText(stringResource(R.string.hub_avvio_model_q))
+    OutlinedTextField(
+        value = state.deviceModel,
+        onValueChange = onDeviceModelChange,
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
+        placeholder = { Text(stringResource(R.string.hub_avvio_model_hint)) },
+    )
+
+    Button(
+        onClick = onContinua,
+        enabled = !state.busy,
+        modifier = Modifier.fillMaxWidth(),
     ) {
-        Text(stringResource(R.string.hub_s0_modify))
+        Text(stringResource(R.string.hub_avvio_continua))
     }
-    TextButton(onClick = onCancel) {
-        Text(stringResource(R.string.importa_annulla))
+    TextButton(onClick = onCancel, enabled = !state.busy) {
+        Text(stringResource(R.string.hub_avvio_esc))
     }
 }
 
@@ -696,32 +737,86 @@ private fun ChecklistOkBlock(
 
 @Composable
 private fun PcShareReadyStep(
-    onYes: () -> Unit,
-    onNo: () -> Unit,
+    kind: CatalogSeatKind,
+    procedureMode: ProcedureMode,
+    onProcedureMode: (ProcedureMode) -> Unit,
+    onAvvia: () -> Unit,
     onBack: () -> Unit,
     busy: Boolean,
 ) {
-    Text(stringResource(R.string.hub_pc_share_ready_intro))
+    val intro = if (kind == CatalogSeatKind.NETWORK_NAS) {
+        stringResource(R.string.hub_pc_share_ready_intro_nas)
+    } else {
+        stringResource(R.string.hub_pc_share_ready_intro)
+    }
+    Text(intro)
     Text(
         stringResource(R.string.hub_pc_share_ready_question),
         fontWeight = FontWeight.SemiBold,
     )
+    ProcedureModeDropdown(
+        selected = procedureMode,
+        onSelect = onProcedureMode,
+        enabled = !busy,
+    )
     Button(
-        onClick = onYes,
+        onClick = onAvvia,
         enabled = !busy,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Text(stringResource(R.string.hub_pc_share_ready_yes))
-    }
-    OutlinedButton(
-        onClick = onNo,
-        enabled = !busy,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Text(stringResource(R.string.hub_pc_share_ready_no))
+        Text(stringResource(R.string.hub_procedure_avvia))
     }
     TextButton(onClick = onBack, enabled = !busy) {
         Text(stringResource(R.string.hub_indietro))
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ProcedureModeDropdown(
+    selected: ProcedureMode,
+    onSelect: (ProcedureMode) -> Unit,
+    enabled: Boolean,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val label = when (selected) {
+        ProcedureMode.RAPIDA -> stringResource(R.string.hub_procedure_rapida)
+        ProcedureMode.GUIDATA -> stringResource(R.string.hub_procedure_guidata)
+    }
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { if (enabled) expanded = it },
+    ) {
+        OutlinedTextField(
+            value = label,
+            onValueChange = {},
+            readOnly = true,
+            enabled = enabled,
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            label = { Text(stringResource(R.string.hub_pc_share_ready_question)) },
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.hub_procedure_rapida)) },
+                onClick = {
+                    onSelect(ProcedureMode.RAPIDA)
+                    expanded = false
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.hub_procedure_guidata)) },
+                onClick = {
+                    onSelect(ProcedureMode.GUIDATA)
+                    expanded = false
+                },
+            )
+        }
     }
 }
 

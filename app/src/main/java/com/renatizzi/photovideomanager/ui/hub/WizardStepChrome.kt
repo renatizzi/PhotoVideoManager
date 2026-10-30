@@ -3,7 +3,7 @@ package com.renatizzi.photovideomanager.ui.hub
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind
 
 /**
- * Chrome UIX — videate utente Setup Catalogo (PPT V2 + revisioni).
+ * Chrome UIX — Setup Catalogo TO-BE (Avvio procedura + RAPIDA/GUIDATA).
  */
 object WizardStepChrome {
     data class Subtitle(val text: String)
@@ -16,10 +16,17 @@ object WizardStepChrome {
             "Passo 0: sottotitolo senza numero"
         }
         return when (step) {
-            WizardStep.S0_START -> Subtitle("Inizio")
+            WizardStep.S0_START -> Subtitle("Avvio procedura")
             WizardStep.INTRO -> Subtitle(pc[0])
-            WizardStep.W1_CONFIRM -> Subtitle("Su questo dispositivo")
-            WizardStep.PC_SHARE_READY -> Subtitle("Cartella condivisa già pronta?")
+            WizardStep.W1_CONFIRM -> Subtitle("Scelta della cartella")
+            WizardStep.PC_SHARE_READY -> Subtitle(
+                when (kind) {
+                    CatalogSeatKind.NETWORK_NAS ->
+                        "Configurazione del Catalogo su NAS/DISCO DI RETE"
+                    else ->
+                        "Configurazione del Catalogo su un PC / Notebook"
+                },
+            )
             WizardStep.PC_AVAILABILITY -> Subtitle(pc[1])
             WizardStep.PC_USB_PREPARE -> Subtitle(pc[2])
             WizardStep.PC_COPY_FILES -> Subtitle(pc[3])
@@ -42,9 +49,9 @@ object WizardStepChrome {
             WizardStep.W2_SCRIPT_RESULT,
             WizardStep.W2_ROUTINE_CONFIRM,
             -> Subtitle(pc[4])
-            WizardStep.W3_GUIDE -> Subtitle("Google Drive")
-            WizardStep.W4_GUIDE -> Subtitle("NAS / disco di rete")
-            WizardStep.DONE -> Subtitle("Configurazione completata")
+            WizardStep.W3_GUIDE -> Subtitle("Scelta della cartella")
+            WizardStep.W4_GUIDE -> Subtitle("GUIDATA — preparazione NAS")
+            WizardStep.DONE -> Subtitle("Configurazione completata correttamente")
         }
     }
 }

@@ -34,6 +34,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -114,10 +115,6 @@ fun AcquisisciStaticScreen(
     val selectedCount = sources.count {
         state.selectionOf(it.locationId) == SourceCensusSelection.SELECTED
     }
-    val activeCount = sources.count {
-        state.selectionOf(it.locationId) != SourceCensusSelection.EXCLUDED
-    }
-    val allChecked = activeCount > 0 && selectedCount == activeCount
     val busy = state.loading || state.censusBusyLocationIds.isNotEmpty()
     var renameTarget by remember { mutableStateOf<SourceSummary?>(null) }
     var removeTarget by remember { mutableStateOf<SourceSummary?>(null) }
@@ -150,58 +147,27 @@ fun AcquisisciStaticScreen(
             fontWeight = FontWeight.SemiBold,
         )
         Text(
+            text = stringResource(R.string.acquisisci_static_subtitle),
+            style = MaterialTheme.typography.titleMedium,
+            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+        )
+        Text(
             text = stringResource(R.string.acquisisci_static_intro),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
         )
 
-        // Catalogo di riferimento ≠ fonti sotto (Posizione vs dispositivi da cui acquisire).
-        Text(
-            text = stringResource(R.string.acquisisci_catalog_ref_title),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Medium,
+        val hasCatalog = state.catalogSeatConfigured || seatConfigured
+        com.renatizzi.photovideomanager.ui.common.CatalogSeatStatusRow(
+            status = state.catalogSeatStatus,
+            onOpenSeat = onOpenCatalogSeatWizard,
         )
-        if (state.catalogSeatConfigured || seatConfigured) {
-            val seatName = state.catalogSeatLabel.ifBlank { "—" }
-            val kind = state.catalogSeatKindLabel.ifBlank { "Posizione impostata" }
-            Text(
-                text = stringResource(R.string.acquisisci_catalog_ref_line, seatName, kind),
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            val reach = when (state.catalogSeatReachable) {
-                true -> stringResource(R.string.acquisisci_catalog_ref_reachable)
-                false -> stringResource(R.string.acquisisci_catalog_ref_unreachable)
-                null -> stringResource(R.string.acquisisci_catalog_ref_unknown)
-            }
-            Text(
-                text = reach,
-                style = MaterialTheme.typography.labelMedium,
-                color = when (state.catalogSeatReachable) {
-                    true -> MaterialTheme.colorScheme.secondary
-                    false -> MaterialTheme.colorScheme.error
-                    null -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
-                },
-            )
-            TextButton(
-                onClick = onOpenCatalogUpdate,
-                enabled = !busy,
-            ) {
-                Text(stringResource(R.string.hub_update_title))
-            }
-        } else {
-            Text(
-                text = stringResource(R.string.acquisisci_catalog_ref_missing),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-            )
-            Button(
-                onClick = onOpenCatalogSeatWizard,
-                enabled = !busy,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(R.string.hub_acquire_needs_setup_action))
-            }
+
+        if (!hasCatalog) {
+            // TO-BE: senza Catalogo solo invito — niente +, CONFERMA, elenco.
+            Spacer(modifier = Modifier.weight(1f))
+            return@Column
         }
 
         Text(
@@ -230,7 +196,7 @@ fun AcquisisciStaticScreen(
             Text(stringResource(R.string.acquisisci_rename_device, state.deviceAlias.ifBlank { "…" }))
         }
 
-        // Azioni in alto (layout congelato): refresh, Aggiungi, CONFERMA
+        // Azioni: refresh icon-only, Aggiungi, CONFERMA (niente «Tutti»)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -267,15 +233,6 @@ fun AcquisisciStaticScreen(
                     Text(stringResource(R.string.acquisisci_conferma))
                 }
             }
-        }
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(
-                checked = allChecked,
-                onCheckedChange = { onSetAllSelected(it) },
-                enabled = !busy && sources.isNotEmpty(),
-            )
-            Text(stringResource(R.string.acquisisci_tutti))
         }
 
         Column(
@@ -323,7 +280,7 @@ fun AcquisisciStaticScreen(
                             selection = state.selectionOf(source.locationId),
                             busy = source.locationId in state.censusBusyLocationIds,
                             enabled = !busy,
-                            showDeviceLabel = false, // già nell'intestazione gruppo
+                            showDeviceLabel = false,
                             onToggle = { cycleSourceSelection(source) },
                             onBrowse = { onBrowse(source.locationId) },
                             onLongPress = {
@@ -926,6 +883,12 @@ fun AggiornaStaticScreen(
             fontWeight = FontWeight.SemiBold,
         )
         Text(
+            text = stringResource(R.string.aggiorna_static_subtitle),
+            style = MaterialTheme.typography.titleMedium,
+            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+        )
+        Text(
             text = stringResource(R.string.aggiorna_static_intro),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
@@ -1115,18 +1078,27 @@ fun AggiornaStaticScreen(
 }
 
 /**
- * Componi landing (template): ricerca, + ALBUM / + RACCOLTA, elenco con mini-cover e menu ⋮.
- * Crea/Edita/Pubblica non sono bottoni hub separati sulla landing.
+ * Componi landing TO-BE: switch ALBUM/RACCOLTA (default ALBUM), + contestuale, elenco filtrato.
  */
 @Composable
-fun ComponiLandingStaticScreen(modifier: Modifier = Modifier) {
+fun ComponiLandingStaticScreen(
+    seatStatus: com.renatizzi.photovideomanager.domain.hub.CatalogSeatStatus? = null,
+    onOpenCatalogSeat: () -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
     var query by remember { mutableStateOf("") }
+    var albumMode by remember { mutableStateOf(true) } // true = ALBUM (default)
     val albums = listOf(
         "Vacanze 2024" to "Album · ultima modifica 12/08/2026",
         "Compleanno Marco" to "Raccolta · ultima modifica 03/09/2026",
         "Ricordi famiglia" to "Album · ultima modifica 01/10/2026",
         "Evento scuola" to "Raccolta · ultima modifica 20/09/2026",
     )
+    val filtered = albums.filter { (_, meta) ->
+        if (albumMode) meta.startsWith("Album") else meta.startsWith("Raccolta")
+    }.filter { (name, _) ->
+        query.isBlank() || name.contains(query, ignoreCase = true)
+    }
 
     Column(
         modifier = modifier
@@ -1140,9 +1112,21 @@ fun ComponiLandingStaticScreen(modifier: Modifier = Modifier) {
             fontWeight = FontWeight.SemiBold,
         )
         Text(
+            text = stringResource(R.string.componi_static_subtitle),
+            style = MaterialTheme.typography.titleMedium,
+            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+        )
+        Text(
             text = stringResource(R.string.componi_landing_intro),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+        )
+
+        com.renatizzi.photovideomanager.ui.common.CatalogSeatStatusRow(
+            status = seatStatus,
+            onOpenSeat = onOpenCatalogSeat,
+            compact = true,
         )
 
         CatalogSearchField(query = query, onQueryChange = { query = it })
@@ -1154,7 +1138,7 @@ fun ComponiLandingStaticScreen(modifier: Modifier = Modifier) {
         )
         Text(stringResource(R.string.componi_riepilogo_static), style = MaterialTheme.typography.bodySmall)
 
-        // Template: (+) ALBUM / RACCOLTA — creazione; modifica via menu contestuale riga
+        // Switch ALBUM / RACCOLTA + singolo +
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1172,31 +1156,51 @@ fun ComponiLandingStaticScreen(modifier: Modifier = Modifier) {
                     tint = MaterialTheme.colorScheme.onPrimary,
                 )
             }
-            Button(onClick = {}, modifier = Modifier.weight(1f)) {
-                Text(stringResource(R.string.componi_album))
-            }
-            Button(onClick = {}, modifier = Modifier.weight(1f)) {
-                Text(stringResource(R.string.componi_raccolta))
-            }
+            FilterChip(
+                selected = albumMode,
+                onClick = { albumMode = true },
+                label = { Text(stringResource(R.string.componi_album)) },
+            )
+            FilterChip(
+                selected = !albumMode,
+                onClick = { albumMode = false },
+                label = { Text(stringResource(R.string.componi_raccolta)) },
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = if (albumMode) {
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    } else {
+                        MaterialTheme.colorScheme.surfaceVariant
+                    },
+                ),
+            )
         }
-
-        KindFilters()
 
         Column(
             modifier = Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState()),
         ) {
-            albums.forEach { (name, meta) ->
-                HorizontalDivider()
-                MediaRow(
-                    title = name,
-                    subtitle = meta,
-                    selection = SourceCensusSelection.NOT_SELECTED,
-                    showMenu = true,
+            if (filtered.isEmpty()) {
+                Text(
+                    text = stringResource(
+                        if (albumMode) R.string.componi_empty_album else R.string.componi_empty_raccolta,
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+                    modifier = Modifier.padding(vertical = 12.dp),
                 )
+            } else {
+                filtered.forEach { (name, meta) ->
+                    HorizontalDivider()
+                    MediaRow(
+                        title = name,
+                        subtitle = meta,
+                        selection = SourceCensusSelection.NOT_SELECTED,
+                        showMenu = true,
+                    )
+                }
+                HorizontalDivider()
             }
-            HorizontalDivider()
             Spacer(modifier = Modifier.height(16.dp))
         }
     }

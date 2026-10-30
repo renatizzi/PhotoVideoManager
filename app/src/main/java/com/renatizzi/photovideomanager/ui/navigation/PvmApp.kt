@@ -167,24 +167,25 @@ fun PvmApp(
                     )
                 }
                 composable(PvmDestination.Organizza.route) {
-                    var organizaSeat by remember {
-                        mutableStateOf<com.renatizzi.photovideomanager.domain.hub.CatalogSeatStatus?>(null)
-                    }
-                    LaunchedEffect(Unit) {
-                        organizaSeat = runCatching { catalogFacade.catalogSeatStatus() }.getOrNull()
-                    }
+                    // TO-BE: nessuna riga Catalogo sull'hub Organizza (solo Dashboard/Acquisisci/Aggiorna/Componi).
                     MacroHubScreen(
                         area = MacroNavigation.areaFor(ShellTab.ORGANIZZA)!!,
                         onFeatureClick = { openFeature(it.id) },
-                        seatStatus = organizaSeat,
+                    )
+                }
+                composable(PvmDestination.Componi.route) {
+                    var componiSeat by remember {
+                        mutableStateOf<com.renatizzi.photovideomanager.domain.hub.CatalogSeatStatus?>(null)
+                    }
+                    LaunchedEffect(Unit) {
+                        componiSeat = runCatching { catalogFacade.catalogSeatStatus() }.getOrNull()
+                    }
+                    ComponiLandingStaticScreen(
+                        seatStatus = componiSeat,
                         onOpenCatalogSeat = {
                             navController.navigate(PvmDestination.CatalogSeatWizard.route)
                         },
                     )
-                }
-                composable(PvmDestination.Componi.route) {
-                    // Anteprima statica landing Componi (template): elenco + Crea/Edita/Pubblica
-                    ComponiLandingStaticScreen()
                 }
                 composable(PvmDestination.Utility.route) {
                     MacroHubScreen(
@@ -295,7 +296,11 @@ fun PvmApp(
                         onResumeDraft = wizardVm::resumeDraft,
                         onDiscardDraft = wizardVm::discardDraftAndStayOnS0,
                         onSelectKind = wizardVm::selectKind,
+                        onCatalogNameChange = wizardVm::updateCatalogName,
+                        onDeviceModelChange = wizardVm::updateDeviceModel,
+                        onProcedureMode = wizardVm::selectProcedureMode,
                         onAvanti = wizardVm::avantiFromIntro,
+                        onContinuaAvvio = wizardVm::continuaFromAvvio,
                         onBackIntro = wizardVm::goIntro,
                         onBackS0 = wizardVm::goS0,
                         onGoStep = wizardVm::goStep,

@@ -100,7 +100,10 @@ fun HomeScreen(
         )
         Text(
             text = stringResource(R.string.dashboard_subtitle),
-            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontSize = 14.sp,
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+            ),
             color = labelColor,
         )
         com.renatizzi.photovideomanager.ui.common.CatalogSeatStatusRow(

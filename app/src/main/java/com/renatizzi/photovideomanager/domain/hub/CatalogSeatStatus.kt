@@ -1,8 +1,8 @@
 package com.renatizzi.photovideomanager.domain.hub
 
 /**
- * Stato UI della Posizione del Catalogo (contratto comune Dashboard / Organizza /
- * Acquisisci / Aggiorna). Non è una scansione rete: solo probe della sede già scelta.
+ * Stato UI della Posizione del Catalogo (contratto comune Dashboard /
+ * Acquisisci / Aggiorna / Componi). Non è una scansione rete: solo probe della sede già scelta.
  */
 enum class CatalogSeatReachability {
     /** Nessuna Posizione impostata. */
@@ -22,6 +22,9 @@ data class CatalogSeatStatus(
     val configured: Boolean get() = seat.isConfigured
     val label: String get() = seat.displayLabel
     val kind: CatalogSeatKind get() = seat.kind
+    val catalogName: String get() = seat.effectiveCatalogName
+    val deviceModel: String get() = seat.deviceModel
+    val memoryLabel: String get() = seat.memoryLabel
 }
 
 object CatalogSeatKindLabels {
@@ -31,5 +34,42 @@ object CatalogSeatKindLabels {
         CatalogSeatKind.CLOUD_DRIVE -> "Su Google Drive / cloud"
         CatalogSeatKind.NETWORK_NAS -> "Su disco di rete / NAS"
         CatalogSeatKind.NONE -> ""
+    }
+
+    fun shortDevice(kind: CatalogSeatKind): String = when (kind) {
+        CatalogSeatKind.LOCAL_DEVICE -> "Questo dispositivo"
+        CatalogSeatKind.PC_NOTEBOOK -> "PC / notebook"
+        CatalogSeatKind.CLOUD_DRIVE -> "Google Drive"
+        CatalogSeatKind.NETWORK_NAS -> "NAS / disco di rete"
+        CatalogSeatKind.NONE -> ""
+    }
+}
+
+object CatalogSeatRowFormatter {
+    fun reachabilityLabel(reach: CatalogSeatReachability): String = when (reach) {
+        CatalogSeatReachability.REACHABLE -> "Online"
+        CatalogSeatReachability.UNREACHABLE -> "Offline"
+        CatalogSeatReachability.UNKNOWN,
+        CatalogSeatReachability.NOT_CONFIGURED,
+        -> "Non verificabile"
+    }
+
+    /**
+     * Seconda riga stile TO-BE:
+     * locale: «device, Principale|Secondaria, folder - stato»
+     * remoto: «device, path - stato»
+     */
+    fun detailLine(status: CatalogSeatStatus): String {
+        val seat = status.seat
+        val device = seat.deviceModel.ifBlank { CatalogSeatKindLabels.shortDevice(seat.kind) }
+        val path = seat.displayLabel.ifBlank { "—" }
+        val state = reachabilityLabel(status.reachability)
+        return when (seat.kind) {
+            CatalogSeatKind.LOCAL_DEVICE -> {
+                val mem = seat.memoryLabel.ifBlank { CatalogSeat.MEMORY_PRIMARY }
+                "$device, $mem, $path - $state"
+            }
+            else -> "$device, $path - $state"
+        }
     }
 }

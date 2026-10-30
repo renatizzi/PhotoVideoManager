@@ -22,10 +22,21 @@ class CatalogSeatStore(context: Context) {
         val kind = runCatching {
             CatalogSeatKind.valueOf(prefs.getString(KEY_KIND, CatalogSeatKind.NONE.name)!!)
         }.getOrDefault(CatalogSeatKind.NONE)
+        val label = prefs.getString(KEY_LABEL, "").orEmpty()
+        // Migrazione: se manca catalogName, riusa displayLabel se sembra un nome corto, altrimenti default.
+        val storedName = prefs.getString(KEY_CATALOG_NAME, null)
+        val catalogName = when {
+            !storedName.isNullOrBlank() -> storedName
+            label.isNotBlank() && !label.contains('\\') && !label.contains('/') && label.length <= 48 -> label
+            else -> CatalogSeat.DEFAULT_CATALOG_NAME
+        }
         return CatalogSeat(
             kind = kind,
             treeUri = prefs.getString(KEY_URI, null),
-            displayLabel = prefs.getString(KEY_LABEL, "").orEmpty(),
+            displayLabel = label,
+            catalogName = catalogName,
+            deviceModel = prefs.getString(KEY_DEVICE_MODEL, "").orEmpty(),
+            memoryLabel = prefs.getString(KEY_MEMORY, "").orEmpty(),
             configuredAtEpochMs = prefs.getLong(KEY_CONFIGURED_AT, 0L),
         )
     }
@@ -35,6 +46,9 @@ class CatalogSeatStore(context: Context) {
             .putString(KEY_KIND, seat.kind.name)
             .putString(KEY_URI, seat.treeUri)
             .putString(KEY_LABEL, seat.displayLabel)
+            .putString(KEY_CATALOG_NAME, seat.catalogName)
+            .putString(KEY_DEVICE_MODEL, seat.deviceModel)
+            .putString(KEY_MEMORY, seat.memoryLabel)
             .putLong(KEY_CONFIGURED_AT, seat.configuredAtEpochMs)
             .apply()
     }
@@ -78,10 +92,13 @@ class CatalogSeatStore(context: Context) {
     }
 
     companion object {
-        private const val PREFS = "pvm_catalog_seat"
+        const val PREFS = "pvm_catalog_seat"
         private const val KEY_KIND = "seat_kind"
         private const val KEY_URI = "seat_uri"
         private const val KEY_LABEL = "seat_label"
+        private const val KEY_CATALOG_NAME = "seat_catalog_name"
+        private const val KEY_DEVICE_MODEL = "seat_device_model"
+        private const val KEY_MEMORY = "seat_memory"
         private const val KEY_CONFIGURED_AT = "seat_configured_at"
         private const val KEY_DEVICE_ID = "hub_device_id"
         private const val KEY_SYNC = "hub_last_synced"
