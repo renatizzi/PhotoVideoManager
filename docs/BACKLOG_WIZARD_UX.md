@@ -67,3 +67,24 @@
 - File: CONFIGURA / sup  
 
 Non verificato in questa tranche: help contestuale, Configura stile Utility, Cloud/NAS completi.
+
+## BL-UI (28/10/2026) — da proposta editing Albero_template3 / Workflow v2
+
+| ID | Voce | Stato |
+|---|---|---|
+| BL-UI-01 | Rilevamento dispositivi/IP in LAN (oggi escluso: solo Host manuale) | Backlog |
+| BL-UI-02 | Guide setup PC macOS/Linux (Appendici Workflow); prodotto attuale Windows-centrico | Backlog |
+| BL-UI-03 | Riorganizzazione Configura (Sicurezza/Accessi; Archivio vs Catalogo) | Sospeso post-template |
+| BL-UI-04 | Posizione passo «Nome Catalogo» | **Chiuso in template**: subito dopo «Dove tenere», prima del ramo dispositivo |
+| BL-UI-05 | Fattibilità controlli SMB integrati / CIFS configurabile da terza app (Workflow §8.6) | Da validare |
+
+## BL-UI integrazioni 30/10 (da integrazione_template.pdf)
+
+| ID | Voce | Stato |
+|---|---|---|
+| BL-UI-04 | Nome Catalogo + landing Avvio procedura | **Recepito** (default MediaManagerCatalog; dopo/in landing unica) |
+| BL-UI-06 | Conferma dettaglio RAPIDA PC/NAS (proposta Host→CIFS→cartella→Salva) | In attesa Renato |
+| BL-UI-07 | GUIDATA anche su Setup Sorgenti? | In attesa Renato |
+| BL-UI-08 | Esc vincolante nel setup | In mock; da confermare |
+| BL-UI-09 | Cloud: solo SAF account esistenti (no Aggiungi account) | In attesa chiarimento |
+| BL-UI-10 | Correzione testo Sorgenti «cartella Catalogo» → «cartella da censire» | Applicata in template |

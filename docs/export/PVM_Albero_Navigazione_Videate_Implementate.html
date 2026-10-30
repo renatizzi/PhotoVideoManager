@@ -1,0 +1,229 @@
+<!DOCTYPE html><html lang="it"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Albero navigazione videate implementate</title>
+<style>body{font-family:system-ui,sans-serif;line-height:1.45;margin:1rem;max-width:52rem}
+h1,h2,h3{color:#0d47a1} pre{white-space:pre-wrap;background:#f5f5f5;padding:.75rem;border-radius:8px;font-size:.85rem}
+table{border-collapse:collapse;width:100%} td,th{border:1px solid #ccc;padding:.4rem;text-align:left}</style>
+</head><body>
+<h1>Photo&amp;VideoManager — Albero di navigazione delle videate implementate</h1>
+<p>Esportato: 25/10/2026 19:32 (Europe/Rome)</p>
+<p>Build di riferimento codice: 0.16.37-preview (branch cursor/prompt-continuita-allineamento-5311).</p>
+<p>Branch parallelo PR Acquisisci (cursor/cifs-user-folder-attiva-b602): fino a 0.16.52-preview — chiarimenti Catalogo di riferimento / gruppi fonti; dettagli nella sezione 4.</p>
+<p>Fonte requisiti navigazione: Nota Integrata v5.3 §5. Stato: mappa AS-IS implementata (non proposta futura).</p>
+<p>Legenda stati: [OK] implementato con dati/flusso · [UI] layout presente, dominio stub/parziale · [STUB] voce hub senza funzione completa.</p>
+<h1>1. Shell comune (tutte le aree)</h1>
+<p>Top Bar: titolo MediaManager + versione · utente locale · data/ora · Guida · dark mode</p>
+<p>Bottom Bar (5): Home · Organizza · Componi · Utility · Impostazioni (solo icona ingranaggio)</p>
+<p>Route root: home | organiza | componi | utility | config</p>
+<h1>2. Flowchart testuale (panoramica)</h1>
+<pre>
+┌─────────────────────────────────────────────────────────────────┐
+│                         TOP BAR (fissa)                          │
+└─────────────────────────────────────────────────────────────────┘
+┌──────────┬───────────┬──────────┬──────────┬────────────────────┐
+│   HOME   │ ORGANIZZA │ COMPONI  │ UTILITY  │ CONFIGURA (icona)  │
+└────┬─────┴─────┬─────┴────┬─────┴────┬─────┴─────────┬──────────┘
+     │           │          │          │               │
+     ▼           ▼          ▼          ▼               ▼
+  Dashboard   Hub macro   Hub macro  Hub macro     Setup Catalogo
+  KPI+ricerca  Acquisisci  Crea*      Backup*       + Impostazioni*
+  Accesso      Aggiorna    Edita*     Ripristina
+  rapido                   Pubblica*  Revisione*
+                                      Spazio*
+</pre>
+<h1>3. Albero dettagliato per macroarea</h1>
+<h2>3.1 HOME  [OK]</h2>
+<p>Videata: Dashboard (KPI foto/video, Catalogo, acquisite, spazio)</p>
+<p>Ricerca (campo → apre motore Ricerca)</p>
+<p>Accesso rapido 2×3 → scorciatoie verso feature (Acquisisci, Aggiorna, …)</p>
+<p>Nessuno scrolling obbligatorio sul viewport tipico (layout congelato Nota §5.6)</p>
+<h2>3.2 ORGANIZZA — hub  [OK]</h2>
+<p>Landing MacroHub: voci Acquisisci · Aggiorna</p>
+<h3>3.2.1 Acquisisci → Importa (unico processo)  [OK]</h3>
+<p>Route: organiza/acquire</p>
+<p>Passo interno CENSUS — videata Acquisisci:</p>
+<p>Intro + riepilogo sorgenti / Catalogo</p>
+<p>Azioni in alto: Refresh · + (Aggiungi) · CONFERMA</p>
+<p>Elenco fonti con riquadro 3 stati (✓ / vuoto / X) — BL-03</p>
+<p>Rinomina sorgente (long-press) · rimozione con conferma su X</p>
+<p>Da PC o rete / guide SAF · collegamento Catalog seat wizard</p>
+<p>Dettaglio fonte: SourceBrowse (organiza/acquire/browse/{id})</p>
+<p>Passo interno COPY — videata Importa (non voce hub):</p>
+<p>Elenco candidati · filtri · Importa · Continua → Aggiorna</p>
+<p>Torna ad Acquisisci</p>
+<h3>3.2.2 Setup Catalogo personale (Wizard)  [OK ramo PC]</h3>
+<p>Route: organiza/acquire/catalog-seat (anche da CONFIGURA e da Acquisisci)</p>
+<p>Chrome: titolo fisso «Setup Catalogo personale» + sottotitolo passo</p>
+<pre>
+S0_START  →  scelta Crea / Modifica Posizione Catalogo
+    │
+    ▼
+INTRO (Passo 0)  — Dove tenere il Catalogo
+    menu: Questo dispositivo | PC/Notebook | Cloud | Disco rete/NAS
+    │
+    ├─ LOCAL_DEVICE ──► W1_CONFIRM ──► pick cartella ──► DONE
+    ├─ CLOUD_DRIVE ───► W3_GUIDE (stub guida) ──► pick ──► DONE
+    ├─ NETWORK_NAS ───► W4_GUIDE (stub guida) ──► pick ──► DONE
+    └─ PC_NOTEBOOK
+            ▼
+        PC_AVAILABILITY   (Passo 1 — checklist strumenti)
+            ▼
+        PC_USB_PREPARE    (Passo 2 — USB; OK esporta CONFIGURA + sup)
+            ▼
+        PC_COPY_FILES     (Passo 3 — copia manuale Desktop)
+            ▼
+        PC_RUN_SCRIPT     (Passo 4 — doppio clic + UAC + «Tutto pronto»)
+            ▼
+        W2_CIFS           (Passo 5 — scheda CIFS / Host·User·Password·Copia)
+            ▼
+        W2_PICK           (scelta cartella share via SAF / CIFS Documents)
+            ▼
+        DONE              (Posizione verificata)
+</pre>
+<p>Aggiorna Catalogo (organiza/acquire/catalog-update): probe Posizione + sync hub [OK/parziale]</p>
+<h3>3.2.3 Aggiorna (Catalogo)  [OK]</h3>
+<p>Route: organiza/aggiorna</p>
+<p>Ricerca · elenco elementi Catalogo · riquadro 3 stati (default vuoto)</p>
+<p>Menu ⋮ riga: Modifica / Rinomina / Copia su dispositivo (senza Elimina — usa X)</p>
+<p>Pulisci → organiza/clean?sel=…</p>
+<p>Allinea = refresh elenco</p>
+<h3>3.2.4 Pulisci  [OK]</h3>
+<p>Elimina selezionati (✓ da Aggiorna)</p>
+<p>Analizza duplicati (criteri v1 esatti)</p>
+<p>Conferme SÌ/NO; Cestino Catalogo (non elimina originali dispositivo di default)</p>
+<h3>3.2.5 Ricerca  [OK]</h3>
+<p>Route: organiza/search — motore unico (anche da Home)</p>
+<h2>3.3 COMPONI — hub  [UI landing / feature STUB]</h2>
+<p>Landing elenco Album/Raccolte + +Album / +Raccolta / ⋮ (layout congelato)</p>
+<p>Crea  [STUB]</p>
+<p>Edita  [STUB]</p>
+<p>Pubblica  [STUB]</p>
+<h2>3.4 UTILITY — hub  [misto]</h2>
+<p>Backup  [STUB]</p>
+<p>Ripristina  [OK ingresso]:</p>
+<p>Cestino → utility/trash (recupero elementi Catalogo)  [OK]</p>
+<p>Ripristina da backup  [STUB]</p>
+<p>Revisione / Elimina sorgenti  [STUB]</p>
+<p>Verifica spazio  [STUB]</p>
+<h2>3.5 CONFIGURA (tab icona)  [parziale]</h2>
+<p>Ingresso Setup Catalogo personale → stesso Wizard §3.2.2  [OK]</p>
+<p>Rami Nota §5.4.4 (Impostazioni, Sicurezza, Accessi Archivio, Play Store)  [STUB / non tutti presenti]</p>
+<h1>4. Delta branch Acquisisci 0.16.51–0.16.52 (PR cifs-user-folder-attiva)</h1>
+<p>Non necessariamente sul branch base 0.16.37; rilevante per allineamento requisiti W1–W4 / visibilità fonti.</p>
+<p>Acquisisci: gruppi per dispositivo (telefono / PC / Drive / NAS)</p>
+<p>Dialog Aggiungi W1–W4 sui flussi SAF/PC/Drive/NAS già esistenti</p>
+<p>0.16.52: blocco «Catalogo di riferimento» (Posizione + raggiungibile) distinto dalle fonti; «Questo tablet» non riusa il nome Posizione Catalogo; share rete con host in intestazione</p>
+<p>Fuori scope: recupero automatico IP Host CIFS (parcheggio; IP manuale ok)</p>
+<h1>5. Matrice route → videata</h1>
+<h1>6. Diagramma flusso Acquisisci → Catalogo (dominio)</h1>
+<pre>
+[Fonti esterne: tablet / SAF / CIFS / Drive]
+        │  + Aggiungi (autorizzazione cartella)
+        ▼
+[Acquisisci]  selezione 3 stati → CONFERMA (censimento)
+        │
+        ▼
+[Importa]  copia verificata → spazio Catalogo app
+        │
+        ▼
+[Aggiorna]  gestione Catalogo · Pulisci · (X → Cestino)
+        │
+        ▼
+[Posizione Catalogo / Wizard]  hub multi-dispositivo (H1)
+   (PC spento ⇒ Posizione «non raggiungibile»;
+    fonti locali tablet restano disponibili)
+</pre>
+<h1>7. Cosa NON è ancora un livello di navigazione</h1>
+<p>Chip «1. Fonti / 2. Importa» come menu (vietati — unico processo)</p>
+<p>Scansione automatica di tutta la Wi‑Fi / elenco PC non autorizzati</p>
+<p>Help contestuale Wizard what-if (backlog)</p>
+<p>Feature Componi complete e gran parte Utility oltre Cestino/Ripristina</p>
+<h1>8. Riferimenti</h1>
+<p>docs/PVM_Nota_Integrata.md (v5.3) — questo export: PVM_Nota_Integrata_v5.3.docx</p>
+<p>docs/reference/videate-utente-setup-catalogo-pc.md — testi Wizard PC</p>
+<p>docs/TERMINOLOGIA_UI.md · docs/SHELL_PARITY.md · docs/BACKLOG_WIZARD_UX.md</p>
+<p>Codice: PvmDestination.kt · PvmApp.kt · CatalogSeatWizardViewModel (WizardStep) · HomeModels (hub)</p>
+<p>Documento generato per punto di allineamento con Renato. Destinato a ricevere la successiva nota di proposta di allineamento.</p>
+<table>
+<tr>
+<th>Route</th>
+<th>Videata / flusso</th>
+<th>Stato</th>
+</tr>
+<tr>
+<td>home</td>
+<td>Dashboard Home</td>
+<td>OK</td>
+</tr>
+<tr>
+<td>organizza</td>
+<td>Hub Organizza</td>
+<td>OK</td>
+</tr>
+<tr>
+<td>organizza/acquire</td>
+<td>Acquisisci → Importa</td>
+<td>OK (+ delta 0.16.52 su PR)</td>
+</tr>
+<tr>
+<td>organizza/acquire/catalog-seat</td>
+<td>Wizard Setup Catalogo</td>
+<td>OK ramo PC; Cloud/NAS stub</td>
+</tr>
+<tr>
+<td>organizza/acquire/catalog-update</td>
+<td>Aggiorna Catalogo (hub sync)</td>
+<td>OK/parziale</td>
+</tr>
+<tr>
+<td>organizza/acquire/browse/{id}</td>
+<td>Dettaglio/browse fonte</td>
+<td>OK</td>
+</tr>
+<tr>
+<td>organizza/aggiorna</td>
+<td>Aggiorna Catalogo (elementi)</td>
+<td>OK</td>
+</tr>
+<tr>
+<td>organizza/clean</td>
+<td>Pulisci</td>
+<td>OK</td>
+</tr>
+<tr>
+<td>organizza/search</td>
+<td>Ricerca</td>
+<td>OK</td>
+</tr>
+<tr>
+<td>componi</td>
+<td>Hub Componi</td>
+<td>UI / stub feature</td>
+</tr>
+<tr>
+<td>utility</td>
+<td>Hub Utility</td>
+<td>misto</td>
+</tr>
+<tr>
+<td>utility/ripristina</td>
+<td>Ripristina (menu)</td>
+<td>OK ingresso</td>
+</tr>
+<tr>
+<td>utility/trash</td>
+<td>Cestino</td>
+<td>OK</td>
+</tr>
+<tr>
+<td>config</td>
+<td>Configura</td>
+<td>parziale</td>
+</tr>
+<tr>
+<td>feature/{id}</td>
+<td>Stub generico</td>
+<td>STUB</td>
+</tr>
+</table>
+</body></html>

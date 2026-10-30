@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>MediaManager — Template TO-BE (integrazione 30/10)</title>
+<style>
+  :root {
+    --bg:#f6f4ef; --ink:#1a1a1a; --muted:#5c5c5c; --line:#d7d2c8;
+    --accent:#1565c0; --accent2:#0d47a1; --ok:#2e7d32; --warn:#b26a00; --off:#b71c1c;
+    --phone:#fff; --top:#1565c0; --chip:#e8eef7; --grey:#bdbdbd; --flag:#1565c0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Calibri,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.35}
+  header.doc,section,footer,.banner,nav.toc{max-width:1100px;margin:0 auto;padding:0 24px}
+  header.doc{padding-top:28px}
+  header.doc h1{margin:0 0 6px;font-size:1.5rem}
+  header.doc p,.muted{color:var(--muted);font-size:.92rem}
+  .banner{background:#fff8e1;border:1px solid #f0c36d;padding:12px 16px;margin:12px auto}
+  nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin:12px auto 24px}
+  nav.toc a{text-decoration:none;color:var(--accent2);background:#fff;border:1px solid var(--line);padding:6px 10px;border-radius:4px;font-size:.85rem}
+  section{margin-bottom:36px}
+  section h2{border-bottom:2px solid var(--ink);padding-bottom:6px}
+  section h3{margin-top:22px}
+  .note,.decision,.incongr{background:#fff;border-left:4px solid var(--accent);padding:10px 12px;margin:10px 0;font-size:.9rem}
+  .decision{border-left-color:var(--ok)}
+  .incongr{border-left-color:var(--warn)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;margin-top:14px}
+  .phone{background:var(--phone);border:1px solid var(--line);border-radius:18px;overflow:hidden;max-width:320px}
+  .bar{background:var(--top);color:#fff;padding:8px 10px;font-size:.72rem}
+  .bar .app{font-weight:700;font-size:.85rem}
+  .body{padding:12px;min-height:440px}
+  .title{font-size:1.15rem;font-weight:700;margin:0 0 2px}
+  .subtitle{font-size:.82rem;font-style:italic;color:var(--muted);margin:0 0 6px}
+  .desc{font-size:.8rem;margin:0 0 10px}
+  .seat{border:1px solid var(--line);padding:8px;margin:0 0 10px;font-size:.78rem;background:#fafafa}
+  .seat .cn{font-weight:700;font-style:italic}
+  .seat .st-on{color:var(--ok);font-weight:700;font-style:italic}
+  .seat .st-off{color:var(--off);font-weight:700;font-style:italic}
+  .seat .st-nv{color:var(--warn);font-weight:700;font-style:italic}
+  .actions{display:flex;gap:8px;align-items:center;margin:0 0 10px;flex-wrap:wrap}
+  .btn{border:none;background:var(--accent);color:#fff;padding:8px 12px;border-radius:4px;font-size:.78rem;font-weight:600}
+  .btn.grey{background:var(--grey);color:#333}
+  .btn.outline{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+  .btn.wide{flex:1;text-align:center}
+  .btn.esc{background:#fff;color:var(--off);border:1px solid var(--off);font-size:.72rem;padding:6px 10px}
+  .iconbtn{width:36px;height:36px;border-radius:18px;background:var(--accent);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700}
+  .search{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:20px;padding:6px 10px;margin:0 0 10px;font-size:.78rem;color:var(--muted);background:#fff}
+  .search .mic{margin-left:auto}
+  .input{border:1px solid var(--line);border-radius:4px;padding:8px;width:100%;font-size:.8rem;margin:4px 0 10px;background:#fff}
+  .subh{font-size:.85rem;font-weight:700;margin:8px 0 6px}
+  .row{display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line);font-size:.78rem}
+  .box{width:18px;height:18px;border:2px solid var(--accent);flex:0 0 auto;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--accent)}
+  .q{display:flex;gap:8px;align-items:flex-start;margin:8px 0;font-size:.78rem}
+  .q .box{margin-top:2px}
+  .kpi{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 10px}
+  .kpi div{border:1px solid var(--line);padding:8px;font-size:.72rem;background:#fafafa}
+  .kpi b{display:block;font-size:.95rem}
+  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .tile{border:1px solid var(--line);padding:14px 8px;text-align:center;font-size:.78rem;font-weight:600;background:#e3f2fd;color:var(--accent2);border-radius:4px}
+  .hubcard{border:1px solid var(--line);padding:14px;margin-bottom:8px;border-radius:4px}
+  .hubcard b{display:block;margin-bottom:4px}
+  .hubcard span{font-size:.78rem;color:var(--muted)}
+  .bottom{display:flex;justify-content:space-around;border-top:1px solid var(--line);padding:8px 4px;font-size:.65rem;color:var(--muted);background:#fafafa}
+  .bottom .on{color:var(--accent);font-weight:700}
+  .caption{font-size:.75rem;color:var(--muted);margin-top:6px;max-width:320px}
+  .flow{font-size:.8rem;font-weight:700;color:var(--accent2);margin:18px 0 6px}
+  table.spec{width:100%;border-collapse:collapse;background:#fff;font-size:.85rem;margin:10px 0}
+  table.spec th,table.spec td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  table.spec th{background:#e8eef7}
+  .chip{display:inline-block;background:var(--chip);padding:2px 8px;border-radius:10px;font-size:.72rem}
+  .dlg{border:1px solid var(--line);background:#fff;border-radius:8px;padding:10px;margin-top:8px;font-size:.75rem}
+  .proposta{background:#eef7ee;border:1px dashed var(--ok);padding:8px;margin:8px 0;font-size:.8rem}
+  em.bi{font-weight:700;font-style:italic}
+  footer{margin:0 auto 40px;color:var(--muted);font-size:.8rem}
+</style>
+</head>
+<body>
+
+<header class="doc">
+  <h1>MediaManager — Template TO-BE (recepimento integrazione)</h1>
+  <p>Fonte: <code>integrazione_template.pdf</code> ricevuto 30/10/2026 · applicato ora · nessun codice app</p>
+  <p>Parte 1 (chrome pagine) + Parte 2 (Setup Catalogo / Sorgenti) con parti mancanti integrate e incongruenze segnalate.</p>
+</header>
+
+<div class="banner">
+  <strong>Download:</strong>
+  questo HTML ·
+  <a href="PVM_Proposta_Editing_UI_Template_TOBE.pdf">PDF</a> ·
+  <a href="PVM_Proposta_Editing_UI_Template_TOBE.docx">DOCX (incongruenze + indice)</a>
+</div>
+
+<nav class="toc">
+  <a href="#inc">Incongruenze</a>
+  <a href="#p1">Parte 1 — Pagine</a>
+  <a href="#p2">Setup Catalogo</a>
+  <a href="#p2s">Setup Sorgenti</a>
+  <a href="#rapida">Dettaglio RAPIDA (proposta)</a>
+</nav>
+
+<section id="inc">
+  <h2>0. Incongruenze e punti aperti</h2>
+  <div class="incongr">
+    <ol>
+      <li><strong>Sorgenti §10 testo PDF:</strong> dice «selezionare la cartella del <em>Catalogo</em>». Per il Setup Sorgenti deve essere la <em>cartella media da acquisire</em>, non la sede Catalogo. Nei template sotto uso «cartella da censire / da acquisire». <em>Conferma se ok.</em></li>
+      <li><strong>Cloud (§7):</strong> chiedi chiarimento. Nei template assumo percorso SAF come locale (account già sul dispositivo → scegli cartella; <strong>niente</strong> «Aggiungi account»). Se serve un flusso diverso, va specificato.</li>
+      <li><strong>RAPIDA PC/NAS:</strong> il PDF dice che manca. Sotto propongo i passi (Host manuale → CIFS → cartella → Salva). <span class="chip">PROPOSTA</span> finché non confermi.</li>
+      <li><strong>GUIDATA su Sorgenti PC/NAS:</strong> il PDF chiede di «verificare se opportuno». Nei template Sorgenti uso <strong>solo percorso diretto</strong> (come landing §10); RAPIDA/GUIDATA restano sul Setup Catalogo. Se vuoi GUIDATA anche sulle sorgenti, lo aggiungo dopo OK.</li>
+      <li><strong>Esc:</strong> nel PDF «valuterei». Nei mock è presente con conferma uscita. <em>Conferma se lo vuoi vincolante.</em></li>
+      <li><strong>Stato:</strong> il PDF non ribadisce «Non verificabile»; resta Online / Offline / Non verificabile (chiusura Workflow 28/10) dove rilevabile.</li>
+      <li><strong>Nome Catalogo:</strong> default <code>MediaManagerCatalog</code> (niente esempi tipo «Vacanza a Parigi»). Sovrascrive la chiusura 3 precedente.</li>
+      <li><strong>Setup = sostituzione:</strong> niente Imposta/Modifica in ingresso. Se la procedura fallisce resta il Catalogo precedente. Sovrascrive S0 precedente.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ===================== PARTE 1 ===================== -->
+<section id="p1">
+  <h2>1. Parte 1 — Modifiche generali + pagine</h2>
+  <div class="decision">
+    <strong>Stile intestazione (tutte le pagine):</strong> Titolo invariato · <em>Sottotitolo in corsivo</em> · Descrizione invariata.<br/>
+    <strong>Riga Posizione:</strong> senza titolo «Posizione…». Formati sotto.<br/>
+    <strong>Ricerca:</strong> campo unificato + microfono.<br/>
+    <strong>Elenco dispositivi in Catalogo:</strong> formati locali vs altri come da PDF.
+  </div>
+
+  <h3>1.1 Dashboard</h3>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager v0.16.x</div>Utente locale</div>
+      <div class="body">
+        <div class="title">Dashboard</div>
+        <div class="subtitle">Panoramica del Catalogo, kpi e scorciatoie</div>
+        <div class="desc">Homepage dell’app con il quadro d’insieme del tuo Catalogo</div>
+        <div class="seat">
+          Catalogo: <span class="cn">MediaManagerCatalog</span><br/>
+          <em class="bi">S25 Ultra, Principale, Pictures/Catalogo - <span class="st-on">Online</span></em>
+        </div>
+        <div class="search">🔍 Cerca nel Catalogo… <span class="mic">🎤</span></div>
+        <div class="kpi"><div><b>128</b>Foto</div><div><b>14</b>Video</div><div><b>120</b>in Catalogo</div><div><b>2.1 GB</b>Spazio</div></div>
+        <div class="subh">Accesso rapido</div>
+        <div class="tiles">
+          <div class="tile">Acquisisci</div><div class="tile">Aggiorna</div>
+          <div class="tile">Crea</div><div class="tile">Edita</div>
+          <div class="tile">Backup</div><div class="tile">Ripristina</div>
+        </div>
+      </div>
+      <div class="bottom"><span class="on">Home</span><span>Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+    </div>
+    <div>
+      <p class="caption">Senza Catalogo: «Catalogo Personale non presente: clicca qui per crearlo».</p>
+      <p class="caption">Altro dispositivo (es. PC): seconda riga = <em class="bi">PC-UFFICIO, \\192.168.1.20\MediaManagerCatalog - Offline</em></p>
+    </div>
+  </div>
+
+  <h3>1.2 Organizza (hub) — nessuna riga Catalogo</h3>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Organizza</div>
+        <div class="subtitle">Censimento, acquisizione e gestione del Catalogo Personale</div>
+        <div class="desc">Accesso alle funzioni di acquisizione ed aggiornamento dei file che costituiscono il tuo Catalogo</div>
+        <div class="hubcard"><b>Acquisisci</b><span>Dispositivi, cartelle e importazione</span></div>
+        <div class="hubcard"><b>Aggiorna</b><span>Gestione file già in Catalogo</span></div>
+      </div>
+      <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+    </div>
+  </div>
+
+  <h3>1.3 Acquisisci</h3>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Acquisisci</div>
+        <div class="subtitle">Acquisizione dei file da dispositivi e cartelle</div>
+        <div class="desc">Seleziona il dispositivo e la cartella ed importa le foto e i video che intendi tenere nel tuo Catalogo. Se non lo vedi devi prima rendere condivisa la cartella o il dispositivo</div>
+        <div class="seat">Catalogo Personale non presente: <a href="#">clicca qui per crearlo</a></div>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:24px">Niente +, CONFERMA, elenco finché non c’è un Catalogo.</p>
+      </div>
+      <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+    </div>
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Acquisisci</div>
+        <div class="subtitle">Acquisizione dei file da dispositivi e cartelle</div>
+        <div class="desc">Seleziona il dispositivo e la cartella ed importa le foto e i video che intendi tenere nel tuo Catalogo. Se non lo vedi devi prima rendere condivisa la cartella o il dispositivo</div>
+        <div class="seat">
+          Catalogo: <span class="cn">MediaManagerCatalog</span><br/>
+          <em class="bi">PC-UFFICIO, \\192.168.1.20\MediaManagerCatalog - <span class="st-off">Offline</span></em>
+        </div>
+        <div class="actions">
+          <span class="iconbtn" title="Aggiorna">↻</span>
+          <span class="iconbtn">+</span>
+          <span class="btn wide">CONFERMA</span>
+        </div>
+        <div class="subh">Dispositivi e cartelle già in Catalogo</div>
+        <div class="row">
+          <div class="box">✓</div>
+          <div>
+            <em class="bi">S25 Ultra</em><br/>
+            <em class="bi">Principale, DCIM/Camera - <span class="st-on">Online</span></em>
+          </div>
+        </div>
+        <div class="row">
+          <div class="box">✓</div>
+          <div>
+            <em class="bi">Google Drive</em><br/>
+            <em class="bi">Il mio Drive/foto2019 - <span class="st-nv">Non verificabile</span></em>
+          </div>
+        </div>
+      </div>
+      <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+    </div>
+  </div>
+  <p class="caption">Solo icona ↻ (niente testo «Aggiorna Catalogo»). Niente «Tutti». Niente riga «Questo tablet… rinominare».</p>
+
+  <h3>1.4 Aggiorna / Componi / Utility / Ripristina / Configura</h3>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Aggiorna</div>
+        <div class="subtitle">Aggiornamento dei file presenti nel Catalogo</div>
+        <div class="desc">Mantieni aggiornato il tuo Catalogo modificando o eliminando le foto e i video acquisiti. Con «Pulisci» sposti i file indesiderati/duplicati nel Cestino (ripristino da Utility).</div>
+        <div class="seat">Catalogo: <span class="cn">MediaManagerCatalog</span><br/><em class="bi">S25 Ultra, Principale, Catalogo - <span class="st-on">Online</span></em></div>
+        <div class="actions"><span class="iconbtn">↻</span><span class="btn outline">PULISCI</span></div>
+        <div class="search">🔍 Cerca… <span class="mic">🎤</span></div>
+        <div class="subh">Foto e video già in Catalogo</div>
+        <p style="font-size:.72rem;color:var(--muted)">Ciascun elemento potrà essere selezionato, deselezionato o rimosso dall’elenco</p>
+        <div class="row"><div class="box"></div><div>IMG_001.jpg</div></div>
+      </div>
+      <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+    </div>
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Componi</div>
+        <div class="subtitle">Gestione delle composizioni di foto e video</div>
+        <div class="desc">Crea, gestisci e pubblica album e raccolte. Editing dei media del Catalogo.</div>
+        <div class="seat">Catalogo: <span class="cn">MediaManagerCatalog</span><br/><em class="bi">S25 Ultra, Principale, Catalogo - <span class="st-on">Online</span></em></div>
+        <div class="actions"><span class="btn">ALBUM</span><span class="btn grey">RACCOLTA</span><span class="iconbtn">+</span></div>
+        <div class="subh">Elenco album</div>
+        <div class="row"><div class="box">✓</div><div><strong>Compleanno di Leone</strong><br/><span class="muted">modificato 20/10/2026</span></div></div>
+      </div>
+      <div class="bottom"><span>Home</span><span>Organizza</span><span class="on">Componi</span><span>Utility</span><span>⚙</span></div>
+    </div>
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Utility</div>
+        <div class="subtitle">Backup, ripristino, gestione sorgenti e spazio disponibile</div>
+        <div class="desc">Backup/ripristino Catalogo, cestino e verifica spazio.</div>
+        <div class="tiles"><div class="tile">Backup</div><div class="tile">Ripristina</div><div class="tile">Revisione sorgenti</div><div class="tile">Verifica spazio</div></div>
+      </div>
+      <div class="bottom"><span>Home</span><span>Organizza</span><span>Componi</span><span class="on">Utility</span><span>⚙</span></div>
+    </div>
+  </div>
+  <p class="caption">Utility / Ripristina / Configura: nessuna riga Catalogo (hub o fuori perimetro Catalogo operativo). Configura: riorganizzazione voci ancora sospesa (BL-UI-03).</p>
+</section>
+
+<!-- ===================== SETUP CATALOGO ===================== -->
+<section id="p2">
+  <h2>2. Setup Catalogo personale</h2>
+  <p>TITOLO fisso. Setup <strong>sostituisce</strong> la sede (se fallisce resta la precedente). Ogni domanda ha riquadro di selezione, flaggato a CONTINUA/Invio. Esc con conferma.</p>
+
+  <div class="flow">2.0 Landing — Avvio procedura (unica pagina preliminare)</div>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="actions" style="justify-content:flex-end"><span class="btn esc">Esc</span></div>
+        <div class="title">Setup Catalogo personale</div>
+        <div class="subtitle">Avvio procedura</div>
+        <div class="desc">Questa procedura ti consente di creare e configurare il tuo Catalogo, cioè il posto di “raccolta logica” delle foto e dei video personali. Le prime cose da stabilire sono come chiamarlo e dove tenerlo. La scelta potrà essere cambiata in qualsiasi momento, ripetendo questa procedura.</div>
+
+        <div class="q"><div class="box">✓</div><div>Come vuoi chiamare il tuo Catalogo?<div class="input">MediaManagerCatalog</div></div></div>
+        <div class="q"><div class="box">✓</div><div>Seleziona il dispositivo dove tenerlo
+          <div class="input">Questo dispositivo/Tablet ▾</div>
+        </div></div>
+        <div class="q"><div class="box">✓</div><div>Indica in breve il modello del dispositivo selezionato
+          <div class="input">dispositivo selezionato</div>
+        </div></div>
+        <div class="actions"><span class="btn wide">CONTINUA</span></div>
+      </div>
+    </div>
+    <div class="note">
+      Defaults: nome <code>MediaManagerCatalog</code> · dispositivo «Questo dispositivo/Tablet» · modello «dispositivo selezionato».<br/>
+      Combo dispositivi: Questo dispositivo/Tablet · PC/Notebook Windows · Google Drive/Cloud · Disco di rete/NAS.<br/>
+      Niente esempi fuorvianti. Niente domanda Imposta/Modifica.
+    </div>
+  </div>
+
+  <div class="flow">2.1 Telefono / tablet — una pagina</div>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="actions" style="justify-content:flex-end"><span class="btn esc">Esc</span></div>
+        <div class="title">Setup Catalogo personale</div>
+        <div class="subtitle">Scelta della cartella</div>
+        <div class="desc">Clicca sul bottone per selezionare la cartella del Catalogo</div>
+        <div class="q"><div class="box">✓</div><div><span class="btn wide">Scegli cartella</span></div></div>
+        <p style="font-size:.72rem;color:var(--muted)">La memoria (Principale/Secondaria) è implicita nella cartella scelta — nessuna domanda dedicata.</p>
+        <div class="subh">Controlla i dati e salvali</div>
+        <div class="seat">
+          Catalogo: <span class="cn">MediaManagerCatalog</span><br/>
+          <em class="bi">S25 Ultra, Principale, Documenti/Catalogo</em>
+        </div>
+        <div class="actions"><span class="btn wide">Salva</span></div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Setup Catalogo personale</div>
+        <div class="subtitle">Configurazione completata correttamente</div>
+        <div class="desc">Messaggio di conferma. Nessun «e verifica» sul bottone precedente.</div>
+        <div class="seat">Catalogo: <span class="cn">MediaManagerCatalog</span> · <span class="st-on">Online</span></div>
+        <div class="actions"><span class="btn wide">Torna all’accesso</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow">2.2 Google Drive / Cloud — percorso diretto (ipotesi SAF)</div>
+  <div class="incongr">Ipotesi: dopo Cloud, il selettore Android mostra gli account già presenti → l’utente sceglie cartella. <strong>Niente</strong> «Aggiungi account» nel template. Se il flusso è diverso, serve tuo chiarimento (§7 PDF).</div>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="actions" style="justify-content:flex-end"><span class="btn esc">Esc</span></div>
+        <div class="title">Setup Catalogo personale</div>
+        <div class="subtitle">Scelta della cartella</div>
+        <div class="desc">Clicca sul bottone per selezionare la cartella del Catalogo su Drive</div>
+        <div class="actions"><span class="btn wide">Scegli cartella</span></div>
+        <div class="subh">Controlla i dati e salvali</div>
+        <div class="seat">
+          Catalogo: <span class="cn">MediaManagerCatalog</span><br/>
+          <em class="bi">Google Drive, Il mio Drive/Catalogo</em>
+        </div>
+        <div class="actions"><span class="btn wide">Salva</span></div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Setup Catalogo personale</div>
+        <div class="subtitle">Configurazione completata correttamente</div>
+        <div class="actions"><span class="btn wide">Torna all’accesso</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow">2.3 PC / notebook — scelta RAPIDA o GUIDATA</div>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="actions" style="justify-content:flex-end"><span class="btn esc">Esc</span></div>
+        <div class="title">Setup Catalogo personale</div>
+        <div class="subtitle">Configurazione del Catalogo su un PC / Notebook</div>
+        <div class="desc">Se intendi creare il Catalogo su un disco interno o esterno di un PC o Notebook Windows, allora puoi usare - oltre a quella rapida - la procedura che ti guida passo passo alla sua configurazione. Seleziona quella che intendi attivare</div>
+        <div class="q"><div class="box">✓</div><div>
+          <div class="input">Procedura rapida ▾</div>
+          <span class="muted" style="font-size:.72rem">Voci: Procedura rapida (default) · Procedura guidata</span>
+        </div></div>
+        <div class="actions"><span class="btn wide">Avvia</span></div>
+        <p style="font-size:.72rem;color:var(--muted)">Nessuna spiegazione aggiuntiva in questa fase.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow">2.3 GUIDATA PC — passi 1–4 (preparazione) poi CIFS</div>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Setup Catalogo personale</div>
+        <div class="subtitle">1 – Verifica della disponibilità di quanto necessario</div>
+        <div class="desc">Prima di avviare la procedura verifica e conferma di avere a disposizione i seguenti strumenti:</div>
+        <div class="q"><div class="box">✓</div><div>Telefono/tablet con MediaManager</div></div>
+        <div class="q"><div class="box">✓</div><div>PC Windows 10+</div></div>
+        <div class="q"><div class="box">✓</div><div>Cavo USB dati</div></div>
+        <div class="actions"><span class="btn wide">CONTINUA</span></div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Setup Catalogo personale</div>
+        <div class="subtitle">2 – Verifica preliminare e collegamento</div>
+        <div class="q"><div class="box">☐</div><div>PC e telefono accesi/sbloccati</div></div>
+        <div class="q"><div class="box">☐</div><div>Collegati con USB dati</div></div>
+        <div class="q"><div class="box">☐</div><div>USB = Trasferimento file</div></div>
+        <div class="q"><div class="box">☐</div><div>Consenso accesso dati</div></div>
+        <div class="actions"><span class="btn wide">CONTINUA</span></div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Setup Catalogo personale</div>
+        <div class="subtitle">3 – Copia manuale dei file di configurazione</div>
+        <div class="q"><div class="box">☐</div><div>Apri Download del telefono dal PC</div></div>
+        <div class="q"><div class="box">☐</div><div>Copia CONFIGURA e Sup sul Desktop</div></div>
+        <div class="q"><div class="box">☐</div><div>Verifica entrambi sul Desktop</div></div>
+        <div class="actions"><span class="btn wide">CONTINUA</span></div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Setup Catalogo personale</div>
+        <div class="subtitle">4 – Generazione password e dati</div>
+        <div class="q"><div class="box">☐</div><div>Doppio clic su CONFIGURA</div></div>
+        <div class="q"><div class="box">☐</div><div>Conferma UAC</div></div>
+        <div class="q"><div class="box">☐</div><div>Attendi «Tutto pronto»</div></div>
+        <div class="actions"><span class="btn wide">CONTINUA</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow">CIFS comune (GUIDATA dopo passo 4 · RAPIDA subito dopo Avvia) — punti aperti wizard: Host manuale, Copia campi</div>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Setup Catalogo personale</div>
+        <div class="subtitle">Collegamento CIFS</div>
+        <div class="desc">Inserisci Host a mano e copia i dati in CIFS Documents Provider.</div>
+        <div class="dlg">
+          Name MediaManagerCatalog <span class="chip">Copia</span><br/>
+          Host <strong>192.168.1.20</strong> <span class="chip">Copia</span> (editabile)<br/>
+          Port 445 <span class="chip">Copia</span><br/>
+          Domain (vuoto)<br/>
+          User MEDIA-PC\MediaManager <span class="chip">Copia</span><br/>
+          Password ••••• <span class="chip">Mostra</span> <span class="chip">Copia</span><br/>
+          Storage SMB2,3 · Folder (vuoto)
+        </div>
+        <div class="actions"><span class="btn outline">Apri CIFS</span><span class="btn">Attiva collegamento</span></div>
+        <div class="actions"><span class="btn wide">Scegli cartella</span></div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Setup Catalogo personale</div>
+        <div class="subtitle">Controlla i dati e salvali</div>
+        <div class="seat">
+          Catalogo: <span class="cn">MediaManagerCatalog</span><br/>
+          <em class="bi">PC-UFFICIO, \\192.168.1.20\MediaManagerCatalog</em>
+        </div>
+        <div class="actions"><span class="btn wide">Salva</span></div>
+        <p style="font-size:.75rem;margin-top:12px">Poi: «Configurazione completata correttamente» → Torna all’accesso.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow">2.4 NAS / disco di rete — scelta RAPIDA o GUIDATA</div>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="actions" style="justify-content:flex-end"><span class="btn esc">Esc</span></div>
+        <div class="title">Setup Catalogo personale</div>
+        <div class="subtitle">Configurazione del Catalogo su NAS/DISCO DI RETE</div>
+        <div class="desc">Se intendi creare il Catalogo su un disco di rete o NAS, allora puoi usare - oltre a quella rapida - la procedura che ti guida passo passo alla sua configurazione. Seleziona quella che intendi attivare</div>
+        <div class="q"><div class="box">✓</div><div><div class="input">Procedura rapida ▾</div></div></div>
+        <div class="actions"><span class="btn wide">Avvia</span></div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Setup Catalogo personale</div>
+        <div class="subtitle">GUIDATA — preparazione NAS</div>
+        <div class="desc">Verifica sul pannello NAS prima del collegamento.</div>
+        <div class="q"><div class="box">☐</div><div>SMB/CIFS attivo (SMB 2+)</div></div>
+        <div class="q"><div class="box">☐</div><div>Cartella condivisa creata</div></div>
+        <div class="q"><div class="box">☐</div><div>Utente con permesso scrittura</div></div>
+        <div class="actions"><span class="btn wide">CONTINUA</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="caption">Dopo Avvia (RAPIDA) o dopo preparazione (GUIDATA): stesso blocco Host manuale + CIFS + Scegli cartella + Salva + conferma, come PC.</p>
+</section>
+
+<section id="rapida">
+  <h2>3. Dettaglio procedura RAPIDA (proposta — era mancante)</h2>
+  <div class="proposta">
+    <strong>RAPIDA PC</strong> (dopo Avvia, default):<br/>
+    1) Pagina Host/User/Password (Host solo manuale) + scheda CIFS con Copia<br/>
+    2) Apri CIFS → Salva connessione → Indietro<br/>
+    3) Scegli cartella (share Catalogo)<br/>
+    4) Controlla i dati e <strong>Salva</strong><br/>
+    5) «Configurazione completata correttamente» → ritorno<br/>
+    <em>Non</em> include USB/CONFIGURA/script (quelli sono GUIDATA 1–4).
+  </div>
+  <div class="proposta">
+    <strong>RAPIDA NAS</strong> (dopo Avvia, default):<br/>
+    1) Host/User/Password manuali + CIFS<br/>
+    2) Scegli cartella<br/>
+    3) Salva + conferma<br/>
+    GUIDATA NAS aggiunge solo la checklist preparazione SMB prima del punto 1.
+  </div>
+</section>
+
+<!-- ===================== SORGENTI ===================== -->
+<section id="p2s">
+  <h2>4. Setup Sorgenti</h2>
+  <div class="decision">
+    Landing come da PDF §10. Percorso unico diretto (senza RAPIDA/GUIDATA in questa revisione — vedi incongruenza 4).
+    Testo bottone cartella corretto in «cartella da censire» (non «del Catalogo»).
+  </div>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="actions" style="justify-content:flex-end"><span class="btn esc">Esc</span></div>
+        <div class="title">Setup Sorgenti</div>
+        <div class="subtitle">Avvio procedura</div>
+        <div class="desc">Questa procedura ti consente di individuare e censire i dispositivi dai quali importare nel Catalogo le tue foto e video personali.</div>
+        <div class="q"><div class="box">✓</div><div>Seleziona il dispositivo da censire
+          <div class="input">Questo dispositivo/Tablet ▾</div>
+        </div></div>
+        <div class="q"><div class="box">✓</div><div>Indica in breve il modello del dispositivo selezionato
+          <div class="input">dispositivo selezionato</div>
+        </div></div>
+        <div class="q"><div class="box">✓</div><div>Clicca sul bottone per selezionare la cartella da censire
+          <div style="margin-top:6px"><span class="btn">Scegli cartella</span></div>
+        </div></div>
+        <div class="subh">Controlla i dati e salvali</div>
+        <div class="seat">
+          <em class="bi">S25 Ultra, Principale, DCIM/Camera - Online</em>
+        </div>
+        <div class="actions"><span class="btn wide">Salva</span></div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Setup Sorgenti</div>
+        <div class="subtitle">Configurazione completata correttamente</div>
+        <div class="desc">Sorgente disponibile in Acquisisci. Nessuna importazione automatica. La sede Catalogo non cambia.</div>
+        <div class="actions"><span class="btn wide">Torna all’accesso</span></div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Setup Sorgenti</div>
+        <div class="subtitle">Avvio procedura — PC/NAS</div>
+        <div class="desc">Stessa landing; dispositivo = PC o NAS; dopo Scegli cartella il percorso passa da CIFS (Host manuale) se necessario.</div>
+        <div class="q"><div class="box">✓</div><div>Seleziona il dispositivo da censire
+          <div class="input">PC / notebook ▾</div>
+        </div></div>
+        <div class="dlg">Host 192.168.1.20 · Copia · Apri CIFS · Scegli cartella</div>
+        <div class="seat" style="margin-top:8px"><em class="bi">PC-UFFICIO, \\192.168.1.20\Foto - Online</em></div>
+        <div class="actions"><span class="btn wide">Salva</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>5. Backlog residuo</h2>
+  <table class="spec">
+    <tr><th>ID</th><th>Voce</th><th>Stato</th></tr>
+    <tr><td>BL-UI-01</td><td>Scan LAN / rilevamento IP</td><td>Backlog (Host solo manuale)</td></tr>
+    <tr><td>BL-UI-02</td><td>Guide PC macOS/Linux</td><td>Backlog</td></tr>
+    <tr><td>BL-UI-03</td><td>Riorganizzazione Configura</td><td>Sospeso</td></tr>
+    <tr><td>BL-UI-05</td><td>SMB integrato / CIFS da terza app</td><td>Da validare</td></tr>
+    <tr><td>NEW</td><td>Conferma RAPIDA PC/NAS come in §3</td><td>In attesa Renato</td></tr>
+    <tr><td>NEW</td><td>GUIDATA anche su Setup Sorgenti?</td><td>In attesa Renato</td></tr>
+    <tr><td>NEW</td><td>Esc vincolante?</td><td>In mock; da confermare</td></tr>
+    <tr><td>NEW</td><td>Cloud: solo SAF vs altro</td><td>In attesa chiarimento §7</td></tr>
+  </table>
+</section>
+
+<footer>
+  Recepimento <code>integrazione_template.pdf</code> · 30/10/2026 (Europe/Rome) · branch docs-allineamento · nessun cambio codice app.
+</footer>
+</body>
+</html>
