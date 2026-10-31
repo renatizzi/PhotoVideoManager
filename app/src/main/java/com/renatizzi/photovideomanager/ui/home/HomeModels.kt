@@ -16,6 +16,7 @@ data class MacroAreaDefinition(
     val tab: ShellTab,
     @StringRes val titleRes: Int,
     @StringRes val subtitleRes: Int,
+    @StringRes val descriptionRes: Int = 0,
     val accent: Color,
     val features: List<MacroFeature>,
 )
@@ -30,6 +31,7 @@ object MacroNavigation {
             tab = ShellTab.ORGANIZZA,
             titleRes = R.string.organizza,
             subtitleRes = R.string.hub_organizza_subtitle,
+            descriptionRes = R.string.hub_organizza_description,
             accent = organizaAccent,
             features = listOf(
                 MacroFeature(
@@ -73,6 +75,7 @@ object MacroNavigation {
             tab = ShellTab.UTILITY,
             titleRes = R.string.utility,
             subtitleRes = R.string.hub_utility_subtitle,
+            descriptionRes = R.string.hub_utility_description,
             accent = utilityAccent,
             features = listOf(
                 MacroFeature(

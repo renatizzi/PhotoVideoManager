@@ -25,7 +25,8 @@
     <string name="storage_local_unavailable">Storage locale: non disponibile</string>
     <string name="storage_local_unknown">Storage locale: stato sconosciuto</string>
     <string name="dashboard_title">Dashboard</string>
-    <string name="dashboard_subtitle">Panoramica del Catalogo</string>
+    <string name="dashboard_subtitle">Panoramica del Catalogo, kpi e scorciatoie</string>
+    <string name="dashboard_description">Homepage dell’app con il quadro d’insieme del tuo Catalogo</string>
     <string name="dashboard_inline_help"> </string>
     <string name="dashboard_search_hint">Cerca…</string>
     <string name="quick_access">Accesso rapido</string>
@@ -42,21 +43,52 @@
     <string name="kpi_photos">Foto totali</string>
     <string name="kpi_videos">Video totali</string>
     <string name="hub_preview_help">Anteprima struttura UI (template Navigazione11). Le schede sono le funzioni hub della macroarea.</string>
-    <string name="acquisisci_static_intro">In alto: dove sta il Catalogo. Sotto: i dispositivi e le cartelle da cui acquisire (non sono la stessa cosa). Tocca «Aggiungi» per collegarne uno. Riquadro: vuoto ↔ X; il ✓ si rimette con «Tutti». Poi CONFERMA.</string>
-    <string name="acquisisci_static_help">Unico processo Acquisisci: dispositivi e fonti → Conferma → Importa. Riquadro: solo vuoto e X; il ✓ si rimette con Tutti. Default: tutto selezionato.</string>
+    <string name="acquisisci_static_intro">Seleziona il dispositivo e la cartella ed importa le foto e i video che intendi tenere nel tuo Catalogo. Se non lo vedi devi prima rendere condivisa la cartella o il dispositivo. La cartella scelta include anche le sottocartelle (es. Pictures → familiari, vacanze).</string>
+    <string name="acquisisci_static_subtitle">Acquisizione dei file da dispositivi e cartelle</string>
+    <string name="acquisisci_static_help">Unico processo Acquisisci: dispositivi e fonti → Conferma → Importa. Riquadro: vuoto ↔ X. Default: tutto selezionato.</string>
     <string name="acquisisci_catalog_ref_title">Catalogo di riferimento</string>
-    <string name="acquisisci_catalog_ref_missing">Nessuna Posizione del Catalogo impostata. Aprila da Setup o da «Aggiorna Catalogo».</string>
+    <string name="acquisisci_catalog_ref_missing">Catalogo Personale non presente: clicca qui per crearlo</string>
     <string name="acquisisci_catalog_ref_line">%1$s · %2$s</string>
-    <string name="acquisisci_catalog_ref_reachable">Raggiungibile ora</string>
-    <string name="acquisisci_catalog_ref_unreachable">Non raggiungibile ora (PC spento, Wi‑Fi o share)</string>
-    <string name="acquisisci_catalog_ref_unknown">Stato non verificato</string>
-    <string name="catalog_seat_row_title">Posizione del Catalogo</string>
-    <string name="catalog_seat_row_missing">Nessuna Posizione impostata (tocca per configurare)</string>
+    <string name="acquisisci_catalog_ref_reachable">Online</string>
+    <string name="acquisisci_catalog_ref_unreachable">Offline</string>
+    <string name="acquisisci_catalog_ref_unknown">Non verificabile</string>
+    <string name="catalog_seat_row_title">Catalogo</string>
+    <string name="catalog_seat_row_missing">Catalogo Personale non presente: clicca qui per crearlo</string>
+    <string name="catalog_seat_row_name">Catalogo: %1$s</string>
     <string name="catalog_seat_row_compact">Catalogo: %1$s</string>
-    <string name="hub_pc_share_ready_intro">Se la cartella condivisa del Catalogo sul PC è già pronta e la vedi dal tablet (Disco di rete / CIFS), puoi andare subito al collegamento. Altrimenti segui la preparazione guidata (USB e script).</string>
-    <string name="hub_pc_share_ready_question">La cartella condivisa del Catalogo è già pronta e raggiungibile da questo tablet?</string>
-    <string name="hub_pc_share_ready_yes">Sì, vai al collegamento CIFS</string>
-    <string name="hub_pc_share_ready_no">No, prepara la condivisione</string>
+    <string name="hub_pc_share_ready_intro">Se intendi creare il Catalogo su un disco interno o esterno di un PC o Notebook Windows, allora puoi usare - oltre a quella rapida - la procedura che ti guida passo passo alla sua configurazione. Seleziona quella che intendi attivare e clicca su Avvia</string>
+    <string name="hub_pc_share_ready_intro_nas">Se intendi creare il Catalogo su un disco di rete o NAS, allora puoi usare - oltre a quella rapida - la procedura che ti guida passo passo alla sua configurazione. Seleziona quella che intendi attivare e clicca su Avvia</string>
+    <string name="hub_pc_share_ready_question">Quale procedura vuoi usare?</string>
+    <string name="hub_pc_share_ready_yes">Procedura rapida</string>
+    <string name="hub_pc_share_ready_no">Procedura guidata</string>
+    <string name="hub_procedure_rapida">Procedura rapida</string>
+    <string name="hub_procedure_guidata">Procedura guidata</string>
+    <string name="hub_procedure_avvia">Avvia</string>
+    <string name="hub_avvio_subtitle">Avvio procedura</string>
+    <string name="hub_avvio_desc">Questa procedura ti consente di creare e configurare il tuo Catalogo, cioè il posto di “raccolta logica” delle foto e dei video personali. Le prime cose da stabilire sono come chiamarlo e dove tenerlo</string>
+    <string name="hub_avvio_name_q">Come vuoi chiamare il Catalogo?</string>
+    <string name="hub_avvio_name_default">MediaManagerCatalog</string>
+    <string name="hub_avvio_device_q">Su quale dispositivo lo vuoi tenere?</string>
+    <string name="hub_avvio_model_q">Qual è il modello del dispositivo?</string>
+    <string name="hub_avvio_model_hint">dispositivo selezionato</string>
+    <string name="hub_avvio_continua">CONTINUA</string>
+    <string name="hub_avvio_esc">Esc</string>
+    <string name="hub_folder_choice_subtitle">Scelta della cartella</string>
+    <string name="hub_folder_choice_desc">Clicca sul bottone per selezionare la cartella del Catalogo</string>
+    <string name="hub_folder_choice_desc_cloud">Clicca sul bottone per selezionare la cartella del Catalogo su Drive</string>
+    <string name="hub_salva">Salva</string>
+    <string name="hub_folder_summary_title">Controlla i dati e salvali</string>
+    <string name="hub_done_ok_title">Configurazione completata correttamente</string>
+    <string name="hub_done_torna_accesso">Torna all’accesso</string>
+    <string name="hub_cifs_tobe_desc">Inserisci Host a mano e copia i dati in CIFS Documents Provider.</string>
+    <string name="sorgenti_wizard_title">Setup Sorgenti</string>
+    <string name="sorgenti_avvio_subtitle">Avvio procedura</string>
+    <string name="sorgenti_avvio_desc">Questa procedura ti consente di individuare e censire i dispositivi dai quali importare nel Catalogo le tue foto e video personali. Scegli la cartella radice: verranno incluse anche le sottocartelle (es. Pictures con familiari, vacanze, …).</string>
+    <string name="sorgenti_done_title">Configurazione completata correttamente</string>
+    <string name="sorgenti_done_body">Sorgente disponibile in Acquisisci. Nessuna importazione automatica. La sede Catalogo non cambia.</string>
+    <string name="sorgenti_choose_folder">Scegli cartella</string>
+    <string name="hub_pc_config_subtitle">Configurazione del Catalogo su un PC / Notebook</string>
+    <string name="hub_nas_config_subtitle">Configurazione del Catalogo su NAS/DISCO DI RETE</string>
     <string name="hub_b5b_host_edit_label">Host (IP del PC) — modificabile</string>
     <string name="hub_b5b_host_edit_hint">Solo IPv4, es. 192.168.1.20. Puoi correggere o digitare a mano.</string>
     <string name="acquisisci_elenco_fonti">Dispositivi e cartelle (fonti)</string>
@@ -73,7 +105,8 @@
     <string name="acquisisci_riepilogo_static">Elementi selezionati per l\'importazione: xxx · di cui foto xx · di cui video yy</string>
     <string name="acquisisci_riepilogo">Sorgenti selezionate: %1$d di %2$d · elementi in Catalogo: %3$d</string>
     <string name="acquisisci_riepilogo_full">Sorgenti %1$d/%2$d · Catalogo %3$d · di cui acquisite %4$d · spazio acquisite %5$s</string>
-    <string name="acquisisci_empty_sources">Nessuna cartella ancora. Tocca «Aggiungi» e scegli il dispositivo.</string>
+    <string name="acquisisci_empty_sources">Nessuna cartella ancora. Tocca «Aggiungi» e scegli il dispositivo. Con CONFERMA si censiscono anche le sottocartelle.</string>
+    <string name="acquisisci_needs_catalog_invite">Catalogo Personale non presente: clicca qui per crearlo</string>
     <string name="acquisisci_da_pc_rete">Da PC o rete</string>
     <string name="acquisisci_da_pc_title">Aggiungere foto dal PC</string>
     <string name="acquisisci_da_pc_step1">1. Sul PC: condividi la cartella delle foto. Tasto destro sulla cartella → Proprietà → Condivisione → Condividi. Usa un nome semplice, es. Foto.</string>
@@ -86,13 +119,13 @@
     <string name="config_setup_catalogo">Setup Catalogo personale</string>
     <string name="config_setup_catalogo_hint">Scegli dove tenere il Catalogo (telefono, PC, Drive o NAS) e completa i passi guidati. Tocca qui per aprire.</string>
 
-    <!-- E0 Inizio -->
-    <string name="hub_s0_question">Cosa vuoi fare con la Posizione del Catalogo?</string>
-    <string name="hub_s0_body">Non acquisisce foto: serve solo a definire dove risiede il Catalogo e come accedervi.</string>
-    <string name="hub_s0_no_seat">Nessuna Posizione del Catalogo impostata su questo apparecchio.</string>
-    <string name="hub_s0_current_seat">Posizione attuale: %1$s</string>
-    <string name="hub_s0_modify_note">La Posizione attuale resta valida finché la nuova non è verificata.</string>
-    <string name="hub_s0_create">Creare una nuova Posizione del Catalogo</string>
+    <!-- E0 Avvio procedura (sostituisce Imposta/Modifica) -->
+    <string name="hub_s0_question">Avvio procedura</string>
+    <string name="hub_s0_body">Questa procedura ti consente di creare e configurare il tuo Catalogo, cioè il posto di “raccolta logica” delle foto e dei video personali. Le prime cose da stabilire sono come chiamarlo e dove tenerlo</string>
+    <string name="hub_s0_no_seat">Nessun Catalogo ancora configurato su questo apparecchio.</string>
+    <string name="hub_s0_current_seat">Catalogo attuale: %1$s</string>
+    <string name="hub_s0_modify_note">Il Catalogo attuale resta valido finché la nuova configurazione non è salvata.</string>
+    <string name="hub_s0_create">Avvia procedura</string>
     <string name="hub_s0_modify">Modificare la Posizione del Catalogo attuale</string>
     <string name="hub_s0_resume">Riprendere il percorso interrotto (%1$s)</string>
     <string name="hub_s0_resume_hint">Hai un percorso di setup interrotto al passo: %1$s.</string>
@@ -112,13 +145,13 @@
     <string name="hub_acquire_needs_setup_body">Acquisisci aggiunge foto al Catalogo. Prima imposta la Posizione del Catalogo. Tocca Setup Catalogo personale.</string>
     <string name="hub_acquire_needs_setup_action">Vai al Setup Catalogo</string>
     <string name="hub_combo_label">Seleziona il dispositivo</string>
-    <string name="hub_kind_local">Su questo dispositivo</string>
+    <string name="hub_kind_local">Questo dispositivo/Tablet</string>
     <string name="hub_kind_local_hint">Nessuna rete necessaria</string>
-    <string name="hub_kind_pc">Su un PC/Notebook Windows</string>
+    <string name="hub_kind_pc">PC / notebook</string>
     <string name="hub_kind_pc_hint">Deve essere acceso; altrimenti userai il cavo USB</string>
-    <string name="hub_kind_drive">Su Cloud (Google Drive)</string>
+    <string name="hub_kind_drive">Google Drive / Cloud</string>
     <string name="hub_kind_drive_hint">Percorso base</string>
-    <string name="hub_kind_nas">Su disco di rete o NAS</string>
+    <string name="hub_kind_nas">NAS / disco di rete</string>
     <string name="hub_kind_nas_hint">Percorso base</string>
     <string name="hub_s0_pc_guided_intro">Da questa pagina si attiva la procedura guidata per la creazione o modifica della cartella condivisa dove tenere il Catalogo. Per motivi di sicurezza ci sono delle operazioni che puoi fare solo tu.</string>
     <string name="hub_s0_pc_procedure_label">Se hai scelto un PC o Notebook Windows, la procedura prevede:</string>
@@ -192,10 +225,10 @@
     <string name="hub_pc5_problems_stub">La procedura che gestisce i problemi di accesso è in sviluppo. Riprova «Attiva collegamento» oppure torna Indietro e verifica CIFS e il PC.</string>
     <string name="hub_pc5_options_hint">Nella sezione Option di CIFS lascia i valori predefiniti (Safe data transfer, Read only, Add extension, Thumbnail).</string>
 
-    <!-- W1 locale -->
-    <string name="hub_w1_question">Vuoi usare questo apparecchio come Posizione del Catalogo?</string>
-    <string name="hub_w1_body">Questo dispositivo diventa la Posizione di riferimento del Catalogo personale. Un secondo telefono o tablet, in questa versione, si collega più facilmente se usi una Posizione su PC, Drive o NAS.</string>
-    <string name="hub_w1_confirm">Sì, usa questo dispositivo</string>
+    <!-- W1 locale — Scelta della cartella -->
+    <string name="hub_w1_question">Scelta della cartella</string>
+    <string name="hub_w1_body">Clicca sul bottone per selezionare la cartella del Catalogo su questo dispositivo, poi Salva</string>
+    <string name="hub_w1_confirm">Scegli cartella</string>
 
     <!-- Path PC (passo 0) -->
     <string name="hub_s2_pc_path_hint">Percorso Windows assoluto (disco interno o esterno collegato al PC). Esempio: C:\\MediaManager\\Catalogo oppure E:\\MediaManager\\Catalogo</string>
@@ -252,9 +285,9 @@
     <string name="hub_w4_body">Collega il NAS/disco di rete con CIFS Documents Provider (Host, porta 445, utente, cartella).</string>
     <string name="hub_w4_cifs_note">Come in BoxManager: le credenziali restano in CIFS; MediaManager sceglie solo la cartella.</string>
     <string name="hub_w4_pick_hint">Quando CIFS mostra la cartella, tocca Scegli cartella qui sotto.</string>
-    <string name="hub_done_title">Configurazione completata</string>
-    <string name="hub_done_body">Posizione del Catalogo: %1$s.</string>
-    <string name="hub_done_resume_catalog">Riprendi la gestione in MediaManager: Acquisisci per le foto; Aggiorna Catalogo per allineare le schede. Per cambiare Posizione: Setup Catalogo personale.</string>
+    <string name="hub_done_title">Configurazione completata correttamente</string>
+    <string name="hub_done_body">Catalogo: %1$s</string>
+    <string name="hub_done_resume_catalog">Torna all’accesso</string>
 
     <string name="hub_update_title">Aggiorna Catalogo</string>
     <string name="hub_update_action">Confronta con la sede</string>
@@ -308,11 +341,12 @@
     <string name="componi_raccolta">RACCOLTA</string>
     <string name="componi_add_cd">Crea composizione</string>
     <string name="componi_menu_cd">Menu contestuale (modifica, pubblica, elimina)</string>
-    <string name="aggiorna_static_intro">Mantieni aggiornato il tuo Catalogo. Tocca il riquadro: vuoto = non selezionata (default), ✓ = selezionata, X = elimina dal Catalogo (va nel Cestino). I filtri Tutti/Foto/Video lavorano sull\'elenco completo.</string>
+    <string name="aggiorna_static_intro">Mantieni aggiornato il tuo Catalogo modificando o eliminando le foto e i video acquisiti. Con «Pulisci» sposti i file indesiderati/duplicati nel Cestino (ripristino da Utility).</string>
     <string name="aggiorna_static_help"> </string>
     <string name="aggiorna_catalogo_title">Il tuo Catalogo</string>
     <string name="aggiorna_riepilogo_static">Riepilogo: file originali xxx · disponibili xxx · non importabili xxx · duplicati xxx</string>
     <string name="aggiorna_riepilogo">Elementi nel Catalogo: %1$d · di cui foto %2$d · di cui video %3$d</string>
+    <string name="aggiorna_static_subtitle">Aggiornamento dei file presenti nel Catalogo</string>
     <string name="aggiorna_empty">Catalogo vuoto. Usa Acquisisci per aggiungere foto e video.</string>
     <string name="aggiorna_menu_cd">Menu contestuale elemento Catalogo</string>
     <string name="aggiorna_menu_edit">Modifica</string>
@@ -339,9 +373,11 @@
     <string name="kpi_space_personal">Spazio Catalogo</string>
     <string name="kpi_catalog_hint">Catalogo locale</string>
     <string name="kpi_trash">Nel Cestino: %1$d</string>
-    <string name="hub_organizza_subtitle">Censimento, acquisizione e gestione del Catalogo</string>
+    <string name="hub_organizza_subtitle">Censimento, acquisizione e gestione del Catalogo Personale</string>
+    <string name="hub_organizza_description">Accesso alle funzioni di acquisizione ed aggiornamento dei file che costituiscono il tuo Catalogo</string>
     <string name="hub_componi_subtitle">Album, raccolte, editing e pubblicazione</string>
-    <string name="hub_utility_subtitle">Backup, ripristino, spazio e revisione sorgenti</string>
+    <string name="hub_utility_subtitle">Backup, ripristino, gestione sorgenti e spazio disponibile</string>
+    <string name="hub_utility_description">Backup/ripristino Catalogo, cestino e verifica spazio.</string>
     <string name="feature_acquisisci">Acquisisci</string>
     <string name="feature_acquisisci_desc">Fonti e importazione nel Catalogo personale</string>
     <string name="feature_aggiorna">Aggiorna</string>
@@ -367,8 +403,11 @@
     <string name="feature_verifica_spazio">Verifica Spazio</string>
     <string name="feature_spazio_desc">Controllo dello spazio nel workflow</string>
     <string name="aggiorna_refresh_cd">Aggiorna Catalogo / allinea sorgenti</string>
-    <string name="componi_landing_intro">Crea, gestisci e pubblica i tuoi album fotografici e le raccolte di foto e video di eventi e ricordi. Ottimizza i media del Catalogo.</string>
+    <string name="componi_landing_intro">Crea, gestisci e pubblica album e raccolte. Editing dei media del Catalogo.</string>
+    <string name="componi_static_subtitle">Gestione delle composizioni di foto e video</string>
     <string name="componi_riepilogo_static">Riepilogo: Album: xxx · Raccolte: xxx</string>
+    <string name="componi_empty_album">Nessun album: tocca + per crearne uno.</string>
+    <string name="componi_empty_raccolta">Nessuna raccolta: tocca + per crearne una.</string>
     <string name="feature_pulisci">Pulisci</string>
     <string name="feature_pulisci_desc">Elimina selezionati da Aggiorna e analizza duplicati</string>
     <string name="feature_cestino">Cestino</string>

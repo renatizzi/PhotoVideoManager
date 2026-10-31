@@ -59,7 +59,11 @@ fun CatalogSeatWizardScreen(
     onResumeDraft: () -> Unit,
     onDiscardDraft: () -> Unit,
     onSelectKind: (CatalogSeatKind) -> Unit,
+    onCatalogNameChange: (String) -> Unit = {},
+    onDeviceModelChange: (String) -> Unit = {},
+    onProcedureMode: (ProcedureMode) -> Unit = {},
     onAvanti: () -> Unit,
+    onContinuaAvvio: () -> Unit = onAvanti,
     onBackIntro: () -> Unit,
     onBackS0: () -> Unit,
     onGoStep: (WizardStep) -> Unit,
@@ -118,20 +122,23 @@ fun CatalogSeatWizardScreen(
         Text(
             text = WizardStepChrome.subtitle(state.step, state.selectedKind).text,
             style = MaterialTheme.typography.titleMedium,
+            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
         )
 
         when (state.step) {
-            WizardStep.S0_START -> S0StartStep(
-                seatConfigured = state.seatConfigured,
-                seatLabel = state.seatLabel,
-                canResumeDraft = state.canResumeDraft,
-                resumeStepLabel = state.resumeStepLabel,
-                onStartCreate = onStartCreate,
-                onStartModify = onStartModify,
+            WizardStep.S0_START -> AvvioProceduraStep(
+                state = state,
+                onCatalogNameChange = onCatalogNameChange,
+                onSelectKind = onSelectKind,
+                onDeviceModelChange = onDeviceModelChange,
+                onContinua = onContinuaAvvio,
                 onResumeDraft = onResumeDraft,
                 onDiscardDraft = onDiscardDraft,
                 onCancel = onCancel,
+                // compat unused
+                onStartCreate = onStartCreate,
+                onStartModify = onStartModify,
             )
             WizardStep.INTRO -> IntroStep(
                 selected = state.selectedKind,
@@ -142,18 +149,29 @@ fun CatalogSeatWizardScreen(
                 onCancel = onBackS0,
                 busy = state.busy,
             )
-            WizardStep.W1_CONFIRM -> QuestionGuide(
-                intro = stringResource(R.string.hub_w1_body),
-                question = stringResource(R.string.hub_w1_question),
-                primary = stringResource(R.string.hub_w1_confirm),
-                onPrimary = onConfirmLocal,
-                onBack = onBackIntro,
+            WizardStep.W1_CONFIRM -> FolderChoiceStep(
+                body = stringResource(R.string.hub_w1_body),
+                pendingLabel = state.pendingLabel,
+                catalogName = state.catalogName,
+                deviceModel = state.deviceModel,
+                memoryLabel = state.memoryLabel,
                 busy = state.busy,
+                onChooseFolder = { if (!state.busy) openTree.launch(null) },
+                onSalva = onConfirmLocal,
+                onBack = onBackS0,
+                onEsc = onCancel,
             )
             WizardStep.PC_SHARE_READY -> PcShareReadyStep(
-                onYes = onPcShareAlreadyReady,
-                onNo = onPcShareNeedsPrepare,
-                onBack = onBackIntro,
+                kind = state.selectedKind,
+                procedureMode = state.procedureMode,
+                onProcedureMode = onProcedureMode,
+                onAvvia = {
+                    when (state.procedureMode) {
+                        ProcedureMode.RAPIDA -> onPcShareAlreadyReady()
+                        ProcedureMode.GUIDATA -> onPcShareNeedsPrepare()
+                    }
+                },
+                onBack = onBackS0,
                 busy = state.busy,
             )
             WizardStep.PC_AVAILABILITY,
@@ -224,14 +242,28 @@ fun CatalogSeatWizardScreen(
                     onGoToAcquire()
                 },
                 onAccessNo = onAccessNo,
-                onBack = { onGoStep(WizardStep.PC_RUN_SCRIPT) },
+                onSalva = onConfirmLocal,
+                onBack = {
+                    onGoStep(
+                        if (state.procedureMode == ProcedureMode.RAPIDA) {
+                            WizardStep.PC_SHARE_READY
+                        } else {
+                            WizardStep.PC_RUN_SCRIPT
+                        },
+                    )
+                },
             )
-            WizardStep.W3_GUIDE -> SimpleGuide(
-                body = stringResource(R.string.hub_w3_body),
-                primary = stringResource(R.string.hub_choose_folder),
-                onPrimary = { if (!state.busy) openTree.launch(null) },
-                onBack = onBackIntro,
+            WizardStep.W3_GUIDE -> FolderChoiceStep(
+                body = stringResource(R.string.hub_folder_choice_desc_cloud),
+                pendingLabel = state.pendingLabel,
+                catalogName = state.catalogName,
+                deviceModel = state.deviceModel.ifBlank { "Google Drive" },
+                memoryLabel = "",
                 busy = state.busy,
+                onChooseFolder = { if (!state.busy) openTree.launch(null) },
+                onSalva = onConfirmLocal,
+                onBack = onBackS0,
+                onEsc = onCancel,
             )
             WizardStep.W4_GUIDE -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(stringResource(R.string.hub_w4_body))
@@ -261,7 +293,7 @@ fun CatalogSeatWizardScreen(
                     body = stringResource(R.string.hub_w4_pick_hint),
                     primary = stringResource(R.string.hub_choose_folder),
                     onPrimary = { if (!state.busy) openTree.launch(null) },
-                    onBack = onBackIntro,
+                    onBack = { onGoStep(WizardStep.PC_SHARE_READY) },
                     busy = state.busy,
                 )
             }
@@ -299,57 +331,77 @@ private fun QuestionText(text: String) {
 }
 
 @Composable
-private fun S0StartStep(
-    seatConfigured: Boolean,
-    seatLabel: String,
-    canResumeDraft: Boolean,
-    resumeStepLabel: String,
-    onStartCreate: () -> Unit,
-    onStartModify: () -> Unit,
+private fun AvvioProceduraStep(
+    state: CatalogSeatWizardUiState,
+    onCatalogNameChange: (String) -> Unit,
+    onSelectKind: (CatalogSeatKind) -> Unit,
+    onDeviceModelChange: (String) -> Unit,
+    onContinua: () -> Unit,
     onResumeDraft: () -> Unit,
     onDiscardDraft: () -> Unit,
     onCancel: () -> Unit,
+    @Suppress("UNUSED_PARAMETER") onStartCreate: () -> Unit,
+    @Suppress("UNUSED_PARAMETER") onStartModify: () -> Unit,
 ) {
-    QuestionText(stringResource(R.string.hub_s0_question))
-    Text(stringResource(R.string.hub_s0_body))
-    if (seatConfigured) {
+    Text(
+        text = stringResource(R.string.hub_avvio_desc),
+        style = MaterialTheme.typography.bodyMedium,
+    )
+    if (state.seatConfigured) {
         Text(
-            text = stringResource(R.string.hub_s0_current_seat, seatLabel.ifBlank { "—" }),
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        Text(
-            text = stringResource(R.string.hub_s0_modify_note),
+            text = stringResource(
+                R.string.hub_s0_current_seat,
+                state.catalogName.ifBlank { state.seatLabel }.ifBlank { "—" },
+            ),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
         )
-    } else {
-        Text(
-            text = stringResource(R.string.hub_s0_no_seat),
-            style = MaterialTheme.typography.bodyMedium,
-        )
     }
-    if (canResumeDraft) {
-        Text(stringResource(R.string.hub_s0_resume_hint, resumeStepLabel))
-        Button(onClick = onResumeDraft, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.hub_s0_resume, resumeStepLabel))
+    if (state.canResumeDraft) {
+        Text(stringResource(R.string.hub_s0_resume_hint, state.resumeStepLabel))
+        OutlinedButton(onClick = onResumeDraft, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.hub_s0_resume, state.resumeStepLabel))
         }
         TextButton(onClick = onDiscardDraft) {
             Text(stringResource(R.string.hub_s0_discard_draft))
         }
         Spacer(modifier = Modifier.height(4.dp))
     }
-    Button(onClick = onStartCreate, modifier = Modifier.fillMaxWidth()) {
-        Text(stringResource(R.string.hub_s0_create))
-    }
-    OutlinedButton(
-        onClick = onStartModify,
+
+    QuestionText(stringResource(R.string.hub_avvio_name_q))
+    OutlinedTextField(
+        value = state.catalogName,
+        onValueChange = onCatalogNameChange,
         modifier = Modifier.fillMaxWidth(),
-        enabled = seatConfigured,
+        singleLine = true,
+        placeholder = { Text(stringResource(R.string.hub_avvio_name_default)) },
+    )
+
+    QuestionText(stringResource(R.string.hub_avvio_device_q))
+    DeviceKindDropdown(
+        selected = state.selectedKind,
+        onSelectKind = onSelectKind,
+        enabled = !state.busy,
+    )
+
+    QuestionText(stringResource(R.string.hub_avvio_model_q))
+    OutlinedTextField(
+        value = state.deviceModel,
+        onValueChange = onDeviceModelChange,
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
+        placeholder = { Text(stringResource(R.string.hub_avvio_model_hint)) },
+    )
+
+    Button(
+        onClick = onContinua,
+        enabled = !state.busy,
+        modifier = Modifier.fillMaxWidth(),
     ) {
-        Text(stringResource(R.string.hub_s0_modify))
+        Text(stringResource(R.string.hub_avvio_continua))
     }
-    TextButton(onClick = onCancel) {
-        Text(stringResource(R.string.importa_annulla))
+    TextButton(onClick = onCancel, enabled = !state.busy) {
+        Text(stringResource(R.string.hub_avvio_esc))
     }
 }
 
@@ -696,32 +748,143 @@ private fun ChecklistOkBlock(
 
 @Composable
 private fun PcShareReadyStep(
-    onYes: () -> Unit,
-    onNo: () -> Unit,
+    kind: CatalogSeatKind,
+    procedureMode: ProcedureMode,
+    onProcedureMode: (ProcedureMode) -> Unit,
+    onAvvia: () -> Unit,
     onBack: () -> Unit,
     busy: Boolean,
 ) {
-    Text(stringResource(R.string.hub_pc_share_ready_intro))
+    val intro = if (kind == CatalogSeatKind.NETWORK_NAS) {
+        stringResource(R.string.hub_pc_share_ready_intro_nas)
+    } else {
+        stringResource(R.string.hub_pc_share_ready_intro)
+    }
+    Text(intro)
     Text(
         stringResource(R.string.hub_pc_share_ready_question),
         fontWeight = FontWeight.SemiBold,
     )
+    ProcedureModeDropdown(
+        selected = procedureMode,
+        onSelect = onProcedureMode,
+        enabled = !busy,
+    )
     Button(
-        onClick = onYes,
+        onClick = onAvvia,
         enabled = !busy,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Text(stringResource(R.string.hub_pc_share_ready_yes))
-    }
-    OutlinedButton(
-        onClick = onNo,
-        enabled = !busy,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Text(stringResource(R.string.hub_pc_share_ready_no))
+        Text(stringResource(R.string.hub_procedure_avvia))
     }
     TextButton(onClick = onBack, enabled = !busy) {
         Text(stringResource(R.string.hub_indietro))
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ProcedureModeDropdown(
+    selected: ProcedureMode,
+    onSelect: (ProcedureMode) -> Unit,
+    enabled: Boolean,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val label = when (selected) {
+        ProcedureMode.RAPIDA -> stringResource(R.string.hub_procedure_rapida)
+        ProcedureMode.GUIDATA -> stringResource(R.string.hub_procedure_guidata)
+    }
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { if (enabled) expanded = it },
+    ) {
+        OutlinedTextField(
+            value = label,
+            onValueChange = {},
+            readOnly = true,
+            enabled = enabled,
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            label = { Text(stringResource(R.string.hub_pc_share_ready_question)) },
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.hub_procedure_rapida)) },
+                onClick = {
+                    onSelect(ProcedureMode.RAPIDA)
+                    expanded = false
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.hub_procedure_guidata)) },
+                onClick = {
+                    onSelect(ProcedureMode.GUIDATA)
+                    expanded = false
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun FolderChoiceStep(
+    body: String,
+    pendingLabel: String,
+    catalogName: String,
+    deviceModel: String,
+    memoryLabel: String,
+    busy: Boolean,
+    onChooseFolder: () -> Unit,
+    onSalva: () -> Unit,
+    onBack: () -> Unit,
+    onEsc: () -> Unit,
+) {
+    Text(body)
+    if (pendingLabel.isNotBlank()) {
+        val detail = buildString {
+            append(catalogName.ifBlank { "MediaManagerCatalog" })
+            append(" · ")
+            if (deviceModel.isNotBlank()) {
+                append(deviceModel)
+                append(", ")
+            }
+            if (memoryLabel.isNotBlank()) {
+                append(memoryLabel)
+                append(", ")
+            }
+            append(pendingLabel)
+        }
+        Text(
+            text = stringResource(R.string.catalog_seat_row_name, detail),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+        )
+    }
+    Button(
+        onClick = onChooseFolder,
+        enabled = !busy,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.hub_choose_folder))
+    }
+    Button(
+        onClick = onSalva,
+        enabled = !busy && pendingLabel.isNotBlank(),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.hub_salva))
+    }
+    OutlinedButton(onClick = onBack, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.hub_indietro))
+    }
+    TextButton(onClick = onEsc, enabled = !busy) {
+        Text(stringResource(R.string.hub_avvio_esc))
     }
 }
 
@@ -737,13 +900,15 @@ private fun CifsCardStep(
     onRetry: () -> Unit,
     onAccessYes: () -> Unit,
     onAccessNo: () -> Unit,
+    onSalva: () -> Unit,
     onBack: () -> Unit,
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
     // Name, Storage, Host, Port, User, Password, Anonymous, Folder
     var rowFlags by remember { mutableStateOf(BooleanArray(8) { false }) }
     var cifsSavedConfirmed by remember { mutableStateOf(false) }
-    var showProblemsStub by remember { mutableStateOf(false) }
+    @Suppress("UNUSED_VARIABLE", "UNUSED_PARAMETER")
+    val unusedAccess = onAccessYes to onAccessNo
     val share = state.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
     val user = state.cifsUserQualified.trim().ifBlank {
         WindowsCatalogSetupScript.cifsUserCopyText(state.userName)
@@ -756,7 +921,7 @@ private fun CifsCardStep(
     val hostCopyable = state.pcHostIp.isNotBlank()
     val readyForPick = state.cifsInstalled && hasPassword && cifsSavedConfirmed
 
-    Text(stringResource(R.string.hub_pc5_intro))
+    Text(stringResource(R.string.hub_cifs_tobe_desc))
     Text(
         stringResource(R.string.hub_pc5_share_visibility),
         style = MaterialTheme.typography.bodyMedium,
@@ -1032,6 +1197,24 @@ private fun CifsCardStep(
             fontFamily = FontFamily.Monospace,
         )
     }
+    if (state.pendingTreeUri != null && state.pendingLabel.isNotBlank()) {
+        Text(
+            text = stringResource(R.string.hub_folder_summary_title),
+            fontWeight = FontWeight.SemiBold,
+        )
+        Text(
+            text = state.pendingLabel,
+            style = MaterialTheme.typography.bodySmall,
+            fontFamily = FontFamily.Monospace,
+        )
+        Button(
+            onClick = onSalva,
+            enabled = !state.busy,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.hub_salva))
+        }
+    }
     if (state.pendingTreeUri != null &&
         (state.verification == SeatVerificationUi.FAILED ||
             state.verification == SeatVerificationUi.UNREACHABLE)
@@ -1043,42 +1226,6 @@ private fun CifsCardStep(
         ) {
             Text(stringResource(R.string.hub_s6_retry))
         }
-    }
-
-    if (state.awaitAccessOutcome) {
-        Text(
-            stringResource(R.string.hub_pc5_access_question),
-            fontWeight = FontWeight.SemiBold,
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(
-                onClick = {
-                    showProblemsStub = false
-                    onAccessYes()
-                },
-                enabled = !state.busy && state.verification == SeatVerificationUi.VERIFIED,
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(stringResource(R.string.hub_pc5_access_yes))
-            }
-            OutlinedButton(
-                onClick = {
-                    showProblemsStub = true
-                    onAccessNo()
-                },
-                enabled = !state.busy,
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(stringResource(R.string.hub_pc5_access_no))
-            }
-        }
-    }
-    if (showProblemsStub) {
-        Text(
-            stringResource(R.string.hub_pc5_problems_stub),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.error,
-        )
     }
 
     OutlinedButton(onClick = onBack, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) {
@@ -1137,44 +1284,24 @@ private fun W2DoneStep(
     onDone: () -> Unit,
 ) {
     Text(
-        if (state.scriptPrepared) {
-            stringResource(R.string.hub_s7_title)
-        } else {
-            stringResource(R.string.hub_done_title)
-        },
+        stringResource(R.string.hub_done_title),
         fontWeight = FontWeight.Medium,
     )
-    if (state.scriptPrepared && state.verification == SeatVerificationUi.VERIFIED) {
+    val name = state.completedSeat?.effectiveCatalogName
+        ?: state.catalogName.ifBlank { "MediaManagerCatalog" }
+    Text(
+        stringResource(R.string.hub_done_body, name),
+        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+    )
+    if (state.completedSeat?.displayLabel?.isNotBlank() == true) {
         Text(
-            stringResource(R.string.hub_s7_verified_line),
-            color = MaterialTheme.colorScheme.primary,
-        )
-        Text(
-            text = stringResource(
-                R.string.hub_s7_summary_lines,
-                state.folderPath.ifBlank { WindowsCatalogSetupScript.DEFAULT_FOLDER },
-                state.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE },
-                state.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER },
-                state.completedSeat?.displayLabel ?: state.seatLabel.ifBlank { "—" },
-            ),
+            text = state.completedSeat.displayLabel,
+            style = MaterialTheme.typography.bodySmall,
             fontFamily = FontFamily.Monospace,
         )
-        Text(
-            stringResource(R.string.hub_s7_no_password),
-            style = MaterialTheme.typography.bodySmall,
-        )
-        Text(stringResource(R.string.hub_w2_done_password_reminder))
-    } else {
-        Text(
-            stringResource(
-                R.string.hub_done_body,
-                state.completedSeat?.displayLabel ?: "—",
-            ),
-        )
     }
-    Text(stringResource(R.string.hub_done_resume_catalog))
     Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
-        Text(stringResource(R.string.ok))
+        Text(stringResource(R.string.hub_done_torna_accesso))
     }
 }
 

@@ -34,6 +34,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -97,6 +98,20 @@ fun AcquisisciStaticScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    var renameTarget by remember { mutableStateOf<SourceSummary?>(null) }
+    var removeTarget by remember { mutableStateOf<SourceSummary?>(null) }
+    var renameDeviceOpen by remember { mutableStateOf(false) }
+    var pcGuideOpen by remember { mutableStateOf(false) }
+    var pcHelpOpen by remember { mutableStateOf(false) }
+    var addDeviceOpen by remember { mutableStateOf(false) }
+    var setupSorgentiStep by remember { mutableStateOf<String?>(null) } // avvio | done
+    var sorgentiKind by remember {
+        mutableStateOf(com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind.LOCAL_DEVICE)
+    }
+    var sorgentiModel by remember { mutableStateOf("") }
+    var sorgentiAwaitingPick by remember { mutableStateOf(false) }
+    var addTip by remember { mutableStateOf<String?>(null) }
+    var renameText by remember { mutableStateOf("") }
     val openTree = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree(),
     ) { uri ->
@@ -107,6 +122,13 @@ fun AcquisisciStaticScreen(
                 context.getString(R.string.external_source_default_name),
             )
             onAddSource(uri, name)
+            if (sorgentiAwaitingPick) {
+                sorgentiAwaitingPick = false
+                setupSorgentiStep = "done"
+                addDeviceOpen = false
+            }
+        } else {
+            sorgentiAwaitingPick = false
         }
     }
     // Fonti con X (escluse in attesa di conferma) restano visibili con la X nel riquadro.
@@ -114,19 +136,7 @@ fun AcquisisciStaticScreen(
     val selectedCount = sources.count {
         state.selectionOf(it.locationId) == SourceCensusSelection.SELECTED
     }
-    val activeCount = sources.count {
-        state.selectionOf(it.locationId) != SourceCensusSelection.EXCLUDED
-    }
-    val allChecked = activeCount > 0 && selectedCount == activeCount
     val busy = state.loading || state.censusBusyLocationIds.isNotEmpty()
-    var renameTarget by remember { mutableStateOf<SourceSummary?>(null) }
-    var removeTarget by remember { mutableStateOf<SourceSummary?>(null) }
-    var renameDeviceOpen by remember { mutableStateOf(false) }
-    var pcGuideOpen by remember { mutableStateOf(false) }
-    var pcHelpOpen by remember { mutableStateOf(false) }
-    var addDeviceOpen by remember { mutableStateOf(false) }
-    var addTip by remember { mutableStateOf<String?>(null) }
-    var renameText by remember { mutableStateOf("") }
 
     fun cycleSourceSelection(source: SourceSummary) {
         val current = state.selectionOf(source.locationId)
@@ -150,58 +160,27 @@ fun AcquisisciStaticScreen(
             fontWeight = FontWeight.SemiBold,
         )
         Text(
+            text = stringResource(R.string.acquisisci_static_subtitle),
+            style = MaterialTheme.typography.titleMedium,
+            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+        )
+        Text(
             text = stringResource(R.string.acquisisci_static_intro),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
         )
 
-        // Catalogo di riferimento ≠ fonti sotto (Posizione vs dispositivi da cui acquisire).
-        Text(
-            text = stringResource(R.string.acquisisci_catalog_ref_title),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Medium,
+        val hasCatalog = state.catalogSeatConfigured || seatConfigured
+        com.renatizzi.photovideomanager.ui.common.CatalogSeatStatusRow(
+            status = state.catalogSeatStatus,
+            onOpenSeat = onOpenCatalogSeatWizard,
         )
-        if (state.catalogSeatConfigured || seatConfigured) {
-            val seatName = state.catalogSeatLabel.ifBlank { "—" }
-            val kind = state.catalogSeatKindLabel.ifBlank { "Posizione impostata" }
-            Text(
-                text = stringResource(R.string.acquisisci_catalog_ref_line, seatName, kind),
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            val reach = when (state.catalogSeatReachable) {
-                true -> stringResource(R.string.acquisisci_catalog_ref_reachable)
-                false -> stringResource(R.string.acquisisci_catalog_ref_unreachable)
-                null -> stringResource(R.string.acquisisci_catalog_ref_unknown)
-            }
-            Text(
-                text = reach,
-                style = MaterialTheme.typography.labelMedium,
-                color = when (state.catalogSeatReachable) {
-                    true -> MaterialTheme.colorScheme.secondary
-                    false -> MaterialTheme.colorScheme.error
-                    null -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
-                },
-            )
-            TextButton(
-                onClick = onOpenCatalogUpdate,
-                enabled = !busy,
-            ) {
-                Text(stringResource(R.string.hub_update_title))
-            }
-        } else {
-            Text(
-                text = stringResource(R.string.acquisisci_catalog_ref_missing),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-            )
-            Button(
-                onClick = onOpenCatalogSeatWizard,
-                enabled = !busy,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(R.string.hub_acquire_needs_setup_action))
-            }
+
+        if (!hasCatalog) {
+            // TO-BE: senza Catalogo solo invito — niente +, CONFERMA, elenco.
+            Spacer(modifier = Modifier.weight(1f))
+            return@Column
         }
 
         Text(
@@ -230,7 +209,7 @@ fun AcquisisciStaticScreen(
             Text(stringResource(R.string.acquisisci_rename_device, state.deviceAlias.ifBlank { "…" }))
         }
 
-        // Azioni in alto (layout congelato): refresh, Aggiungi, CONFERMA
+        // Azioni: refresh icon-only, Aggiungi, CONFERMA (niente «Tutti»)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -240,7 +219,13 @@ fun AcquisisciStaticScreen(
                 Icon(Icons.Outlined.Refresh, contentDescription = stringResource(R.string.refresh_sources))
             }
             IconButton(
-                onClick = { addDeviceOpen = true },
+                onClick = {
+                    setupSorgentiStep = "avvio"
+                    addDeviceOpen = true
+                    sorgentiKind =
+                        com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind.LOCAL_DEVICE
+                    sorgentiModel = ""
+                },
                 enabled = !busy,
                 modifier = Modifier
                     .clip(CircleShape)
@@ -248,7 +233,7 @@ fun AcquisisciStaticScreen(
             ) {
                 Icon(
                     Icons.Outlined.Add,
-                    contentDescription = stringResource(R.string.acquisisci_add_device_title),
+                    contentDescription = stringResource(R.string.sorgenti_wizard_title),
                     tint = MaterialTheme.colorScheme.onPrimary,
                 )
             }
@@ -267,15 +252,6 @@ fun AcquisisciStaticScreen(
                     Text(stringResource(R.string.acquisisci_conferma))
                 }
             }
-        }
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(
-                checked = allChecked,
-                onCheckedChange = { onSetAllSelected(it) },
-                enabled = !busy && sources.isNotEmpty(),
-            )
-            Text(stringResource(R.string.acquisisci_tutti))
         }
 
         Column(
@@ -323,7 +299,7 @@ fun AcquisisciStaticScreen(
                             selection = state.selectionOf(source.locationId),
                             busy = source.locationId in state.censusBusyLocationIds,
                             enabled = !busy,
-                            showDeviceLabel = false, // già nell'intestazione gruppo
+                            showDeviceLabel = false,
                             onToggle = { cycleSourceSelection(source) },
                             onBrowse = { onBrowse(source.locationId) },
                             onLongPress = {
@@ -339,67 +315,93 @@ fun AcquisisciStaticScreen(
         }
     }
 
-    if (addDeviceOpen) {
+    if (addDeviceOpen && setupSorgentiStep == "avvio") {
         AlertDialog(
-            onDismissRequest = { addDeviceOpen = false },
-            title = { Text(stringResource(R.string.acquisisci_add_device_title)) },
+            onDismissRequest = {
+                addDeviceOpen = false
+                setupSorgentiStep = null
+            },
+            title = { Text(stringResource(R.string.sorgenti_wizard_title)) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = stringResource(R.string.acquisisci_add_device_body),
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(bottom = 8.dp),
+                        text = stringResource(R.string.sorgenti_avvio_subtitle),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                     )
-                    TextButton(
-                        onClick = {
-                            addDeviceOpen = false
-                            openTree.launch(null)
-                        },
+                    Text(
+                        text = stringResource(R.string.sorgenti_avvio_desc),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    com.renatizzi.photovideomanager.ui.hub.DeviceKindDropdown(
+                        selected = sorgentiKind,
+                        onSelectKind = { sorgentiKind = it },
+                        enabled = true,
+                    )
+                    OutlinedTextField(
+                        value = sorgentiModel,
+                        onValueChange = { sorgentiModel = it },
                         modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(stringResource(R.string.acquisisci_add_this_device))
-                    }
-                    TextButton(
-                        onClick = {
-                            addDeviceOpen = false
-                            pcGuideOpen = true
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(stringResource(R.string.acquisisci_add_pc))
-                    }
-                    TextButton(
-                        onClick = {
-                            addDeviceOpen = false
-                            addTip = "drive"
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(stringResource(R.string.acquisisci_add_drive))
-                    }
-                    TextButton(
-                        onClick = {
-                            addDeviceOpen = false
-                            addTip = "nas"
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(stringResource(R.string.acquisisci_add_nas))
-                    }
-                    TextButton(
-                        onClick = {
-                            addDeviceOpen = false
-                            onOpenCatalogSeatWizard()
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(stringResource(R.string.acquisisci_open_catalog_seat))
-                    }
+                        singleLine = true,
+                        placeholder = { Text(stringResource(R.string.hub_avvio_model_hint)) },
+                        label = { Text(stringResource(R.string.hub_avvio_model_q)) },
+                    )
                 }
             },
             confirmButton = {
-                TextButton(onClick = { addDeviceOpen = false }) {
-                    Text(stringResource(R.string.importa_annulla))
+                Button(
+                    onClick = {
+                        when (sorgentiKind) {
+                            com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind.PC_NOTEBOOK -> {
+                                addDeviceOpen = false
+                                setupSorgentiStep = null
+                                sorgentiAwaitingPick = true
+                                pcGuideOpen = true
+                            }
+                            com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind.CLOUD_DRIVE -> {
+                                addDeviceOpen = false
+                                setupSorgentiStep = null
+                                sorgentiAwaitingPick = true
+                                addTip = "drive"
+                            }
+                            com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind.NETWORK_NAS -> {
+                                addDeviceOpen = false
+                                setupSorgentiStep = null
+                                sorgentiAwaitingPick = true
+                                addTip = "nas"
+                            }
+                            else -> {
+                                addDeviceOpen = false
+                                setupSorgentiStep = null
+                                sorgentiAwaitingPick = true
+                                openTree.launch(null)
+                            }
+                        }
+                    },
+                ) {
+                    Text(stringResource(R.string.sorgenti_choose_folder))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        addDeviceOpen = false
+                        setupSorgentiStep = null
+                    },
+                ) {
+                    Text(stringResource(R.string.hub_avvio_esc))
+                }
+            },
+        )
+    }
+    if (setupSorgentiStep == "done") {
+        AlertDialog(
+            onDismissRequest = { setupSorgentiStep = null },
+            title = { Text(stringResource(R.string.sorgenti_done_title)) },
+            text = { Text(stringResource(R.string.sorgenti_done_body)) },
+            confirmButton = {
+                Button(onClick = { setupSorgentiStep = null }) {
+                    Text(stringResource(R.string.hub_done_torna_accesso))
                 }
             },
         )
@@ -926,6 +928,12 @@ fun AggiornaStaticScreen(
             fontWeight = FontWeight.SemiBold,
         )
         Text(
+            text = stringResource(R.string.aggiorna_static_subtitle),
+            style = MaterialTheme.typography.titleMedium,
+            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+        )
+        Text(
             text = stringResource(R.string.aggiorna_static_intro),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
@@ -1115,18 +1123,27 @@ fun AggiornaStaticScreen(
 }
 
 /**
- * Componi landing (template): ricerca, + ALBUM / + RACCOLTA, elenco con mini-cover e menu ⋮.
- * Crea/Edita/Pubblica non sono bottoni hub separati sulla landing.
+ * Componi landing TO-BE: switch ALBUM/RACCOLTA (default ALBUM), + contestuale, elenco filtrato.
  */
 @Composable
-fun ComponiLandingStaticScreen(modifier: Modifier = Modifier) {
+fun ComponiLandingStaticScreen(
+    seatStatus: com.renatizzi.photovideomanager.domain.hub.CatalogSeatStatus? = null,
+    onOpenCatalogSeat: () -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
     var query by remember { mutableStateOf("") }
+    var albumMode by remember { mutableStateOf(true) } // true = ALBUM (default)
     val albums = listOf(
         "Vacanze 2024" to "Album · ultima modifica 12/08/2026",
         "Compleanno Marco" to "Raccolta · ultima modifica 03/09/2026",
         "Ricordi famiglia" to "Album · ultima modifica 01/10/2026",
         "Evento scuola" to "Raccolta · ultima modifica 20/09/2026",
     )
+    val filtered = albums.filter { (_, meta) ->
+        if (albumMode) meta.startsWith("Album") else meta.startsWith("Raccolta")
+    }.filter { (name, _) ->
+        query.isBlank() || name.contains(query, ignoreCase = true)
+    }
 
     Column(
         modifier = modifier
@@ -1140,9 +1157,21 @@ fun ComponiLandingStaticScreen(modifier: Modifier = Modifier) {
             fontWeight = FontWeight.SemiBold,
         )
         Text(
+            text = stringResource(R.string.componi_static_subtitle),
+            style = MaterialTheme.typography.titleMedium,
+            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+        )
+        Text(
             text = stringResource(R.string.componi_landing_intro),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+        )
+
+        com.renatizzi.photovideomanager.ui.common.CatalogSeatStatusRow(
+            status = seatStatus,
+            onOpenSeat = onOpenCatalogSeat,
+            compact = true,
         )
 
         CatalogSearchField(query = query, onQueryChange = { query = it })
@@ -1154,7 +1183,7 @@ fun ComponiLandingStaticScreen(modifier: Modifier = Modifier) {
         )
         Text(stringResource(R.string.componi_riepilogo_static), style = MaterialTheme.typography.bodySmall)
 
-        // Template: (+) ALBUM / RACCOLTA — creazione; modifica via menu contestuale riga
+        // Switch ALBUM / RACCOLTA + singolo +
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1172,31 +1201,51 @@ fun ComponiLandingStaticScreen(modifier: Modifier = Modifier) {
                     tint = MaterialTheme.colorScheme.onPrimary,
                 )
             }
-            Button(onClick = {}, modifier = Modifier.weight(1f)) {
-                Text(stringResource(R.string.componi_album))
-            }
-            Button(onClick = {}, modifier = Modifier.weight(1f)) {
-                Text(stringResource(R.string.componi_raccolta))
-            }
+            FilterChip(
+                selected = albumMode,
+                onClick = { albumMode = true },
+                label = { Text(stringResource(R.string.componi_album)) },
+            )
+            FilterChip(
+                selected = !albumMode,
+                onClick = { albumMode = false },
+                label = { Text(stringResource(R.string.componi_raccolta)) },
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = if (albumMode) {
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    } else {
+                        MaterialTheme.colorScheme.surfaceVariant
+                    },
+                ),
+            )
         }
-
-        KindFilters()
 
         Column(
             modifier = Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState()),
         ) {
-            albums.forEach { (name, meta) ->
-                HorizontalDivider()
-                MediaRow(
-                    title = name,
-                    subtitle = meta,
-                    selection = SourceCensusSelection.NOT_SELECTED,
-                    showMenu = true,
+            if (filtered.isEmpty()) {
+                Text(
+                    text = stringResource(
+                        if (albumMode) R.string.componi_empty_album else R.string.componi_empty_raccolta,
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+                    modifier = Modifier.padding(vertical = 12.dp),
                 )
+            } else {
+                filtered.forEach { (name, meta) ->
+                    HorizontalDivider()
+                    MediaRow(
+                        title = name,
+                        subtitle = meta,
+                        selection = SourceCensusSelection.NOT_SELECTED,
+                        showMenu = true,
+                    )
+                }
+                HorizontalDivider()
             }
-            HorizontalDivider()
             Spacer(modifier = Modifier.height(16.dp))
         }
     }

@@ -16,6 +16,7 @@ import com.renatizzi.photovideomanager.data.hub.WizardDraftStore
 import com.renatizzi.photovideomanager.data.storage.NetworkDriveAssistant
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeat
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind
+import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKindLabels
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -33,6 +34,12 @@ import kotlinx.coroutines.withContext
 enum class SetupMode {
     CREATE,
     MODIFY,
+}
+
+/** PC/NAS: RAPIDA (default) o GUIDATA. */
+enum class ProcedureMode {
+    RAPIDA,
+    GUIDATA,
 }
 
 /** Campi scheda CIFS — ordine form Connection (screenshot PPT V2). */
@@ -57,10 +64,18 @@ enum class SeatVerificationUi {
 
 data class CatalogSeatWizardUiState(
     val step: WizardStep = WizardStep.S0_START,
-    val selectedKind: CatalogSeatKind = CatalogSeatKind.PC_NOTEBOOK,
+    val selectedKind: CatalogSeatKind = CatalogSeatKind.LOCAL_DEVICE,
     val setupMode: SetupMode = SetupMode.CREATE,
     val seatConfigured: Boolean = false,
     val seatLabel: String = "",
+    /** Nome Catalogo (Avvio procedura). */
+    val catalogName: String = CatalogSeat.DEFAULT_CATALOG_NAME,
+    /** Modello dispositivo (Avvio procedura). */
+    val deviceModel: String = "",
+    /** Memoria locale Principale/Secondaria. */
+    val memoryLabel: String = CatalogSeat.MEMORY_PRIMARY,
+    /** PC/NAS: RAPIDA (default) o GUIDATA. */
+    val procedureMode: ProcedureMode = ProcedureMode.RAPIDA,
     val canResumeDraft: Boolean = false,
     val resumeStepLabel: String = "",
     val pendingTreeUri: String? = null,
@@ -173,9 +188,20 @@ class CatalogSeatWizardViewModel(
                 step = WizardStep.S0_START,
                 seatConfigured = seat.isConfigured,
                 seatLabel = seat.displayLabel,
+                catalogName = if (seat.isConfigured) {
+                    seat.effectiveCatalogName
+                } else {
+                    CatalogSeat.DEFAULT_CATALOG_NAME
+                },
+                deviceModel = seat.deviceModel.ifBlank {
+                    if (seat.isConfigured) CatalogSeatKindLabels.shortDevice(seat.kind) else ""
+                },
+                memoryLabel = seat.memoryLabel.ifBlank { CatalogSeat.MEMORY_PRIMARY },
+                procedureMode = ProcedureMode.RAPIDA,
                 canResumeDraft = canResume && resumeStep != null,
                 resumeStepLabel = resumeStep?.let { s -> humanStepLabel(s) }.orEmpty(),
                 selectedKind = if (seat.isConfigured) seat.kind else CatalogSeatKind.LOCAL_DEVICE,
+                setupMode = if (seat.isConfigured) SetupMode.MODIFY else SetupMode.CREATE,
                 folderPath = draft?.folderPath ?: WindowsCatalogSetupScript.DEFAULT_FOLDER,
                 shareName = draft?.shareName ?: WindowsCatalogSetupScript.DEFAULT_SHARE,
                 userName = draft?.userName ?: WindowsCatalogSetupScript.DEFAULT_USER,
@@ -186,13 +212,18 @@ class CatalogSeatWizardViewModel(
         }
     }
 
+    /** Compat: avvia da landing già su S0 (Avvio procedura). */
     fun startCreate() {
         draftStore.clear()
         _state.update {
             it.copy(
                 setupMode = SetupMode.CREATE,
-                step = WizardStep.INTRO,
+                step = WizardStep.S0_START,
                 selectedKind = CatalogSeatKind.LOCAL_DEVICE,
+                catalogName = CatalogSeat.DEFAULT_CATALOG_NAME,
+                deviceModel = "",
+                memoryLabel = CatalogSeat.MEMORY_PRIMARY,
+                procedureMode = ProcedureMode.RAPIDA,
                 completedSeat = null,
                 errorMessage = null,
                 statusMessage = null,
@@ -205,7 +236,6 @@ class CatalogSeatWizardViewModel(
                 shareName = WindowsCatalogSetupScript.DEFAULT_SHARE,
             )
         }
-        persistDraft()
     }
 
     fun startModify() {
@@ -213,15 +243,34 @@ class CatalogSeatWizardViewModel(
         _state.update {
             it.copy(
                 setupMode = SetupMode.MODIFY,
-                step = WizardStep.INTRO,
-                selectedKind = if (seat.kind != CatalogSeatKind.NONE) seat.kind else CatalogSeatKind.PC_NOTEBOOK,
+                step = WizardStep.S0_START,
+                selectedKind = if (seat.kind != CatalogSeatKind.NONE) seat.kind else CatalogSeatKind.LOCAL_DEVICE,
+                catalogName = seat.effectiveCatalogName,
+                deviceModel = seat.deviceModel,
+                memoryLabel = seat.memoryLabel.ifBlank { CatalogSeat.MEMORY_PRIMARY },
+                procedureMode = ProcedureMode.RAPIDA,
                 completedSeat = null,
                 errorMessage = null,
                 statusMessage = null,
                 canResumeDraft = false,
             )
         }
-        persistDraft()
+    }
+
+    fun updateCatalogName(name: String) {
+        _state.update { it.copy(catalogName = name, errorMessage = null) }
+    }
+
+    fun updateDeviceModel(model: String) {
+        _state.update { it.copy(deviceModel = model, errorMessage = null) }
+    }
+
+    fun updateMemoryLabel(label: String) {
+        _state.update { it.copy(memoryLabel = label, errorMessage = null) }
+    }
+
+    fun selectProcedureMode(mode: ProcedureMode) {
+        _state.update { it.copy(procedureMode = mode, errorMessage = null) }
     }
 
     fun resumeDraft() {
@@ -299,9 +348,21 @@ class CatalogSeatWizardViewModel(
         loadEntryState()
     }
 
-    fun avantiFromIntro() {
+    /**
+     * CONTINUA da Avvio procedura: nome + dispositivo + modello → ramo locale/cloud/PC/NAS.
+     * Salta INTRO (scelta dispositivo già fatta in landing).
+     */
+    fun continuaFromAvvio() {
         val current = _state.value
+        val name = current.catalogName.trim().ifBlank { CatalogSeat.DEFAULT_CATALOG_NAME }
         val kind = current.selectedKind
+        if (kind == CatalogSeatKind.NONE) {
+            _state.update { it.copy(errorMessage = "Seleziona un dispositivo") }
+            return
+        }
+        val model = current.deviceModel.trim().ifBlank {
+            CatalogSeatKindLabels.shortDevice(kind)
+        }
         if (kind == CatalogSeatKind.PC_NOTEBOOK) {
             val pathErr = WindowsCatalogSetupScript.validateFolderPath(current.folderPath)
             if (pathErr != null) {
@@ -311,35 +372,72 @@ class CatalogSeatWizardViewModel(
         }
         val step = when (kind) {
             CatalogSeatKind.LOCAL_DEVICE -> WizardStep.W1_CONFIRM
-            CatalogSeatKind.PC_NOTEBOOK -> WizardStep.PC_SHARE_READY
+            CatalogSeatKind.PC_NOTEBOOK,
+            CatalogSeatKind.NETWORK_NAS,
+            -> WizardStep.PC_SHARE_READY
             CatalogSeatKind.CLOUD_DRIVE -> WizardStep.W3_GUIDE
-            CatalogSeatKind.NETWORK_NAS -> WizardStep.W4_GUIDE
-            CatalogSeatKind.NONE -> WizardStep.INTRO
+            CatalogSeatKind.NONE -> WizardStep.S0_START
         }
-        _state.update { it.copy(step = step, errorMessage = null, statusMessage = null) }
-        persistDraft()
-    }
-
-    /** F3: share già pronta → CIFS + pick (stesse verifiche finali). */
-    fun onPcShareAlreadyReady() {
-        refreshCifsInstalled()
+        draftStore.clear()
         _state.update {
             it.copy(
-                step = WizardStep.W2_CIFS,
-                recoveringPcData = false,
+                catalogName = name,
+                deviceModel = model,
+                step = step,
                 errorMessage = null,
-                statusMessage = "Inserisci Host (IP) e User se non già compilati, poi collega CIFS e scegli la cartella.",
+                statusMessage = null,
+                completedSeat = null,
+                canResumeDraft = false,
+                procedureMode = ProcedureMode.RAPIDA,
             )
         }
         persistDraft()
     }
 
-    /** F3: share non pronta → preparazione guidata Passo 1. */
-    fun onPcShareNeedsPrepare() {
+    /** Compat: INTRO legacy (bozze) → stesso routing di Avvio. */
+    fun avantiFromIntro() {
+        continuaFromAvvio()
+    }
+
+    /** RAPIDA: subito a CIFS + pick (PC e NAS). */
+    fun onPcShareAlreadyReady() {
+        refreshCifsInstalled()
         _state.update {
-            it.copy(step = WizardStep.PC_AVAILABILITY, errorMessage = null, statusMessage = null)
+            it.copy(
+                procedureMode = ProcedureMode.RAPIDA,
+                step = WizardStep.W2_CIFS,
+                recoveringPcData = false,
+                errorMessage = null,
+                statusMessage = "Inserisci Host (IP) a mano e copia i dati in CIFS, poi scegli la cartella.",
+            )
         }
         persistDraft()
+    }
+
+    /** GUIDATA: PC → passi 1–4; NAS → guida NAS poi CIFS. */
+    fun onPcShareNeedsPrepare() {
+        val kind = _state.value.selectedKind
+        val step = when (kind) {
+            CatalogSeatKind.NETWORK_NAS -> WizardStep.W4_GUIDE
+            else -> WizardStep.PC_AVAILABILITY
+        }
+        _state.update {
+            it.copy(
+                procedureMode = ProcedureMode.GUIDATA,
+                step = step,
+                errorMessage = null,
+                statusMessage = null,
+            )
+        }
+        persistDraft()
+    }
+
+    /** Avvia dalla combo RAPIDA/GUIDATA su PC_SHARE_READY. */
+    fun avviaProcedure() {
+        when (_state.value.procedureMode) {
+            ProcedureMode.RAPIDA -> onPcShareAlreadyReady()
+            ProcedureMode.GUIDATA -> onPcShareNeedsPrepare()
+        }
     }
 
     /** Passo 1 → 2. */
@@ -785,40 +883,48 @@ class CatalogSeatWizardViewModel(
         }
     }
 
+    /** Solo memorizza la cartella scelta; il salvataggio avviene con [confirmPendingSeat] (Salva). */
     fun onFolderPicked(uri: String, label: String) {
         _state.update {
             it.copy(
                 pendingTreeUri = uri,
                 pendingLabel = label,
                 errorMessage = null,
+                statusMessage = null,
                 verification = SeatVerificationUi.NONE,
+                awaitAccessOutcome = false,
             )
         }
-        confirmSeat(
-            kind = _state.value.selectedKind,
-            treeUri = uri,
-            label = label,
-        )
     }
 
+    /**
+     * Locale senza URI: non più usato come conferma diretta.
+     * La UI apre il selettore cartelle; resta come fallback etichetta.
+     */
     fun confirmLocalSeat() {
-        confirmSeat(
-            kind = CatalogSeatKind.LOCAL_DEVICE,
-            treeUri = null,
-            label = "Questo dispositivo",
-        )
+        confirmPendingSeat()
     }
 
-    /** Riprova S6 con l'ultima cartella scelta, senza azzerare S1–S2. */
-    fun retryPendingFolderVerification() {
+    /** TO-BE: Salva — conferma la cartella in pending (locale / cloud / CIFS). */
+    fun confirmPendingSeat() {
         val s = _state.value
-        val uri = s.pendingTreeUri ?: return
+        val uri = s.pendingTreeUri
+        // Filiera locale inclusa: serve sempre una cartella scelta (es. Documenti/Catalogo).
+        if (uri.isNullOrBlank()) {
+            _state.update { it.copy(errorMessage = "Scegli prima la cartella del Catalogo") }
+            return
+        }
         confirmSeat(
             kind = s.selectedKind,
             treeUri = uri,
-            label = s.pendingLabel.ifBlank { "Cartella Catalogo" },
+            label = s.pendingLabel.ifBlank {
+                s.catalogName.ifBlank { CatalogSeat.DEFAULT_CATALOG_NAME }
+            },
         )
     }
+
+    /** Compat: stesso di [confirmPendingSeat]. */
+    fun retryPendingFolderVerification() = confirmPendingSeat()
 
     private fun confirmSeat(kind: CatalogSeatKind, treeUri: String?, label: String) {
         viewModelScope.launch {
@@ -829,14 +935,20 @@ class CatalogSeatWizardViewModel(
                     statusMessage = null,
                     verification = SeatVerificationUi.IN_PROGRESS,
                     awaitAccessOutcome = false,
-                    // Ramo PC: resta sulla pagina CIFS (revisione4 SI/NO).
-                    step = if (kind == CatalogSeatKind.LOCAL_DEVICE) it.step else WizardStep.W2_CIFS,
                 )
             }
+            val ui = _state.value
             val seat = CatalogSeat(
                 kind = kind,
                 treeUri = treeUri,
                 displayLabel = label,
+                catalogName = ui.catalogName.ifBlank { CatalogSeat.DEFAULT_CATALOG_NAME },
+                deviceModel = ui.deviceModel.ifBlank { CatalogSeatKindLabels.shortDevice(kind) },
+                memoryLabel = if (kind == CatalogSeatKind.LOCAL_DEVICE) {
+                    ui.memoryLabel.ifBlank { CatalogSeat.MEMORY_PRIMARY }
+                } else {
+                    ""
+                },
             )
             val result = catalogFacade.configureCatalogSeat(seat)
             if (result.isSuccess) {
@@ -845,16 +957,11 @@ class CatalogSeatWizardViewModel(
                     it.copy(
                         busy = false,
                         completedSeat = result.getOrNull(),
-                        // Locale: esito diretto. PC: domanda SI/NO prima di Acquisisci.
-                        step = if (kind == CatalogSeatKind.LOCAL_DEVICE) {
-                            WizardStep.DONE
-                        } else {
-                            WizardStep.W2_CIFS
-                        },
+                        step = WizardStep.DONE,
                         seatConfigured = true,
                         seatLabel = label,
                         verification = SeatVerificationUi.VERIFIED,
-                        awaitAccessOutcome = kind != CatalogSeatKind.LOCAL_DEVICE,
+                        awaitAccessOutcome = false,
                         errorMessage = null,
                         statusMessage = null,
                     )
@@ -870,12 +977,12 @@ class CatalogSeatWizardViewModel(
                         } else {
                             SeatVerificationUi.FAILED
                         },
-                        awaitAccessOutcome = kind != CatalogSeatKind.LOCAL_DEVICE,
+                        awaitAccessOutcome = false,
                         errorMessage = friendlySeatError(raw, unreachable),
-                        step = if (kind == CatalogSeatKind.LOCAL_DEVICE) {
-                            WizardStep.W1_CONFIRM
-                        } else {
-                            WizardStep.W2_CIFS
+                        step = when (kind) {
+                            CatalogSeatKind.LOCAL_DEVICE -> WizardStep.W1_CONFIRM
+                            CatalogSeatKind.CLOUD_DRIVE -> WizardStep.W3_GUIDE
+                            else -> WizardStep.W2_CIFS
                         },
                     )
                 }
@@ -884,7 +991,7 @@ class CatalogSeatWizardViewModel(
         }
     }
 
-    /** revisione4: SI → chiude il wizard (navigazione verso Acquisisci dal caller). */
+    /** Compat legacy: porta all’esito DONE. */
     fun acceptAccessYes() {
         _state.update {
             it.copy(
@@ -896,16 +1003,14 @@ class CatalogSeatWizardViewModel(
         }
     }
 
-    /** revisione4: NO → stub procedura problemi (da sviluppare). */
     fun acceptAccessNo() {
         _state.update {
             it.copy(
-                awaitAccessOutcome = true,
+                awaitAccessOutcome = false,
                 statusMessage = null,
                 errorMessage = null,
             )
         }
-        // Messaggio UI via stringa dedicata; resta su W2_CIFS.
     }
 
     private fun isUnreachableSeatError(message: String): Boolean {

@@ -20,7 +20,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.launch
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -150,7 +153,12 @@ fun PvmApp(
                     .padding(padding),
             ) {
                 composable(PvmDestination.Home.route) {
-                    LaunchedEffect(Unit) { homeViewModel.refresh() }
+                    val homeLifecycle = LocalLifecycleOwner.current
+                    LaunchedEffect(homeLifecycle) {
+                        homeLifecycle.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                            homeViewModel.refresh()
+                        }
+                    }
                     HomeScreen(
                         snapshot = homeState.snapshot,
                         seatStatus = homeState.seatStatus,
@@ -167,24 +175,28 @@ fun PvmApp(
                     )
                 }
                 composable(PvmDestination.Organizza.route) {
-                    var organizaSeat by remember {
-                        mutableStateOf<com.renatizzi.photovideomanager.domain.hub.CatalogSeatStatus?>(null)
-                    }
-                    LaunchedEffect(Unit) {
-                        organizaSeat = runCatching { catalogFacade.catalogSeatStatus() }.getOrNull()
-                    }
+                    // TO-BE: nessuna riga Catalogo sull'hub Organizza (solo Dashboard/Acquisisci/Aggiorna/Componi).
                     MacroHubScreen(
                         area = MacroNavigation.areaFor(ShellTab.ORGANIZZA)!!,
                         onFeatureClick = { openFeature(it.id) },
-                        seatStatus = organizaSeat,
+                    )
+                }
+                composable(PvmDestination.Componi.route) {
+                    var componiSeat by remember {
+                        mutableStateOf<com.renatizzi.photovideomanager.domain.hub.CatalogSeatStatus?>(null)
+                    }
+                    val componiLifecycle = LocalLifecycleOwner.current
+                    LaunchedEffect(componiLifecycle) {
+                        componiLifecycle.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                            componiSeat = runCatching { catalogFacade.catalogSeatStatus() }.getOrNull()
+                        }
+                    }
+                    ComponiLandingStaticScreen(
+                        seatStatus = componiSeat,
                         onOpenCatalogSeat = {
                             navController.navigate(PvmDestination.CatalogSeatWizard.route)
                         },
                     )
-                }
-                composable(PvmDestination.Componi.route) {
-                    // Anteprima statica landing Componi (template): elenco + Crea/Edita/Pubblica
-                    ComponiLandingStaticScreen()
                 }
                 composable(PvmDestination.Utility.route) {
                     MacroHubScreen(
@@ -209,6 +221,12 @@ fun PvmApp(
                     )
                     val censusState by censusVm.state.collectAsStateWithLifecycle()
                     val acquireState by acquireVm.state.collectAsStateWithLifecycle()
+                    val acquireLifecycle = LocalLifecycleOwner.current
+                    LaunchedEffect(acquireLifecycle) {
+                        acquireLifecycle.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                            censusVm.refresh()
+                        }
+                    }
                     LaunchedEffect(censusState.message) {
                         censusState.message?.let {
                             snackbarHostState.showSnackbar(it)
@@ -295,11 +313,15 @@ fun PvmApp(
                         onResumeDraft = wizardVm::resumeDraft,
                         onDiscardDraft = wizardVm::discardDraftAndStayOnS0,
                         onSelectKind = wizardVm::selectKind,
+                        onCatalogNameChange = wizardVm::updateCatalogName,
+                        onDeviceModelChange = wizardVm::updateDeviceModel,
+                        onProcedureMode = wizardVm::selectProcedureMode,
                         onAvanti = wizardVm::avantiFromIntro,
+                        onContinuaAvvio = wizardVm::continuaFromAvvio,
                         onBackIntro = wizardVm::goIntro,
                         onBackS0 = wizardVm::goS0,
                         onGoStep = wizardVm::goStep,
-                        onConfirmLocal = wizardVm::confirmLocalSeat,
+                        onConfirmLocal = wizardVm::confirmPendingSeat,
                         onFolderPathChange = wizardVm::updateFolderPath,
                         onConfirmAvailability = wizardVm::confirmAvailabilityChecked,
                         onPcShareAlreadyReady = wizardVm::onPcShareAlreadyReady,
@@ -317,8 +339,12 @@ fun PvmApp(
                         onFolderPicked = wizardVm::onFolderPicked,
                         onAccessYes = wizardVm::acceptAccessYes,
                         onAccessNo = wizardVm::acceptAccessNo,
-                        onDone = { navController.popBackStack() },
+                        onDone = {
+                            homeViewModel.refresh()
+                            navController.popBackStack()
+                        },
                         onGoToAcquire = {
+                            homeViewModel.refresh()
                             navController.popBackStack()
                             navController.navigate(PvmDestination.Acquire.route) {
                                 launchSingleTop = true
