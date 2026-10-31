@@ -106,6 +106,11 @@ fun HomeScreen(
             ),
             color = labelColor,
         )
+        Text(
+            text = stringResource(R.string.dashboard_description),
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
+            color = labelColor.copy(alpha = 0.9f),
+        )
         com.renatizzi.photovideomanager.ui.common.CatalogSeatStatusRow(
             status = seatStatus,
             onOpenSeat = onOpenCatalogSeat,

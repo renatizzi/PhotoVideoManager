@@ -98,6 +98,20 @@ fun AcquisisciStaticScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    var renameTarget by remember { mutableStateOf<SourceSummary?>(null) }
+    var removeTarget by remember { mutableStateOf<SourceSummary?>(null) }
+    var renameDeviceOpen by remember { mutableStateOf(false) }
+    var pcGuideOpen by remember { mutableStateOf(false) }
+    var pcHelpOpen by remember { mutableStateOf(false) }
+    var addDeviceOpen by remember { mutableStateOf(false) }
+    var setupSorgentiStep by remember { mutableStateOf<String?>(null) } // avvio | done
+    var sorgentiKind by remember {
+        mutableStateOf(com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind.LOCAL_DEVICE)
+    }
+    var sorgentiModel by remember { mutableStateOf("") }
+    var sorgentiAwaitingPick by remember { mutableStateOf(false) }
+    var addTip by remember { mutableStateOf<String?>(null) }
+    var renameText by remember { mutableStateOf("") }
     val openTree = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree(),
     ) { uri ->
@@ -108,6 +122,13 @@ fun AcquisisciStaticScreen(
                 context.getString(R.string.external_source_default_name),
             )
             onAddSource(uri, name)
+            if (sorgentiAwaitingPick) {
+                sorgentiAwaitingPick = false
+                setupSorgentiStep = "done"
+                addDeviceOpen = false
+            }
+        } else {
+            sorgentiAwaitingPick = false
         }
     }
     // Fonti con X (escluse in attesa di conferma) restano visibili con la X nel riquadro.
@@ -116,14 +137,6 @@ fun AcquisisciStaticScreen(
         state.selectionOf(it.locationId) == SourceCensusSelection.SELECTED
     }
     val busy = state.loading || state.censusBusyLocationIds.isNotEmpty()
-    var renameTarget by remember { mutableStateOf<SourceSummary?>(null) }
-    var removeTarget by remember { mutableStateOf<SourceSummary?>(null) }
-    var renameDeviceOpen by remember { mutableStateOf(false) }
-    var pcGuideOpen by remember { mutableStateOf(false) }
-    var pcHelpOpen by remember { mutableStateOf(false) }
-    var addDeviceOpen by remember { mutableStateOf(false) }
-    var addTip by remember { mutableStateOf<String?>(null) }
-    var renameText by remember { mutableStateOf("") }
 
     fun cycleSourceSelection(source: SourceSummary) {
         val current = state.selectionOf(source.locationId)
@@ -206,7 +219,13 @@ fun AcquisisciStaticScreen(
                 Icon(Icons.Outlined.Refresh, contentDescription = stringResource(R.string.refresh_sources))
             }
             IconButton(
-                onClick = { addDeviceOpen = true },
+                onClick = {
+                    setupSorgentiStep = "avvio"
+                    addDeviceOpen = true
+                    sorgentiKind =
+                        com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind.LOCAL_DEVICE
+                    sorgentiModel = ""
+                },
                 enabled = !busy,
                 modifier = Modifier
                     .clip(CircleShape)
@@ -214,7 +233,7 @@ fun AcquisisciStaticScreen(
             ) {
                 Icon(
                     Icons.Outlined.Add,
-                    contentDescription = stringResource(R.string.acquisisci_add_device_title),
+                    contentDescription = stringResource(R.string.sorgenti_wizard_title),
                     tint = MaterialTheme.colorScheme.onPrimary,
                 )
             }
@@ -296,67 +315,93 @@ fun AcquisisciStaticScreen(
         }
     }
 
-    if (addDeviceOpen) {
+    if (addDeviceOpen && setupSorgentiStep == "avvio") {
         AlertDialog(
-            onDismissRequest = { addDeviceOpen = false },
-            title = { Text(stringResource(R.string.acquisisci_add_device_title)) },
+            onDismissRequest = {
+                addDeviceOpen = false
+                setupSorgentiStep = null
+            },
+            title = { Text(stringResource(R.string.sorgenti_wizard_title)) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = stringResource(R.string.acquisisci_add_device_body),
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(bottom = 8.dp),
+                        text = stringResource(R.string.sorgenti_avvio_subtitle),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                     )
-                    TextButton(
-                        onClick = {
-                            addDeviceOpen = false
-                            openTree.launch(null)
-                        },
+                    Text(
+                        text = stringResource(R.string.sorgenti_avvio_desc),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    com.renatizzi.photovideomanager.ui.hub.DeviceKindDropdown(
+                        selected = sorgentiKind,
+                        onSelectKind = { sorgentiKind = it },
+                        enabled = true,
+                    )
+                    OutlinedTextField(
+                        value = sorgentiModel,
+                        onValueChange = { sorgentiModel = it },
                         modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(stringResource(R.string.acquisisci_add_this_device))
-                    }
-                    TextButton(
-                        onClick = {
-                            addDeviceOpen = false
-                            pcGuideOpen = true
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(stringResource(R.string.acquisisci_add_pc))
-                    }
-                    TextButton(
-                        onClick = {
-                            addDeviceOpen = false
-                            addTip = "drive"
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(stringResource(R.string.acquisisci_add_drive))
-                    }
-                    TextButton(
-                        onClick = {
-                            addDeviceOpen = false
-                            addTip = "nas"
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(stringResource(R.string.acquisisci_add_nas))
-                    }
-                    TextButton(
-                        onClick = {
-                            addDeviceOpen = false
-                            onOpenCatalogSeatWizard()
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(stringResource(R.string.acquisisci_open_catalog_seat))
-                    }
+                        singleLine = true,
+                        placeholder = { Text(stringResource(R.string.hub_avvio_model_hint)) },
+                        label = { Text(stringResource(R.string.hub_avvio_model_q)) },
+                    )
                 }
             },
             confirmButton = {
-                TextButton(onClick = { addDeviceOpen = false }) {
-                    Text(stringResource(R.string.importa_annulla))
+                Button(
+                    onClick = {
+                        when (sorgentiKind) {
+                            com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind.PC_NOTEBOOK -> {
+                                addDeviceOpen = false
+                                setupSorgentiStep = null
+                                sorgentiAwaitingPick = true
+                                pcGuideOpen = true
+                            }
+                            com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind.CLOUD_DRIVE -> {
+                                addDeviceOpen = false
+                                setupSorgentiStep = null
+                                sorgentiAwaitingPick = true
+                                addTip = "drive"
+                            }
+                            com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind.NETWORK_NAS -> {
+                                addDeviceOpen = false
+                                setupSorgentiStep = null
+                                sorgentiAwaitingPick = true
+                                addTip = "nas"
+                            }
+                            else -> {
+                                addDeviceOpen = false
+                                setupSorgentiStep = null
+                                sorgentiAwaitingPick = true
+                                openTree.launch(null)
+                            }
+                        }
+                    },
+                ) {
+                    Text(stringResource(R.string.sorgenti_choose_folder))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        addDeviceOpen = false
+                        setupSorgentiStep = null
+                    },
+                ) {
+                    Text(stringResource(R.string.hub_avvio_esc))
+                }
+            },
+        )
+    }
+    if (setupSorgentiStep == "done") {
+        AlertDialog(
+            onDismissRequest = { setupSorgentiStep = null },
+            title = { Text(stringResource(R.string.sorgenti_done_title)) },
+            text = { Text(stringResource(R.string.sorgenti_done_body)) },
+            confirmButton = {
+                Button(onClick = { setupSorgentiStep = null }) {
+                    Text(stringResource(R.string.hub_done_torna_accesso))
                 }
             },
         )

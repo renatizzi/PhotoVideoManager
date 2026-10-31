@@ -9,10 +9,10 @@ class CatalogSeatStatusTest {
 
     @Test
     fun kindLabels_coverW1toW4() {
-        assertEquals("Su questo dispositivo", CatalogSeatKindLabels.label(CatalogSeatKind.LOCAL_DEVICE))
-        assertEquals("Su PC / notebook", CatalogSeatKindLabels.label(CatalogSeatKind.PC_NOTEBOOK))
-        assertEquals("Su Google Drive / cloud", CatalogSeatKindLabels.label(CatalogSeatKind.CLOUD_DRIVE))
-        assertEquals("Su disco di rete / NAS", CatalogSeatKindLabels.label(CatalogSeatKind.NETWORK_NAS))
+        assertEquals("Questo dispositivo/Tablet", CatalogSeatKindLabels.label(CatalogSeatKind.LOCAL_DEVICE))
+        assertEquals("PC / notebook", CatalogSeatKindLabels.label(CatalogSeatKind.PC_NOTEBOOK))
+        assertEquals("Google Drive / Cloud", CatalogSeatKindLabels.label(CatalogSeatKind.CLOUD_DRIVE))
+        assertEquals("NAS / disco di rete", CatalogSeatKindLabels.label(CatalogSeatKind.NETWORK_NAS))
         assertEquals("", CatalogSeatKindLabels.label(CatalogSeatKind.NONE))
     }
 

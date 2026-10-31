@@ -149,12 +149,17 @@ fun CatalogSeatWizardScreen(
                 onCancel = onBackS0,
                 busy = state.busy,
             )
-            WizardStep.W1_CONFIRM -> SimpleGuide(
+            WizardStep.W1_CONFIRM -> FolderChoiceStep(
                 body = stringResource(R.string.hub_w1_body),
-                primary = stringResource(R.string.hub_w1_confirm),
-                onPrimary = { if (!state.busy) openTree.launch(null) },
-                onBack = onBackS0,
+                pendingLabel = state.pendingLabel,
+                catalogName = state.catalogName,
+                deviceModel = state.deviceModel,
+                memoryLabel = state.memoryLabel,
                 busy = state.busy,
+                onChooseFolder = { if (!state.busy) openTree.launch(null) },
+                onSalva = onConfirmLocal,
+                onBack = onBackS0,
+                onEsc = onCancel,
             )
             WizardStep.PC_SHARE_READY -> PcShareReadyStep(
                 kind = state.selectedKind,
@@ -237,6 +242,7 @@ fun CatalogSeatWizardScreen(
                     onGoToAcquire()
                 },
                 onAccessNo = onAccessNo,
+                onSalva = onConfirmLocal,
                 onBack = {
                     onGoStep(
                         if (state.procedureMode == ProcedureMode.RAPIDA) {
@@ -247,12 +253,17 @@ fun CatalogSeatWizardScreen(
                     )
                 },
             )
-            WizardStep.W3_GUIDE -> SimpleGuide(
+            WizardStep.W3_GUIDE -> FolderChoiceStep(
                 body = stringResource(R.string.hub_folder_choice_desc_cloud),
-                primary = stringResource(R.string.hub_choose_folder),
-                onPrimary = { if (!state.busy) openTree.launch(null) },
-                onBack = onBackS0,
+                pendingLabel = state.pendingLabel,
+                catalogName = state.catalogName,
+                deviceModel = state.deviceModel.ifBlank { "Google Drive" },
+                memoryLabel = "",
                 busy = state.busy,
+                onChooseFolder = { if (!state.busy) openTree.launch(null) },
+                onSalva = onConfirmLocal,
+                onBack = onBackS0,
+                onEsc = onCancel,
             )
             WizardStep.W4_GUIDE -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(stringResource(R.string.hub_w4_body))
@@ -821,6 +832,63 @@ private fun ProcedureModeDropdown(
 }
 
 @Composable
+private fun FolderChoiceStep(
+    body: String,
+    pendingLabel: String,
+    catalogName: String,
+    deviceModel: String,
+    memoryLabel: String,
+    busy: Boolean,
+    onChooseFolder: () -> Unit,
+    onSalva: () -> Unit,
+    onBack: () -> Unit,
+    onEsc: () -> Unit,
+) {
+    Text(body)
+    if (pendingLabel.isNotBlank()) {
+        val detail = buildString {
+            append(catalogName.ifBlank { "MediaManagerCatalog" })
+            append(" · ")
+            if (deviceModel.isNotBlank()) {
+                append(deviceModel)
+                append(", ")
+            }
+            if (memoryLabel.isNotBlank()) {
+                append(memoryLabel)
+                append(", ")
+            }
+            append(pendingLabel)
+        }
+        Text(
+            text = stringResource(R.string.catalog_seat_row_name, detail),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+        )
+    }
+    Button(
+        onClick = onChooseFolder,
+        enabled = !busy,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.hub_choose_folder))
+    }
+    Button(
+        onClick = onSalva,
+        enabled = !busy && pendingLabel.isNotBlank(),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.hub_salva))
+    }
+    OutlinedButton(onClick = onBack, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.hub_indietro))
+    }
+    TextButton(onClick = onEsc, enabled = !busy) {
+        Text(stringResource(R.string.hub_avvio_esc))
+    }
+}
+
+@Composable
 private fun CifsCardStep(
     state: CatalogSeatWizardUiState,
     onCopyField: (CifsCopyField) -> Unit,
@@ -832,13 +900,15 @@ private fun CifsCardStep(
     onRetry: () -> Unit,
     onAccessYes: () -> Unit,
     onAccessNo: () -> Unit,
+    onSalva: () -> Unit,
     onBack: () -> Unit,
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
     // Name, Storage, Host, Port, User, Password, Anonymous, Folder
     var rowFlags by remember { mutableStateOf(BooleanArray(8) { false }) }
     var cifsSavedConfirmed by remember { mutableStateOf(false) }
-    var showProblemsStub by remember { mutableStateOf(false) }
+    @Suppress("UNUSED_VARIABLE", "UNUSED_PARAMETER")
+    val unusedAccess = onAccessYes to onAccessNo
     val share = state.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
     val user = state.cifsUserQualified.trim().ifBlank {
         WindowsCatalogSetupScript.cifsUserCopyText(state.userName)
@@ -851,7 +921,7 @@ private fun CifsCardStep(
     val hostCopyable = state.pcHostIp.isNotBlank()
     val readyForPick = state.cifsInstalled && hasPassword && cifsSavedConfirmed
 
-    Text(stringResource(R.string.hub_pc5_intro))
+    Text(stringResource(R.string.hub_cifs_tobe_desc))
     Text(
         stringResource(R.string.hub_pc5_share_visibility),
         style = MaterialTheme.typography.bodyMedium,
@@ -1127,6 +1197,24 @@ private fun CifsCardStep(
             fontFamily = FontFamily.Monospace,
         )
     }
+    if (state.pendingTreeUri != null && state.pendingLabel.isNotBlank()) {
+        Text(
+            text = stringResource(R.string.hub_folder_summary_title),
+            fontWeight = FontWeight.SemiBold,
+        )
+        Text(
+            text = state.pendingLabel,
+            style = MaterialTheme.typography.bodySmall,
+            fontFamily = FontFamily.Monospace,
+        )
+        Button(
+            onClick = onSalva,
+            enabled = !state.busy,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.hub_salva))
+        }
+    }
     if (state.pendingTreeUri != null &&
         (state.verification == SeatVerificationUi.FAILED ||
             state.verification == SeatVerificationUi.UNREACHABLE)
@@ -1138,42 +1226,6 @@ private fun CifsCardStep(
         ) {
             Text(stringResource(R.string.hub_s6_retry))
         }
-    }
-
-    if (state.awaitAccessOutcome) {
-        Text(
-            stringResource(R.string.hub_pc5_access_question),
-            fontWeight = FontWeight.SemiBold,
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(
-                onClick = {
-                    showProblemsStub = false
-                    onAccessYes()
-                },
-                enabled = !state.busy && state.verification == SeatVerificationUi.VERIFIED,
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(stringResource(R.string.hub_pc5_access_yes))
-            }
-            OutlinedButton(
-                onClick = {
-                    showProblemsStub = true
-                    onAccessNo()
-                },
-                enabled = !state.busy,
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(stringResource(R.string.hub_pc5_access_no))
-            }
-        }
-    }
-    if (showProblemsStub) {
-        Text(
-            stringResource(R.string.hub_pc5_problems_stub),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.error,
-        )
     }
 
     OutlinedButton(onClick = onBack, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) {
@@ -1232,44 +1284,24 @@ private fun W2DoneStep(
     onDone: () -> Unit,
 ) {
     Text(
-        if (state.scriptPrepared) {
-            stringResource(R.string.hub_s7_title)
-        } else {
-            stringResource(R.string.hub_done_title)
-        },
+        stringResource(R.string.hub_done_title),
         fontWeight = FontWeight.Medium,
     )
-    if (state.scriptPrepared && state.verification == SeatVerificationUi.VERIFIED) {
+    val name = state.completedSeat?.effectiveCatalogName
+        ?: state.catalogName.ifBlank { "MediaManagerCatalog" }
+    Text(
+        stringResource(R.string.hub_done_body, name),
+        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+    )
+    if (state.completedSeat?.displayLabel?.isNotBlank() == true) {
         Text(
-            stringResource(R.string.hub_s7_verified_line),
-            color = MaterialTheme.colorScheme.primary,
-        )
-        Text(
-            text = stringResource(
-                R.string.hub_s7_summary_lines,
-                state.folderPath.ifBlank { WindowsCatalogSetupScript.DEFAULT_FOLDER },
-                state.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE },
-                state.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER },
-                state.completedSeat?.displayLabel ?: state.seatLabel.ifBlank { "—" },
-            ),
+            text = state.completedSeat.displayLabel,
+            style = MaterialTheme.typography.bodySmall,
             fontFamily = FontFamily.Monospace,
         )
-        Text(
-            stringResource(R.string.hub_s7_no_password),
-            style = MaterialTheme.typography.bodySmall,
-        )
-        Text(stringResource(R.string.hub_w2_done_password_reminder))
-    } else {
-        Text(
-            stringResource(
-                R.string.hub_done_body,
-                state.completedSeat?.displayLabel ?: "—",
-            ),
-        )
     }
-    Text(stringResource(R.string.hub_done_resume_catalog))
     Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
-        Text(stringResource(R.string.ok))
+        Text(stringResource(R.string.hub_done_torna_accesso))
     }
 }
 

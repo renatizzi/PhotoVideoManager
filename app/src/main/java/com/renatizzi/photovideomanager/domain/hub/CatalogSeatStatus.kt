@@ -29,15 +29,15 @@ data class CatalogSeatStatus(
 
 object CatalogSeatKindLabels {
     fun label(kind: CatalogSeatKind): String = when (kind) {
-        CatalogSeatKind.LOCAL_DEVICE -> "Su questo dispositivo"
-        CatalogSeatKind.PC_NOTEBOOK -> "Su PC / notebook"
-        CatalogSeatKind.CLOUD_DRIVE -> "Su Google Drive / cloud"
-        CatalogSeatKind.NETWORK_NAS -> "Su disco di rete / NAS"
+        CatalogSeatKind.LOCAL_DEVICE -> "Questo dispositivo/Tablet"
+        CatalogSeatKind.PC_NOTEBOOK -> "PC / notebook"
+        CatalogSeatKind.CLOUD_DRIVE -> "Google Drive / Cloud"
+        CatalogSeatKind.NETWORK_NAS -> "NAS / disco di rete"
         CatalogSeatKind.NONE -> ""
     }
 
     fun shortDevice(kind: CatalogSeatKind): String = when (kind) {
-        CatalogSeatKind.LOCAL_DEVICE -> "Questo dispositivo"
+        CatalogSeatKind.LOCAL_DEVICE -> "Questo dispositivo/Tablet"
         CatalogSeatKind.PC_NOTEBOOK -> "PC / notebook"
         CatalogSeatKind.CLOUD_DRIVE -> "Google Drive"
         CatalogSeatKind.NETWORK_NAS -> "NAS / disco di rete"

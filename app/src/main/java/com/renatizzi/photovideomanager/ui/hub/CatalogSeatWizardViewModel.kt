@@ -883,20 +883,18 @@ class CatalogSeatWizardViewModel(
         }
     }
 
+    /** Solo memorizza la cartella scelta; il salvataggio avviene con [confirmPendingSeat] (Salva). */
     fun onFolderPicked(uri: String, label: String) {
         _state.update {
             it.copy(
                 pendingTreeUri = uri,
                 pendingLabel = label,
                 errorMessage = null,
+                statusMessage = null,
                 verification = SeatVerificationUi.NONE,
+                awaitAccessOutcome = false,
             )
         }
-        confirmSeat(
-            kind = _state.value.selectedKind,
-            treeUri = uri,
-            label = label,
-        )
     }
 
     /**
@@ -904,24 +902,28 @@ class CatalogSeatWizardViewModel(
      * La UI apre il selettore cartelle; resta come fallback etichetta.
      */
     fun confirmLocalSeat() {
-        val s = _state.value
-        confirmSeat(
-            kind = CatalogSeatKind.LOCAL_DEVICE,
-            treeUri = null,
-            label = s.pendingLabel.ifBlank { s.catalogName.ifBlank { CatalogSeat.DEFAULT_CATALOG_NAME } },
-        )
+        confirmPendingSeat()
     }
 
-    /** Riprova S6 con l'ultima cartella scelta, senza azzerare S1–S2. */
-    fun retryPendingFolderVerification() {
+    /** TO-BE: Salva — conferma la cartella in pending (locale / cloud / CIFS). */
+    fun confirmPendingSeat() {
         val s = _state.value
-        val uri = s.pendingTreeUri ?: return
+        val uri = s.pendingTreeUri
+        if (uri.isNullOrBlank() && s.selectedKind != CatalogSeatKind.LOCAL_DEVICE) {
+            _state.update { it.copy(errorMessage = "Scegli prima la cartella del Catalogo") }
+            return
+        }
         confirmSeat(
             kind = s.selectedKind,
             treeUri = uri,
-            label = s.pendingLabel.ifBlank { "Cartella Catalogo" },
+            label = s.pendingLabel.ifBlank {
+                s.catalogName.ifBlank { CatalogSeat.DEFAULT_CATALOG_NAME }
+            },
         )
     }
+
+    /** Compat: stesso di [confirmPendingSeat]. */
+    fun retryPendingFolderVerification() = confirmPendingSeat()
 
     private fun confirmSeat(kind: CatalogSeatKind, treeUri: String?, label: String) {
         viewModelScope.launch {
@@ -932,8 +934,6 @@ class CatalogSeatWizardViewModel(
                     statusMessage = null,
                     verification = SeatVerificationUi.IN_PROGRESS,
                     awaitAccessOutcome = false,
-                    // Ramo PC: resta sulla pagina CIFS (revisione4 SI/NO).
-                    step = if (kind == CatalogSeatKind.LOCAL_DEVICE) it.step else WizardStep.W2_CIFS,
                 )
             }
             val ui = _state.value
@@ -956,16 +956,11 @@ class CatalogSeatWizardViewModel(
                     it.copy(
                         busy = false,
                         completedSeat = result.getOrNull(),
-                        // Locale: esito diretto. PC: domanda SI/NO prima di Acquisisci.
-                        step = if (kind == CatalogSeatKind.LOCAL_DEVICE) {
-                            WizardStep.DONE
-                        } else {
-                            WizardStep.W2_CIFS
-                        },
+                        step = WizardStep.DONE,
                         seatConfigured = true,
                         seatLabel = label,
                         verification = SeatVerificationUi.VERIFIED,
-                        awaitAccessOutcome = kind != CatalogSeatKind.LOCAL_DEVICE,
+                        awaitAccessOutcome = false,
                         errorMessage = null,
                         statusMessage = null,
                     )
@@ -981,12 +976,12 @@ class CatalogSeatWizardViewModel(
                         } else {
                             SeatVerificationUi.FAILED
                         },
-                        awaitAccessOutcome = kind != CatalogSeatKind.LOCAL_DEVICE,
+                        awaitAccessOutcome = false,
                         errorMessage = friendlySeatError(raw, unreachable),
-                        step = if (kind == CatalogSeatKind.LOCAL_DEVICE) {
-                            WizardStep.W1_CONFIRM
-                        } else {
-                            WizardStep.W2_CIFS
+                        step = when (kind) {
+                            CatalogSeatKind.LOCAL_DEVICE -> WizardStep.W1_CONFIRM
+                            CatalogSeatKind.CLOUD_DRIVE -> WizardStep.W3_GUIDE
+                            else -> WizardStep.W2_CIFS
                         },
                     )
                 }
@@ -995,7 +990,7 @@ class CatalogSeatWizardViewModel(
         }
     }
 
-    /** revisione4: SI → chiude il wizard (navigazione verso Acquisisci dal caller). */
+    /** Compat legacy: porta all’esito DONE. */
     fun acceptAccessYes() {
         _state.update {
             it.copy(
@@ -1007,16 +1002,14 @@ class CatalogSeatWizardViewModel(
         }
     }
 
-    /** revisione4: NO → stub procedura problemi (da sviluppare). */
     fun acceptAccessNo() {
         _state.update {
             it.copy(
-                awaitAccessOutcome = true,
+                awaitAccessOutcome = false,
                 statusMessage = null,
                 errorMessage = null,
             )
         }
-        // Messaggio UI via stringa dedicata; resta su W2_CIFS.
     }
 
     private fun isUnreachableSeatError(message: String): Boolean {

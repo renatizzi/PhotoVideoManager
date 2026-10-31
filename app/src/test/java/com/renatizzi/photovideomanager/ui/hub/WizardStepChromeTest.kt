@@ -47,15 +47,24 @@ class WizardStepChromeTest {
     }
 
     @Test
-    fun pcPipeline_subtitlesMatchVideateUtente() {
+    fun pcPipeline_subtitlesMatchTobe() {
         val kind = CatalogSeatKind.PC_NOTEBOOK
         val expected = WizardUiContract.PC_STEP_SUBTITLES
         assertEquals(expected[0], WizardStepChrome.subtitle(WizardStep.INTRO, kind).text)
         assertEquals(expected[1], WizardStepChrome.subtitle(WizardStep.PC_AVAILABILITY, kind).text)
-        assertEquals(expected[2], WizardStepChrome.subtitle(WizardStep.PC_USB_PREPARE, kind).text)
+        assertEquals(
+            "2 – Verifica preliminare e collegamento",
+            WizardStepChrome.subtitle(WizardStep.PC_USB_PREPARE, kind).text,
+        )
         assertEquals(expected[3], WizardStepChrome.subtitle(WizardStep.PC_COPY_FILES, kind).text)
-        assertEquals(expected[4], WizardStepChrome.subtitle(WizardStep.PC_RUN_SCRIPT, kind).text)
-        assertEquals(expected[5], WizardStepChrome.subtitle(WizardStep.W2_CIFS, kind).text)
+        assertEquals(
+            "4 – Generazione password e dati",
+            WizardStepChrome.subtitle(WizardStep.PC_RUN_SCRIPT, kind).text,
+        )
+        assertEquals(
+            "Collegamento CIFS",
+            WizardStepChrome.subtitle(WizardStep.W2_CIFS, kind).text,
+        )
         assertEquals(expected[5], WizardStepChrome.subtitle(WizardStep.W2_PICK, kind).text)
         assertEquals(6, expected.size)
 
