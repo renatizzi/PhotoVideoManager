@@ -909,7 +909,8 @@ class CatalogSeatWizardViewModel(
     fun confirmPendingSeat() {
         val s = _state.value
         val uri = s.pendingTreeUri
-        if (uri.isNullOrBlank() && s.selectedKind != CatalogSeatKind.LOCAL_DEVICE) {
+        // Filiera locale inclusa: serve sempre una cartella scelta (es. Documenti/Catalogo).
+        if (uri.isNullOrBlank()) {
             _state.update { it.copy(errorMessage = "Scegli prima la cartella del Catalogo") }
             return
         }
