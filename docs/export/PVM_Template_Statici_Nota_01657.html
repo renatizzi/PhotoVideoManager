@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>MediaManager — Template statici Nota v0.16.57</title>
+<style>
+  :root {
+    --bg:#f6f4ef; --ink:#1a1a1a; --muted:#5c5c5c; --line:#d7d2c8;
+    --accent:#1565c0; --accent2:#0d47a1; --ok:#2e7d32; --warn:#b26a00; --off:#b71c1c;
+    --phone:#fff; --top:#1565c0; --chip:#e8eef7; --grey:#bdbdbd; --flag:#1565c0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Calibri,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.35}
+  header.doc,section,footer,.banner,nav.toc{max-width:1100px;margin:0 auto;padding:0 24px}
+  header.doc{padding-top:28px}
+  header.doc h1{margin:0 0 6px;font-size:1.5rem}
+  header.doc p,.muted{color:var(--muted);font-size:.92rem}
+  .banner{background:#fff8e1;border:1px solid #f0c36d;padding:12px 16px;margin:12px auto}
+  nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin:12px auto 24px}
+  nav.toc a{text-decoration:none;color:var(--accent2);background:#fff;border:1px solid var(--line);padding:6px 10px;border-radius:4px;font-size:.85rem}
+  section{margin-bottom:36px}
+  section h2{border-bottom:2px solid var(--ink);padding-bottom:6px}
+  section h3{margin-top:22px}
+  .note,.decision,.incongr{background:#fff;border-left:4px solid var(--accent);padding:10px 12px;margin:10px 0;font-size:.9rem}
+  .decision{border-left-color:var(--ok)}
+  .incongr{border-left-color:var(--warn)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;margin-top:14px}
+  .phone{background:var(--phone);border:1px solid var(--line);border-radius:18px;overflow:hidden;max-width:320px}
+  .bar{background:var(--top);color:#fff;padding:8px 10px;font-size:.72rem}
+  .bar .app{font-weight:700;font-size:.85rem}
+  .body{padding:12px;min-height:440px}
+  .title{font-size:1.15rem;font-weight:700;margin:0 0 2px}
+  .subtitle{font-size:.82rem;font-style:italic;color:var(--muted);margin:0 0 6px}
+  .desc{font-size:.8rem;margin:0 0 10px}
+  .seat{border:1px solid var(--line);padding:8px;margin:0 0 10px;font-size:.78rem;background:#fafafa}
+  .seat .cn{font-weight:700;font-style:italic;color:var(--accent)}
+  .seat .lbl{font-weight:700;font-style:italic;color:#000}
+  .seat .line2{font-weight:700;font-style:italic;color:var(--accent);display:block;margin-top:2px}
+  .seat .st-on{color:var(--ok)}
+  .seat .st-off{color:var(--off)}
+  .seat .st-nv{color:var(--warn)}
+  .actions{display:flex;gap:8px;align-items:center;margin:0 0 10px;flex-wrap:wrap}
+  .btn{border:none;background:var(--accent);color:#fff;padding:8px 12px;border-radius:4px;font-size:.78rem;font-weight:600}
+  .btn.grey{background:var(--grey);color:#333}
+  .btn.outline{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+  .btn.wide{flex:1;text-align:center}
+  .btn.esc{background:#fff;color:var(--off);border:1px solid var(--off);font-size:.72rem;padding:6px 10px}
+  .iconbtn{width:36px;height:36px;border-radius:18px;background:var(--accent);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700}
+  .search{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:20px;padding:6px 10px;margin:0 0 10px;font-size:.78rem;color:var(--muted);background:#fff}
+  .search .mic{margin-left:auto}
+  .input{border:1px solid var(--line);border-radius:4px;padding:8px;width:100%;font-size:.8rem;margin:4px 0 10px;background:#fff}
+  .subh{font-size:.85rem;font-weight:700;margin:8px 0 6px}
+  .row{display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line);font-size:.78rem}
+  .box{width:18px;height:18px;border:2px solid var(--accent);flex:0 0 auto;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--accent)}
+  .q{display:flex;gap:8px;align-items:flex-start;margin:8px 0;font-size:.78rem}
+  .q .box{margin-top:2px}
+  .kpi{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 10px}
+  .kpi div{border:1px solid var(--line);padding:8px;font-size:.72rem;background:#fafafa}
+  .kpi b{display:block;font-size:.95rem}
+  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .tile{border:1px solid var(--line);padding:14px 8px;text-align:center;font-size:.78rem;font-weight:600;background:#e3f2fd;color:var(--accent2);border-radius:4px}
+  .tile.dim{opacity:.4}
+  .hubcard{border:1px solid var(--line);padding:14px;margin-bottom:8px;border-radius:4px}
+  .hubcard b{display:block;margin-bottom:4px}
+  .hubcard span{font-size:.78rem;color:var(--muted)}
+  .bottom{display:flex;justify-content:space-around;border-top:1px solid var(--line);padding:8px 4px;font-size:.65rem;color:var(--muted);background:#fafafa}
+  .bottom .on{color:var(--accent);font-weight:700}
+  .caption{font-size:.75rem;color:var(--muted);margin-top:6px;max-width:320px}
+  .flow{font-size:.8rem;font-weight:700;color:var(--accent2);margin:18px 0 6px}
+  .chip{display:inline-block;background:var(--chip);padding:2px 8px;border-radius:10px;font-size:.72rem}
+  .dlg{border:1px solid var(--line);background:#fff;border-radius:8px;padding:10px;margin-top:8px;font-size:.75rem}
+  .counters{font-size:.78rem;margin:0 0 10px}
+  .counters div{margin:2px 0}
+  .hint{font-size:.78rem;margin:0 0 10px}
+  em.bi{font-weight:700;font-style:italic}
+  footer{margin:0 auto 40px;color:var(--muted);font-size:.8rem}
+</style>
+</head>
+<body>
+
+<header class="doc">
+  <h1>MediaManager — Template statici Nota v0.16.57</h1>
+  <p>Fonte: <code>modifiche_v0.16.57.docx_7920.pdf</code> · stesso formato del TO-BE precedente (cornici telefono) · <strong>nessun codice app</strong> finché non confermi</p>
+  <p>Pagine Dashboard / Setup ×3 / Acquisisci / dialog / Dettaglio / Pulisci. Testi e controlli letterali dalla nota.</p>
+</header>
+
+<div class="banner">
+  <strong>Download:</strong>
+  questo HTML ·
+  <a href="PVM_Template_Statici_Nota_01657.pdf">PDF</a> ·
+  <a href="PVM_Template_Statici_Nota_01657.docx">DOCX (indice + conflitti)</a>
+</div>
+
+<nav class="toc">
+  <a href="#open">Punti aperti</a>
+  <a href="#riga">Riga Catalogo</a>
+  <a href="#dash">Dashboard</a>
+  <a href="#setup">Setup Catalogo</a>
+  <a href="#acq">Acquisisci</a>
+  <a href="#dett">Dettaglio</a>
+  <a href="#pulisci">Pulisci</a>
+</nav>
+
+<section id="open">
+  <h2>0. Punti aperti (prima del codice)</h2>
+  <div class="incongr">
+    <ol>
+      <li><strong>NOVITÀ nota vs D1 chat:</strong> la nota chiede <em>una riga per ogni sottocartella con media</em> sotto la root. In chat D1 avevi escluso l’elenco sottocartelle (root ↔ ramo). <em>Nei mock Acquisisci sotto seguo la NOTA.</em> Conferma quale vince.</li>
+      <li><strong>Pulisci:</strong> non compare nella nota 0.16.57 → mock AS-IS. Se va modificato, indicarlo.</li>
+      <li><strong>Dashboard guida implicita:</strong> nota «verificare se opportuno» inibire scorciatoie e lasciare solo Acquisisci→Setup. Nel mock senza Catalogo mostro la proposta (scorciatoie dim).</li>
+      <li><strong>Gap APK 0.16.57:</strong> Acquisisci/Dettaglio/dialog hanno ancora testi obsoleti — i mock sotto sono il TO-BE da applicare letteralmente.</li>
+    </ol>
+  </div>
+</section>
+
+<section id="riga">
+  <h2>1. Riga fissa Catalogo (componente)</h2>
+  <div class="decision">
+    Sempre 2 righe · «Catalogo:» bold corsivo nero + nome bold corsivo blu · seconda riga tutta corsivo blu:
+    &lt;Dispositivo&gt; [SD se Secondaria] &lt;percorso con \ iniziale&gt; icona &lt;Stato&gt;.
+  </div>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="subh">Esempio nota (Secondaria)</div>
+        <div class="seat">
+          <span class="lbl">Catalogo:</span> <span class="cn">MediaManagerCatalog</span><br/>
+          <span class="line2">Tablet S9 SD \pictures\vacanze - 🛜 <span class="st-on">Online</span></span>
+        </div>
+        <div class="subh">Locale Principale (niente SD)</div>
+        <div class="seat">
+          <span class="lbl">Catalogo:</span> <span class="cn">MyMedia</span><br/>
+          <span class="line2">MyDevice \Pictures\MyMedia - 🛜 <span class="st-on">Online</span></span>
+        </div>
+        <div class="subh">PC remoto</div>
+        <div class="seat">
+          <span class="lbl">Catalogo:</span> <span class="cn">MyMedia</span><br/>
+          <span class="line2">PC-UFFICIO \\192.168.1.20\MyMedia - <span class="st-off">Offline</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="dash">
+  <h2>2. Dashboard</h2>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager v0.16.57</div>Utente locale</div>
+      <div class="body">
+        <div class="title">Dashboard</div>
+        <div class="subtitle">Panoramica del Catalogo, kpi e scorciatoie</div>
+        <div class="desc">Homepage dell’app con il quadro d’insieme del tuo Catalogo</div>
+        <p class="hint" style="color:var(--muted);font-style:italic">(nessuna riga Catalogo · nessun messaggio «assenza»)</p>
+        <div class="kpi"><div><b>—</b>Foto</div><div><b>—</b>Video</div><div><b>—</b>in Catalogo</div><div><b>—</b>Spazio</div></div>
+        <div class="subh">Accesso rapido</div>
+        <div class="tiles">
+          <div class="tile">Acquisisci</div><div class="tile dim">Aggiorna</div>
+          <div class="tile dim">Crea</div><div class="tile dim">Edita</div>
+          <div class="tile dim">Backup</div><div class="tile dim">Ripristina</div>
+        </div>
+      </div>
+      <div class="bottom"><span class="on">Home</span><span>Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+    </div>
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager v0.16.57</div>Utente locale</div>
+      <div class="body">
+        <div class="title">Dashboard</div>
+        <div class="subtitle">Panoramica del Catalogo, kpi e scorciatoie</div>
+        <div class="desc">Homepage dell’app con il quadro d’insieme del tuo Catalogo</div>
+        <div class="seat">
+          <span class="lbl">Catalogo:</span> <span class="cn">MyMedia</span><br/>
+          <span class="line2">MyDevice \Pictures\MyMedia - 🛜 <span class="st-on">Online</span></span>
+        </div>
+        <div class="search">🔍 Cerca nel Catalogo… <span class="mic">🎤</span></div>
+        <div class="kpi"><div><b>128</b>Foto</div><div><b>14</b>Video</div><div><b>120</b>in Catalogo</div><div><b>2.1 GB</b>Spazio</div></div>
+        <div class="subh">Accesso rapido</div>
+        <div class="tiles">
+          <div class="tile">Acquisisci</div><div class="tile">Aggiorna</div>
+          <div class="tile">Crea</div><div class="tile">Edita</div>
+          <div class="tile">Backup</div><div class="tile">Ripristina</div>
+        </div>
+      </div>
+      <div class="bottom"><span class="on">Home</span><span>Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+    </div>
+  </div>
+  <p class="caption"><strong>Sinistra — Catalogo assente:</strong> niente messaggio assenza. Scorciatoie dim = proposta guida implicita (Acquisisci → Setup). <strong>Destra — presente:</strong> riga fissa nuova.</p>
+</section>
+
+<section id="setup">
+  <h2>3. Setup Catalogo personale (filiera locale)</h2>
+
+  <div class="flow">3.1 Avvio procedura</div>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Setup Catalogo personale</div>
+        <div class="subtitle">Avvio procedura</div>
+        <div class="desc">Questa procedura ti consente di creare e configurare il tuo Catalogo, cioè il posto di “raccolta logica” delle foto e dei video personali. Le prime cose da stabilire sono come chiamarlo e dove tenerlo</div>
+        <div class="q"><div class="box">✓</div><div>Come vuoi chiamare il Catalogo?<div class="input">MyMedia</div></div></div>
+        <div class="q"><div class="box">✓</div><div>Su quale dispositivo lo vuoi tenere?
+          <div class="input">Questo dispositivo ▾</div>
+          <span class="muted" style="font-size:.7rem">Questo dispositivo · PC Windows · Cloud · Disco di Rete</span>
+        </div></div>
+        <div class="q"><div class="box">✓</div><div>Qual è il modello del dispositivo?<div class="input">MyDevice</div></div></div>
+        <div class="actions"><span class="btn outline wide">Annulla</span><span class="btn wide">CONTINUA</span></div>
+      </div>
+    </div>
+    <div class="note">
+      Defaults: <code>MyMedia</code> / <code>MyDevice</code>.<br/>
+      Combo: Questo dispositivo, PC Windows, Cloud, Disco di Rete.<br/>
+      Piede: <strong>[Annulla][Continua]</strong> — niente Esc.
+    </div>
+  </div>
+
+  <div class="flow">3.2 Scelta della cartella</div>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Setup Catalogo personale</div>
+        <div class="subtitle">Scelta della cartella</div>
+        <div class="desc">Seleziona e poi salva la cartella del Catalogo su MyDevice</div>
+        <div class="actions"><span class="btn wide">Seleziona Cartella</span></div>
+        <div class="seat">
+          <span class="lbl">Catalogo:</span> <span class="cn">MyMedia</span><br/>
+          <span class="line2">MyDevice \Pictures\MyMedia</span>
+        </div>
+        <div class="actions"><span class="btn outline wide">Annulla</span><span class="btn wide">Salva</span></div>
+      </div>
+    </div>
+    <div class="note">Niente Indietro. Pending solo volatile di sessione (non persistito).</div>
+  </div>
+
+  <div class="flow">3.3 Riepilogo e conferma</div>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Setup Catalogo personale</div>
+        <div class="subtitle">Riepilogo e conferma</div>
+        <div class="desc">Riepilogo dati</div>
+        <div class="seat">
+          <span class="lbl">Catalogo:</span> <span class="cn">MyMedia</span><br/>
+          <span class="line2">MyDevice \Pictures\MyMedia - 🛜 <span class="st-on">Online</span></span>
+        </div>
+        <p class="hint" style="color:var(--ok);font-style:italic">Catalogo censito correttamente</p>
+        <div class="actions"><span class="btn wide">Continua</span></div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Setup Catalogo personale</div>
+        <div class="subtitle">Riepilogo e conferma</div>
+        <div class="desc">Riepilogo dati</div>
+        <div class="seat">
+          <span class="lbl">Catalogo:</span> <span class="cn">MyMedia</span><br/>
+          <span class="line2">MyDevice \Pictures\MyMedia - <span class="st-off">Offline</span></span>
+        </div>
+        <p class="hint" style="color:var(--off);font-style:italic">Configurazione incompleta: ripeti la scelta della cartella e verifica i permessi, poi Salva di nuovo.</p>
+        <div class="actions"><span class="btn wide">Continua</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="caption">OK / KO. Bottone <strong>Continua</strong> → punto di accesso. KO deve spiegare cosa fare.</p>
+</section>
+
+<section id="acq">
+  <h2>4. Acquisisci</h2>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Acquisisci</div>
+        <div class="subtitle">Acquisizione dei file da dispositivi e cartelle</div>
+        <div class="desc">Prima di utilizzare questa funzione devi creare il Catalogo personale</div>
+        <div class="actions"><span class="btn wide">Crea</span></div>
+        <p style="font-size:.72rem;color:var(--muted);margin-top:24px">Niente +, CONFERMA, elenco.</p>
+      </div>
+      <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+    </div>
+
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Acquisisci</div>
+        <div class="subtitle">Acquisizione dei file da dispositivi e cartelle</div>
+        <div class="desc">Seleziona i dispositivi con le cartelle condivise ed importa i media (foto e video) che intendi gestire nel tuo Catalogo</div>
+        <div class="seat">
+          <span class="lbl">Catalogo:</span> <span class="cn">MyMedia</span><br/>
+          <span class="line2">MyDevice \Pictures\MyMedia - 🛜 <span class="st-on">Online</span></span>
+        </div>
+        <div class="counters">
+          <div><strong>N. Cartelle collegate:</strong> 3</div>
+          <div><strong>N. Foto:</strong> 128</div>
+          <div><strong>N. Video:</strong> 12</div>
+        </div>
+        <div class="hint">Clicca sul bottone [+] per aggiungere una alla volta le cartelle del dispositivo dove conservi i tuoi file. Quando hai terminato clicca sul bottone [Conferma]</div>
+        <div class="actions">
+          <span class="iconbtn" title="Aggiorna">↻</span>
+          <span class="iconbtn">+</span>
+          <span class="btn wide">Conferma</span>
+        </div>
+        <div class="subh">Elenco delle cartelle collegate al Catalogo</div>
+        <div class="row">
+          <div class="box">✓</div>
+          <div>
+            <em class="bi">familiari</em><br/>
+            <em class="bi">Questo dispositivo · \Pictures\familiari</em>
+          </div>
+        </div>
+        <div class="row">
+          <div class="box"></div>
+          <div>
+            <em class="bi">vacanze</em><br/>
+            <em class="bi">Questo dispositivo · \Pictures\vacanze</em>
+          </div>
+        </div>
+        <div class="row">
+          <div class="box">X</div>
+          <div>
+            <em class="bi">work</em><br/>
+            <em class="bi">Questo dispositivo · \Pictures\work</em>
+          </div>
+        </div>
+      </div>
+      <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+    </div>
+
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Acquisisci</div>
+        <div class="subtitle">Acquisizione dei file da dispositivi e cartelle</div>
+        <div class="dlg">
+          <strong>Eliminare la cartella familiari dal catalogo?</strong>
+          <p style="margin:8px 0">(L'eliminazione non comporta alcuna perdita di dati originali ma solo l'esclusione dal Catalogo dei relativi media)</p>
+          <div class="actions"><span class="btn outline wide">NO</span><span class="btn wide">SÌ</span></div>
+        </div>
+      </div>
+      <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+    </div>
+  </div>
+  <div class="incongr">
+    <strong>NOVITÀ (nota):</strong> se la cartella scelta è root di sottocartelle con media, <em>ogni sottocartella</em> compare nell’elenco (biunivoca cartella/media). Il dettaglio delle sottocartelle della root non basta.
+    Nel mock a destra l’elenco mostra già le sottocartelle (come da nota).
+  </div>
+</section>
+
+<section id="dett">
+  <h2>5. Dettaglio cartella (da Acquisisci)</h2>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="actions"><span class="btn outline">Indietro</span></div>
+        <div class="title">Dettaglio della cartella \Pictures\familiari</div>
+        <div class="desc">su MyDevice</div>
+        <div class="desc"><strong>N. Elementi:</strong> 42</div>
+        <div class="actions">
+          <span class="btn outline">Più recenti</span>
+          <span class="btn grey">Nome</span>
+          <span class="btn grey">Tipo</span>
+        </div>
+        <div class="row"><div style="width:40px;height:40px;background:#ddd;border-radius:4px"></div><div>IMG_001.jpg</div></div>
+        <div class="row"><div style="width:40px;height:40px;background:#ddd;border-radius:4px"></div><div>IMG_002.jpg</div></div>
+      </div>
+      <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+    </div>
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="actions"><span class="btn outline">Indietro</span></div>
+        <div class="title">Dettaglio della cartella \Pictures\vuota</div>
+        <div class="desc">su MyDevice, SD</div>
+        <p class="hint">La cartella selezionata non contiene foto o video: torna su Acquisisci e seleziona un'altra cartella</p>
+        <p style="font-size:.72rem;color:var(--muted)">Ordinamento nascosto (N=0). N. Elementi nascosto (N=0).</p>
+      </div>
+      <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="pulisci">
+  <h2>6. Pulisci <span class="chip">fuori nota 0.16.57</span></h2>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div></div>
+      <div class="body">
+        <div class="title">Pulisci</div>
+        <div class="desc">Trova foto e video identici presenti più volte nel Catalogo.</div>
+        <div class="subh">Elementi selezionati</div>
+        <p class="hint">Da ✓ in Aggiorna → Cestino</p>
+        <div class="actions"><span class="btn wide">Elimina selezionati</span></div>
+        <div class="subh">Possibili scarti</div>
+        <div class="actions"><span class="btn wide">Elimina scarti selezionati</span></div>
+        <div class="subh">Duplicati</div>
+        <div class="actions"><span class="btn wide">Analizza duplicati</span></div>
+      </div>
+      <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+    </div>
+    <div class="note">AS-IS. Nessuna modifica richiesta dal PDF 0.16.57.</div>
+  </div>
+</section>
+
+<footer>
+  Artifact: stesso formato di <code>PVM_Proposta_Editing_UI_Template_TOBE</code> (HTML cornici + PDF + DOCX indice).
+  Fonte nota: <code>modifiche_v0.16.57.docx_7920.pdf</code>.
+</footer>
+</body>
+</html>
