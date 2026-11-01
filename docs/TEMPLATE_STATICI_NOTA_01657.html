@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Template statici — Nota v0.16.57 (allineamento UI)</title>
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --ink: #1a1a1a;
+    --muted: #5a5a5a;
+    --blue: #1565c0;
+    --line: #d5d0c6;
+    --phone: #fff;
+    --gap: #8a1f11;
+    --ok: #1b5e20;
+    --chip: #eee9df;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.35;
+  }
+  header {
+    padding: 20px 24px 8px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  header h1 { margin: 0 0 6px; font-size: 1.45rem; }
+  header p { margin: 0 0 8px; color: var(--muted); max-width: 72ch; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 4px; }
+  .legend span {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.85rem; background: var(--chip); padding: 4px 10px; border-radius: 4px;
+  }
+  .dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .dot.nota { background: var(--blue); }
+  .dot.gap { background: var(--gap); }
+  .dot.ok { background: var(--ok); }
+  .dot.out { background: #666; }
+  nav.toc {
+    max-width: 1200px; margin: 0 auto 16px; padding: 0 24px;
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  nav.toc a {
+    color: var(--blue); text-decoration: none; font-size: 0.9rem;
+    border: 1px solid var(--line); background: #fff; padding: 6px 10px; border-radius: 4px;
+  }
+  section.page {
+    max-width: 1200px; margin: 0 auto 28px; padding: 0 24px 8px;
+    border-top: 1px solid var(--line); padding-top: 20px;
+  }
+  section.page h2 { margin: 0 0 4px; font-size: 1.2rem; }
+  section.page .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 12px; }
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(280px, 360px) 1fr;
+    gap: 18px;
+    align-items: start;
+  }
+  @media (max-width: 860px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+  .phone {
+    background: var(--phone);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 14px 14px 18px;
+    min-height: 420px;
+    box-shadow: none;
+  }
+  .phone .t { font-size: 1.25rem; font-weight: 700; margin: 0 0 2px; }
+  .phone .st { font-size: 1rem; font-style: italic; color: #333; margin: 0 0 8px; }
+  .phone .desc { font-size: 0.92rem; margin: 0 0 12px; color: #222; }
+  .phone .desc.absent { font-style: italic; }
+  .cat1 { font-weight: 700; font-style: italic; margin: 0; }
+  .cat1 .lbl { color: #000; }
+  .cat1 .name { color: var(--blue); }
+  .cat2 { font-style: italic; color: var(--blue); font-size: 0.9rem; margin: 2px 0 12px; font-weight: 600; }
+  .field { margin: 10px 0; }
+  .field label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; }
+  .field .box {
+    border: 1px solid #999; border-radius: 4px; padding: 8px 10px; background: #fafafa;
+    font-size: 0.92rem;
+  }
+  .btnrow { display: flex; gap: 8px; margin-top: 16px; }
+  .btn {
+    flex: 1; text-align: center; border: 1px solid #333; padding: 10px 8px;
+    border-radius: 4px; font-weight: 600; font-size: 0.9rem; background: #eee;
+  }
+  .btn.primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .btn.ghost { background: #fff; }
+  .counters { font-size: 0.88rem; margin: 8px 0 10px; }
+  .counters div { margin: 2px 0; }
+  .hint { font-size: 0.88rem; margin: 8px 0 12px; }
+  .list-title { font-weight: 650; margin: 10px 0 6px; font-size: 0.95rem; }
+  .row {
+    display: grid; grid-template-columns: 28px 1fr auto; gap: 8px;
+    align-items: center; padding: 8px 0; border-top: 1px solid var(--line);
+    font-size: 0.9rem;
+  }
+  .boxsel {
+    width: 22px; height: 22px; border: 1.5px solid #333; display: inline-flex;
+    align-items: center; justify-content: center; font-size: 0.85rem;
+  }
+  .dialog {
+    margin-top: 14px; border: 1px dashed #888; padding: 10px; border-radius: 6px;
+    background: #fbfaf7; font-size: 0.88rem;
+  }
+  .spec {
+    background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px;
+  }
+  .spec h3 { margin: 0 0 8px; font-size: 0.95rem; }
+  .spec ul { margin: 0; padding-left: 1.1rem; }
+  .spec li { margin: 4px 0; font-size: 0.9rem; }
+  .gap {
+    margin-top: 10px; border-left: 3px solid var(--gap); padding: 6px 10px;
+    background: #f8ebe8; font-size: 0.88rem;
+  }
+  .oknote {
+    margin-top: 10px; border-left: 3px solid var(--ok); padding: 6px 10px;
+    background: #eaf5eb; font-size: 0.88rem;
+  }
+  .outnote {
+    margin-top: 10px; border-left: 3px solid #666; padding: 6px 10px;
+    background: #eee; font-size: 0.88rem;
+  }
+  .conflict {
+    margin-top: 10px; border-left: 3px solid #b26a00; padding: 6px 10px;
+    background: #fff4e0; font-size: 0.88rem;
+  }
+  code { font-size: 0.86em; }
+  footer {
+    max-width: 1200px; margin: 0 auto 40px; padding: 8px 24px; color: var(--muted); font-size: 0.85rem;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Template statici TO-BE — Nota v0.16.57</h1>
+  <p>
+    Fonte: <code>modifiche_v0.16.57.docx_7920.pdf</code>. Ogni cornice = pagina come richiesta nella nota
+    (messaggi, bottoni, controlli). A destra: specifica puntuale + gap rispetto all’APK 0.16.57 attuale.
+    Nessuna nuova implementazione finché non confermi l’allineamento.
+  </p>
+  <div class="legend">
+    <span><i class="dot nota"></i> Testo/controllo dalla nota</span>
+    <span><i class="dot gap"></i> Gap AS-IS (ancora obsoleto o diverso)</span>
+    <span><i class="dot ok"></i> Già allineato in 0.16.57</span>
+    <span><i class="dot out"></i> Fuori dalla nota 0.16.57</span>
+  </div>
+</header>
+
+<nav class="toc">
+  <a href="#riga">Riga Catalogo</a>
+  <a href="#dash-no">Dashboard (senza)</a>
+  <a href="#dash-yes">Dashboard (con)</a>
+  <a href="#setup1">Setup 1 Avvio</a>
+  <a href="#setup2">Setup 2 Cartella</a>
+  <a href="#setup3">Setup 3 Riepilogo</a>
+  <a href="#acq-no">Acquisisci (senza)</a>
+  <a href="#acq-yes">Acquisisci (con)</a>
+  <a href="#acq-del">Dialog elimina</a>
+  <a href="#dett">Dettaglio cartella</a>
+  <a href="#novita">NOVITÀ elenco</a>
+  <a href="#pulisci">Pulisci</a>
+</nav>
+
+<!-- RIGA FISSA -->
+<section class="page" id="riga">
+  <h2>Componente riusabile — Riga fissa Catalogo</h2>
+  <p class="meta">Nota § Generale — stessa formattazione ovunque compare Catalogo (Dashboard, Acquisisci, Aggiorna, Componi; non Organizza).</p>
+  <div class="grid">
+    <div class="phone">
+      <p class="cat1"><span class="lbl">Catalogo:</span> <span class="name">MediaManagerCatalog</span></p>
+      <p class="cat2">Tablet S9 SD \pictures\vacanze - 🛜 Online</p>
+      <p class="hint" style="color:#666">Esempio della nota (Secondaria → compare «SD»). Se Principale: niente «SD».</p>
+    </div>
+    <div class="spec">
+      <h3>Specifiche nota</h3>
+      <ul>
+        <li><b>Riga 1:</b> «Catalogo:» bold corsivo nero + &lt;Nome&gt; bold corsivo blu</li>
+        <li><b>Riga 2</b> (tutto corsivo blu): &lt;Dispositivo&gt;, &lt;SD solo se Secondaria&gt;, &lt;percorso con '\' iniziale&gt;, icona stato, &lt;Stato&gt;</li>
+      </ul>
+      <div class="oknote">Parzialmente in 0.16.57 (formatter + StatusRow). Verificare stile tipografico e colore blu su device.</div>
+    </div>
+  </div>
+</section>
+
+<!-- DASHBOARD SENZA -->
+<section class="page" id="dash-no">
+  <h2>Dashboard — Catalogo assente</h2>
+  <p class="meta">Nota: messaggio assenza <b>non</b> mostrato. Guida implicita (scorciatoie inibite, solo Acquisisci → Setup) = da verificare/opzionale.</p>
+  <div class="grid">
+    <div class="phone">
+      <p class="t">Dashboard</p>
+      <p class="st">Panoramica del Catalogo, kpi e scorciatoie</p>
+      <p class="desc">Homepage dell’app con il quadro d’insieme del tuo Catalogo</p>
+      <!-- nessuna riga catalogo / nessun messaggio assenza -->
+      <p class="hint" style="color:#888;font-style:italic">(nessuna riga Catalogo · nessun messaggio «assenza»)</p>
+      <div class="list-title">KPI (invariati — fuori delta nota)</div>
+      <div class="counters">
+        <div>Foto / Video — conteggi</div>
+      </div>
+      <div class="btnrow">
+        <div class="btn primary">Acquisisci</div>
+      </div>
+      <p class="hint">Opzionale nota: altre scorciatoie inibite; Acquisisci apre Setup Catalogo.</p>
+    </div>
+    <div class="spec">
+      <h3>Controlli</h3>
+      <ul>
+        <li>Titolo / sottotitolo / descrizione: <b>invariati</b></li>
+        <li><b>Niente</b> testo «Catalogo Personale non presente…»</li>
+        <li>Opzionale: solo bottone Acquisisci → Setup</li>
+      </ul>
+      <div class="oknote">Silenzio assenza: fatto in 0.16.57 (<code>showWhenMissing=false</code>).</div>
+      <div class="gap">Guida implicita (inibire scorciatoie) <b>non</b> implementata — ancora aperta in nota.</div>
+    </div>
+  </div>
+</section>
+
+<!-- DASHBOARD CON -->
+<section class="page" id="dash-yes">
+  <h2>Dashboard — Catalogo presente</h2>
+  <p class="meta">Usare la formattazione della riga fissa.</p>
+  <div class="grid">
+    <div class="phone">
+      <p class="t">Dashboard</p>
+      <p class="st">Panoramica del Catalogo, kpi e scorciatoie</p>
+      <p class="desc">Homepage dell’app con il quadro d’insieme del tuo Catalogo</p>
+      <p class="cat1"><span class="lbl">Catalogo:</span> <span class="name">MyMedia</span></p>
+      <p class="cat2">MyDevice \Pictures\MyMedia - 🛜 Online</p>
+      <div class="counters"><div>KPI invariati…</div></div>
+    </div>
+    <div class="spec">
+      <h3>Controlli</h3>
+      <ul>
+        <li>Riga fissa Catalogo (tap → Setup)</li>
+        <li>Resto Dashboard invariato</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- SETUP 1 -->
+<section class="page" id="setup1">
+  <h2>Setup Catalogo — 1. Avvio procedura</h2>
+  <p class="meta">Nota «Prima pagina» · Titolo/sottotitolo/descrizione invariati · default MyMedia / MyDevice · [Annulla][Continua]</p>
+  <div class="grid">
+    <div class="phone">
+      <p class="t">Setup Catalogo personale</p>
+      <p class="st">Avvio procedura</p>
+      <p class="desc">Questa procedura ti consente di creare e configurare il tuo Catalogo, cioè il posto di “raccolta logica” delle foto e dei video personali. Le prime cose da stabilire sono come chiamarlo e dove tenerlo</p>
+      <div class="field">
+        <label>Come vuoi chiamare il Catalogo?</label>
+        <div class="box">MyMedia</div>
+      </div>
+      <div class="field">
+        <label>Su quale dispositivo lo vuoi tenere?</label>
+        <div class="box">Questo dispositivo ▾</div>
+      </div>
+      <p class="hint" style="font-size:0.8rem;color:#666">Voci combo: Questo dispositivo · PC Windows · Cloud · Disco di Rete</p>
+      <div class="field">
+        <label>Qual è il modello del dispositivo?</label>
+        <div class="box">MyDevice</div>
+      </div>
+      <div class="btnrow">
+        <div class="btn ghost">Annulla</div>
+        <div class="btn primary">CONTINUA</div>
+      </div>
+    </div>
+    <div class="spec">
+      <h3>Controlli / testi</h3>
+      <ul>
+        <li>Default nome: <code>MyMedia</code></li>
+        <li>Combo device: Questo dispositivo, PC Windows, Cloud, Disco di Rete</li>
+        <li>Default modello: <code>MyDevice</code></li>
+        <li>Piede: <b>[Annulla]</b> (torna accesso) + <b>[Continua]</b> — niente Esc</li>
+      </ul>
+      <div class="oknote">Defaults e piede Annulla/Continua: presenti in 0.16.57.</div>
+      <div class="gap">Verificare sul device se restano residui (resume draft, Esc altrove, label lunghe in altri rami).</div>
+    </div>
+  </div>
+</section>
+
+<!-- SETUP 2 -->
+<section class="page" id="setup2">
+  <h2>Setup Catalogo — 2. Scelta della cartella</h2>
+  <p class="meta">Descrizione con &lt;modello&gt; · bottone «Seleziona Cartella» · piede [Annulla][Salva] · niente Indietro · niente pending persistito</p>
+  <div class="grid">
+    <div class="phone">
+      <p class="t">Setup Catalogo personale</p>
+      <p class="st">Scelta della cartella</p>
+      <p class="desc">Seleziona e poi salva la cartella del Catalogo su MyDevice</p>
+      <div class="btn" style="margin:12px 0">Seleziona Cartella</div>
+      <p class="hint" style="font-style:italic;color:#555">Dopo pick (esempio): MyMedia · MyDevice \Pictures\MyMedia</p>
+      <div class="btnrow">
+        <div class="btn ghost">Annulla</div>
+        <div class="btn primary">Salva</div>
+      </div>
+    </div>
+    <div class="spec">
+      <h3>Controlli / testi</h3>
+      <ul>
+        <li>Descrizione esatta: «Seleziona e poi salva la cartella del Catalogo su &lt;modello dispositivo&gt;»</li>
+        <li>Bottone selezione: <b>Seleziona Cartella</b></li>
+        <li>Piede: <b>[Annulla][Salva]</b></li>
+        <li>Niente Indietro; pending solo volatile di sessione</li>
+      </ul>
+      <div class="oknote">Struttura e stringhe base: 0.16.57.</div>
+    </div>
+  </div>
+</section>
+
+<!-- SETUP 3 -->
+<section class="page" id="setup3">
+  <h2>Setup Catalogo — 3. Riepilogo e conferma</h2>
+  <p class="meta">Sottotitolo «Riepilogo e conferma» · «Riepilogo dati» · riga fissa · messaggio OK/KO · [Continua]</p>
+  <div class="grid">
+    <div class="phone">
+      <p class="t">Setup Catalogo personale</p>
+      <p class="st">Riepilogo e conferma</p>
+      <p class="desc">Riepilogo dati</p>
+      <p class="cat1"><span class="lbl">Catalogo:</span> <span class="name">MyMedia</span></p>
+      <p class="cat2">MyDevice \Pictures\MyMedia - 🛜 Online</p>
+      <p class="desc" style="color:var(--blue);font-style:italic">Catalogo censito correttamente</p>
+      <div class="btnrow">
+        <div class="btn primary">Continua</div>
+      </div>
+    </div>
+    <div class="spec">
+      <h3>Controlli / testi</h3>
+      <ul>
+        <li>Sottotitolo: <b>Riepilogo e conferma</b></li>
+        <li>Descrizione: <b>Riepilogo dati</b> (normale nero)</li>
+        <li>Riga fissa Catalogo</li>
+        <li>OK: «Catalogo censito correttamente» · KO: messaggio esplicativo + istruzioni</li>
+        <li>Bottone: <b>Continua</b> → punto di accesso</li>
+      </ul>
+      <div class="oknote">Sottotitolo/messaggio/Continua: 0.16.57.</div>
+      <div class="gap">KO esplicativo «con istruzioni su cosa deve fare» ancora generico.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ACQUISISCI SENZA -->
+<section class="page" id="acq-no">
+  <h2>Acquisisci — Catalogo assente</h2>
+  <p class="meta">Messaggio esatto nota + [Crea] → Setup</p>
+  <div class="grid">
+    <div class="phone">
+      <p class="t">Acquisisci</p>
+      <p class="st">Acquisizione dei file da dispositivi e cartelle</p>
+      <p class="desc absent">Prima di utilizzare questa funzione devi creare il Catalogo personale</p>
+      <div class="btnrow">
+        <div class="btn primary">Crea</div>
+      </div>
+    </div>
+    <div class="spec">
+      <h3>Testo nota (letterale)</h3>
+      <ul>
+        <li>«Prima di utilizzare <b>questa funzione</b> devi creare il Catalogo personale»</li>
+        <li>Bottone <b>[Crea]</b> ⇒ setup catalogo</li>
+        <li>Niente +, Conferma, elenco</li>
+      </ul>
+      <div class="gap">AS-IS 0.16.57 usa ancora: «Prima di utilizzare <b>Acquisisci</b> crea il tuo Catalogo personale» — <b>non letterale</b> rispetto alla nota.</div>
+      <div class="gap">Intro lunga obsoleta (<code>acquisisci_static_intro</code>) ancora in resources e potenzialmente mostrata.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ACQUISISCI CON -->
+<section class="page" id="acq-yes">
+  <h2>Acquisisci — Catalogo presente</h2>
+  <p class="meta">Descrizione nuova · riga fissa · contatori solo se N&gt;0 · messaggio [+]/Conferma · titolo elenco · struttura invariata</p>
+  <div class="grid">
+    <div class="phone">
+      <p class="t">Acquisisci</p>
+      <p class="st">Acquisizione dei file da dispositivi e cartelle</p>
+      <p class="desc">Seleziona i dispositivi con le cartelle condivise ed importa i media (foto e video) che intendi gestire nel tuo Catalogo</p>
+      <p class="cat1"><span class="lbl">Catalogo:</span> <span class="name">MyMedia</span></p>
+      <p class="cat2">MyDevice \Pictures\MyMedia - 🛜 Online</p>
+      <div class="counters">
+        <div><b>N. Cartelle collegate:</b> 3</div>
+        <div><b>N. Foto:</b> 128</div>
+        <div><b>N. Video:</b> 12</div>
+      </div>
+      <p class="hint">Clicca sul bottone [+] per aggiungere una alla volta le cartelle del dispositivo dove conservi i tuoi file. Quando hai terminato clicca sul bottone [Conferma]</p>
+      <div class="btnrow">
+        <div class="btn ghost" style="flex:0 0 44px">↻</div>
+        <div class="btn primary" style="flex:0 0 44px;border-radius:50%">+</div>
+        <div class="btn primary">Conferma</div>
+      </div>
+      <p class="list-title">Elenco delle cartelle collegate al Catalogo</p>
+      <div class="row"><span class="boxsel">✓</span><span>familiari<br/><small>Questo dispositivo · \Pictures\familiari</small></span><span>›</span></div>
+      <div class="row"><span class="boxsel"></span><span>vacanze<br/><small>Questo dispositivo · \Pictures\vacanze</small></span><span>›</span></div>
+      <div class="row"><span class="boxsel">X</span><span>work<br/><small>Questo dispositivo · \Pictures\work</small></span><span>›</span></div>
+    </div>
+    <div class="spec">
+      <h3>Ordine elementi (nota)</h3>
+      <ul>
+        <li>Titolo / sottotitolo invariati</li>
+        <li>Descrizione (testo sopra, letterale)</li>
+        <li>Riga fissa Catalogo</li>
+        <li>Contatori <b>solo se N&gt;0</b>: N. Cartelle collegate / N. Foto / N. Video (acquisite in Catalogo)</li>
+        <li>Messaggio [+] … [Conferma] (letterale)</li>
+        <li>Bottoni: invariati (refresh, +, Conferma)</li>
+        <li>Titolo elenco: «Elenco delle cartelle collegate al Catalogo» (solo se ≥1 cartella)</li>
+        <li>Struttura elenco: invariata (ciclo selezione: vedi bug 3)</li>
+      </ul>
+      <div class="gap">Descrizione AS-IS ancora il testo lungo con «Pictures → familiari, vacanze» — <b>obsoleto</b>.</div>
+      <div class="gap">Contatori AS-IS: riepilogo «Sorgenti x/y · Catalogo…» — <b>non</b> i tre «N. …» della nota.</div>
+      <div class="gap">Messaggio [+]/Conferma e titolo elenco <b>non</b> allineati letteralmente.</div>
+      <div class="conflict">
+        <b>NOVITÀ nota vs D1 chat:</b> la nota chiede <b>una riga per ogni sottocartella con media</b> sotto la root.
+        In chat D1 avevi escluso l’elenco sottocartelle. Qui il template segue la <b>nota</b>. Conferma quale vince prima del codice.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DIALOG DELETE -->
+<section class="page" id="acq-del">
+  <h2>Acquisisci — dialog eliminazione cartella</h2>
+  <div class="grid">
+    <div class="phone">
+      <p class="t">Acquisisci</p>
+      <div class="dialog">
+        <p><b>Eliminare la cartella familiari dal catalogo?</b></p>
+        <p>(L'eliminazione non comporta alcuna perdita di dati originali ma solo l'esclusione dal Catalogo dei relativi media)</p>
+        <div class="btnrow">
+          <div class="btn ghost">NO</div>
+          <div class="btn primary">SÌ</div>
+        </div>
+      </div>
+    </div>
+    <div class="spec">
+      <h3>Testo nota (letterale)</h3>
+      <ul>
+        <li>«Eliminare la cartella &lt;nome&gt; dal catalogo?»</li>
+        <li>Riga sotto: «(L'eliminazione non comporta alcuna perdita di dati originali ma solo l'esclusione dal Catalogo dei relativi media)»</li>
+      </ul>
+      <div class="gap">AS-IS: «Togliere questa cartella dall'elenco?» + body diverso — <b>obsoleto</b>.</div>
+    </div>
+  </div>
+</section>
+
+<!-- DETTAGLIO -->
+<section class="page" id="dett">
+  <h2>Dettaglio cartella (da Acquisisci)</h2>
+  <p class="meta">Titolo + path · «su» device[, SD] · N. Elementi solo se &gt;0 · Indietro (bug 4) · ordinamento solo se N&gt;0 · empty message nuovo</p>
+  <div class="grid">
+    <div class="phone">
+      <div class="btn ghost" style="display:inline-block;margin-bottom:8px">Indietro</div>
+      <p class="t">Dettaglio della cartella \Pictures\familiari</p>
+      <p class="desc">su MyDevice</p>
+      <p class="desc"><b>N. Elementi:</b> 42</p>
+      <p class="hint">(miniature + link dettaglio invariati)</p>
+      <div class="btnrow">
+        <div class="btn ghost">Più recenti</div>
+        <div class="btn ghost">Nome</div>
+        <div class="btn ghost">Tipo</div>
+      </div>
+      <div class="dialog" style="margin-top:18px">
+        <p><b>Empty (N=0):</b></p>
+        <p>La cartella selezionata non contiene foto o video: torna su Acquisisci e seleziona un'altra cartella</p>
+      </div>
+    </div>
+    <div class="spec">
+      <h3>Controlli / testi</h3>
+      <ul>
+        <li>Titolo: «Dettaglio della cartella» + percorso completo</li>
+        <li>Riga: «su» &lt;dispositivo&gt;[, SD]</li>
+        <li>«N. Elementi:» solo se &gt;0</li>
+        <li>Ordinamento solo se N&gt;0</li>
+        <li>Empty letterale come sopra</li>
+        <li>Bug 4: bottone ritorno al punto di accesso</li>
+      </ul>
+      <div class="gap">AS-IS titolo «Dettaglio di», count «Elementi: N», empty «Torna a Censisci…», mostra sottocartelle dell’albero — <b>obsoleto vs nota</b>.</div>
+      <div class="oknote">Bottone Indietro aggiunto in 0.16.57 (bug 4) — da verificare testo/posizione.</div>
+    </div>
+  </div>
+</section>
+
+<!-- NOVITA -->
+<section class="page" id="novita">
+  <h2>NOVITÀ — corrispondenza biunivoca cartella/media</h2>
+  <div class="spec">
+    <p>
+      Se in Acquisisci la cartella selezionata è la <b>root</b> di sottocartelle che contengono media,
+      allora <b>ogni sottocartella</b> deve comparire nell’elenco (corrispondenza biunivoca cartella/media).
+      Il solo dettaglio delle sottocartelle della root <b>non</b> risolve il problema.
+    </p>
+    <div class="conflict">
+      Chiusura chat D1 (01/11): «una riga root ↔ tutto il ramo, escludere elenco sottocartelle».
+      La nota scritta chiede il contrario (espansione sottocartelle).
+      <b>Serve tua conferma esplicita su quale dei due applicare</b> prima di scrivere altro codice.
+    </div>
+  </div>
+</section>
+
+<!-- PULISCI -->
+<section class="page" id="pulisci">
+  <h2>Pulisci</h2>
+  <p class="meta">Non compare nella nota v0.16.57. Template = AS-IS attuale (invariato), per completezza del set pagine.</p>
+  <div class="grid">
+    <div class="phone">
+      <p class="t">Pulisci</p>
+      <p class="desc">Trova foto e video identici presenti più volte nel Catalogo.</p>
+      <div class="list-title">Elementi selezionati</div>
+      <p class="hint">Da ✓ in Aggiorna → Cestino</p>
+      <div class="btn primary" style="margin:8px 0">Elimina selezionati</div>
+      <div class="list-title">Possibili scarti</div>
+      <div class="btn primary" style="margin:8px 0">Elimina scarti selezionati</div>
+      <div class="list-title">Duplicati</div>
+      <div class="btn primary" style="margin:8px 0">Analizza duplicati</div>
+    </div>
+    <div class="spec">
+      <div class="outnote">
+        <b>Fuori nota 0.16.57.</b> Nessuna modifica richiesta dal PDF.
+        Se vuoi allineare anche Pulisci (testi/riga Catalogo/bottoni), indicarlo esplicitamente:
+        altrimenti resta AS-IS.
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Artifact generato per allineamento pre-codice. File: <code>/opt/cursor/artifacts/TEMPLATE_STATICI_NOTA_01657.html</code>
+  · Nota federata: <code>/opt/cursor/artifacts/NOTA_01657_TESTO_FEDERALE.md</code>
+</footer>
+</body>
+</html>
