@@ -69,6 +69,7 @@ fun MacroHubScreen(
                 status = seatStatus,
                 onOpenSeat = onOpenCatalogSeat,
                 compact = true,
+                showWhenMissing = false,
             )
         }
 

@@ -389,6 +389,7 @@ fun PvmApp(
                         state = browseState,
                         onSortMode = browseVm::setSortMode,
                         onRefresh = browseVm::refresh,
+                        onBack = { navController.popBackStack() },
                     )
                 }
                 composable(PvmDestination.Aggiorna.route) {

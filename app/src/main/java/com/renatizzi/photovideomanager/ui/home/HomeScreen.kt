@@ -115,6 +115,7 @@ fun HomeScreen(
             status = seatStatus,
             onOpenSeat = onOpenCatalogSeat,
             compact = true,
+            showWhenMissing = false,
             modifier = Modifier.padding(top = 4.dp),
         )
 

@@ -150,7 +150,12 @@ fun CatalogSeatWizardScreen(
                 busy = state.busy,
             )
             WizardStep.W1_CONFIRM -> FolderChoiceStep(
-                body = stringResource(R.string.hub_w1_body),
+                body = stringResource(
+                    R.string.hub_w1_body,
+                    state.deviceModel.ifBlank {
+                        com.renatizzi.photovideomanager.domain.hub.CatalogSeat.DEFAULT_DEVICE_MODEL
+                    },
+                ),
                 pendingLabel = state.pendingLabel,
                 catalogName = state.catalogName,
                 deviceModel = state.deviceModel,
@@ -393,15 +398,24 @@ private fun AvvioProceduraStep(
         placeholder = { Text(stringResource(R.string.hub_avvio_model_hint)) },
     )
 
-    Button(
-        onClick = onContinua,
-        enabled = !state.busy,
+    Row(
         modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(stringResource(R.string.hub_avvio_continua))
-    }
-    TextButton(onClick = onCancel, enabled = !state.busy) {
-        Text(stringResource(R.string.hub_avvio_esc))
+        OutlinedButton(
+            onClick = onCancel,
+            enabled = !state.busy,
+            modifier = Modifier.weight(1f),
+        ) {
+            Text(stringResource(R.string.hub_annulla))
+        }
+        Button(
+            onClick = onContinua,
+            enabled = !state.busy,
+            modifier = Modifier.weight(1f),
+        ) {
+            Text(stringResource(R.string.hub_avvio_continua))
+        }
     }
 }
 
@@ -844,20 +858,25 @@ private fun FolderChoiceStep(
     onBack: () -> Unit,
     onEsc: () -> Unit,
 ) {
+    @Suppress("UNUSED_PARAMETER")
+    val unusedBack = onBack
     Text(body)
     if (pendingLabel.isNotBlank()) {
+        val path = com.renatizzi.photovideomanager.domain.hub.CatalogSeatRowFormatter
+            .displayPath(pendingLabel)
         val detail = buildString {
-            append(catalogName.ifBlank { "MediaManagerCatalog" })
+            append(catalogName.ifBlank { com.renatizzi.photovideomanager.domain.hub.CatalogSeat.DEFAULT_CATALOG_NAME })
             append(" · ")
-            if (deviceModel.isNotBlank()) {
-                append(deviceModel)
-                append(", ")
+            append(
+                deviceModel.ifBlank {
+                    com.renatizzi.photovideomanager.domain.hub.CatalogSeat.DEFAULT_DEVICE_MODEL
+                },
+            )
+            if (memoryLabel == com.renatizzi.photovideomanager.domain.hub.CatalogSeat.MEMORY_SECONDARY) {
+                append(" SD")
             }
-            if (memoryLabel.isNotBlank()) {
-                append(memoryLabel)
-                append(", ")
-            }
-            append(pendingLabel)
+            append(' ')
+            append(path)
         }
         Text(
             text = stringResource(R.string.catalog_seat_row_name, detail),
@@ -873,18 +892,24 @@ private fun FolderChoiceStep(
     ) {
         Text(stringResource(R.string.hub_choose_folder))
     }
-    Button(
-        onClick = onSalva,
-        enabled = !busy && pendingLabel.isNotBlank(),
+    Row(
         modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(stringResource(R.string.hub_salva))
-    }
-    OutlinedButton(onClick = onBack, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
-        Text(stringResource(R.string.hub_indietro))
-    }
-    TextButton(onClick = onEsc, enabled = !busy) {
-        Text(stringResource(R.string.hub_avvio_esc))
+        OutlinedButton(
+            onClick = onEsc,
+            enabled = !busy,
+            modifier = Modifier.weight(1f),
+        ) {
+            Text(stringResource(R.string.hub_annulla))
+        }
+        Button(
+            onClick = onSalva,
+            enabled = !busy && pendingLabel.isNotBlank(),
+            modifier = Modifier.weight(1f),
+        ) {
+            Text(stringResource(R.string.hub_salva))
+        }
     }
 }
 
@@ -1284,24 +1309,40 @@ private fun W2DoneStep(
     onDone: () -> Unit,
 ) {
     Text(
-        stringResource(R.string.hub_done_title),
+        stringResource(R.string.hub_done_riepilogo_dati),
         fontWeight = FontWeight.Medium,
     )
-    val name = state.completedSeat?.effectiveCatalogName
-        ?: state.catalogName.ifBlank { "MediaManagerCatalog" }
-    Text(
-        stringResource(R.string.hub_done_body, name),
-        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-    )
-    if (state.completedSeat?.displayLabel?.isNotBlank() == true) {
+    val seat = state.completedSeat
+    if (seat != null) {
+        com.renatizzi.photovideomanager.ui.common.CatalogSeatStatusRow(
+            status = com.renatizzi.photovideomanager.domain.hub.CatalogSeatStatus(
+                seat = seat,
+                reachability = com.renatizzi.photovideomanager.domain.hub.CatalogSeatReachability.REACHABLE,
+            ),
+            onOpenSeat = {},
+            showWhenMissing = false,
+        )
         Text(
-            text = state.completedSeat.displayLabel,
-            style = MaterialTheme.typography.bodySmall,
-            fontFamily = FontFamily.Monospace,
+            stringResource(R.string.hub_done_censito_ok),
+            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+            color = MaterialTheme.colorScheme.primary,
+        )
+    } else {
+        val name = state.catalogName.ifBlank {
+            com.renatizzi.photovideomanager.domain.hub.CatalogSeat.DEFAULT_CATALOG_NAME
+        }
+        Text(
+            stringResource(R.string.hub_done_body, name),
+            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+        )
+        Text(
+            stringResource(R.string.hub_done_censito_ko),
+            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+            color = MaterialTheme.colorScheme.error,
         )
     }
     Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
-        Text(stringResource(R.string.hub_done_torna_accesso))
+        Text(stringResource(R.string.hub_avvio_continua))
     }
 }
 

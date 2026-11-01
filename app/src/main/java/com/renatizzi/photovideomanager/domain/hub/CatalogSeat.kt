@@ -13,9 +13,9 @@ data class CatalogSeat(
     val treeUri: String? = null,
     /** Etichetta percorso / share (es. Pictures/Catalogo o \\host\share). */
     val displayLabel: String = "",
-    /** Nome convenzionale del Catalogo (default MediaManagerCatalog). */
+    /** Nome convenzionale del Catalogo (default MyMedia). */
     val catalogName: String = DEFAULT_CATALOG_NAME,
-    /** Modello / nome dispositivo mostrato in riga (es. S25 Ultra, PC-UFFICIO). */
+    /** Modello / nome dispositivo mostrato in riga (es. S25 Ultra, MyDevice). */
     val deviceModel: String = "",
     /** Memoria locale: Principale o Secondaria (microSD); vuoto se remoto. */
     val memoryLabel: String = "",
@@ -29,8 +29,13 @@ data class CatalogSeat(
     val effectiveCatalogName: String
         get() = catalogName.ifBlank { DEFAULT_CATALOG_NAME }
 
+    /** Modello dispositivo non vuoto per UI. */
+    val effectiveDeviceModel: String
+        get() = deviceModel.ifBlank { DEFAULT_DEVICE_MODEL }
+
     companion object {
-        const val DEFAULT_CATALOG_NAME = "MediaManagerCatalog"
+        const val DEFAULT_CATALOG_NAME = "MyMedia"
+        const val DEFAULT_DEVICE_MODEL = "MyDevice"
         const val MEMORY_PRIMARY = "Principale"
         const val MEMORY_SECONDARY = "Secondaria"
     }

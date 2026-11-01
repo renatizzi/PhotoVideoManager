@@ -9,10 +9,10 @@ class CatalogSeatStatusTest {
 
     @Test
     fun kindLabels_coverW1toW4() {
-        assertEquals("Questo dispositivo/Tablet", CatalogSeatKindLabels.label(CatalogSeatKind.LOCAL_DEVICE))
-        assertEquals("PC / notebook", CatalogSeatKindLabels.label(CatalogSeatKind.PC_NOTEBOOK))
-        assertEquals("Google Drive / Cloud", CatalogSeatKindLabels.label(CatalogSeatKind.CLOUD_DRIVE))
-        assertEquals("NAS / disco di rete", CatalogSeatKindLabels.label(CatalogSeatKind.NETWORK_NAS))
+        assertEquals("Questo dispositivo", CatalogSeatKindLabels.label(CatalogSeatKind.LOCAL_DEVICE))
+        assertEquals("PC Windows", CatalogSeatKindLabels.label(CatalogSeatKind.PC_NOTEBOOK))
+        assertEquals("Cloud", CatalogSeatKindLabels.label(CatalogSeatKind.CLOUD_DRIVE))
+        assertEquals("Disco di Rete", CatalogSeatKindLabels.label(CatalogSeatKind.NETWORK_NAS))
         assertEquals("", CatalogSeatKindLabels.label(CatalogSeatKind.NONE))
     }
 
@@ -32,42 +32,67 @@ class CatalogSeatStatusTest {
             kind = CatalogSeatKind.PC_NOTEBOOK,
             treeUri = "content://tree/abc",
             displayLabel = "\\\\192.168.1.20\\MediaManagerCatalog",
-            catalogName = "MediaManagerCatalog",
+            catalogName = "MyMedia",
             deviceModel = "PC-UFFICIO",
         )
         assertTrue(seat.isConfigured)
         val status = CatalogSeatStatus(seat, CatalogSeatReachability.REACHABLE)
         assertTrue(status.configured)
-        assertEquals("MediaManagerCatalog", status.catalogName)
+        assertEquals("MyMedia", status.catalogName)
         assertEquals(
-            "PC-UFFICIO, \\\\192.168.1.20\\MediaManagerCatalog - Online",
+            "PC-UFFICIO \\\\192.168.1.20\\MediaManagerCatalog - 🛜 Online",
             CatalogSeatRowFormatter.detailLine(status),
         )
     }
 
     @Test
-    fun rowFormatter_localUsesMemoryAndOnlineOfflineNv() {
-        val seat = CatalogSeat(
+    fun rowFormatter_localUsesSdOnlyWhenSecondary_andBackslashPath() {
+        val primary = CatalogSeat(
             kind = CatalogSeatKind.LOCAL_DEVICE,
             displayLabel = "Pictures/Catalogo",
-            catalogName = "MediaManagerCatalog",
+            catalogName = "MyMedia",
             deviceModel = "S25 Ultra",
             memoryLabel = CatalogSeat.MEMORY_PRIMARY,
         )
-        val online = CatalogSeatStatus(seat, CatalogSeatReachability.REACHABLE)
+        val online = CatalogSeatStatus(primary, CatalogSeatReachability.REACHABLE)
         assertEquals(
-            "S25 Ultra, Principale, Pictures/Catalogo - Online",
+            "S25 Ultra \\Pictures\\Catalogo - 🛜 Online",
             CatalogSeatRowFormatter.detailLine(online),
         )
-        val offline = CatalogSeatStatus(seat, CatalogSeatReachability.UNREACHABLE)
+        val offline = CatalogSeatStatus(primary, CatalogSeatReachability.UNREACHABLE)
         assertEquals(
-            "S25 Ultra, Principale, Pictures/Catalogo - Offline",
+            "S25 Ultra \\Pictures\\Catalogo - ⚠ Offline",
             CatalogSeatRowFormatter.detailLine(offline),
         )
-        val nv = CatalogSeatStatus(seat, CatalogSeatReachability.UNKNOWN)
+        val nv = CatalogSeatStatus(primary, CatalogSeatReachability.UNKNOWN)
         assertEquals(
-            "S25 Ultra, Principale, Pictures/Catalogo - Non verificabile",
+            "S25 Ultra \\Pictures\\Catalogo - ? Non verificabile",
             CatalogSeatRowFormatter.detailLine(nv),
         )
+
+        val secondary = primary.copy(memoryLabel = CatalogSeat.MEMORY_SECONDARY)
+        assertEquals(
+            "S25 Ultra SD \\Pictures\\Catalogo - 🛜 Online",
+            CatalogSeatRowFormatter.detailLine(
+                CatalogSeatStatus(secondary, CatalogSeatReachability.REACHABLE),
+            ),
+        )
+    }
+
+    @Test
+    fun displayPath_prefixesBackslash_keepsUnc() {
+        assertEquals("\\pictures\\vacanze", CatalogSeatRowFormatter.displayPath("pictures/vacanze"))
+        assertEquals("\\pictures\\vacanze", CatalogSeatRowFormatter.displayPath("\\pictures\\vacanze"))
+        assertEquals(
+            "\\\\192.168.1.20\\share",
+            CatalogSeatRowFormatter.displayPath("\\\\192.168.1.20\\share"),
+        )
+        assertEquals("—", CatalogSeatRowFormatter.displayPath(""))
+    }
+
+    @Test
+    fun defaults_areMyMediaMyDevice() {
+        assertEquals("MyMedia", CatalogSeat.DEFAULT_CATALOG_NAME)
+        assertEquals("MyDevice", CatalogSeat.DEFAULT_DEVICE_MODEL)
     }
 }

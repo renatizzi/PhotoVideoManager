@@ -175,30 +175,44 @@ fun AcquisisciStaticScreen(
         com.renatizzi.photovideomanager.ui.common.CatalogSeatStatusRow(
             status = state.catalogSeatStatus,
             onOpenSeat = onOpenCatalogSeatWizard,
+            showWhenMissing = false,
         )
 
         if (!hasCatalog) {
-            // TO-BE: senza Catalogo solo invito — niente +, CONFERMA, elenco.
             Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = stringResource(R.string.acquisisci_needs_catalog_body),
+                style = MaterialTheme.typography.bodyMedium,
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+            )
+            Button(
+                onClick = onOpenCatalogSeatWizard,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.acquisisci_needs_catalog_crea))
+            }
             return@Column
         }
 
-        Text(
-            text = stringResource(R.string.acquisisci_elenco_fonti),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Medium,
-        )
-        Text(
-            text = stringResource(
-                R.string.acquisisci_riepilogo_full,
-                selectedCount,
-                sources.size,
-                state.catalogCount,
-                state.acquiredCount,
-                formatBytes(state.acquiredUsedBytes),
-            ),
-            style = MaterialTheme.typography.bodySmall,
-        )
+        if (sources.isNotEmpty()) {
+            Text(
+                text = stringResource(R.string.acquisisci_elenco_fonti),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium,
+            )
+            Text(
+                text = stringResource(
+                    R.string.acquisisci_riepilogo_full,
+                    selectedCount,
+                    sources.size,
+                    state.catalogCount,
+                    state.acquiredCount,
+                    formatBytes(state.acquiredUsedBytes),
+                ),
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
         TextButton(
             onClick = {
                 renameText = state.deviceAlias
@@ -220,11 +234,9 @@ fun AcquisisciStaticScreen(
             }
             IconButton(
                 onClick = {
-                    setupSorgentiStep = "avvio"
-                    addDeviceOpen = true
-                    sorgentiKind =
-                        com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind.LOCAL_DEVICE
-                    sorgentiModel = ""
+                    // D1/D2: una riga root ↔ ramo intero; + apre subito SAF (niente procedura finta).
+                    sorgentiAwaitingPick = false
+                    openTree.launch(null)
                 },
                 enabled = !busy,
                 modifier = Modifier
@@ -233,7 +245,7 @@ fun AcquisisciStaticScreen(
             ) {
                 Icon(
                     Icons.Outlined.Add,
-                    contentDescription = stringResource(R.string.sorgenti_wizard_title),
+                    contentDescription = stringResource(R.string.sorgenti_choose_folder),
                     tint = MaterialTheme.colorScheme.onPrimary,
                 )
             }
@@ -940,6 +952,7 @@ fun AggiornaStaticScreen(
         )
         com.renatizzi.photovideomanager.ui.common.CatalogSeatStatusRow(
             status = state.seatStatus,
+            showWhenMissing = false,
             onOpenSeat = onOpenCatalogSeat,
             compact = true,
         )
@@ -1172,6 +1185,7 @@ fun ComponiLandingStaticScreen(
             status = seatStatus,
             onOpenSeat = onOpenCatalogSeat,
             compact = true,
+            showWhenMissing = false,
         )
 
         CatalogSearchField(query = query, onQueryChange = { query = it })

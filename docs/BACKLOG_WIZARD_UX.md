@@ -99,8 +99,10 @@ Aperti:
 - **BL-UI-02** PC non-Windows (macOS/Linux)
 - **BL-UI-03** Configura reorg stile Utility
 - **BL-UI-06** Dettaglio RAPIDA (Host→CIFS→folder) — base in 0.16.54, raffinare testi
-- **BL-UI-07** GUIDATA su Setup Sorgenti
+- **BL-UI-07** GUIDATA su Setup Sorgenti — **deprioritizzato** (D2 0.16.57: no procedure finte; + Acquisisci apre SAF)
 - **BL-UI-08** Esc con dialog di conferma abbandono
 - **BL-UI-09** Cloud oltre SAF (account)
 - **BL-UI-10** Setup Sorgenti «cartella da censire» (landing dedicata)
+- **BL-UI-11** Uniformare stile bottoni / microfono ricerca non su tutti i motori
+- **BL-UI-12** Funzione di **pulizia dati app** (prefs Catalogo, bozze wizard, indici/censimenti, cache MediaManager) — richiesta Renato 01/11 con Tranche A 0.16.57; non cancellare i file utente nelle cartelle SAF
 - Font/stile carattere — correzione UI differita (accordo 30/10)

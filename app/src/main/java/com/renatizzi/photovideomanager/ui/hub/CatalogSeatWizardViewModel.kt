@@ -194,7 +194,11 @@ class CatalogSeatWizardViewModel(
                     CatalogSeat.DEFAULT_CATALOG_NAME
                 },
                 deviceModel = seat.deviceModel.ifBlank {
-                    if (seat.isConfigured) CatalogSeatKindLabels.shortDevice(seat.kind) else ""
+                    if (seat.isConfigured) {
+                        CatalogSeatKindLabels.shortDevice(seat.kind)
+                    } else {
+                        CatalogSeat.DEFAULT_DEVICE_MODEL
+                    }
                 },
                 memoryLabel = seat.memoryLabel.ifBlank { CatalogSeat.MEMORY_PRIMARY },
                 procedureMode = ProcedureMode.RAPIDA,
@@ -221,7 +225,7 @@ class CatalogSeatWizardViewModel(
                 step = WizardStep.S0_START,
                 selectedKind = CatalogSeatKind.LOCAL_DEVICE,
                 catalogName = CatalogSeat.DEFAULT_CATALOG_NAME,
-                deviceModel = "",
+                deviceModel = CatalogSeat.DEFAULT_DEVICE_MODEL,
                 memoryLabel = CatalogSeat.MEMORY_PRIMARY,
                 procedureMode = ProcedureMode.RAPIDA,
                 completedSeat = null,
@@ -361,7 +365,7 @@ class CatalogSeatWizardViewModel(
             return
         }
         val model = current.deviceModel.trim().ifBlank {
-            CatalogSeatKindLabels.shortDevice(kind)
+            CatalogSeat.DEFAULT_DEVICE_MODEL
         }
         if (kind == CatalogSeatKind.PC_NOTEBOOK) {
             val pathErr = WindowsCatalogSetupScript.validateFolderPath(current.folderPath)
@@ -542,8 +546,18 @@ class CatalogSeatWizardViewModel(
 
     private fun persistDraft() {
         val s = _state.value
-        if (s.step == WizardStep.S0_START || s.step == WizardStep.DONE) {
-            if (s.step == WizardStep.DONE) draftStore.clear()
+        // D5: flusso corto locale/cloud (Avvio → cartella → Riepilogo) = pending solo in sessione.
+        if (s.step == WizardStep.S0_START ||
+            s.step == WizardStep.DONE ||
+            s.step == WizardStep.W1_CONFIRM ||
+            s.step == WizardStep.W3_GUIDE
+        ) {
+            if (s.step == WizardStep.DONE ||
+                s.step == WizardStep.W1_CONFIRM ||
+                s.step == WizardStep.W3_GUIDE
+            ) {
+                draftStore.clear()
+            }
             return
         }
         draftStore.save(
@@ -943,7 +957,7 @@ class CatalogSeatWizardViewModel(
                 treeUri = treeUri,
                 displayLabel = label,
                 catalogName = ui.catalogName.ifBlank { CatalogSeat.DEFAULT_CATALOG_NAME },
-                deviceModel = ui.deviceModel.ifBlank { CatalogSeatKindLabels.shortDevice(kind) },
+                deviceModel = ui.deviceModel.ifBlank { CatalogSeat.DEFAULT_DEVICE_MODEL },
                 memoryLabel = if (kind == CatalogSeatKind.LOCAL_DEVICE) {
                     ui.memoryLabel.ifBlank { CatalogSeat.MEMORY_PRIMARY }
                 } else {

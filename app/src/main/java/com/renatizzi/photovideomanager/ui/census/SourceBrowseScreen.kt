@@ -12,6 +12,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -30,6 +31,7 @@ fun SourceBrowseScreen(
     state: SourceBrowseUiState,
     onSortMode: (MediaBrowseSortMode) -> Unit,
     onRefresh: () -> Unit,
+    onBack: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -39,6 +41,9 @@ fun SourceBrowseScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        OutlinedButton(onClick = onBack) {
+            Text(stringResource(R.string.browse_source_back))
+        }
         Text(
             text = stringResource(R.string.browse_source_title),
             style = MaterialTheme.typography.headlineSmall,

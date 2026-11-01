@@ -51,7 +51,7 @@ object WizardStepChrome {
             -> Subtitle(pc[4])
             WizardStep.W3_GUIDE -> Subtitle("Scelta della cartella")
             WizardStep.W4_GUIDE -> Subtitle("GUIDATA — preparazione NAS")
-            WizardStep.DONE -> Subtitle("Configurazione completata correttamente")
+            WizardStep.DONE -> Subtitle("Riepilogo e conferma")
         }
     }
 }

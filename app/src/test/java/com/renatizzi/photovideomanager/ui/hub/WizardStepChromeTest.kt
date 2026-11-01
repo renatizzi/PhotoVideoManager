@@ -41,7 +41,7 @@ class WizardStepChromeTest {
             WizardStepChrome.subtitle(WizardStep.PC_SHARE_READY, CatalogSeatKind.NETWORK_NAS).text,
         )
         assertEquals(
-            "Configurazione completata correttamente",
+            "Riepilogo e conferma",
             WizardStepChrome.subtitle(WizardStep.DONE, CatalogSeatKind.LOCAL_DEVICE).text,
         )
     }
