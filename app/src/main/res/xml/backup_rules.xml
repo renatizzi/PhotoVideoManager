@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Auto Backup disabilitato a livello application (allowBackup=false).
+  Se riattivato in futuro, escludere la sede Catalogo: altrimenti un reinstall
+  ripristina un NAS/PC vecchio e confonde l’utente.
+-->
+<full-backup-content>
+    <exclude domain="sharedpref" path="pvm_catalog_seat.xml" />
+    <exclude domain="sharedpref" path="pvm_wizard_draft.xml" />
+</full-backup-content>

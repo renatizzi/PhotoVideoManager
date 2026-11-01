@@ -8,16 +8,15 @@ import org.junit.Test
 
 class SourceCensusSelectionTest {
     @Test
-    fun cycleNext_acquisisci_box_only_empty_and_x() {
+    fun cycleNext_acquisisci_empty_check_x_empty() {
         assertEquals(
-            SourceCensusSelection.NOT_SELECTED,
-            SourceCensusSelection.SELECTED.cycleNext(),
+            SourceCensusSelection.SELECTED,
+            SourceCensusSelection.NOT_SELECTED.cycleNext(),
         )
         assertEquals(
             SourceCensusSelection.EXCLUDED,
-            SourceCensusSelection.NOT_SELECTED.cycleNext(),
+            SourceCensusSelection.SELECTED.cycleNext(),
         )
-        // X non torna a ✓: solo Tutti rimette la selezione.
         assertEquals(
             SourceCensusSelection.NOT_SELECTED,
             SourceCensusSelection.EXCLUDED.cycleNext(),

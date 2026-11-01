@@ -11,10 +11,32 @@ enum class CatalogSeatKind {
 data class CatalogSeat(
     val kind: CatalogSeatKind,
     val treeUri: String? = null,
+    /** Etichetta percorso / share (es. Pictures/Catalogo o \\host\share). */
     val displayLabel: String = "",
+    /** Nome convenzionale del Catalogo (default MyMedia). */
+    val catalogName: String = DEFAULT_CATALOG_NAME,
+    /** Modello / nome dispositivo mostrato in riga (es. S25 Ultra, MyDevice). */
+    val deviceModel: String = "",
+    /** Memoria locale: Principale o Secondaria (microSD); vuoto se remoto. */
+    val memoryLabel: String = "",
     val configuredAtEpochMs: Long = 0L,
 ) {
     val isConfigured: Boolean
         get() = kind != CatalogSeatKind.NONE &&
             (kind == CatalogSeatKind.LOCAL_DEVICE || !treeUri.isNullOrBlank())
+
+    /** Nome Catalogo non vuoto per UI. */
+    val effectiveCatalogName: String
+        get() = catalogName.ifBlank { DEFAULT_CATALOG_NAME }
+
+    /** Modello dispositivo non vuoto per UI. */
+    val effectiveDeviceModel: String
+        get() = deviceModel.ifBlank { DEFAULT_DEVICE_MODEL }
+
+    companion object {
+        const val DEFAULT_CATALOG_NAME = "MyMedia"
+        const val DEFAULT_DEVICE_MODEL = "MyDevice"
+        const val MEMORY_PRIMARY = "Principale"
+        const val MEMORY_SECONDARY = "Secondaria"
+    }
 }

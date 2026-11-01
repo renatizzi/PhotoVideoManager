@@ -53,14 +53,23 @@ fun MacroHubScreen(
         )
         Text(
             text = stringResource(area.subtitleRes),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+            style = MaterialTheme.typography.titleMedium,
+            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
         )
+        if (area.descriptionRes != 0) {
+            Text(
+                text = stringResource(area.descriptionRes),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+            )
+        }
         if (onOpenCatalogSeat != null) {
             com.renatizzi.photovideomanager.ui.common.CatalogSeatStatusRow(
                 status = seatStatus,
                 onOpenSeat = onOpenCatalogSeat,
                 compact = true,
+                showWhenMissing = false,
             )
         }
 

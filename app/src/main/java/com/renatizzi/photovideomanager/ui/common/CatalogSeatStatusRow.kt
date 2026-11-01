@@ -10,27 +10,38 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.renatizzi.photovideomanager.R
-import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKindLabels
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatReachability
+import com.renatizzi.photovideomanager.domain.hub.CatalogSeatRowFormatter
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatStatus
 
 /**
- * Riga compatta «Posizione del Catalogo» — stesso contratto su Dashboard, Organizza,
- * Acquisisci e Aggiorna. Tap apre l’ingresso unico (Wizard / Setup).
+ * Riga compatta Catalogo — Dashboard, Acquisisci, Aggiorna, Componi.
+ * Formato TO-BE 2 linee (C1). Tap apre Setup Catalogo.
+ *
+ * @param showWhenMissing se false (Dashboard/Componi) non mostra testo assenza.
  */
 @Composable
 fun CatalogSeatStatusRow(
     status: CatalogSeatStatus?,
     onOpenSeat: () -> Unit,
     compact: Boolean = false,
+    showWhenMissing: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val reach = status?.reachability ?: CatalogSeatReachability.UNKNOWN
-    val label = status?.label?.takeIf { it.isNotBlank() }
-    val kind = status?.let { CatalogSeatKindLabels.label(it.kind) }.orEmpty()
+    val missing = status == null ||
+        reach == CatalogSeatReachability.NOT_CONFIGURED ||
+        status.configured.not()
+    if (missing && !showWhenMissing) {
+        return
+    }
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -38,55 +49,55 @@ fun CatalogSeatStatusRow(
             .padding(vertical = if (compact) 2.dp else 4.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        if (!compact) {
-            Text(
-                text = stringResource(R.string.catalog_seat_row_title),
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Medium,
-            )
-        }
-        when (reach) {
-            CatalogSeatReachability.NOT_CONFIGURED -> {
+        when {
+            missing -> {
                 Text(
                     text = stringResource(R.string.catalog_seat_row_missing),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                    fontWeight = FontWeight.SemiBold,
+                    fontStyle = FontStyle.Italic,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
                 )
             }
             else -> {
-                val line = buildString {
-                    append(label ?: "—")
-                    if (kind.isNotBlank()) {
-                        append(" · ")
-                        append(kind)
-                    }
-                }
+                val nameColor = MaterialTheme.colorScheme.primary
+                val labelColor = MaterialTheme.colorScheme.onSurface
                 Text(
-                    text = if (compact) {
-                        stringResource(R.string.catalog_seat_row_compact, line)
-                    } else {
-                        line
+                    text = buildAnnotatedString {
+                        withStyle(
+                            SpanStyle(
+                                fontWeight = FontWeight.Bold,
+                                fontStyle = FontStyle.Italic,
+                                color = labelColor,
+                            ),
+                        ) {
+                            append(stringResource(R.string.catalog_seat_row_title))
+                            append(": ")
+                        }
+                        withStyle(
+                            SpanStyle(
+                                fontWeight = FontWeight.Bold,
+                                fontStyle = FontStyle.Italic,
+                                color = nameColor,
+                            ),
+                        ) {
+                            append(status!!.catalogName)
+                        }
                     },
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
                 )
-                val (reachText, reachColor) = when (reach) {
-                    CatalogSeatReachability.REACHABLE ->
-                        stringResource(R.string.acquisisci_catalog_ref_reachable) to
-                            MaterialTheme.colorScheme.secondary
-                    CatalogSeatReachability.UNREACHABLE ->
-                        stringResource(R.string.acquisisci_catalog_ref_unreachable) to
-                            MaterialTheme.colorScheme.error
-                    CatalogSeatReachability.UNKNOWN,
-                    CatalogSeatReachability.NOT_CONFIGURED,
-                    ->
-                        stringResource(R.string.acquisisci_catalog_ref_unknown) to
-                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
+                val detail = CatalogSeatRowFormatter.detailLine(status)
+                val detailColor = when (reach) {
+                    CatalogSeatReachability.REACHABLE -> MaterialTheme.colorScheme.primary
+                    CatalogSeatReachability.UNREACHABLE -> MaterialTheme.colorScheme.error
+                    else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
                 }
                 Text(
-                    text = reachText,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = reachColor,
+                    text = detail,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.SemiBold,
+                    fontStyle = FontStyle.Italic,
+                    color = detailColor,
                 )
             }
         }
