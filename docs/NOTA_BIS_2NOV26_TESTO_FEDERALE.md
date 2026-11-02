@@ -22,7 +22,7 @@ Fonte: `docs/reference/modifichebis_2nov26.pdf`
   2. `[SD se Secondaria]`, `<percorso cartella>` (`\` iniziale) - icona stato, `<Stato>` (corsivo blu)
 
 - Dettaglio cartella su **Cloud** molto lento: c’è un modo per velocizzarlo? (punto aperto)
-- Evitare di riproporre i file **scartati in Importa** ogni volta che si clicca **[Conferma]** (se si vogliono mantenere gli originali). (punto aperto / requisito)
+- **Importa — esclusione + recupero (chiuso 2 nov):** i file deselezionati e confermati restano esclusi ai [Conferma] successivi; restano recuperabili in seguito (elenco Esclusi / ripristino in Importa). Originali sul dispositivo intatti.
 
 ## Aggiorna
 
@@ -42,7 +42,7 @@ Fonte: `docs/reference/modifichebis_2nov26.pdf`
 |---|---|
 | Titolo | invariato |
 | Sottotitolo | Sposta nel cestino i file indesiderati |
-| Descrizione | Verifica quali sono i file anomali da tenere in Catalogo e quelli invece da eliminare. Questi possono essere eventualmente ripristinati usando l’omologa funzione presente in Ripristina |
+| Descrizione | Verifica quali sono i file anomali (scarti e i duplicati) da tenere in Catalogo e quelli invece da eliminare. Questi possono essere eventualmente ripristinati usando l'omologa funzione presente in Ripristina |
 | Possibili scarti | N. \<Contatore\> · selezione solo manuale · elenco formato Catalogo |
 | Duplicati | N. \<Contatore\> · filtro più vecchi / più recenti · elenco formato Catalogo |
 

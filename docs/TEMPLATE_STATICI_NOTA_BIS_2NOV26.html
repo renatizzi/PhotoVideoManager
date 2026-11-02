@@ -95,7 +95,7 @@
   <h2>0. Punti aperti (prima del codice)</h2>
   <div class="openq"><strong>Setup — nome dispositivo:</strong> è possibile leggere il nome già impostato dall’utente (es. «Tab S9 di RENATO») e usarlo come default al posto di MyDevice? → proposta mock: sì, se leggibile; altrimenti MyDevice.</div>
   <div class="openq"><strong>Cloud — dettaglio lento:</strong> c’è un modo per velocizzarlo? → da analizzare (cache listing / lazy miniature); non mockato come UI.</div>
-  <div class="openq"><strong>Importa scarti:</strong> non riproporre i file scartati a ogni [Conferma] se si mantengono gli originali. → regola di esclusione persistente (come BL-15); da confermare.</div>
+  <div class="decision"><strong>Importa — esclusione + recupero (chiuso):</strong> i file deselezionati e confermati restano esclusi ai [Conferma] successivi (niente riselezione uno a uno). Restano recuperabili in seguito: elenco «Esclusi» / azione «Ripristina in Importa» che toglie l’esclusione (stesso meccanismo BL-15 già usato da Pulisci/Cestino). Gli originali sul dispositivo non si toccano.</div>
   <div class="incongr"><strong>BUG 1:</strong> alcuni file importati (es. .mp4) non riconosciuti — da approfondire in fase implementativa, non in template.</div>
 </section>
 
@@ -232,7 +232,7 @@
         [riquadro] [miniatura] &lt;Nome File&gt; blu bold corsivo<br/>
         &lt;Dispositivo&gt;, [SD], &lt;\path&gt; - icona &lt;Stato&gt; corsivo blu
       </div>
-      <div class="openq">Scarti Importa: non riproposti a [Conferma] successivo se esclusione persistente attiva.</div>
+      <div class="decision">Dopo [Conferma]: deselezionati → esclusi (non riproposti). Recupero: da elenco Esclusi si può reinserire un file in Importa.</div>
     </div>
   </div>
 </section>
@@ -337,7 +337,7 @@
         <div class="actions"><span class="btn">Indietro</span></div>
         <div class="title">Pulisci</div>
         <div class="subtitle">Sposta nel cestino i file indesiderati</div>
-        <p class="desc">Verifica quali sono i file anomali da tenere in Catalogo e quelli invece da eliminare. Questi possono essere eventualmente ripristinati usando l’omologa funzione presente in Ripristina</p>
+        <p class="desc">Verifica quali sono i file anomali (scarti e i duplicati) da tenere in Catalogo e quelli invece da eliminare. Questi possono essere eventualmente ripristinati usando l'omologa funzione presente in Ripristina</p>
 
         <div class="subh">Possibili scarti: N. 3</div>
         <div class="cap">Selezione solo manuale</div>
