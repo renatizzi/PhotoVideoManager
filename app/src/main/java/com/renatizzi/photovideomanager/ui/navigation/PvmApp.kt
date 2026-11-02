@@ -295,6 +295,7 @@ fun PvmApp(
                             onImporta = { acquireVm.acquireSelected() },
                             onContinue = { acquireVm.continueToAggiorna() },
                             onBackToAcquisisci = { acquireStep = AcquireFlowStep.CENSUS },
+                            onRestoreExclusion = acquireVm::restoreExclusion,
                         )
                     }
                 }
@@ -483,18 +484,15 @@ fun PvmApp(
                     }
                     CleanScreen(
                         state = cleanState,
-                        onAnalyze = cleanVm::analyze,
-                        onRequestTrashSelected = cleanVm::requestTrashSelected,
-                        onConfirmTrashSelected = cleanVm::confirmTrashSelected,
-                        onDismissTrashSelected = cleanVm::dismissTrashSelected,
+                        onBack = {
+                            navController.popBackStack()
+                        },
+                        onRequestTrashPending = cleanVm::requestTrashPending,
+                        onConfirmTrashPending = cleanVm::confirmTrashPending,
+                        onDismissTrashPending = cleanVm::dismissTrashPending,
                         onToggleScrap = cleanVm::toggleScrap,
-                        onSelectAllScraps = cleanVm::selectAllScraps,
-                        onRequestTrashScraps = cleanVm::requestTrashScraps,
-                        onConfirmTrashScraps = cleanVm::confirmTrashScraps,
-                        onDismissTrashScraps = cleanVm::dismissTrashScraps,
-                        onRequestTrash = cleanVm::requestTrashExtras,
-                        onConfirmTrash = cleanVm::confirmTrashExtras,
-                        onDismissTrash = cleanVm::dismissTrashConfirm,
+                        onToggleDuplicate = cleanVm::toggleDuplicate,
+                        onDuplicateAgeFilter = cleanVm::setDuplicateAgeFilter,
                     )
                 }
                 composable(PvmDestination.Trash.route) {

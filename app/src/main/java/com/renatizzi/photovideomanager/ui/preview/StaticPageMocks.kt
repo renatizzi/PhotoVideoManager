@@ -100,7 +100,6 @@ fun AcquisisciStaticScreen(
     val context = LocalContext.current
     var renameTarget by remember { mutableStateOf<SourceSummary?>(null) }
     var removeTarget by remember { mutableStateOf<SourceSummary?>(null) }
-    var renameDeviceOpen by remember { mutableStateOf(false) }
     var pcGuideOpen by remember { mutableStateOf(false) }
     var pcHelpOpen by remember { mutableStateOf(false) }
     var addDeviceOpen by remember { mutableStateOf(false) }
@@ -294,29 +293,22 @@ fun AcquisisciStaticScreen(
                     modifier = Modifier.padding(vertical = 12.dp),
                 )
             } else {
-                state.deviceGroups.forEach { group ->
+                // Nota bis: riga = dispositivo (titolo) + SD?/path - stato; niente header gruppo né alias.
+                sources.forEach { source ->
                     HorizontalDivider()
-                    Text(
-                        text = group.deviceLabel,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(top = 10.dp, bottom = 2.dp),
+                    SourceRow(
+                        source = source,
+                        selection = state.selectionOf(source.locationId),
+                        busy = source.locationId in state.censusBusyLocationIds,
+                        enabled = !busy && removeTarget == null,
+                        showDeviceLabel = true,
+                        onToggle = { cycleSourceSelection(source) },
+                        onBrowse = { onBrowse(source.locationId) },
+                        onLongPress = {
+                            renameTarget = source
+                            renameText = source.displayName
+                        },
                     )
-                    group.sources.forEach { source ->
-                        SourceRow(
-                            source = source,
-                            selection = state.selectionOf(source.locationId),
-                            busy = source.locationId in state.censusBusyLocationIds,
-                            enabled = !busy && removeTarget == null,
-                            showDeviceLabel = false,
-                            onToggle = { cycleSourceSelection(source) },
-                            onBrowse = { onBrowse(source.locationId) },
-                            onLongPress = {
-                                renameTarget = source
-                                renameText = source.displayName
-                            },
-                        )
-                    }
                 }
                 HorizontalDivider()
             }
@@ -556,33 +548,9 @@ fun AcquisisciStaticScreen(
             },
         )
     }
-    if (renameDeviceOpen) {
-        AlertDialog(
-            onDismissRequest = { renameDeviceOpen = false },
-            title = { Text(stringResource(R.string.acquisisci_rename_device_title)) },
-            text = {
-                OutlinedTextField(
-                    value = renameText,
-                    onValueChange = { renameText = it },
-                    singleLine = true,
-                    label = { Text(stringResource(R.string.acquisisci_rename_device_label)) },
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onRenameDevice(renameText.trim())
-                        renameDeviceOpen = false
-                    },
-                ) { Text(stringResource(R.string.ok)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { renameDeviceOpen = false }) {
-                    Text(stringResource(R.string.importa_annulla))
-                }
-            },
-        )
-    }
+    // Nota bis: niente riga/dialog «Questo tablet: … (tocca per rinominare)».
+    @Suppress("UNUSED_PARAMETER")
+    val unusedRenameDevice = onRenameDevice
     removeTarget?.let { target ->
         AlertDialog(
             onDismissRequest = {
@@ -657,31 +625,41 @@ private fun SourceRow(
                     onLongClick = onLongPress,
                 ),
         ) {
-            // Titolo cartella · dispositivo · percorso (senza «Tipo: …»)
-            Text(
-                source.displayName.ifBlank { stringResource(R.string.external_source_default_name) },
-                fontWeight = FontWeight.SemiBold,
-            )
-            if (showDeviceLabel && source.deviceLabel.isNotBlank()) {
-                Text(source.deviceLabel, style = MaterialTheme.typography.labelMedium)
-            }
-            if (source.pathLabel.isNotBlank()) {
-                Text(source.pathLabel, style = MaterialTheme.typography.bodyMedium)
+            // Nota bis: <Dispositivo> blu bold corsivo
+            val device = source.deviceLabel.ifBlank {
+                source.displayName.ifBlank { stringResource(R.string.external_source_default_name) }
             }
             Text(
-                text = when (source.availability) {
-                    Availability.AVAILABLE -> stringResource(R.string.status_available)
-                    Availability.UNAVAILABLE -> stringResource(R.string.status_unavailable)
-                    Availability.UNKNOWN -> stringResource(R.string.status_unknown)
+                text = if (showDeviceLabel) device else source.displayName.ifBlank {
+                    stringResource(R.string.external_source_default_name)
                 },
-                style = MaterialTheme.typography.labelSmall,
-                color = when (source.availability) {
-                    Availability.AVAILABLE -> MaterialTheme.colorScheme.secondary
-                    Availability.UNAVAILABLE -> MaterialTheme.colorScheme.error
-                    Availability.UNKNOWN ->
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
-                },
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                color = MaterialTheme.colorScheme.primary,
             )
+            // Meta: [SD] \path - stato (corsivo blu, non bold)
+            val meta = com.renatizzi.photovideomanager.domain.hub.CatalogListRowFormat.metaLine(
+                deviceLabel = "",
+                pathLabel = source.pathLabel.ifBlank { source.displayName },
+                statusLabel = com.renatizzi.photovideomanager.domain.hub.CatalogListRowFormat
+                    .availabilityLabel(source.availability),
+                secondary = source.isSecondaryVolume,
+            )
+            if (meta.isNotBlank()) {
+                Text(
+                    text = meta,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Normal,
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                    color = when (source.availability) {
+                        Availability.AVAILABLE -> MaterialTheme.colorScheme.primary
+                        Availability.UNAVAILABLE -> MaterialTheme.colorScheme.error
+                        Availability.UNKNOWN ->
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
+                    },
+                )
+            }
         }
         if (busy) {
             CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
@@ -702,6 +680,7 @@ fun ImportaStaticScreen(
     onImporta: () -> Unit,
     onContinue: () -> Unit = {},
     onBackToAcquisisci: () -> Unit,
+    onRestoreExclusion: (storageLocationId: String, opaqueLocator: String) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier,
 ) {
     val pool = state.kindFiltered
@@ -828,6 +807,31 @@ fun ImportaStaticScreen(
                 }
                 HorizontalDivider()
             }
+
+            if (state.exclusions.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = stringResource(R.string.importa_esclusi_title, state.exclusions.size),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium,
+                )
+                Text(
+                    text = stringResource(R.string.importa_esclusi_intro),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+                )
+                state.exclusions.forEach { exclusion ->
+                    HorizontalDivider()
+                    ExclusionRow(
+                        exclusion = exclusion,
+                        enabled = !busy,
+                        onRestore = {
+                            onRestoreExclusion(exclusion.storageLocationId, exclusion.opaqueLocator)
+                        },
+                    )
+                }
+                HorizontalDivider()
+            }
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
@@ -869,19 +873,31 @@ private fun ImportCandidateRow(
             kind = candidate.mediaItem.kind,
         )
         Column(modifier = Modifier.weight(1f)) {
-            // Come Acquisisci: nome (grassetto) · dispositivo · percorso senza ripetere il nome.
-            Text(title, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
-            val device = candidate.sourceDeviceLabel
-            val path = candidate.sourcePathLabel
-            if (device.isNotBlank()) {
-                Text(device, style = MaterialTheme.typography.labelMedium)
+            // Nota bis: <Nome File> blu bold corsivo
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            val device = candidate.sourceDeviceLabel.ifBlank {
+                candidate.sourceLocationName.substringBefore('·').trim()
             }
-            if (path.isNotBlank()) {
-                Text(path, style = MaterialTheme.typography.bodySmall)
-            } else if (device.isBlank() && candidate.sourceLocationName.isNotBlank()) {
+            val path = candidate.sourcePathLabel
+            val meta = com.renatizzi.photovideomanager.domain.hub.CatalogListRowFormat.metaLine(
+                deviceLabel = device,
+                pathLabel = path.ifBlank { candidate.sourceLocationName },
+                statusLabel = "Online",
+                secondary = candidate.isSecondaryVolume,
+            )
+            if (meta.isNotBlank()) {
                 Text(
-                    candidate.sourceLocationName,
+                    text = meta,
                     style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Normal,
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
             if (candidate.alreadyInPersonalArchive) {
@@ -891,6 +907,49 @@ private fun ImportCandidateRow(
                     color = MaterialTheme.colorScheme.secondary,
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun ExclusionRow(
+    exclusion: com.renatizzi.photovideomanager.domain.model.ImportExclusionSummary,
+    enabled: Boolean,
+    onRestore: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = exclusion.displayName,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            val meta = com.renatizzi.photovideomanager.domain.hub.CatalogListRowFormat.metaLine(
+                deviceLabel = exclusion.deviceLabel,
+                pathLabel = exclusion.pathLabel,
+                statusLabel = stringResource(R.string.importa_esclusi_status),
+                secondary = exclusion.isSecondaryVolume,
+            )
+            if (meta.isNotBlank()) {
+                Text(
+                    text = meta,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Normal,
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                )
+            }
+        }
+        OutlinedButton(onClick = onRestore, enabled = enabled) {
+            Text(stringResource(R.string.importa_esclusi_restore))
         }
     }
 }
@@ -1024,15 +1083,23 @@ fun AggiornaStaticScreen(
                         ?: entry.previewCopy?.opaqueLocator?.substringAfterLast('/')
                             ?.substringAfterLast(':')
                         ?: entry.mediaItem.id
-                    // Preferisci sorgente esterna; «Spazio app» solo se non c’è altro.
-                    val loc = entry.locationNames
-                        .firstOrNull { it != "Spazio app" }
-                        ?: entry.locationNames.firstOrNull()
-                        ?: ""
+                    val device = entry.deviceLabel.ifBlank {
+                        entry.locationNames
+                            .firstOrNull { it != "Spazio app" }
+                            ?: entry.locationNames.firstOrNull()
+                            ?: ""
+                    }
+                    val meta = com.renatizzi.photovideomanager.domain.hub.CatalogListRowFormat.metaLine(
+                        deviceLabel = device,
+                        pathLabel = entry.pathLabel,
+                        statusLabel = com.renatizzi.photovideomanager.domain.hub.CatalogListRowFormat
+                            .availabilityLabel(entry.availability),
+                        secondary = entry.isSecondaryVolume,
+                    )
                     val id = entry.mediaItem.id
                     MediaRow(
                         title = title,
-                        subtitle = stringResource(R.string.importa_riga_meta, loc.ifBlank { "—" }),
+                        subtitle = meta.ifBlank { "—" },
                         selection = state.selectionOf(id),
                         showMenu = true,
                         menuExpanded = menuForId == id,
@@ -1359,8 +1426,21 @@ private fun MediaRow(
             }
         }
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyMedium)
-            Text(subtitle, style = MaterialTheme.typography.bodySmall)
+            // Nota bis: <Nome File> blu bold corsivo + meta Catalogo
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Normal,
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                color = MaterialTheme.colorScheme.primary,
+            )
         }
         if (showMenu) {
             Box {
