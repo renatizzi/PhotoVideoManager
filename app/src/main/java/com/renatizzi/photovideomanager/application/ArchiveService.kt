@@ -63,6 +63,7 @@ class ArchiveService(
     suspend fun listPossibleScraps(): List<ScrapCandidate> {
         require(permissionGate.canView(DomainScope.PERSONAL))
         val items = catalogStore.listAllMediaItems().associateBy { it.id }
+        val locations = catalogStore.listStorageLocations().associateBy { it.id }
         val active = catalogStore.listMediaCopiesByState(MediaCopyState.ACTIVE)
             .groupBy { it.mediaItemId }
         val out = ArrayList<ScrapCandidate>()
@@ -71,6 +72,10 @@ class ArchiveService(
             val preferred = copies.firstOrNull {
                 it.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID
             } ?: copies.first()
+            val metaCopy = copies.firstOrNull {
+                it.storageLocationId != CatalogFacade.PERSONAL_LOCATION_ID
+            } ?: preferred
+            val location = locations[metaCopy.storageLocationId]
             val title = item.displayTitle?.ifBlank { null }
                 ?: preferred.opaqueLocator.substringAfterLast('/')
                     .substringAfterLast(':')
@@ -80,6 +85,13 @@ class ArchiveService(
                     mediaItem = item,
                     previewCopy = preferred,
                     reason = ScrapHeuristics.reasonLabel(title, preferred.byteSize),
+                    deviceLabel = location?.displayName.orEmpty(),
+                    pathLabel = "",
+                    isSecondaryVolume = location?.opaqueLocator
+                        ?.let {
+                            com.renatizzi.photovideomanager.data.storage.SafTreeIdentity
+                                .isMobileSecondaryVolume(it)
+                        } == true,
                 ),
             )
         }

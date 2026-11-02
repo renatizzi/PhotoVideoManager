@@ -15,6 +15,7 @@ import com.renatizzi.photovideomanager.domain.model.ScanSession
 import com.renatizzi.photovideomanager.domain.model.ScanSessionState
 import com.renatizzi.photovideomanager.domain.model.StorageAdapterKind
 import com.renatizzi.photovideomanager.domain.model.StorageLocation
+import com.renatizzi.photovideomanager.domain.port.CatalogExclusion
 import com.renatizzi.photovideomanager.domain.port.CatalogStore
 
 class RoomCatalogStore(
@@ -261,6 +262,16 @@ class RoomCatalogStore(
     override suspend fun removeExclusion(storageLocationId: String, opaqueLocator: String) {
         db.catalogExclusionDao().deleteByLocator(storageLocationId, opaqueLocator)
     }
+
+    override suspend fun listExclusions(): List<CatalogExclusion> =
+        db.catalogExclusionDao().listAll().map {
+            CatalogExclusion(
+                storageLocationId = it.storageLocationId,
+                opaqueLocator = it.opaqueLocator,
+                fingerprintSha256 = it.fingerprintSha256,
+                createdAtEpochMs = it.createdAtEpochMs,
+            )
+        }
 
     private fun ArchiveEntity.toDomain() = ArchiveRef(
         id = id,

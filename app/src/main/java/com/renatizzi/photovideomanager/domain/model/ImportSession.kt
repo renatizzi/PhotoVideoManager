@@ -34,6 +34,8 @@ data class AcquireCandidate(
     val sourceDeviceLabel: String = "",
     /** Percorso completo senza ripetere il nome file. */
     val sourcePathLabel: String = "",
+    /** Memoria Secondaria su telefono/tablet → badge SD. */
+    val isSecondaryVolume: Boolean = false,
     val alreadyInPersonalArchive: Boolean,
 )
 
@@ -44,4 +46,14 @@ data class AcquireResult(
     val skippedAlreadyPresent: Int,
     val failed: Int,
     val message: String? = null,
+)
+
+/** File escluso da Importa/Conferma (recuperabile). */
+data class ImportExclusionSummary(
+    val storageLocationId: String,
+    val opaqueLocator: String,
+    val displayName: String,
+    val deviceLabel: String,
+    val pathLabel: String,
+    val isSecondaryVolume: Boolean = false,
 )

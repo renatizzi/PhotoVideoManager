@@ -3,6 +3,8 @@ package com.renatizzi.photovideomanager.application
 import android.content.Context
 import android.net.Uri
 import com.renatizzi.photovideomanager.data.storage.SafPathLabels
+import com.renatizzi.photovideomanager.data.storage.SafTreeIdentity
+import com.renatizzi.photovideomanager.domain.model.Availability
 import com.renatizzi.photovideomanager.domain.model.CatalogSearchEntry
 import com.renatizzi.photovideomanager.domain.model.DomainScope
 import com.renatizzi.photovideomanager.domain.model.MediaCopyState
@@ -55,6 +57,13 @@ class SearchService(
                 val preferred = copies.firstOrNull {
                     it.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID
                 } ?: copies.first()
+                // Meta riga: preferisci sorgente esterna rispetto a «Spazio app».
+                val metaCopy = copies.firstOrNull {
+                    it.storageLocationId != CatalogFacade.PERSONAL_LOCATION_ID
+                } ?: preferred
+                val metaLocation = locations[metaCopy.storageLocationId]
+                val device = deviceLabelFor(metaLocation)
+                val path = pathLabelFor(metaLocation, device)
                 CatalogSearchEntry(
                     mediaItem = item,
                     previewCopy = preferred,
@@ -70,6 +79,11 @@ class SearchService(
                     inPersonalArchive = copies.any {
                         it.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID
                     },
+                    deviceLabel = device,
+                    pathLabel = path,
+                    isSecondaryVolume = metaLocation?.opaqueLocator
+                        ?.let { SafTreeIdentity.isMobileSecondaryVolume(it) } == true,
+                    availability = metaLocation?.availability ?: Availability.AVAILABLE,
                 )
             }
             .sortedByDescending { it.mediaItem.updatedAtEpochMs }
@@ -81,24 +95,53 @@ class SearchService(
     private fun formatLocationLabel(location: StorageLocation?): String? {
         if (location == null) return null
         if (location.id == CatalogFacade.PERSONAL_LOCATION_ID) return "Spazio app"
+        val device = deviceLabelFor(location)
+        val path = pathLabelFor(location, device)
+        return listOf(device, path).filter { it.isNotBlank() }.joinToString(" · ")
+            .ifBlank { location.displayName.takeIf { it.isNotBlank() } }
+    }
+
+    private fun deviceLabelFor(location: StorageLocation?): String {
+        if (location == null) return ""
+        if (location.id == CatalogFacade.PERSONAL_LOCATION_ID) return "Catalogo"
+        return when (location.adapterKind) {
+            StorageAdapterKind.LOCAL_FS -> "Catalogo"
+            StorageAdapterKind.MEDIA_STORE -> "Galleria di sistema"
+            StorageAdapterKind.SMB -> SafPathLabels.networkDeviceLabelFromHints(
+                displayHint = location.displayName,
+                path = "",
+                uriString = location.opaqueLocator,
+            )
+            StorageAdapterKind.SAF_TREE -> {
+                if (location.opaqueLocator.isBlank()) return location.displayName
+                runCatching {
+                    val uri = Uri.parse(location.opaqueLocator)
+                    when (SafPathLabels.providerOf(uri)) {
+                        SafPathLabels.SafProvider.NETWORK_NAS ->
+                            SafPathLabels.networkDeviceLabel(uri, location.displayName)
+                        else ->
+                            SafPathLabels.deviceLabelForTree(
+                                appContext,
+                                uri,
+                                SafPathLabels.deviceLabel(appContext),
+                            )
+                    }
+                }.getOrDefault(location.displayName)
+            }
+        }
+    }
+
+    private fun pathLabelFor(location: StorageLocation?, deviceLabel: String): String {
+        if (location == null) return ""
+        if (location.id == CatalogFacade.PERSONAL_LOCATION_ID) return ""
         if (location.adapterKind != StorageAdapterKind.SAF_TREE || location.opaqueLocator.isBlank()) {
-            return location.displayName.takeIf { it.isNotBlank() }
+            return ""
         }
         return runCatching {
             val uri = Uri.parse(location.opaqueLocator)
-            val path = SafPathLabels.storagePathLabel(appContext, uri)
-                .takeUnless { it.isBlank() || SafPathLabels.looksIllegible(it) }
-            val name = location.displayName.takeUnless { SafPathLabels.looksIllegible(it) || it.isBlank() }
-            when {
-                !path.isNullOrBlank() && !name.isNullOrBlank() &&
-                    !path.equals(name, ignoreCase = true) &&
-                    !name.equals(path.substringAfterLast('/'), ignoreCase = true) ->
-                    "$name · $path"
-                !path.isNullOrBlank() -> path
-                !name.isNullOrBlank() -> name
-                else -> null
-            }
-        }.getOrNull() ?: location.displayName.takeIf { it.isNotBlank() }
+            val raw = SafPathLabels.storagePathLabel(appContext, uri)
+            SafPathLabels.pathUnderName(raw, location.displayName, deviceLabel)
+        }.getOrDefault("")
     }
 
     companion object {

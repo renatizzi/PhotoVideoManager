@@ -8,6 +8,7 @@ import com.renatizzi.photovideomanager.domain.model.CatalogSearchEntry
 import com.renatizzi.photovideomanager.domain.model.CensusResult
 import com.renatizzi.photovideomanager.domain.model.DashboardSnapshot
 import com.renatizzi.photovideomanager.domain.model.DedupAnalysisResult
+import com.renatizzi.photovideomanager.domain.model.ImportExclusionSummary
 import com.renatizzi.photovideomanager.domain.model.MediaKind
 import com.renatizzi.photovideomanager.domain.model.SearchKindFilter
 import com.renatizzi.photovideomanager.domain.model.RegisterSourceResult
@@ -178,6 +179,13 @@ class CatalogFacade(
     /** Scarta dal Catalogo i file deselezionati in Importa (non ancora acquisiti). */
     suspend fun discardUnselectedCensusItems(mediaItemIds: Collection<String>): Int =
         acquisitionService.discardUnselectedCensusItems(mediaItemIds)
+
+    /** Esclusioni anti re-import (BL-15 / Nota bis) — recupero in Importa. */
+    suspend fun listImportExclusions(): List<ImportExclusionSummary> =
+        acquisitionService.listImportExclusions()
+
+    suspend fun restoreImportExclusion(storageLocationId: String, opaqueLocator: String) =
+        acquisitionService.restoreImportExclusion(storageLocationId, opaqueLocator)
 
     suspend fun analyzeExactDuplicates(): DedupAnalysisResult =
         dedupService.analyzeExactDuplicates()

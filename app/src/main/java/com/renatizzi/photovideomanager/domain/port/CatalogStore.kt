@@ -52,4 +52,14 @@ interface CatalogStore {
         fingerprintSha256: String? = null,
     )
     suspend fun removeExclusion(storageLocationId: String, opaqueLocator: String)
+    /** Esclusioni Importa/Pulisci (BL-15) per recupero in UI. */
+    suspend fun listExclusions(): List<CatalogExclusion>
 }
+
+/** Voce esclusa dal ri-censimento (anti re-import). */
+data class CatalogExclusion(
+    val storageLocationId: String,
+    val opaqueLocator: String,
+    val fingerprintSha256: String? = null,
+    val createdAtEpochMs: Long = 0L,
+)

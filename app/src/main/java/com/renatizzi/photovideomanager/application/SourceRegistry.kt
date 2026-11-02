@@ -112,7 +112,7 @@ class SourceRegistry(
                 isSharedArchive = archive?.isSharedArchive == true,
                 isBuiltInPersonal = location.id == PERSONAL_LOCATION_ID,
                 isSecondaryVolume = location.adapterKind == StorageAdapterKind.SAF_TREE &&
-                    SafTreeIdentity.isSecondaryVolume(location.opaqueLocator),
+                    SafTreeIdentity.isMobileSecondaryVolume(location.opaqueLocator),
             )
         }
     }
@@ -314,7 +314,7 @@ class SourceRegistry(
             availability = saved.availability,
             isSharedArchive = false,
             isBuiltInPersonal = false,
-            isSecondaryVolume = SafTreeIdentity.isSecondaryVolume(uriKey),
+            isSecondaryVolume = SafTreeIdentity.isMobileSecondaryVolume(uriKey),
         ) to true
     }
 

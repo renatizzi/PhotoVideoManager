@@ -4,10 +4,12 @@ import android.content.Context
 import android.net.Uri
 import com.renatizzi.photovideomanager.data.storage.SafPathLabels
 import com.renatizzi.photovideomanager.data.storage.StorageAdapterFactory
+import com.renatizzi.photovideomanager.data.storage.SafTreeIdentity
 import com.renatizzi.photovideomanager.domain.model.AcquireCandidate
 import com.renatizzi.photovideomanager.domain.model.AcquireResult
 import com.renatizzi.photovideomanager.domain.model.Availability
 import com.renatizzi.photovideomanager.domain.model.DomainScope
+import com.renatizzi.photovideomanager.domain.model.ImportExclusionSummary
 import com.renatizzi.photovideomanager.domain.model.ImportSession
 import com.renatizzi.photovideomanager.domain.model.ImportSessionState
 import com.renatizzi.photovideomanager.domain.model.MediaCopy
@@ -66,6 +68,8 @@ class AcquisitionService(
                     sourceLocationName = combined,
                     sourceDeviceLabel = device,
                     sourcePathLabel = path,
+                    isSecondaryVolume = sourceLocation?.opaqueLocator
+                        ?.let { SafTreeIdentity.isMobileSecondaryVolume(it) } == true,
                     alreadyInPersonalArchive = alreadyPersonal,
                 ),
             )
@@ -118,6 +122,10 @@ class AcquisitionService(
     /**
      * Rimuove dal Catalogo i candidati deselezionati in Importa (solo se non hanno
      * ancora copia nello spazio app). Così non restano in Aggiorna dopo CONFERMA.
+     *
+     * Nota bis: registra esclusione BL-15 su ogni copia sorgente così un nuovo
+     * [Conferma] Acquisisci non ripropone gli stessi file (es. screenshot).
+     * Gli originali sul dispositivo restano; l’esclusione è recuperabile.
      */
     suspend fun discardUnselectedCensusItems(mediaItemIds: Collection<String>): Int {
         require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
@@ -126,12 +134,60 @@ class AcquisitionService(
             val copies = catalogStore.listMediaCopiesForItem(itemId)
             if (copies.any { it.storageLocationId == CatalogFacade.PERSONAL_LOCATION_ID }) continue
             for (copy in copies) {
+                if (copy.storageLocationId != CatalogFacade.PERSONAL_LOCATION_ID) {
+                    val sha = catalogStore.listFingerprintsForCopy(copy.id)
+                        .firstOrNull { it.algorithm.contains("SHA", ignoreCase = true) }
+                        ?.value
+                    catalogStore.addExclusion(
+                        storageLocationId = copy.storageLocationId,
+                        opaqueLocator = copy.opaqueLocator,
+                        fingerprintSha256 = sha,
+                    )
+                }
                 catalogStore.deleteMediaCopy(copy.id)
             }
             catalogStore.deleteMediaItem(itemId)
             removed++
         }
         return removed
+    }
+
+    suspend fun listImportExclusions(): List<ImportExclusionSummary> {
+        val locations = catalogStore.listStorageLocations().associateBy { it.id }
+        return catalogStore.listExclusions().map { ex ->
+            val location = locations[ex.storageLocationId]
+            val displayName = ex.opaqueLocator.substringAfterLast('/')
+                .substringAfterLast(':')
+                .ifBlank { "File escluso" }
+            val device = location?.let { loc ->
+                if (loc.adapterKind == StorageAdapterKind.SAF_TREE && loc.opaqueLocator.isNotBlank()) {
+                    runCatching {
+                        SafPathLabels.deviceLabelForTree(
+                            appContext,
+                            Uri.parse(loc.opaqueLocator),
+                            SafPathLabels.deviceLabel(appContext),
+                        )
+                    }.getOrDefault(loc.displayName)
+                } else {
+                    loc.displayName
+                }
+            }.orEmpty()
+            val path = location?.let { sourcePathLabel(it, device) }.orEmpty()
+            ImportExclusionSummary(
+                storageLocationId = ex.storageLocationId,
+                opaqueLocator = ex.opaqueLocator,
+                displayName = displayName,
+                deviceLabel = device,
+                pathLabel = path,
+                isSecondaryVolume = location?.opaqueLocator
+                    ?.let { SafTreeIdentity.isMobileSecondaryVolume(it) } == true,
+            )
+        }
+    }
+
+    suspend fun restoreImportExclusion(storageLocationId: String, opaqueLocator: String) {
+        require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
+        catalogStore.removeExclusion(storageLocationId, opaqueLocator)
     }
 
     suspend fun acquireToPersonalArchive(mediaItemIds: Collection<String>): AcquireResult {
