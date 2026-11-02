@@ -255,6 +255,7 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         // Tessere grandi che riempiono tutto lo spazio restante (come BoxManager)
+        val catalogReady = seatStatus?.configured == true
         val quick = listOf(
             Triple("acquisisci", R.string.feature_acquisisci, Icons.Outlined.AddAPhoto),
             Triple("aggiorna", R.string.feature_aggiorna, Icons.Outlined.Sync),
@@ -277,10 +278,20 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     pair.forEach { (id, titleRes, icon) ->
+                        // Guida implicita (nota): senza Catalogo inibisci scorciatoie;
+                        // solo Acquisisci resta attivo → Setup Catalogo.
+                        val enabled = catalogReady || id == "acquisisci"
                         QuickAccessTile(
                             title = stringResource(titleRes),
                             icon = icon,
-                            onClick = { onOpenFeature(id) },
+                            enabled = enabled,
+                            onClick = {
+                                if (!catalogReady && id == "acquisisci") {
+                                    onOpenCatalogSeat()
+                                } else {
+                                    onOpenFeature(id)
+                                }
+                            },
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxHeight(),
@@ -398,15 +409,20 @@ private fun QuickAccessTile(
     icon: ImageVector,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     val accent = MaterialTheme.colorScheme.primary
+    val dim = if (enabled) 1f else 0.38f
     Card(
-        modifier = modifier.clickable(onClick = onClick),
+        modifier = modifier
+            .then(
+                if (enabled) Modifier.clickable(onClick = onClick) else Modifier,
+            ),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f * dim),
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (enabled) 2.dp else 0.dp),
     ) {
         Row(
             modifier = Modifier
@@ -418,14 +434,14 @@ private fun QuickAccessTile(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = accent,
+                tint = accent.copy(alpha = dim),
                 modifier = Modifier.size(26.dp),
             )
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
                 fontWeight = FontWeight.SemiBold,
-                color = accent,
+                color = accent.copy(alpha = dim),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

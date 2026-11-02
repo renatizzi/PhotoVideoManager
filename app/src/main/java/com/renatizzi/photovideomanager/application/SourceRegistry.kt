@@ -18,6 +18,8 @@ import com.renatizzi.photovideomanager.domain.model.StorageAdapterKind
 import com.renatizzi.photovideomanager.domain.model.StorageLocation
 import com.renatizzi.photovideomanager.domain.port.CatalogStore
 import com.renatizzi.photovideomanager.domain.port.PermissionGate
+import com.renatizzi.photovideomanager.domain.port.StorageAdapter
+import java.util.ArrayDeque
 import java.util.UUID
 
 /**
@@ -109,30 +111,14 @@ class SourceRegistry(
                 availability = availability,
                 isSharedArchive = archive?.isSharedArchive == true,
                 isBuiltInPersonal = location.id == PERSONAL_LOCATION_ID,
+                isSecondaryVolume = location.adapterKind == StorageAdapterKind.SAF_TREE &&
+                    SafTreeIdentity.isSecondaryVolume(location.opaqueLocator),
             )
         }
     }
 
     suspend fun registerSafFolder(treeUri: Uri, displayName: String): RegisterSourceResult {
         require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
-        val uriKey = treeUri.toString()
-        val canonical = SafTreeIdentity.canonicalKey(treeUri)
-        // Stessa cartella già presente (URI uguale o stessa identità albero): non duplicare.
-        catalogStore.listStorageLocations()
-            .firstOrNull {
-                it.adapterKind == StorageAdapterKind.SAF_TREE &&
-                    (
-                        it.opaqueLocator == uriKey ||
-                            SafTreeIdentity.sameTree(it.opaqueLocator, uriKey) ||
-                            SafTreeIdentity.canonicalKeyFromUriString(it.opaqueLocator) == canonical
-                        )
-            }
-            ?.let { existing ->
-                val summary = listSources(refreshAvailability = true)
-                    .first { it.locationId == existing.id }
-                // Già in elenco: non richiamare takePersistable (evita nuova richiesta Android).
-                return RegisterSourceResult(source = summary, alreadyPresent = true)
-            }
 
         // Se il permesso persistente c’è già (stesso albero), non richiederlo di nuovo.
         if (!hasPersistableAccess(treeUri)) {
@@ -147,15 +133,152 @@ class SourceRegistry(
             }.getOrThrow()
         }
 
+        // NOVITÀ: se la cartella scelta è root di sottocartelle con media,
+        // registra una riga per ogni sottocartella (corrispondenza biunivoca).
+        val targets = resolveRegisterTargets(treeUri, displayName)
+        val summaries = mutableListOf<SourceSummary>()
+        var anyNew = false
+        for (target in targets) {
+            val (summary, created) = registerOneSafTarget(target.uri, target.displayName)
+            summaries += summary
+            if (created) anyNew = true
+        }
+        val first = summaries.first()
+        return RegisterSourceResult(
+            source = first,
+            alreadyPresent = !anyNew,
+            additionalSources = summaries.drop(1),
+        )
+    }
+
+    private data class SafRegisterTarget(val uri: Uri, val displayName: String)
+
+    /**
+     * Se esistono sottocartelle immediate con media nel sottoalbero → quelle;
+     * altrimenti la cartella scelta (foglia / senza figli con media).
+     */
+    private suspend fun resolveRegisterTargets(
+        treeUri: Uri,
+        displayName: String,
+    ): List<SafRegisterTarget> {
+        val rootAdapter = runCatching {
+            adapterFactory.create(
+                StorageLocation(
+                    id = "tmp.resolve",
+                    archiveId = "tmp.resolve",
+                    displayName = displayName,
+                    adapterKind = StorageAdapterKind.SAF_TREE,
+                    opaqueLocator = treeUri.toString(),
+                ),
+            )
+        }.getOrNull() ?: return listOf(SafRegisterTarget(treeUri, displayName.ifBlank { "Cartella" }))
+
+        val rootLocator = treeUri.toString()
+        val childDirs = runCatching {
+            rootAdapter.listChildren(rootLocator).filter { it.isDirectory }
+        }.getOrDefault(emptyList())
+
+        val mediaChildren = childDirs.mapNotNull { child ->
+            val hasMedia = runCatching {
+                hasMediaInSubtree(rootAdapter, child.opaqueLocator)
+            }.getOrDefault(false)
+            if (!hasMedia) return@mapNotNull null
+            // Mantieni document URI sotto il tree genitore: l’adapter usa il parent
+            // (permesso takePersistable) e il censimento parte dal documentId figlio.
+            SafRegisterTarget(
+                uri = Uri.parse(child.opaqueLocator),
+                displayName = child.displayName.trim().ifBlank { displayName },
+            )
+        }
+
+        if (mediaChildren.isNotEmpty()) {
+            return mediaChildren
+        }
+
+        val rootName = displayName.ifBlank {
+            SafPathLabels.folderTitle(
+                appContext,
+                treeUri,
+                SafPathLabels.humanPathOrCloud(appContext, treeUri),
+            )
+        }
+        return listOf(SafRegisterTarget(treeUri, rootName))
+    }
+
+    /**
+     * BFS limitato: true se nel sottoalbero c’è almeno un file foto/video.
+     * Allineato a [CensusService] (MIME + estensione).
+     */
+    private suspend fun hasMediaInSubtree(
+        adapter: StorageAdapter,
+        startLocator: String,
+        maxDirs: Int = 400,
+        maxFiles: Int = 2_000,
+    ): Boolean {
+        val queue = ArrayDeque<String>()
+        queue.add(startLocator)
+        var dirs = 0
+        var files = 0
+        while (queue.isNotEmpty() && dirs < maxDirs && files < maxFiles) {
+            val current = queue.removeFirst()
+            dirs++
+            val children = runCatching { adapter.listChildren(current) }.getOrDefault(emptyList())
+            for (child in children) {
+                if (child.isDirectory) {
+                    queue.add(child.opaqueLocator)
+                    continue
+                }
+                files++
+                if (looksLikeMedia(child.displayName, child.mimeType)) return true
+            }
+        }
+        return false
+    }
+
+    private fun looksLikeMedia(fileName: String, mimeType: String?): Boolean {
+        val mime = mimeType?.lowercase().orEmpty()
+        if (mime.startsWith("image/") || mime.startsWith("video/")) return true
+        val ext = fileName.substringAfterLast('.', missingDelimiterValue = "").lowercase()
+        return ext in MEDIA_EXT
+    }
+
+    /**
+     * @return summary + true se appena creata, false se già presente.
+     */
+    private suspend fun registerOneSafTarget(
+        targetUri: Uri,
+        displayName: String,
+    ): Pair<SourceSummary, Boolean> {
+        val uriKey = targetUri.toString()
+        val canonical = SafTreeIdentity.canonicalKey(targetUri)
+        catalogStore.listStorageLocations()
+            .firstOrNull {
+                it.adapterKind == StorageAdapterKind.SAF_TREE &&
+                    (
+                        it.opaqueLocator == uriKey ||
+                            SafTreeIdentity.sameTree(it.opaqueLocator, uriKey) ||
+                            SafTreeIdentity.canonicalKeyFromUriString(it.opaqueLocator) == canonical
+                        )
+            }
+            ?.let { existing ->
+                val summary = listSources(refreshAvailability = true)
+                    .first { it.locationId == existing.id }
+                return summary to false
+            }
+
         val archiveId = "archive.external.${UUID.randomUUID()}"
         val locationId = "location.saf.${UUID.randomUUID()}"
-        val pathLabel = SafPathLabels.humanPathOrCloud(appContext, treeUri)
-        val queriedName = SafPathLabels.queryTreeDisplayName(appContext, treeUri)
+        // Etichette: su document URI sotto tree usa il tree adapter (genitore) per query nome/path.
+        val labelUri = SafTreeIdentity.adapterTreeUri(targetUri)
+        val pathLabel = SafPathLabels.humanPathOrCloud(appContext, targetUri)
+            ?: SafPathLabels.humanPathOrCloud(appContext, labelUri)
+        val queriedName = SafPathLabels.queryTreeDisplayName(appContext, targetUri)
+            ?: SafPathLabels.queryTreeDisplayName(appContext, labelUri)
         val name = when {
-            queriedName != null && !SafPathLabels.looksIllegible(queriedName) -> queriedName
             displayName.isNotBlank() && !looksIllegible(displayName) &&
                 !displayName.equals("primary", ignoreCase = true) -> displayName
-            else -> SafPathLabels.folderTitle(appContext, treeUri, pathLabel)
+            queriedName != null && !SafPathLabels.looksIllegible(queriedName) -> queriedName
+            else -> SafPathLabels.folderTitle(appContext, labelUri, pathLabel)
         }
 
         catalogStore.upsertArchive(
@@ -181,20 +304,18 @@ class SourceRegistry(
 
         val device = deviceLabelFor(saved)
         val rawPath = pathLabel ?: saved.displayName
-        return RegisterSourceResult(
-            source = SourceSummary(
-                locationId = saved.id,
-                archiveId = saved.archiveId,
-                displayName = saved.displayName,
-                deviceLabel = device,
-                pathLabel = SafPathLabels.pathUnderName(rawPath, saved.displayName, device),
-                adapterKind = saved.adapterKind,
-                availability = saved.availability,
-                isSharedArchive = false,
-                isBuiltInPersonal = false,
-            ),
-            alreadyPresent = false,
-        )
+        return SourceSummary(
+            locationId = saved.id,
+            archiveId = saved.archiveId,
+            displayName = saved.displayName,
+            deviceLabel = device,
+            pathLabel = SafPathLabels.pathUnderName(rawPath, saved.displayName, device),
+            adapterKind = saved.adapterKind,
+            availability = saved.availability,
+            isSharedArchive = false,
+            isBuiltInPersonal = false,
+            isSecondaryVolume = SafTreeIdentity.isSecondaryVolume(uriKey),
+        ) to true
     }
 
     suspend fun renameSource(locationId: String, newName: String) {
@@ -367,5 +488,11 @@ class SourceRegistry(
     companion object {
         const val PERSONAL_ARCHIVE_ID = CatalogFacade.PERSONAL_ARCHIVE_ID
         const val PERSONAL_LOCATION_ID = CatalogFacade.PERSONAL_LOCATION_ID
+        private val MEDIA_EXT = setOf(
+            "jpg", "jpeg", "jpe", "jfif", "png", "webp", "heic", "heif",
+            "gif", "bmp", "dng", "tif", "tiff", "raw", "cr2", "nef", "arw",
+            "mp4", "m4v", "mov", "mkv", "webm", "avi", "3gp", "3gpp",
+            "mpeg", "mpg", "wmv", "flv", "ts", "mts", "m2ts",
+        )
     }
 }

@@ -5,6 +5,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,10 +15,16 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.focus.onFocusEvent
+import kotlinx.coroutines.launch
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -110,6 +117,7 @@ fun CatalogSeatWizardScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .imePadding()
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -335,6 +343,7 @@ private fun QuestionText(text: String) {
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun AvvioProceduraStep(
     state: CatalogSeatWizardUiState,
@@ -373,11 +382,19 @@ private fun AvvioProceduraStep(
         Spacer(modifier = Modifier.height(4.dp))
     }
 
+    // Bug 5 IME: porta il campo a vista quando la tastiera lo copre.
+    val nameBring = remember { BringIntoViewRequester() }
+    val modelBring = remember { BringIntoViewRequester() }
+    val scope = rememberCoroutineScope()
+
     QuestionText(stringResource(R.string.hub_avvio_name_q))
     OutlinedTextField(
         value = state.catalogName,
         onValueChange = onCatalogNameChange,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .bringIntoViewRequester(nameBring)
+            .onFocusEvent { if (it.isFocused) scope.launch { nameBring.bringIntoView() } },
         singleLine = true,
         placeholder = { Text(stringResource(R.string.hub_avvio_name_default)) },
     )
@@ -393,7 +410,10 @@ private fun AvvioProceduraStep(
     OutlinedTextField(
         value = state.deviceModel,
         onValueChange = onDeviceModelChange,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .bringIntoViewRequester(modelBring)
+            .onFocusEvent { if (it.isFocused) scope.launch { modelBring.bringIntoView() } },
         singleLine = true,
         placeholder = { Text(stringResource(R.string.hub_avvio_model_hint)) },
     )

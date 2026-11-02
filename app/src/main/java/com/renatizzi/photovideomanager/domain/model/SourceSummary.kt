@@ -13,6 +13,8 @@ data class SourceSummary(
     val availability: Availability,
     val isSharedArchive: Boolean,
     val isBuiltInPersonal: Boolean,
+    /** Memoria secondaria SAF (non primary:) → UI «SD». */
+    val isSecondaryVolume: Boolean = false,
 )
 
 /**

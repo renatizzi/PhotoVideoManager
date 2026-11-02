@@ -16,7 +16,9 @@ class StorageAdapterFactory(
             StorageAdapterKind.LOCAL_FS -> LocalFilesystemStorageAdapter(personalRoot)
             StorageAdapterKind.SAF_TREE -> SafTreeStorageAdapter(
                 context = context,
-                treeUri = Uri.parse(location.opaqueLocator),
+                // Sottocartella espansa: opaque = tree/parent/document/child → adapter sul parent
+                // (permesso persistente del pick). Foglia pick diretto: tree URI della cartella.
+                treeUri = SafTreeIdentity.adapterTreeUri(Uri.parse(location.opaqueLocator)),
             )
             StorageAdapterKind.MEDIA_STORE,
             StorageAdapterKind.SMB,

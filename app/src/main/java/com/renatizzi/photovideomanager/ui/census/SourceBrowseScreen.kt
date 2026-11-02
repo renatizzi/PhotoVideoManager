@@ -21,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.renatizzi.photovideomanager.R
+import com.renatizzi.photovideomanager.domain.hub.CatalogSeatRowFormatter
 import com.renatizzi.photovideomanager.domain.model.ArchiveEntry
 import com.renatizzi.photovideomanager.domain.model.MediaBrowseSortMode
 import com.renatizzi.photovideomanager.domain.model.MediaKind
@@ -34,6 +35,17 @@ fun SourceBrowseScreen(
     onBack: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
+    val itemCount = state.visibleEntries.size
+    val pathDisplay = CatalogSeatRowFormatter.displayPath(
+        state.pathLabel.ifBlank { state.displayName }.ifBlank { "—" },
+    )
+    val deviceLine = when {
+        state.deviceLabel.isBlank() -> null
+        state.isSecondaryVolume ->
+            stringResource(R.string.browse_source_on_device_sd, state.deviceLabel)
+        else -> stringResource(R.string.browse_source_on_device, state.deviceLabel)
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -41,59 +53,42 @@ fun SourceBrowseScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        // Bug 4: ritorno al punto di accesso (Acquisisci).
         OutlinedButton(onClick = onBack) {
             Text(stringResource(R.string.browse_source_back))
         }
         Text(
-            text = stringResource(R.string.browse_source_title),
+            text = stringResource(R.string.browse_source_title, pathDisplay),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold,
         )
-        // Stesso blocco identità della riga in Acquisisci (cartella · dispositivo · percorso).
-        if (state.displayName.isNotBlank()) {
-            Text(state.displayName, fontWeight = FontWeight.SemiBold)
-        }
-        if (state.deviceLabel.isNotBlank()) {
-            Text(state.deviceLabel, style = MaterialTheme.typography.labelMedium)
-        }
-        if (state.pathLabel.isNotBlank()) {
-            Text(state.pathLabel, style = MaterialTheme.typography.bodyMedium)
-        }
-
-        if (state.childFolders.isNotEmpty()) {
+        if (deviceLine != null) {
             Text(
-                text = stringResource(R.string.browse_source_folders_title),
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(top = 4.dp),
-            )
-            Text(
-                text = state.childFolders.joinToString(" · "),
+                text = deviceLine,
                 style = MaterialTheme.typography.bodyMedium,
-            )
-            Text(
-                text = stringResource(R.string.browse_source_folders_hint),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
             )
         }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(
-                selected = state.sortMode == MediaBrowseSortMode.NEWEST,
-                onClick = { onSortMode(MediaBrowseSortMode.NEWEST) },
-                label = { Text(stringResource(R.string.sort_newest)) },
-            )
-            FilterChip(
-                selected = state.sortMode == MediaBrowseSortMode.NAME,
-                onClick = { onSortMode(MediaBrowseSortMode.NAME) },
-                label = { Text(stringResource(R.string.sort_name)) },
-            )
-            FilterChip(
-                selected = state.sortMode == MediaBrowseSortMode.KIND,
-                onClick = { onSortMode(MediaBrowseSortMode.KIND) },
-                label = { Text(stringResource(R.string.sort_kind)) },
-            )
+        // Ordinamento solo con N. elementi > 0 (nota).
+        if (itemCount > 0) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = state.sortMode == MediaBrowseSortMode.NEWEST,
+                    onClick = { onSortMode(MediaBrowseSortMode.NEWEST) },
+                    label = { Text(stringResource(R.string.sort_newest)) },
+                )
+                FilterChip(
+                    selected = state.sortMode == MediaBrowseSortMode.NAME,
+                    onClick = { onSortMode(MediaBrowseSortMode.NAME) },
+                    label = { Text(stringResource(R.string.sort_name)) },
+                )
+                FilterChip(
+                    selected = state.sortMode == MediaBrowseSortMode.KIND,
+                    onClick = { onSortMode(MediaBrowseSortMode.KIND) },
+                    label = { Text(stringResource(R.string.sort_kind)) },
+                )
+            }
         }
 
         if (state.loading) {
@@ -105,13 +100,16 @@ fun SourceBrowseScreen(
             }
         }
 
-        Text(
-            text = stringResource(R.string.browse_source_count, state.visibleEntries.size),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Medium,
-        )
+        // N. Elementi solo se > 0.
+        if (!state.loading && itemCount > 0) {
+            Text(
+                text = stringResource(R.string.browse_source_count, itemCount),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium,
+            )
+        }
 
-        if (!state.loading && state.visibleEntries.isEmpty()) {
+        if (!state.loading && itemCount == 0) {
             Text(stringResource(R.string.browse_source_empty))
         }
 

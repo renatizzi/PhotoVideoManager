@@ -19,7 +19,9 @@ data class SourceBrowseUiState(
     val displayName: String = "",
     val deviceLabel: String = "",
     val pathLabel: String = "",
-    /** Sottocartelle immediate nell’albero autorizzato (es. famiglia, archivio condiviso). */
+    /** Memoria secondaria → «SD» in Dettaglio. */
+    val isSecondaryVolume: Boolean = false,
+    /** Sottocartelle immediate — non mostrate in Dettaglio (NOVITÀ: riga=media). */
     val childFolders: List<String> = emptyList(),
     val entries: List<ArchiveEntry> = emptyList(),
     val sortMode: MediaBrowseSortMode = MediaBrowseSortMode.NEWEST,
@@ -68,6 +70,7 @@ class SourceBrowseViewModel(
                         displayName = source?.displayName.orEmpty(),
                         deviceLabel = source?.deviceLabel.orEmpty(),
                         pathLabel = source?.pathLabel.orEmpty(),
+                        isSecondaryVolume = source?.isSecondaryVolume == true,
                         childFolders = folders,
                         entries = entries,
                         loading = false,

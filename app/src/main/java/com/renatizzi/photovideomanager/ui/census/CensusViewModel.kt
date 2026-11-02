@@ -28,6 +28,9 @@ data class CensusUiState(
     val loading: Boolean = true,
     val censusBusyLocationIds: Set<String> = emptySet(),
     val catalogCount: Long = 0,
+    /** Contatori TO-BE Acquisisci (foto/video in Catalogo). */
+    val catalogPhotoCount: Long = 0,
+    val catalogVideoCount: Long = 0,
     val acquiredCount: Long = 0,
     /** Byte delle sole copie acquisite (spazio app catalogato), non orfani su disco. */
     val acquiredUsedBytes: Long = 0,
@@ -37,6 +40,9 @@ data class CensusUiState(
     val catalogSeatStatus: CatalogSeatStatus? = null,
     val message: String? = null,
 ) {
+    /** N. Cartelle collegate (escluso archivio personale built-in). */
+    val linkedFolderCount: Int
+        get() = visibleSources.size
     val catalogSeatConfigured: Boolean
         get() = catalogSeatStatus?.configured == true
     val catalogSeatLabel: String
@@ -126,6 +132,8 @@ class CensusViewModel(
                         sources = payload.sources,
                         selection = selection,
                         catalogCount = payload.snap.catalogPhotoCount + payload.snap.catalogVideoCount,
+                        catalogPhotoCount = payload.snap.catalogPhotoCount,
+                        catalogVideoCount = payload.snap.catalogVideoCount,
                         acquiredCount = payload.snap.acquiredPhotoCount + payload.snap.acquiredVideoCount,
                         acquiredUsedBytes = payload.snap.acquiredPhotoBytes + payload.snap.acquiredVideoBytes,
                         deviceAlias = payload.deviceAlias,
@@ -263,18 +271,28 @@ class CensusViewModel(
             _state.update { it.copy(loading = true, message = null) }
             runCatching { catalogFacade.registerSafFolder(uri, displayName) }
                 .onSuccess { result ->
-                    val added = result.source
+                    val addedAll = result.allSources
+                    // Bug 2: forza refresh elenco subito dopo «+».
                     val sources = catalogFacade.listSources(refresh = true)
+                    val snap = runCatching { catalogFacade.dashboardSnapshot() }.getOrNull()
                     _state.update { current ->
+                        val selection = current.selection.toMutableMap()
+                        for (s in addedAll) {
+                            selection[s.locationId] = SourceCensusSelection.SELECTED
+                        }
                         current.copy(
                             sources = sources,
-                            selection = current.selection +
-                                (added.locationId to SourceCensusSelection.SELECTED),
+                            selection = selection,
+                            catalogCount = snap?.let { s -> s.catalogPhotoCount + s.catalogVideoCount }
+                                ?: current.catalogCount,
+                            catalogPhotoCount = snap?.catalogPhotoCount ?: current.catalogPhotoCount,
+                            catalogVideoCount = snap?.catalogVideoCount ?: current.catalogVideoCount,
                             loading = false,
-                            message = if (result.alreadyPresent) {
-                                "Sorgente già presente in elenco"
-                            } else {
-                                "Sorgente aggiunta: ${added.displayName}"
+                            message = when {
+                                result.alreadyPresent -> "Sorgente già presente in elenco"
+                                addedAll.size > 1 ->
+                                    "Aggiunte ${addedAll.size} cartelle con media"
+                                else -> "Sorgente aggiunta: ${result.source.displayName}"
                             },
                         )
                     }

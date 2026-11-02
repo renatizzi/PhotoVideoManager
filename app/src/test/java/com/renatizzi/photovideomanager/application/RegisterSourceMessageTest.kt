@@ -31,4 +31,26 @@ class RegisterSourceMessageTest {
         }
         assertEquals("Sorgente già presente in elenco", message)
     }
+
+    @Test
+    fun allSources_includesAdditional() {
+        fun summary(id: String, name: String) = SourceSummary(
+            locationId = id,
+            archiveId = "a",
+            displayName = name,
+            deviceLabel = "Questo dispositivo",
+            pathLabel = "\\Pictures\\$name",
+            adapterKind = StorageAdapterKind.SAF_TREE,
+            availability = Availability.AVAILABLE,
+            isSharedArchive = false,
+            isBuiltInPersonal = false,
+        )
+        val result = RegisterSourceResult(
+            source = summary("1", "familiari"),
+            alreadyPresent = false,
+            additionalSources = listOf(summary("2", "vacanze"), summary("3", "work")),
+        )
+        assertEquals(3, result.allSources.size)
+        assertEquals(listOf("familiari", "vacanze", "work"), result.allSources.map { it.displayName })
+    }
 }

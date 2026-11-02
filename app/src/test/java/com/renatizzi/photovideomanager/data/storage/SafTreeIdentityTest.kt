@@ -29,4 +29,50 @@ class SafTreeIdentityTest {
         val uri = "content://com.android.externalstorage.documents/tree/primary%3ADCIM/document/primary%3ADCIM"
         assertEquals("primary:DCIM", SafTreeIdentity.parseTreeDocumentId(uri))
     }
+
+    @Test
+    fun parseDocumentId_readsDocumentSegment() {
+        val uri =
+            "content://com.android.externalstorage.documents/tree/primary%3APictures/document/primary%3APictures%2Ffamiliari"
+        assertEquals("primary:Pictures/familiari", SafTreeIdentity.parseDocumentId(uri))
+    }
+
+    @Test
+    fun isSecondaryVolume_detectsNonPrimary() {
+        assertFalse(
+            SafTreeIdentity.isSecondaryVolume(
+                "content://com.android.externalstorage.documents/tree/primary%3APictures",
+            ),
+        )
+        assertTrue(
+            SafTreeIdentity.isSecondaryVolume(
+                "content://com.android.externalstorage.documents/tree/ABCD-EF01%3ADCIM",
+            ),
+        )
+    }
+
+    @Test
+    fun childDocument_andSubtreeTree_shareCanonicalKey() {
+        val doc =
+            "content://com.android.externalstorage.documents/tree/primary%3APictures/document/primary%3APictures%2Fvacanze"
+        val tree =
+            "content://com.android.externalstorage.documents/tree/primary%3APictures%2Fvacanze"
+        assertEquals(
+            SafTreeIdentity.canonicalKeyFromUriString(doc),
+            SafTreeIdentity.canonicalKeyFromUriString(tree),
+        )
+    }
+
+    @Test
+    fun documentUnderTree_parentAndChildIds() {
+        val doc =
+            "content://com.android.externalstorage.documents/tree/primary%3APictures/document/primary%3APictures%2Fvacanze"
+        // Adapter usa treeId genitore; censimento parte da documentId figlio.
+        assertEquals("primary:Pictures", SafTreeIdentity.parseTreeDocumentId(doc))
+        assertEquals("primary:Pictures/vacanze", SafTreeIdentity.parseDocumentId(doc))
+        assertEquals(
+            "saf:com.android.externalstorage.documents|primary:Pictures/vacanze",
+            SafTreeIdentity.canonicalKeyFromUriString(doc),
+        )
+    }
 }

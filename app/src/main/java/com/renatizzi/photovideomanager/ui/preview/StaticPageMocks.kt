@@ -139,9 +139,10 @@ fun AcquisisciStaticScreen(
     val busy = state.loading || state.censusBusyLocationIds.isNotEmpty()
 
     fun cycleSourceSelection(source: SourceSummary) {
+        // Bug 3: setSelection esplicito (niente toggle ambiguo dopo X/dialog).
         val current = state.selectionOf(source.locationId)
         val next = current.cycleNext()
-        onToggleSelection(source.locationId)
+        onSetSelection(source.locationId, next)
         // Arrivati a X: mostra conferma; SÌ toglie dall’elenco, NO torna al riquadro vuoto.
         if (next == SourceCensusSelection.EXCLUDED) {
             removeTarget = source
@@ -165,27 +166,16 @@ fun AcquisisciStaticScreen(
             fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
         )
-        Text(
-            text = stringResource(R.string.acquisisci_static_intro),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
-        )
 
         val hasCatalog = state.catalogSeatConfigured || seatConfigured
-        com.renatizzi.photovideomanager.ui.common.CatalogSeatStatusRow(
-            status = state.catalogSeatStatus,
-            onOpenSeat = onOpenCatalogSeatWizard,
-            showWhenMissing = false,
-        )
-
         if (!hasCatalog) {
-            Spacer(modifier = Modifier.weight(1f))
             Text(
                 text = stringResource(R.string.acquisisci_needs_catalog_body),
                 style = MaterialTheme.typography.bodyMedium,
                 fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
             )
+            Spacer(modifier = Modifier.weight(1f))
             Button(
                 onClick = onOpenCatalogSeatWizard,
                 modifier = Modifier.fillMaxWidth(),
@@ -195,35 +185,44 @@ fun AcquisisciStaticScreen(
             return@Column
         }
 
-        if (sources.isNotEmpty()) {
+        Text(
+            text = stringResource(R.string.acquisisci_static_intro),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+        )
+
+        com.renatizzi.photovideomanager.ui.common.CatalogSeatStatusRow(
+            status = state.catalogSeatStatus,
+            onOpenSeat = onOpenCatalogSeatWizard,
+            showWhenMissing = false,
+        )
+
+        if (state.linkedFolderCount > 0) {
             Text(
-                text = stringResource(R.string.acquisisci_elenco_fonti),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium,
-            )
-            Text(
-                text = stringResource(
-                    R.string.acquisisci_riepilogo_full,
-                    selectedCount,
-                    sources.size,
-                    state.catalogCount,
-                    state.acquiredCount,
-                    formatBytes(state.acquiredUsedBytes),
-                ),
-                style = MaterialTheme.typography.bodySmall,
+                text = stringResource(R.string.acquisisci_n_cartelle, state.linkedFolderCount),
+                style = MaterialTheme.typography.bodyMedium,
             )
         }
-        TextButton(
-            onClick = {
-                renameText = state.deviceAlias
-                renameDeviceOpen = true
-            },
-            enabled = !busy,
-        ) {
-            Text(stringResource(R.string.acquisisci_rename_device, state.deviceAlias.ifBlank { "…" }))
+        if (state.catalogPhotoCount > 0L) {
+            Text(
+                text = stringResource(R.string.acquisisci_n_foto, state.catalogPhotoCount),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+        if (state.catalogVideoCount > 0L) {
+            Text(
+                text = stringResource(R.string.acquisisci_n_video, state.catalogVideoCount),
+                style = MaterialTheme.typography.bodyMedium,
+            )
         }
 
-        // Azioni: refresh icon-only, Aggiungi, CONFERMA (niente «Tutti»)
+        Text(
+            text = stringResource(R.string.acquisisci_hint_plus_confirm),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+        )
+
+        // Azioni: refresh, [+], CONFERMA (niente procedura finta Sorgenti — bug 6).
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -234,7 +233,6 @@ fun AcquisisciStaticScreen(
             }
             IconButton(
                 onClick = {
-                    // D1/D2: una riga root ↔ ramo intero; + apre subito SAF (niente procedura finta).
                     sorgentiAwaitingPick = false
                     openTree.launch(null)
                 },
@@ -264,6 +262,14 @@ fun AcquisisciStaticScreen(
                     Text(stringResource(R.string.acquisisci_conferma))
                 }
             }
+        }
+
+        if (sources.isNotEmpty()) {
+            Text(
+                text = stringResource(R.string.acquisisci_elenco_collegate),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium,
+            )
         }
 
         Column(
@@ -296,21 +302,12 @@ fun AcquisisciStaticScreen(
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(top = 10.dp, bottom = 2.dp),
                     )
-                    Text(
-                        text = stringResource(
-                            R.string.acquisisci_device_header_available,
-                            group.availableCount,
-                        ),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
-                        modifier = Modifier.padding(bottom = 4.dp),
-                    )
                     group.sources.forEach { source ->
                         SourceRow(
                             source = source,
                             selection = state.selectionOf(source.locationId),
                             busy = source.locationId in state.censusBusyLocationIds,
-                            enabled = !busy,
+                            enabled = !busy && removeTarget == null,
                             showDeviceLabel = false,
                             onToggle = { cycleSourceSelection(source) },
                             onBrowse = { onBrowse(source.locationId) },
@@ -593,9 +590,16 @@ fun AcquisisciStaticScreen(
                 onSetSelection(target.locationId, SourceCensusSelection.NOT_SELECTED)
                 removeTarget = null
             },
-            title = { Text(stringResource(R.string.acquisisci_remove_confirm_title)) },
+            title = {
+                Text(
+                    stringResource(
+                        R.string.acquisisci_remove_confirm_title,
+                        target.displayName,
+                    ),
+                )
+            },
             text = {
-                Text(stringResource(R.string.acquisisci_remove_confirm_body, target.displayName))
+                Text(stringResource(R.string.acquisisci_remove_confirm_body))
             },
             confirmButton = {
                 TextButton(

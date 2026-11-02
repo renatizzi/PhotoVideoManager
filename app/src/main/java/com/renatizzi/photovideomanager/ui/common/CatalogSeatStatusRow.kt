@@ -95,7 +95,8 @@ fun CatalogSeatStatusRow(
                 Text(
                     text = detail,
                     style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.SemiBold,
+                    // Template Nota 0.16.57: seconda riga corsivo blu, NON bold.
+                    fontWeight = FontWeight.Normal,
                     fontStyle = FontStyle.Italic,
                     color = detailColor,
                 )
