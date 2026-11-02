@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>MediaManager — Template statici Nota bis 2 nov 2026</title>
+<style>
+  :root {
+    --bg:#f6f4ef; --ink:#1a1a1a; --muted:#5c5c5c; --line:#d7d2c8;
+    --accent:#1565c0; --accent2:#0d47a1; --ok:#2e7d32; --warn:#b26a00; --off:#b71c1c;
+    --phone:#fff; --top:#1565c0; --chip:#e8eef7; --grey:#bdbdbd;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Calibri,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.35}
+  header.doc,section,footer,.banner,nav.toc{max-width:1100px;margin:0 auto;padding:0 24px}
+  header.doc{padding-top:28px}
+  header.doc h1{margin:0 0 6px;font-size:1.5rem}
+  header.doc p,.muted{color:var(--muted);font-size:.92rem}
+  .banner{background:#fff8e1;border:1px solid #f0c36d;padding:12px 16px;margin:12px auto}
+  nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin:12px auto 24px}
+  nav.toc a{text-decoration:none;color:var(--accent2);background:#fff;border:1px solid var(--line);padding:6px 10px;border-radius:4px;font-size:.85rem}
+  section{margin-bottom:36px}
+  section h2{border-bottom:2px solid var(--ink);padding-bottom:6px}
+  section h3{margin-top:22px;font-size:1.05rem}
+  .note,.decision,.incongr,.openq{background:#fff;border-left:4px solid var(--accent);padding:10px 12px;margin:10px 0;font-size:.9rem}
+  .decision{border-left-color:var(--ok)}
+  .incongr{border-left-color:var(--warn)}
+  .openq{border-left-color:#6a1b9a}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;margin-top:14px}
+  .phone{background:var(--phone);border:1px solid var(--line);border-radius:18px;overflow:hidden;max-width:320px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+  .bar{background:var(--top);color:#fff;padding:8px 10px;font-size:.72rem}
+  .bar .app{font-weight:700;font-size:.85rem}
+  .body{padding:12px;min-height:460px}
+  .title{font-size:1.15rem;font-weight:700;margin:0 0 2px}
+  .subtitle{font-size:.82rem;font-style:italic;color:var(--muted);margin:0 0 6px}
+  .desc{font-size:.8rem;margin:0 0 10px}
+  .seat{border:1px solid var(--line);padding:8px;margin:0 0 10px;font-size:.78rem;background:#fafafa}
+  .seat .lbl{font-weight:700;font-style:italic;color:#000}
+  .seat .cn{font-weight:700;font-style:italic;color:var(--accent)}
+  /* Specifica nota: seconda riga corsivo blu, NON bold */
+  .seat .line2{font-weight:400;font-style:italic;color:var(--accent);display:block;margin-top:2px}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+  .btn{display:inline-block;border:1px solid var(--accent);color:var(--accent);padding:6px 10px;border-radius:4px;font-size:.78rem;background:#fff}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.wide{flex:1;text-align:center}
+  .btn.ghost{border-color:var(--line);color:var(--muted)}
+  .btn.dim{opacity:.38;pointer-events:none}
+  .chip{display:inline-block;background:var(--chip);padding:3px 8px;border-radius:12px;font-size:.72rem;margin:2px 2px 2px 0}
+  .chip.on{background:var(--accent);color:#fff}
+  .row{border-bottom:1px solid var(--line);padding:8px 0;font-size:.78rem}
+  .row .dev{font-weight:700;font-style:italic;color:var(--accent)}
+  .row .meta{font-style:italic;color:var(--accent);font-weight:400}
+  .row .fname{font-weight:700;font-style:italic;color:var(--accent)}
+  .thumb{width:36px;height:36px;background:#e0e0e0;border-radius:3px;display:inline-block;vertical-align:middle;margin-right:8px}
+  .sel{display:inline-flex;width:22px;height:22px;border:2px solid var(--accent);border-radius:3px;align-items:center;justify-content:center;font-size:.75rem;margin-right:6px;vertical-align:middle;color:var(--accent);font-weight:700}
+  .sel.x{border-color:var(--off);color:var(--off)}
+  .sel.empty{border-color:var(--grey);color:transparent}
+  .subh{font-weight:600;font-size:.85rem;margin:12px 0 4px}
+  .counter{font-size:.8rem;margin:4px 0}
+  .field{border:1px solid var(--line);padding:8px;margin:6px 0;border-radius:4px;font-size:.8rem;background:#fff}
+  .field label{display:block;font-size:.72rem;color:var(--muted);margin-bottom:2px}
+  .field .val{font-style:italic;color:var(--accent)}
+  .bottom{display:flex;justify-content:space-around;padding:8px;border-top:1px solid var(--line);font-size:.68rem;color:var(--muted);background:#fafafa}
+  .bottom .on{color:var(--accent);font-weight:700}
+  .strike{text-decoration:line-through;opacity:.55}
+  .cap{font-size:.78rem;color:var(--muted);margin-top:8px}
+  code{font-size:.85em}
+  footer{padding:24px;color:var(--muted);font-size:.85rem}
+</style>
+</head>
+<body>
+
+<header class="doc">
+  <h1>MediaManager — Template statici Nota bis 2 nov 2026</h1>
+  <p>Fonte: <code>modifichebis_2nov26.pdf</code> · stesso formato TO-BE precedente (cornici telefono) · <strong>nessun codice app</strong> finché non confermi i mock.</p>
+  <p class="muted">Pagine: Setup Avvio · Acquisisci (cartelle + media) · Dettaglio · Aggiorna filtri · Pulisci. Download: HTML · PDF · DOCX.</p>
+</header>
+
+<div class="banner">
+  Prima del codice: i punti aperti (nome dispositivo di sistema, lentezza Cloud, scarti Importa, bug mp4)
+  restano domande — nei mock sotto mostro la proposta TO-BE dove la nota è prescrittiva.
+</div>
+
+<nav class="toc">
+  <a href="#aperti">Punti aperti</a>
+  <a href="#setup">Setup Catalogo</a>
+  <a href="#acq-cartelle">Acquisisci cartelle</a>
+  <a href="#acq-media">Elenco media Catalogo</a>
+  <a href="#dett">Dettaglio</a>
+  <a href="#aggiorna">Aggiorna</a>
+  <a href="#pulisci">Pulisci</a>
+</nav>
+
+<section id="aperti">
+  <h2>0. Punti aperti (prima del codice)</h2>
+  <div class="openq"><strong>Setup — nome dispositivo:</strong> è possibile leggere il nome già impostato dall’utente (es. «Tab S9 di RENATO») e usarlo come default al posto di MyDevice? → proposta mock: sì, se leggibile; altrimenti MyDevice.</div>
+  <div class="openq"><strong>Cloud — dettaglio lento:</strong> c’è un modo per velocizzarlo? → da analizzare (cache listing / lazy miniature); non mockato come UI.</div>
+  <div class="openq"><strong>Importa scarti:</strong> non riproporre i file scartati a ogni [Conferma] se si mantengono gli originali. → regola di esclusione persistente (come BL-15); da confermare.</div>
+  <div class="incongr"><strong>BUG 1:</strong> alcuni file importati (es. .mp4) non riconosciuti — da approfondire in fase implementativa, non in template.</div>
+</section>
+
+<section id="setup">
+  <h2>1. Setup Catalogo — Prima pagina (Avvio)</h2>
+  <div class="decision">Titolo/sottotitolo/descrizione invariati. Unico delta nota bis: default <em>Modello dispositivo</em> = nome dispositivo letto (es. Tab S9 di RENATO), non MyDevice.</div>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div>Setup Catalogo</div>
+      <div class="body">
+        <div class="title">Setup Catalogo personale</div>
+        <div class="subtitle">Avvio procedura</div>
+        <p class="desc">Questa procedura ti consente di creare e configurare il tuo Catalogo, cioè il posto di “raccolta logica” delle foto e dei video personali. Le prime cose da stabilire sono come chiamarlo e dove tenerlo</p>
+        <div class="field"><label>Come vuoi chiamare il Catalogo?</label><div class="val">MyMedia</div></div>
+        <div class="field"><label>Su quale dispositivo lo vuoi tenere?</label><div>Questo dispositivo ▾</div></div>
+        <div class="field"><label>Qual è il modello del dispositivo?</label><div class="val">Tab S9 di RENATO</div></div>
+        <div class="actions">
+          <span class="btn wide">Annulla</span>
+          <span class="btn primary wide">Continua</span>
+        </div>
+      </div>
+      <div class="bottom"><span class="on">Home</span><span>Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+    </div>
+    <div>
+      <div class="note"><strong>AS-IS → TO-BE:</strong> placeholder/default modello da <code>MyDevice</code> a nome dispositivo di sistema se disponibile.</div>
+      <div class="cap">Esempio nota: «Tab S9 di RENATO». Combo dispositivi invariata: Questo dispositivo · PC Windows · Cloud · Disco di Rete.</div>
+    </div>
+  </div>
+</section>
+
+<section id="acq-cartelle">
+  <h2>2. Acquisisci — elenco cartelle</h2>
+  <div class="decision">Eliminare dalla pagina il vecchio nome dispositivo (riga «Questo tablet: …»). Formato riga cartella: dispositivo (blu bold corsivo) + riga meta SD?/path/\ + stato.</div>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div>Acquisisci</div>
+      <div class="body">
+        <div class="title">Acquisisci</div>
+        <div class="subtitle">Acquisizione dei file da dispositivi e cartelle</div>
+        <p class="desc">Seleziona i dispositivi con le cartelle condivise ed importa i media (foto e video) che intendi gestire nel tuo Catalogo</p>
+        <div class="seat">
+          <span class="lbl">Catalogo:</span> <span class="cn">MyMedia</span>
+          <span class="line2">Tab S9 di RENATO \Pictures\MyMedia - 🛜 Online</span>
+        </div>
+        <div class="counter">N. Cartelle collegate: 3</div>
+        <div class="counter">N. Foto: 120</div>
+        <div class="counter">N. Video: 8</div>
+        <p class="desc">Clicca sul bottone [+] per aggiungere una alla volta le cartelle del dispositivo dove conservi i tuoi file. Quando hai terminato clicca sul bottone [Conferma]</p>
+        <div class="actions">
+          <span class="btn">⟳</span>
+          <span class="btn primary">+</span>
+          <span class="btn primary wide">CONFERMA</span>
+        </div>
+        <div class="subh">Elenco delle cartelle collegate al Catalogo</div>
+        <!-- Niente «Questo tablet: …» -->
+        <div class="row">
+          <span class="sel">✓</span>
+          <div>
+            <div class="dev">Questo dispositivo</div>
+            <div class="meta">\Pictures\familiari - 🛜 Online</div>
+          </div>
+        </div>
+        <div class="row">
+          <span class="sel">✓</span>
+          <div>
+            <div class="dev">Questo dispositivo</div>
+            <div class="meta">SD \DCIM\Camera - 🛜 Online</div>
+          </div>
+        </div>
+        <div class="row">
+          <span class="sel empty">·</span>
+          <div>
+            <div class="dev">PC-UFFICIO</div>
+            <div class="meta">\\192.168.1.20\Foto\vacanze - ⚠ Offline</div>
+          </div>
+        </div>
+      </div>
+      <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+    </div>
+    <div>
+      <div class="note"><strong>Riga cartella (nota):</strong><br/>
+        1. &lt;Nome Dispositivo&gt; blu bold corsivo<br/>
+        2. [SD se Secondaria] &lt;percorso con \ &gt; - icona &lt;Stato&gt; corsivo blu<br/>
+        SD <em>solo</em> memoria Secondaria su telefoni/tablet.
+      </div>
+      <div class="incongr">Rimossa la riga «Questo tablet: &lt;alias&gt; (tocca per rinominare)» dall’elenco.</div>
+    </div>
+  </div>
+</section>
+
+<section id="acq-media">
+  <h2>3. Elenco foto/video (formato Catalogo)</h2>
+  <div class="decision">Stesso formato ovunque compare elenco media (Importa / Aggiorna / Pulisci). Ordine: tipo file, dispositivo, nome file.</div>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div>Importa / Catalogo</div>
+      <div class="body">
+        <div class="title">Importa</div>
+        <div class="subtitle">File da importare nel Catalogo</div>
+        <div class="actions">
+          <span class="chip on">Tutti</span>
+          <span class="chip">Foto</span>
+          <span class="chip">Video</span>
+        </div>
+        <div class="row">
+          <span class="sel">✓</span><span class="thumb"></span>
+          <div style="display:inline-block;vertical-align:middle;max-width:210px">
+            <div class="fname">nonna.jpg</div>
+            <div class="meta">Questo dispositivo \Pictures\familiari - 🛜 Online</div>
+          </div>
+        </div>
+        <div class="row">
+          <span class="sel">✓</span><span class="thumb"></span>
+          <div style="display:inline-block;vertical-align:middle;max-width:210px">
+            <div class="fname">mare.mp4</div>
+            <div class="meta">Questo dispositivo SD \DCIM\Camera - 🛜 Online</div>
+          </div>
+        </div>
+        <div class="row">
+          <span class="sel empty">·</span><span class="thumb"></span>
+          <div style="display:inline-block;vertical-align:middle;max-width:210px">
+            <div class="fname">report.pdf</div>
+            <div class="meta strike">— non media / scartato</div>
+          </div>
+        </div>
+        <div class="actions" style="margin-top:16px">
+          <span class="btn primary wide">Importa</span>
+        </div>
+      </div>
+      <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+    </div>
+    <div>
+      <div class="note"><strong>Riga media:</strong><br/>
+        [riquadro] [miniatura] &lt;Nome File&gt; blu bold corsivo<br/>
+        &lt;Dispositivo&gt;, [SD], &lt;\path&gt; - icona &lt;Stato&gt; corsivo blu
+      </div>
+      <div class="openq">Scarti Importa: non riproposti a [Conferma] successivo se esclusione persistente attiva.</div>
+    </div>
+  </div>
+</section>
+
+<section id="dett">
+  <h2>4. Dettaglio cartella</h2>
+  <div class="decision">Sotto il titolo: «su» &lt;dispositivo&gt;[, SD solo mobili+Secondaria]. Niente SD su PC/Cloud/NAS.</div>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div>Dettaglio</div>
+      <div class="body">
+        <div class="actions"><span class="btn">Indietro</span></div>
+        <div class="title">Dettaglio della cartella \Pictures\familiari</div>
+        <p class="desc">su Tab S9 di RENATO</p>
+        <div class="counter">N. Elementi: 42</div>
+        <div class="actions">
+          <span class="chip on">Più recenti</span>
+          <span class="chip">Nome</span>
+          <span class="chip">Tipo</span>
+        </div>
+        <div class="row">
+          <span class="thumb"></span>
+          <div style="display:inline-block;vertical-align:middle">
+            <div class="fname">nonna.jpg</div>
+            <div class="meta">Questo dispositivo \Pictures\familiari - 🛜 Online</div>
+          </div>
+        </div>
+      </div>
+      <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+    </div>
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div>Dettaglio Cloud</div>
+      <div class="body">
+        <div class="actions"><span class="btn">Indietro</span></div>
+        <div class="title">Dettaglio della cartella \Drive\Vacanze</div>
+        <p class="desc">su Cloud</p>
+        <div class="cap">Niente «SD» (non è telefono/tablet).</div>
+        <div class="counter">N. Elementi: 18</div>
+        <div class="incongr" style="margin-top:12px">Punto aperto: dettaglio Cloud lento — ottimizzazione listing/cache, non cambio layout.</div>
+      </div>
+      <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="aggiorna">
+  <h2>5. Aggiorna — filtri Tutti / Foto / Video</h2>
+  <div class="decision">I filtri agiscono sulle righe con lo <strong>stesso criterio ciclico</strong> del riquadro (vuoto → ✓ → X → vuoto): non solo nascondono, ma applicano lo stesso ciclo di selezione al sottoinsieme filtrato.</div>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div>Aggiorna</div>
+      <div class="body">
+        <div class="title">Aggiorna</div>
+        <div class="subtitle">Allinea il Catalogo con le fonti</div>
+        <div class="seat">
+          <span class="lbl">Catalogo:</span> <span class="cn">MyMedia</span>
+          <span class="line2">Tab S9 di RENATO \Pictures\MyMedia - 🛜 Online</span>
+        </div>
+        <div class="actions">
+          <span class="chip on">Tutti</span>
+          <span class="chip">Foto</span>
+          <span class="chip">Video</span>
+        </div>
+        <div class="row">
+          <span class="sel">✓</span><span class="thumb"></span>
+          <div style="display:inline-block;vertical-align:middle;max-width:200px">
+            <div class="fname">nonna.jpg</div>
+            <div class="meta">Questo dispositivo \Pictures\familiari - 🛜 Online</div>
+          </div>
+        </div>
+        <div class="row">
+          <span class="sel x">X</span><span class="thumb"></span>
+          <div style="display:inline-block;vertical-align:middle;max-width:200px">
+            <div class="fname">mare.mp4</div>
+            <div class="meta">Questo dispositivo SD \DCIM\Camera - 🛜 Online</div>
+          </div>
+        </div>
+        <div class="row">
+          <span class="sel empty">·</span><span class="thumb"></span>
+          <div style="display:inline-block;vertical-align:middle;max-width:200px">
+            <div class="fname">spiaggia.jpg</div>
+            <div class="meta">Questo dispositivo \Pictures\vacanze - 🛜 Online</div>
+          </div>
+        </div>
+        <div class="cap">Filtro «Foto»: ciclo ✓/X/vuoto solo sulle righe foto visibili.</div>
+      </div>
+      <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+    </div>
+    <div>
+      <div class="note">Criterio ciclico invariato sul riquadro; i chip Tutti/Foto/Video filtrano il dominio su cui il ciclo e le azioni di massa operano.</div>
+    </div>
+  </div>
+</section>
+
+<section id="pulisci">
+  <h2>6. Pulisci — layout TO-BE</h2>
+  <div class="decision">Niente «Analizza duplicati». Due elenchi: scarti (selezione manuale) + duplicati (filtro più vecchi/più recenti + manuale). Bottone Indietro → Aggiorna. Formato riga = Catalogo.</div>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar"><div class="app">MediaManager</div>Pulisci</div>
+      <div class="body">
+        <div class="actions"><span class="btn">Indietro</span></div>
+        <div class="title">Pulisci</div>
+        <div class="subtitle">Sposta nel cestino i file indesiderati</div>
+        <p class="desc">Verifica quali sono i file anomali da tenere in Catalogo e quelli invece da eliminare. Questi possono essere eventualmente ripristinati usando l’omologa funzione presente in Ripristina</p>
+
+        <div class="subh">Possibili scarti: N. 3</div>
+        <div class="cap">Selezione solo manuale</div>
+        <div class="row">
+          <span class="sel empty">·</span><span class="thumb"></span>
+          <div style="display:inline-block;vertical-align:middle;max-width:200px">
+            <div class="fname">IMG_0001.tmp.jpg</div>
+            <div class="meta">Questo dispositivo \Download - 🛜 Online</div>
+          </div>
+        </div>
+        <div class="row">
+          <span class="sel">✓</span><span class="thumb"></span>
+          <div style="display:inline-block;vertical-align:middle;max-width:200px">
+            <div class="fname">screenshot_bozza.png</div>
+            <div class="meta">Questo dispositivo \Pictures\Screenshots - 🛜 Online</div>
+          </div>
+        </div>
+
+        <div class="subh">Duplicati: N. 2 gruppi</div>
+        <div class="actions">
+          <span class="chip on">Più vecchi</span>
+          <span class="chip">Più recenti</span>
+        </div>
+        <div class="cap">Filtro seleziona i file da eliminare; override manuale sul riquadro</div>
+        <div class="row">
+          <span class="sel">✓</span><span class="thumb"></span>
+          <div style="display:inline-block;vertical-align:middle;max-width:200px">
+            <div class="fname">vacanza.jpg</div>
+            <div class="meta">Questo dispositivo \Pictures\vacanze - 🛜 Online</div>
+          </div>
+        </div>
+        <div class="row">
+          <span class="sel empty">·</span><span class="thumb"></span>
+          <div style="display:inline-block;vertical-align:middle;max-width:200px">
+            <div class="fname">vacanza.jpg</div>
+            <div class="meta">PC-UFFICIO \\192.168.1.20\Foto - ⚠ Offline</div>
+          </div>
+        </div>
+
+        <div class="actions" style="margin-top:12px">
+          <span class="btn primary wide">Sposta nel cestino</span>
+        </div>
+      </div>
+      <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+    </div>
+    <div>
+      <div class="note"><strong>Letterali nota:</strong><br/>
+        Sottotitolo: «Sposta nel cestino i file indesiderati»<br/>
+        Descrizione: testo completo sulla verifica scarti/duplicati e Ripristina.<br/>
+        Contatori: Possibili scarti N. · Duplicati N.
+      </div>
+      <div class="incongr">AS-IS aveva «Analizza duplicati» → rimosso. Aggiunto Indietro.</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Artifact: stesso formato di <code>PVM_Proposta_Editing_UI_Template_TOBE</code> / Nota 0.16.57
+  (HTML cornici + PDF + DOCX indice).<br/>
+  Fonte nota: <code>docs/reference/modifichebis_2nov26.pdf</code> · testo federale:
+  <code>docs/NOTA_BIS_2NOV26_TESTO_FEDERALE.md</code>.
+</footer>
+</body>
+</html>
