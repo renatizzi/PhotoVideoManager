@@ -5,12 +5,20 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.domain.model.DuplicateGroup
+import com.renatizzi.photovideomanager.domain.model.DuplicateMember
 import com.renatizzi.photovideomanager.domain.model.ScrapCandidate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+enum class DuplicateAgeFilter {
+    /** Seleziona i più vecchi (tiene il più recente). */
+    OLDER,
+    /** Seleziona i più recenti (tiene il più vecchio). */
+    NEWER,
+}
 
 data class CleanUiState(
     /** Id selezionati (✓) portati da Aggiorna — BL-12. */
@@ -19,6 +27,9 @@ data class CleanUiState(
     /** BL-01: possibili scarti proposti. */
     val scraps: List<ScrapCandidate> = emptyList(),
     val scrapSelectedIds: Set<String> = emptySet(),
+    /** Duplicati selezionati per il Cestino (override manuale sul filtro età). */
+    val duplicateSelectedIds: Set<String> = emptySet(),
+    val duplicateAgeFilter: DuplicateAgeFilter = DuplicateAgeFilter.OLDER,
     val scrapsLoaded: Boolean = false,
     val analyzing: Boolean = false,
     val busy: Boolean = false,
@@ -26,13 +37,16 @@ data class CleanUiState(
     val hashesComputed: Int = 0,
     val hashesFailed: Int = 0,
     val hasAnalyzed: Boolean = false,
-    val pendingTrashGroup: DuplicateGroup? = null,
-    val pendingTrashSelected: Boolean = false,
-    val pendingTrashScraps: Boolean = false,
+    val pendingTrash: Boolean = false,
     val message: String? = null,
 ) {
     val selectedCount: Int get() = selectedIds.size
     val scrapSelectedCount: Int get() = scrapSelectedIds.size
+    val duplicateSelectedCount: Int get() = duplicateSelectedIds.size
+    val totalPendingTrashCount: Int
+        get() = selectedCount + scrapSelectedCount + duplicateSelectedCount
+    val duplicateMemberCount: Int
+        get() = groups.sumOf { it.members.size }
 }
 
 class CleanViewModel(
@@ -42,12 +56,14 @@ class CleanViewModel(
     val state: StateFlow<CleanUiState> = _state.asStateFlow()
 
     init {
+        // Nota bis: analisi al lancio di Pulisci (niente bottone «Analizza duplicati»).
         refreshScraps()
+        analyze()
     }
 
     /** Chiamato all’ingresso in Pulisci con i ✓ di Aggiorna. */
     fun setSelectedFromAggiorna(ids: Set<String>) {
-        _state.update { it.copy(selectedIds = ids, pendingTrashSelected = false) }
+        _state.update { it.copy(selectedIds = ids, pendingTrash = false) }
         refreshScraps()
     }
 
@@ -80,71 +96,20 @@ class CleanViewModel(
         }
     }
 
-    fun selectAllScraps(selected: Boolean) {
+    fun toggleDuplicate(mediaItemId: String) {
+        _state.update { current ->
+            val next = current.duplicateSelectedIds.toMutableSet()
+            if (!next.add(mediaItemId)) next.remove(mediaItemId)
+            current.copy(duplicateSelectedIds = next)
+        }
+    }
+
+    fun setDuplicateAgeFilter(filter: DuplicateAgeFilter) {
         _state.update { current ->
             current.copy(
-                scrapSelectedIds = if (selected) {
-                    current.scraps.map { it.mediaItem.id }.toSet()
-                } else {
-                    emptySet()
-                },
+                duplicateAgeFilter = filter,
+                duplicateSelectedIds = selectByAgeFilter(current.groups, filter),
             )
-        }
-    }
-
-    fun requestTrashScraps() {
-        if (_state.value.scrapSelectedIds.isEmpty()) return
-        _state.update {
-            it.copy(
-                pendingTrashScraps = true,
-                pendingTrashSelected = false,
-                pendingTrashGroup = null,
-            )
-        }
-    }
-
-    fun dismissTrashScraps() {
-        _state.update { it.copy(pendingTrashScraps = false) }
-    }
-
-    fun confirmTrashScraps(deleteSourceFiles: Boolean = false) {
-        val ids = _state.value.scrapSelectedIds.toList()
-        if (ids.isEmpty()) {
-            _state.update { it.copy(pendingTrashScraps = false) }
-            return
-        }
-        viewModelScope.launch {
-            _state.update {
-                it.copy(busy = true, pendingTrashScraps = false, message = null)
-            }
-            var ok = 0
-            var fail = 0
-            for (id in ids) {
-                runCatching {
-                    catalogFacade.trashMediaItem(
-                        mediaItemId = id,
-                        deleteSourceFiles = deleteSourceFiles,
-                    )
-                }
-                    .onSuccess { ok++ }
-                    .onFailure { fail++ }
-            }
-            val scraps = runCatching { catalogFacade.listPossibleScraps() }.getOrDefault(emptyList())
-            _state.update {
-                it.copy(
-                    busy = false,
-                    scraps = scraps,
-                    scrapSelectedIds = emptySet(),
-                    message = when {
-                        ok > 0 && fail == 0 ->
-                            "Scarti nel Cestino: $ok. Recupero: Utility → Ripristina."
-                        ok > 0 ->
-                            "Scarti nel Cestino: $ok · non riusciti: $fail."
-                        else ->
-                            "Eliminazione scarti non riuscita"
-                    },
-                )
-            }
         }
     }
 
@@ -153,14 +118,16 @@ class CleanViewModel(
             _state.update { it.copy(analyzing = true, message = null) }
             runCatching { catalogFacade.analyzeExactDuplicates() }
                 .onSuccess { result ->
-                    _state.update {
-                        it.copy(
+                    _state.update { current ->
+                        val filter = current.duplicateAgeFilter
+                        current.copy(
                             analyzing = false,
                             hasAnalyzed = true,
                             groups = result.groups,
                             copiesScanned = result.copiesScanned,
                             hashesComputed = result.hashesComputed,
                             hashesFailed = result.hashesFailed,
+                            duplicateSelectedIds = selectByAgeFilter(result.groups, filter),
                             message = null,
                         )
                     }
@@ -176,31 +143,28 @@ class CleanViewModel(
         }
     }
 
-    fun requestTrashSelected() {
-        if (_state.value.selectedIds.isEmpty()) return
-        _state.update {
-            it.copy(
-                pendingTrashSelected = true,
-                pendingTrashGroup = null,
-                pendingTrashScraps = false,
-            )
+    fun requestTrashPending() {
+        if (_state.value.totalPendingTrashCount <= 0) return
+        _state.update { it.copy(pendingTrash = true) }
+    }
+
+    fun dismissTrashPending() {
+        _state.update { it.copy(pendingTrash = false) }
+    }
+
+    fun confirmTrashPending(deleteSourceFiles: Boolean = false) {
+        val snapshot = _state.value
+        val ids = linkedSetOf<String>().apply {
+            addAll(snapshot.selectedIds)
+            addAll(snapshot.scrapSelectedIds)
+            addAll(snapshot.duplicateSelectedIds)
         }
-    }
-
-    fun dismissTrashSelected() {
-        _state.update { it.copy(pendingTrashSelected = false) }
-    }
-
-    fun confirmTrashSelected(deleteSourceFiles: Boolean = false) {
-        val ids = _state.value.selectedIds.toList()
         if (ids.isEmpty()) {
-            _state.update { it.copy(pendingTrashSelected = false) }
+            _state.update { it.copy(pendingTrash = false) }
             return
         }
         viewModelScope.launch {
-            _state.update {
-                it.copy(busy = true, pendingTrashSelected = false, message = null)
-            }
+            _state.update { it.copy(busy = true, pendingTrash = false, message = null) }
             var ok = 0
             var fail = 0
             for (id in ids) {
@@ -214,71 +178,29 @@ class CleanViewModel(
                     .onFailure { fail++ }
             }
             val scraps = runCatching { catalogFacade.listPossibleScraps() }.getOrDefault(emptyList())
-            _state.update {
-                it.copy(
+            val refreshed = runCatching { catalogFacade.analyzeExactDuplicates() }.getOrNull()
+            _state.update { current ->
+                val groups = refreshed?.groups ?: emptyList()
+                current.copy(
                     busy = false,
                     selectedIds = emptySet(),
                     scraps = scraps,
+                    scrapSelectedIds = emptySet(),
+                    groups = groups,
+                    copiesScanned = refreshed?.copiesScanned ?: current.copiesScanned,
+                    hashesComputed = refreshed?.hashesComputed ?: current.hashesComputed,
+                    hashesFailed = refreshed?.hashesFailed ?: current.hashesFailed,
+                    hasAnalyzed = true,
+                    duplicateSelectedIds = selectByAgeFilter(groups, current.duplicateAgeFilter),
                     message = when {
                         ok > 0 && fail == 0 ->
                             "Spostati nel Cestino: $ok. Recupero: Utility → Ripristina."
                         ok > 0 ->
                             "Spostati nel Cestino: $ok · non riusciti: $fail."
                         else ->
-                            "Eliminazione selezionati non riuscita"
+                            "Eliminazione non riuscita"
                     },
                 )
-            }
-        }
-    }
-
-    fun requestTrashExtras(group: DuplicateGroup) {
-        _state.update {
-            it.copy(
-                pendingTrashGroup = group,
-                pendingTrashSelected = false,
-                pendingTrashScraps = false,
-            )
-        }
-    }
-
-    fun dismissTrashConfirm() {
-        _state.update { it.copy(pendingTrashGroup = null) }
-    }
-
-    fun confirmTrashExtras(deleteSourceFiles: Boolean = false) {
-        val group = _state.value.pendingTrashGroup ?: return
-        val keepId = group.members.firstOrNull { it.isSuggestedKeep }?.mediaItem?.id
-            ?: return
-        viewModelScope.launch {
-            _state.update { it.copy(busy = true, pendingTrashGroup = null, message = null) }
-            runCatching {
-                catalogFacade.trashDuplicateExtras(
-                    fingerprintValue = group.fingerprintValue,
-                    keepMediaItemId = keepId,
-                    memberCopyIds = group.members.map { it.mediaCopy.id },
-                    deleteSourceFiles = deleteSourceFiles,
-                )
-            }.onSuccess { result ->
-                val refreshed = catalogFacade.analyzeExactDuplicates()
-                val scraps = runCatching { catalogFacade.listPossibleScraps() }.getOrDefault(emptyList())
-                _state.update {
-                    it.copy(
-                        busy = false,
-                        groups = refreshed.groups,
-                        copiesScanned = refreshed.copiesScanned,
-                        hashesComputed = refreshed.hashesComputed,
-                        hashesFailed = refreshed.hashesFailed,
-                        hasAnalyzed = true,
-                        scraps = scraps,
-                        message = result.message
-                            ?: "Duplicati nel Cestino. Recupero: Utility → Ripristina.",
-                    )
-                }
-            }.onFailure { error ->
-                _state.update {
-                    it.copy(busy = false, message = error.message ?: "Operazione non riuscita")
-                }
             }
         }
     }
@@ -288,6 +210,35 @@ class CleanViewModel(
     }
 
     companion object {
+        fun selectByAgeFilter(
+            groups: List<DuplicateGroup>,
+            filter: DuplicateAgeFilter,
+        ): Set<String> {
+            val selected = linkedSetOf<String>()
+            for (group in groups) {
+                val byItem = group.members
+                    .groupBy { it.mediaItem.id }
+                    .mapValues { (_, members) -> members.first() }
+                if (byItem.size < 2) continue
+                val ordered = byItem.values.sortedBy { memberAgeEpochMs(it) }
+                val keep = when (filter) {
+                    DuplicateAgeFilter.OLDER -> ordered.last() // tiene il più recente
+                    DuplicateAgeFilter.NEWER -> ordered.first() // tiene il più vecchio
+                }
+                for (member in ordered) {
+                    if (member.mediaItem.id != keep.mediaItem.id) {
+                        selected += member.mediaItem.id
+                    }
+                }
+            }
+            return selected
+        }
+
+        private fun memberAgeEpochMs(member: DuplicateMember): Long =
+            member.mediaItem.capturedAtEpochMs
+                ?: member.mediaCopy.createdAtEpochMs
+                ?: member.mediaItem.createdAtEpochMs
+
         fun factory(catalogFacade: CatalogFacade): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")

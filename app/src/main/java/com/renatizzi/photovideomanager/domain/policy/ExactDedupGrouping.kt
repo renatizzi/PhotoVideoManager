@@ -42,11 +42,13 @@ object ExactDedupGrouping {
 
             val members = pairs.mapNotNull { (_, copy) ->
                 val item = itemsById[copy.mediaItemId] ?: return@mapNotNull null
+                val locName = locationNames[copy.storageLocationId] ?: copy.storageLocationId
                 DuplicateMember(
                     mediaItem = item,
                     mediaCopy = copy,
-                    locationName = locationNames[copy.storageLocationId] ?: copy.storageLocationId,
+                    locationName = locName,
                     isSuggestedKeep = item.id == keepItemId,
+                    deviceLabel = locName,
                 )
             }.sortedWith(
                 compareByDescending<DuplicateMember> { it.isSuggestedKeep }

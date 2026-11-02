@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.domain.model.AcquireCandidate
+import com.renatizzi.photovideomanager.domain.model.ImportExclusionSummary
 import com.renatizzi.photovideomanager.domain.model.MediaKind
 import com.renatizzi.photovideomanager.domain.model.SearchKindFilter
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -21,6 +22,7 @@ data class AcquireUiState(
     val selectedIds: Set<String> = emptySet(),
     val kindFilter: SearchKindFilter = SearchKindFilter.ALL,
     val sourceLocationIds: Set<String> = emptySet(),
+    val exclusions: List<ImportExclusionSummary> = emptyList(),
     val loading: Boolean = true,
     val acquiring: Boolean = false,
     val catalogCount: Long = 0,
@@ -74,13 +76,16 @@ class AcquireViewModel(
                     sourceLocationIds = sourceLocationIds,
                 )
                 val count = catalogFacade.mediaItemCount()
-                Triple(candidates, count, sourceLocationIds.orEmpty())
-            }.onSuccess { (candidates, count, sources) ->
+                val exclusions = catalogFacade.listImportExclusions()
+                Triple(candidates, count, exclusions) to sourceLocationIds.orEmpty()
+            }.onSuccess { (payload, sources) ->
+                val (candidates, count, exclusions) = payload
                 _state.update { current ->
                     val next = current.copy(
                         candidates = candidates,
                         catalogCount = count,
                         sourceLocationIds = sources,
+                        exclusions = exclusions,
                         loading = false,
                     )
                     next.copy(
@@ -132,6 +137,27 @@ class AcquireViewModel(
         _state.update { it.copy(selectedIds = emptySet()) }
     }
 
+    fun restoreExclusion(storageLocationId: String, opaqueLocator: String) {
+        viewModelScope.launch {
+            runCatching {
+                catalogFacade.restoreImportExclusion(storageLocationId, opaqueLocator)
+            }.onSuccess {
+                val exclusions = runCatching { catalogFacade.listImportExclusions() }
+                    .getOrDefault(emptyList())
+                _state.update {
+                    it.copy(
+                        exclusions = exclusions,
+                        message = "File ripristinato: al prossimo Conferma tornerà in Importa",
+                    )
+                }
+            }.onFailure { error ->
+                _state.update {
+                    it.copy(message = error.message ?: "Ripristino esclusione non riuscito")
+                }
+            }
+        }
+    }
+
     fun acquireSelected() {
         // Snapshot immediato: solo i ✓ effettivi (mai i deselezionati).
         val snapshot = _state.value
@@ -153,13 +179,15 @@ class AcquireViewModel(
                         val sources = _state.value.sourceLocationIds.takeIf { it.isNotEmpty() }
                         val candidates = catalogFacade.listAcquireCandidates(sourceLocationIds = sources)
                         val count = catalogFacade.mediaItemCount()
-                        candidates to count
-                    }.onSuccess { (candidates, count) ->
+                        val exclusions = catalogFacade.listImportExclusions()
+                        Triple(candidates, count, exclusions)
+                    }.onSuccess { (candidates, count, exclusions) ->
                         _state.update { current ->
                             val next = current.copy(
                                 acquiring = false,
                                 candidates = candidates,
                                 catalogCount = count,
+                                exclusions = exclusions,
                                 message = result.message?.takeIf { it.isNotBlank() }
                                     ?: defaultAcquireMessage(result.acquired, result.skippedAlreadyPresent, result.failed),
                             )

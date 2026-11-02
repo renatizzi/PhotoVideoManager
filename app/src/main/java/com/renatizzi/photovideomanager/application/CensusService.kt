@@ -98,7 +98,11 @@ class CensusService(
                     filesSeen++
                     // Usa MIME del listing SAF subito: evita di scartare file senza estensione
                     // “classica” (o con suffissi anomali) che il provider tipizza correttamente.
-                    val kind = detectMediaKind(child.displayName, child.mimeType) ?: continue
+                    val kind = com.renatizzi.photovideomanager.domain.policy.MediaKindDetector.detect(
+                        fileName = child.displayName,
+                        mimeType = child.mimeType,
+                        locatorHint = child.opaqueLocator,
+                    ) ?: continue
                     mediaFound++
 
                     val existing = catalogStore.findMediaCopyByLocator(locationId, child.opaqueLocator)
@@ -114,8 +118,11 @@ class CensusService(
 
                     val metadata = runCatching { adapter.readMetadata(child.opaqueLocator) }.getOrNull()
                     val resolvedKind =
-                        detectMediaKind(child.displayName, metadata?.mimeType ?: child.mimeType)
-                            ?: kind
+                        com.renatizzi.photovideomanager.domain.policy.MediaKindDetector.detect(
+                            fileName = child.displayName,
+                            mimeType = metadata?.mimeType ?: child.mimeType,
+                            locatorHint = child.opaqueLocator,
+                        ) ?: kind
                     val resolvedSize = metadata?.byteSize ?: child.byteSize
                     val createdAt = System.currentTimeMillis()
                     val itemId = "media.${UUID.randomUUID()}"
@@ -211,30 +218,9 @@ class CensusService(
         }
     }
 
-    private fun detectMediaKind(fileName: String, mimeType: String?): MediaKind? {
-        val mime = mimeType?.lowercase().orEmpty()
-        if (mime.startsWith("image/")) return MediaKind.PHOTO
-        if (mime.startsWith("video/")) return MediaKind.VIDEO
-        // Estensione: usa l'ultimo segmento dopo il punto (es. foto.12.jpg → jpg).
-        val ext = fileName.substringAfterLast('.', missingDelimiterValue = "").lowercase()
-        return when (ext) {
-            in PHOTO_EXT -> MediaKind.PHOTO
-            in VIDEO_EXT -> MediaKind.VIDEO
-            else -> null
-        }
-    }
-
     companion object {
         const val DEFAULT_MAX_FILES = 10_000
         /** Più alto per NAS/SMB con molte sottocartelle (es. «famiglia»). */
         const val DEFAULT_MAX_DIRS = 5_000
-        private val PHOTO_EXT = setOf(
-            "jpg", "jpeg", "jpe", "jfif", "png", "webp", "heic", "heif",
-            "gif", "bmp", "dng", "tif", "tiff", "raw", "cr2", "nef", "arw",
-        )
-        private val VIDEO_EXT = setOf(
-            "mp4", "m4v", "mov", "mkv", "webm", "avi", "3gp", "3gpp",
-            "mpeg", "mpg", "wmv", "flv", "ts", "mts", "m2ts",
-        )
     }
 }

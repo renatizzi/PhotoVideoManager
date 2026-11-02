@@ -15,6 +15,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -31,27 +32,21 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.renatizzi.photovideomanager.R
-import com.renatizzi.photovideomanager.domain.model.DuplicateGroup
-import com.renatizzi.photovideomanager.domain.model.DuplicateMember
-import com.renatizzi.photovideomanager.domain.model.MediaKind
-import com.renatizzi.photovideomanager.domain.model.ScrapCandidate
+import com.renatizzi.photovideomanager.domain.hub.CatalogListRowFormat
+import com.renatizzi.photovideomanager.domain.model.SourceCensusSelection
+import com.renatizzi.photovideomanager.ui.census.SourceSelectionBox
 import com.renatizzi.photovideomanager.ui.common.MediaThumbnail
 
 @Composable
 fun CleanScreen(
     state: CleanUiState,
-    onAnalyze: () -> Unit,
-    onRequestTrashSelected: () -> Unit,
-    onConfirmTrashSelected: (deleteSourceFiles: Boolean) -> Unit,
-    onDismissTrashSelected: () -> Unit,
+    onBack: () -> Unit = {},
+    onRequestTrashPending: () -> Unit,
+    onConfirmTrashPending: (deleteSourceFiles: Boolean) -> Unit,
+    onDismissTrashPending: () -> Unit,
     onToggleScrap: (String) -> Unit,
-    onSelectAllScraps: (Boolean) -> Unit,
-    onRequestTrashScraps: () -> Unit,
-    onConfirmTrashScraps: (deleteSourceFiles: Boolean) -> Unit,
-    onDismissTrashScraps: () -> Unit,
-    onRequestTrash: (DuplicateGroup) -> Unit,
-    onConfirmTrash: (deleteSourceFiles: Boolean) -> Unit,
-    onDismissTrash: () -> Unit,
+    onToggleDuplicate: (String) -> Unit,
+    onDuplicateAgeFilter: (DuplicateAgeFilter) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -61,47 +56,51 @@ fun CleanScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        OutlinedButton(onClick = onBack) {
+            Text(stringResource(R.string.clean_back))
+        }
+
         Text(
             text = stringResource(R.string.clean_title),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold,
         )
-
-        // —— Funzione 1: eliminazione elementi selezionati (✓ da Aggiorna) ——
         Text(
-            text = stringResource(R.string.clean_section_selected),
+            text = stringResource(R.string.clean_subtitle),
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Medium,
+            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
         )
         Text(
-            text = if (state.selectedCount > 0) {
-                stringResource(R.string.clean_selected_summary, state.selectedCount)
-            } else {
-                stringResource(R.string.clean_selected_empty_hint)
-            },
+            text = stringResource(R.string.clean_description),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
         )
-        Button(
-            onClick = onRequestTrashSelected,
-            enabled = state.selectedCount > 0 && !state.analyzing && !state.busy,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(stringResource(R.string.clean_trash_selected))
+
+        if (state.selectedCount > 0) {
+            Text(
+                text = stringResource(R.string.clean_section_selected),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium,
+            )
+            Text(
+                text = stringResource(R.string.clean_selected_summary, state.selectedCount),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+            )
         }
 
         HorizontalDivider()
 
-        // —— Funzione 2: possibili scarti (BL-01) ——
         Text(
-            text = stringResource(R.string.clean_section_scraps),
+            text = stringResource(R.string.clean_section_scraps, state.scraps.size),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Medium,
         )
         Text(
-            text = stringResource(R.string.clean_scraps_intro),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+            text = stringResource(R.string.clean_scraps_manual_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
         )
         if (state.scrapsLoaded && state.scraps.isEmpty()) {
             Text(
@@ -109,66 +108,54 @@ fun CleanScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
             )
-        } else if (state.scraps.isNotEmpty()) {
-            val allScrapsOn = state.scrapSelectedCount == state.scraps.size
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clickable(
-                    enabled = !state.busy && !state.analyzing,
-                    onClick = { onSelectAllScraps(!allScrapsOn) },
-                ),
-            ) {
-                Checkbox(
-                    checked = allScrapsOn,
-                    onCheckedChange = { onSelectAllScraps(it) },
-                    enabled = !state.busy && !state.analyzing,
-                )
-                Text(stringResource(R.string.acquisisci_tutti))
-            }
+        } else {
             state.scraps.forEach { scrap ->
-                ScrapRow(
-                    scrap = scrap,
-                    checked = scrap.mediaItem.id in state.scrapSelectedIds,
+                CatalogSelectableRow(
+                    title = scrap.mediaItem.displayTitle?.ifBlank { null }
+                        ?: scrap.mediaItem.id,
+                    deviceLabel = scrap.deviceLabel,
+                    pathLabel = scrap.pathLabel,
+                    statusLabel = scrap.reason,
+                    secondary = scrap.isSecondaryVolume,
+                    selection = if (scrap.mediaItem.id in state.scrapSelectedIds) {
+                        SourceCensusSelection.SELECTED
+                    } else {
+                        SourceCensusSelection.NOT_SELECTED
+                    },
+                    previewCopy = scrap.previewCopy,
+                    kind = scrap.mediaItem.kind,
                     enabled = !state.busy && !state.analyzing,
                     onToggle = { onToggleScrap(scrap.mediaItem.id) },
                 )
-            }
-            Button(
-                onClick = onRequestTrashScraps,
-                enabled = state.scrapSelectedCount > 0 && !state.busy && !state.analyzing,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(R.string.clean_trash_scraps))
             }
         }
 
         HorizontalDivider()
 
-        // —— Funzione 3: duplicati ——
         Text(
-            text = stringResource(R.string.clean_section_duplicates),
+            text = stringResource(R.string.clean_section_duplicates, state.groups.size),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Medium,
         )
-        Text(
-            text = stringResource(R.string.clean_subtitle_duplicates),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
-        )
-
-        Button(
-            onClick = onAnalyze,
-            enabled = !state.analyzing && !state.busy,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(
-                if (state.analyzing) {
-                    stringResource(R.string.clean_analyzing)
-                } else {
-                    stringResource(R.string.clean_analyze)
-                },
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = state.duplicateAgeFilter == DuplicateAgeFilter.OLDER,
+                onClick = { onDuplicateAgeFilter(DuplicateAgeFilter.OLDER) },
+                enabled = !state.busy && !state.analyzing,
+                label = { Text(stringResource(R.string.clean_dup_filter_older)) },
+            )
+            FilterChip(
+                selected = state.duplicateAgeFilter == DuplicateAgeFilter.NEWER,
+                onClick = { onDuplicateAgeFilter(DuplicateAgeFilter.NEWER) },
+                enabled = !state.busy && !state.analyzing,
+                label = { Text(stringResource(R.string.clean_dup_filter_newer)) },
             )
         }
+        Text(
+            text = stringResource(R.string.clean_dup_filter_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+        )
 
         if (state.analyzing || state.busy) {
             Row(
@@ -179,26 +166,6 @@ fun CleanScreen(
             }
         }
 
-        if (state.hasAnalyzed && !state.analyzing) {
-            Text(
-                text = stringResource(
-                    R.string.clean_stats,
-                    state.groups.size,
-                    state.copiesScanned,
-                    state.hashesComputed,
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
-
-        HorizontalDivider()
-
-        Text(
-            text = stringResource(R.string.clean_groups_title),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Medium,
-        )
-
         if (state.hasAnalyzed && state.groups.isEmpty() && !state.analyzing) {
             Text(
                 text = stringResource(R.string.clean_empty),
@@ -207,30 +174,57 @@ fun CleanScreen(
             )
         }
 
-        state.groups.forEachIndexed { index, group ->
-            DuplicateGroupBlock(
-                index = index + 1,
-                group = group,
-                enabled = !state.busy && !state.analyzing,
-                onTrashExtras = { onRequestTrash(group) },
-            )
+        state.groups.forEach { group ->
+            group.members
+                .distinctBy { it.mediaItem.id }
+                .forEach { member ->
+                    CatalogSelectableRow(
+                        title = member.mediaItem.displayTitle?.ifBlank { null }
+                            ?: member.mediaItem.id,
+                        deviceLabel = member.deviceLabel.ifBlank { member.locationName },
+                        pathLabel = member.pathLabel,
+                        statusLabel = if (member.isSuggestedKeep) {
+                            stringResource(R.string.clean_suggested_keep)
+                        } else {
+                            "Online"
+                        },
+                        secondary = member.isSecondaryVolume,
+                        selection = if (member.mediaItem.id in state.duplicateSelectedIds) {
+                            SourceCensusSelection.SELECTED
+                        } else {
+                            SourceCensusSelection.NOT_SELECTED
+                        },
+                        previewCopy = member.mediaCopy,
+                        kind = member.mediaItem.kind,
+                        enabled = !state.busy && !state.analyzing,
+                        onToggle = { onToggleDuplicate(member.mediaItem.id) },
+                    )
+                }
             HorizontalDivider()
+        }
+
+        Button(
+            onClick = onRequestTrashPending,
+            enabled = state.totalPendingTrashCount > 0 && !state.analyzing && !state.busy,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.clean_move_to_trash))
         }
 
         Spacer(modifier = Modifier.height(8.dp))
     }
 
-    if (state.pendingTrashSelected) {
+    if (state.pendingTrash) {
         var deleteSource by remember { mutableStateOf(false) }
         AlertDialog(
-            onDismissRequest = onDismissTrashSelected,
+            onDismissRequest = onDismissTrashPending,
             title = { Text(stringResource(R.string.aggiorna_trash_confirm_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         stringResource(
-                            R.string.clean_confirm_selected_body,
-                            state.selectedCount,
+                            R.string.clean_confirm_combined_body,
+                            state.totalPendingTrashCount,
                         ),
                     )
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -243,83 +237,12 @@ fun CleanScreen(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { onConfirmTrashSelected(deleteSource) }) {
+                TextButton(onClick = { onConfirmTrashPending(deleteSource) }) {
                     Text(stringResource(R.string.dialog_yes))
                 }
             },
             dismissButton = {
-                TextButton(onClick = onDismissTrashSelected) {
-                    Text(stringResource(R.string.dialog_no))
-                }
-            },
-        )
-    }
-
-    if (state.pendingTrashScraps) {
-        var deleteSource by remember { mutableStateOf(false) }
-        AlertDialog(
-            onDismissRequest = onDismissTrashScraps,
-            title = { Text(stringResource(R.string.aggiorna_trash_confirm_title)) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        stringResource(
-                            R.string.clean_confirm_scraps_body,
-                            state.scrapSelectedCount,
-                        ),
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
-                            checked = deleteSource,
-                            onCheckedChange = { deleteSource = it },
-                        )
-                        Text(stringResource(R.string.trash_also_delete_source))
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { onConfirmTrashScraps(deleteSource) }) {
-                    Text(stringResource(R.string.dialog_yes))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismissTrashScraps) {
-                    Text(stringResource(R.string.dialog_no))
-                }
-            },
-        )
-    }
-
-    val pending = state.pendingTrashGroup
-    if (pending != null) {
-        var deleteSource by remember { mutableStateOf(false) }
-        AlertDialog(
-            onDismissRequest = onDismissTrash,
-            title = { Text(stringResource(R.string.aggiorna_trash_confirm_title)) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        stringResource(
-                            R.string.clean_confirm_body,
-                            pending.extraItemCount,
-                        ),
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
-                            checked = deleteSource,
-                            onCheckedChange = { deleteSource = it },
-                        )
-                        Text(stringResource(R.string.trash_also_delete_source))
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { onConfirmTrash(deleteSource) }) {
-                    Text(stringResource(R.string.dialog_yes))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismissTrash) {
+                TextButton(onClick = onDismissTrashPending) {
                     Text(stringResource(R.string.dialog_no))
                 }
             },
@@ -328,130 +251,57 @@ fun CleanScreen(
 }
 
 @Composable
-private fun ScrapRow(
-    scrap: ScrapCandidate,
-    checked: Boolean,
+private fun CatalogSelectableRow(
+    title: String,
+    deviceLabel: String,
+    pathLabel: String,
+    statusLabel: String,
+    secondary: Boolean,
+    selection: SourceCensusSelection,
+    previewCopy: com.renatizzi.photovideomanager.domain.model.MediaCopy?,
+    kind: com.renatizzi.photovideomanager.domain.model.MediaKind,
     enabled: Boolean,
     onToggle: () -> Unit,
 ) {
-    val title = scrap.mediaItem.displayTitle?.ifBlank { null }
-        ?: scrap.mediaItem.id
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = enabled, onClick = onToggle)
-            .padding(vertical = 4.dp),
+            .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Checkbox(
-            checked = checked,
-            onCheckedChange = { if (enabled) onToggle() },
-            enabled = enabled,
+        SourceSelectionBox(
+            selection = selection,
+            enabled = false,
+            onClick = {},
         )
-        MediaThumbnail(
-            copy = scrap.previewCopy,
-            kind = scrap.mediaItem.kind,
-            size = 48.dp,
-        )
-        Column(modifier = Modifier.weight(1f)) {
-            Text(title, fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyMedium)
-            Text(
-                text = kindLabel(scrap.mediaItem.kind),
-                style = MaterialTheme.typography.bodySmall,
-            )
-            Text(
-                text = scrap.reason,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-            )
+        if (previewCopy != null) {
+            MediaThumbnail(copy = previewCopy, kind = kind, size = 48.dp)
         }
-    }
-}
-
-@Composable
-private fun DuplicateGroupBlock(
-    index: Int,
-    group: DuplicateGroup,
-    enabled: Boolean,
-    onTrashExtras: () -> Unit,
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Text(
-            text = stringResource(
-                R.string.clean_group_header,
-                index,
-                group.distinctItemCount,
-                group.extraItemCount,
-            ),
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold,
-        )
-        Text(
-            text = stringResource(
-                R.string.clean_group_hash,
-                group.fingerprintValue.take(12),
-            ),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-        )
-        group.members.forEach { member ->
-            MemberRow(member)
-        }
-        OutlinedButton(
-            onClick = onTrashExtras,
-            enabled = enabled && group.extraItemCount > 0,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(stringResource(R.string.clean_trash_extras))
-        }
-    }
-}
-
-@Composable
-private fun MemberRow(member: DuplicateMember) {
-    val title = member.mediaItem.displayTitle?.ifBlank { null }
-        ?: member.mediaItem.id
-    Row(
-        modifier = Modifier.padding(start = 4.dp, top = 4.dp, bottom = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        MediaThumbnail(
-            copy = member.mediaCopy,
-            kind = member.mediaItem.kind,
-            size = 48.dp,
-        )
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.Bold,
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                color = MaterialTheme.colorScheme.primary,
             )
-            Text(
-                text = kindLabel(member.mediaItem.kind),
-                style = MaterialTheme.typography.bodySmall,
+            val meta = CatalogListRowFormat.metaLine(
+                deviceLabel = deviceLabel,
+                pathLabel = pathLabel,
+                statusLabel = statusLabel,
+                secondary = secondary,
             )
-            Text(
-                text = stringResource(R.string.clean_member_location, member.locationName),
-                style = MaterialTheme.typography.bodySmall,
-            )
-            if (member.isSuggestedKeep) {
+            if (meta.isNotBlank()) {
                 Text(
-                    text = stringResource(R.string.clean_suggested_keep),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.secondary,
+                    text = meta,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Normal,
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
         }
     }
-}
-
-@Composable
-private fun kindLabel(kind: MediaKind): String = when (kind) {
-    MediaKind.PHOTO -> stringResource(R.string.media_kind_photo)
-    MediaKind.VIDEO -> stringResource(R.string.media_kind_video)
 }

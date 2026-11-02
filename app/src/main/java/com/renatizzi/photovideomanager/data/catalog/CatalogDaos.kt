@@ -192,4 +192,7 @@ interface CatalogExclusionDao {
 
     @Query("DELETE FROM catalog_exclusions WHERE storageLocationId = :storageLocationId AND opaqueLocator = :opaqueLocator")
     suspend fun deleteByLocator(storageLocationId: String, opaqueLocator: String)
+
+    @Query("SELECT * FROM catalog_exclusions ORDER BY createdAtEpochMs DESC")
+    suspend fun listAll(): List<CatalogExclusionEntity>
 }

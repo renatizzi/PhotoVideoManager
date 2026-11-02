@@ -9,6 +9,9 @@ data class DuplicateMember(
     val mediaCopy: MediaCopy,
     val locationName: String,
     val isSuggestedKeep: Boolean,
+    val deviceLabel: String = "",
+    val pathLabel: String = "",
+    val isSecondaryVolume: Boolean = false,
 )
 
 data class DuplicateGroup(
@@ -35,4 +38,7 @@ data class ScrapCandidate(
     val mediaItem: MediaItem,
     val previewCopy: MediaCopy?,
     val reason: String,
+    val deviceLabel: String = "",
+    val pathLabel: String = "",
+    val isSecondaryVolume: Boolean = false,
 )

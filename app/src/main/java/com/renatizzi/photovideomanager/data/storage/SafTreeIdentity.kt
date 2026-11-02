@@ -90,6 +90,19 @@ object SafTreeIdentity {
         return decoded.isNotBlank() && !decoded.startsWith("primary:", ignoreCase = true)
     }
 
+    /**
+     * Badge «SD» solo su telefono/tablet con memoria Secondaria.
+     * Mai su PC / Cloud / NAS (anche se l’URI non è `primary:`).
+     */
+    fun isMobileSecondaryVolume(uriString: String): Boolean {
+        if (uriString.isBlank()) return false
+        val authority = authorityOf(uriString) ?: return false
+        if (SafPathLabels.providerOfAuthority(authority) != SafPathLabels.SafProvider.LOCAL_STORAGE) {
+            return false
+        }
+        return isSecondaryVolume(uriString)
+    }
+
     internal fun parseTreeDocumentId(uriString: String): String? {
         val marker = "/tree/"
         val idx = uriString.indexOf(marker)

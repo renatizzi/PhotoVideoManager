@@ -14,6 +14,7 @@ import com.renatizzi.photovideomanager.data.hub.WindowsSetupResultParser
 import com.renatizzi.photovideomanager.data.hub.WindowsSetupScriptExporter
 import com.renatizzi.photovideomanager.data.hub.WizardDraftStore
 import com.renatizzi.photovideomanager.data.storage.NetworkDriveAssistant
+import com.renatizzi.photovideomanager.data.storage.SafPathLabels
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeat
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKindLabels
@@ -197,7 +198,7 @@ class CatalogSeatWizardViewModel(
                     if (seat.isConfigured) {
                         CatalogSeatKindLabels.shortDevice(seat.kind)
                     } else {
-                        CatalogSeat.DEFAULT_DEVICE_MODEL
+                        suggestedDeviceModel()
                     }
                 },
                 memoryLabel = seat.memoryLabel.ifBlank { CatalogSeat.MEMORY_PRIMARY },
@@ -225,7 +226,7 @@ class CatalogSeatWizardViewModel(
                 step = WizardStep.S0_START,
                 selectedKind = CatalogSeatKind.LOCAL_DEVICE,
                 catalogName = CatalogSeat.DEFAULT_CATALOG_NAME,
-                deviceModel = CatalogSeat.DEFAULT_DEVICE_MODEL,
+                deviceModel = suggestedDeviceModel(),
                 memoryLabel = CatalogSeat.MEMORY_PRIMARY,
                 procedureMode = ProcedureMode.RAPIDA,
                 completedSeat = null,
@@ -365,7 +366,7 @@ class CatalogSeatWizardViewModel(
             return
         }
         val model = current.deviceModel.trim().ifBlank {
-            CatalogSeat.DEFAULT_DEVICE_MODEL
+            suggestedDeviceModel()
         }
         if (kind == CatalogSeatKind.PC_NOTEBOOK) {
             val pathErr = WindowsCatalogSetupScript.validateFolderPath(current.folderPath)
@@ -1045,6 +1046,11 @@ class CatalogSeatWizardViewModel(
             raw.ifBlank { "Verifica della Posizione del Catalogo non riuscita. Riprova o torna a CIFS." }
         }
     }
+
+    /** Nota bis: default modello = nome dispositivo di sistema se leggibile. */
+    private fun suggestedDeviceModel(): String =
+        SafPathLabels.deviceLabel(appContext).trim()
+            .ifBlank { CatalogSeat.DEFAULT_DEVICE_MODEL }
 
     companion object {
         fun factory(catalogFacade: CatalogFacade, appContext: Context): ViewModelProvider.Factory =
