@@ -52,6 +52,25 @@ class SafTreeIdentityTest {
     }
 
     @Test
+    fun isMobileSecondaryVolume_onlyOnLocalStorage() {
+        assertTrue(
+            SafTreeIdentity.isMobileSecondaryVolume(
+                "content://com.android.externalstorage.documents/tree/ABCD-EF01%3ADCIM",
+            ),
+        )
+        assertFalse(
+            SafTreeIdentity.isMobileSecondaryVolume(
+                "content://com.google.android.apps.docs.storage/tree/root",
+            ),
+        )
+        assertFalse(
+            SafTreeIdentity.isMobileSecondaryVolume(
+                "content://com.android.externalstorage.documents/tree/primary%3APictures",
+            ),
+        )
+    }
+
+    @Test
     fun childDocument_andSubtreeTree_shareCanonicalKey() {
         val doc =
             "content://com.android.externalstorage.documents/tree/primary%3APictures/document/primary%3APictures%2Fvacanze"
