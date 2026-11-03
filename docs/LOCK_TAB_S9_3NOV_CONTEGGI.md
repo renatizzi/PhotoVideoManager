@@ -1,9 +1,9 @@
 # LOCK — Tab S9 conteggi e Ripristina (3 nov)
 
-**Stato:** in attesa OK Renato  
+**Stato:** approvato  
 **Data:** 2026-11-03  
 **Richiesta / test di riferimento:** Modifiche del 3 novembre 2026 — Tab S9 (dopo prove su build recente)  
-**Approvazione Renato:** in attesa
+**Approvazione Renato:** 2026-11-03 OK (2 righe Acquisisci = Test1+Test2; file Duplicati nei 11 senza righe separate)
 
 ## Contesto test (invariante — non è elenco bug)
 

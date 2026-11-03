@@ -119,8 +119,10 @@ class AcquisitionService(
         return runCatching {
             val uri = Uri.parse(location.opaqueLocator)
             val raw = SafPathLabels.storagePathLabel(appContext, uri)
-            SafPathLabels.pathUnderName(raw, location.displayName, deviceLabel)
-        }.getOrDefault("")
+            val under = SafPathLabels.pathUnderName(raw, location.displayName, deviceLabel)
+            // LOCK #6: se pathUnderName omette la foglia (= nome), tieni comunque la cartella.
+            under.ifBlank { location.displayName.trim() }
+        }.getOrDefault(location.displayName.trim())
     }
 
     /**

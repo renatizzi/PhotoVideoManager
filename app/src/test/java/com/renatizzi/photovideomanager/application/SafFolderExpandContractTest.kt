@@ -12,9 +12,8 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
 /**
- * NOVITÀ Nota 0.16.57: se si sceglie una root (es. Pictures) con sottocartelle
- * che contengono media, ogni sottocartella con media diventa una riga elenco
- * (corrispondenza biunivoca), non la sola root.
+ * LOCK Tab S9 #1–#3: una cartella scelta → census ricorsivo include le sottocartelle
+ * (non espandere in più righe Acquisisci).
  */
 class SafFolderExpandContractTest {
 
@@ -22,41 +21,36 @@ class SafFolderExpandContractTest {
     val tmp = TemporaryFolder()
 
     @Test
-    fun expand_listsOnlyImmediateChildrenWithMedia() = runBlocking {
-        val pictures = tmp.newFolder("Pictures")
-        val familiari = File(pictures, "familiari").also { assertTrue(it.mkdirs()) }
-        val vacanze = File(pictures, "vacanze").also { assertTrue(it.mkdirs()) }
-        val empty = File(pictures, "vuota").also { assertTrue(it.mkdirs()) }
-        File(familiari, "nonna.jpg").writeText("photo")
-        File(vacanze, "mare.mp4").writeBytes(ByteArray(8))
-        File(empty, "readme.txt").writeText("ignore")
+    fun censusRecursesIntoChildren_singleChosenFolder() = runBlocking {
+        val test1 = tmp.newFolder("Test1")
+        val duplicati = File(test1, "Duplicati").also { assertTrue(it.mkdirs()) }
+        File(test1, "a.mp4").writeBytes(ByteArray(4))
+        File(test1, "b.mp4").writeBytes(ByteArray(4))
+        File(test1, "c.mp4").writeBytes(ByteArray(4))
+        File(duplicati, "d.jpg").writeText("p")
+        File(duplicati, "e.mp4").writeBytes(ByteArray(4))
+        File(duplicati, "f.mp4").writeBytes(ByteArray(4))
 
-        val adapter = LocalFilesystemStorageAdapter(pictures)
-        val children = adapter.listChildren("").filter { it.isDirectory }
-        val mediaChildren = children.filter { child ->
-            hasMediaInSubtree(adapter, child.opaqueLocator)
-        }.map { it.displayName }.sorted()
-
-        assertEquals(listOf("familiari", "vacanze"), mediaChildren)
+        val adapter = LocalFilesystemStorageAdapter(test1)
+        val media = bfsMediaNames(adapter)
+        assertEquals(6, media.size)
+        assertTrue(media.containsAll(listOf("a.mp4", "b.mp4", "c.mp4", "d.jpg", "e.mp4", "f.mp4")))
+        // Una sola «riga» scelta = root Test1 (nessuna espansione figli).
+        assertEquals(listOf("Test1"), listOf(test1.name))
     }
 
     @Test
-    fun leafFolder_registersItself() = runBlocking {
+    fun leafFolder_stillHasOwnMedia() = runBlocking {
         val leaf = tmp.newFolder("solo")
         File(leaf, "a.jpg").writeText("x")
         val adapter = LocalFilesystemStorageAdapter(leaf)
-        val children = adapter.listChildren("").filter { it.isDirectory }
-        val mediaChildren = children.filter { hasMediaInSubtree(adapter, it.opaqueLocator) }
-        assertTrue(mediaChildren.isEmpty())
-        assertTrue(hasMediaInSubtree(adapter, ""))
+        assertEquals(listOf("a.jpg"), bfsMediaNames(adapter))
     }
 
-    private suspend fun hasMediaInSubtree(
-        adapter: LocalFilesystemStorageAdapter,
-        start: String,
-    ): Boolean {
+    private suspend fun bfsMediaNames(adapter: LocalFilesystemStorageAdapter): List<String> {
         val queue = ArrayDeque<String>()
-        queue.add(start)
+        queue.add("")
+        val names = mutableListOf<String>()
         var dirs = 0
         while (queue.isNotEmpty() && dirs < 200) {
             val current = queue.removeFirst()
@@ -66,10 +60,12 @@ class SafFolderExpandContractTest {
                     queue.add(child.opaqueLocator)
                 } else {
                     val ext = child.displayName.substringAfterLast('.', "").lowercase()
-                    if (ext in setOf("jpg", "jpeg", "png", "mp4", "mov")) return true
+                    if (ext in setOf("jpg", "jpeg", "png", "mp4", "mov")) {
+                        names += child.displayName
+                    }
                 }
             }
         }
-        return false
+        return names
     }
 }

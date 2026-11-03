@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Refresh
@@ -969,19 +970,31 @@ private fun ExclusionRow(
                 fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                 color = MaterialTheme.colorScheme.primary,
             )
-            val meta = com.renatizzi.photovideomanager.domain.hub.CatalogListRowFormat.metaLine(
-                deviceLabel = exclusion.deviceLabel,
-                pathLabel = exclusion.pathLabel,
-                statusLabel = stringResource(R.string.importa_esclusi_status),
-                secondary = exclusion.isSecondaryVolume,
-            )
-            if (meta.isNotBlank()) {
-                Text(
-                    text = meta,
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.Normal,
-                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                    color = MaterialTheme.colorScheme.primary,
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                val meta = com.renatizzi.photovideomanager.domain.hub.CatalogListRowFormat.metaLine(
+                    deviceLabel = exclusion.deviceLabel,
+                    pathLabel = exclusion.pathLabel,
+                    statusLabel = "",
+                    secondary = exclusion.isSecondaryVolume,
+                )
+                if (meta.isNotBlank()) {
+                    Text(
+                        text = meta,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Normal,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                // LOCK #9: icona Cestino al posto della dicitura «Escluso».
+                Icon(
+                    imageVector = Icons.Outlined.Delete,
+                    contentDescription = stringResource(R.string.importa_esclusi_status_cd),
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp),
                 )
             }
         }

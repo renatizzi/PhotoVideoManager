@@ -350,9 +350,10 @@
     <string name="importa_annulla">Annulla</string>
     <string name="importa_back_acquisisci">Annulla</string>
     <string name="importa_esclusi_title">Esclusi: N. %1$d</string>
-    <string name="importa_esclusi_intro">Sono stati trovati file esclusi dal Catalogo. Selezionali e clicca [Ripristina in Importa] per recuperarli</string>
-    <string name="importa_esclusi_restore">Ripristina in Importa</string>
+    <string name="importa_esclusi_intro">Sono stati trovati file in precedenza esclusi dal Catalogo e spostati nel Cestino. Selezionali e clicca su [Ripristina] per recuperarli</string>
+    <string name="importa_esclusi_restore">Ripristina</string>
     <string name="importa_esclusi_status">Escluso</string>
+    <string name="importa_esclusi_status_cd">Nel Cestino</string>
     <string name="componi_album">ALBUM</string>
     <string name="componi_raccolta">RACCOLTA</string>
     <string name="componi_add_cd">Crea composizione</string>
@@ -535,7 +536,7 @@
     <string name="clean_confirm_no">NO</string>
     <string name="trash_title">Cestino</string>
     <string name="trash_intro">Elementi tolti dal Catalogo. Puoi ripristinarli o eliminarli definitivamente.</string>
-    <string name="trash_restore_prompt">Sono stati trovati file esclusi dal Catalogo e spostati nel Cestino. Selezionali e clicca [Ripristina] per recuperarli</string>
+    <string name="trash_restore_prompt">Sono stati trovati file in precedenza esclusi dal Catalogo e spostati nel Cestino. Selezionali e clicca su [Ripristina] per recuperarli</string>
     <string name="trash_inline_help">I file del dispositivo non vengono cancellati. «Elimina» qui toglie la voce dal Cestino; «Svuota Cestino» può cancellare anche le copie gestite dall’app.</string>
     <string name="trash_list_title">Nel Cestino: %1$d</string>
     <string name="trash_empty_list">Cestino vuoto.</string>
