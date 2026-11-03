@@ -40,11 +40,11 @@ class CatalogListRowFormatTest {
     }
 
     @Test
-    fun availabilityLabel_mapsKnownStates() {
-        assertEquals("Online", CatalogListRowFormat.availabilityLabel(Availability.AVAILABLE))
-        assertEquals("Offline", CatalogListRowFormat.availabilityLabel(Availability.UNAVAILABLE))
+    fun availabilityLabel_mapsKnownStatesWithIcon() {
+        assertEquals("🛜 Online", CatalogListRowFormat.availabilityLabel(Availability.AVAILABLE))
+        assertEquals("⚠ Offline", CatalogListRowFormat.availabilityLabel(Availability.UNAVAILABLE))
         assertEquals(
-            "Non verificabile",
+            "? Non verificabile",
             CatalogListRowFormat.availabilityLabel(Availability.UNKNOWN),
         )
     }

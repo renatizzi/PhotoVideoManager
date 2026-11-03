@@ -506,10 +506,19 @@ fun PvmApp(
                             trashVm.consumeMessage()
                         }
                     }
+                    LaunchedEffect(Unit) {
+                        trashVm.goToAggiorna.collect {
+                            navController.navigate(PvmDestination.Aggiorna.route) {
+                                popUpTo(PvmDestination.Ripristina.route) { inclusive = false }
+                                launchSingleTop = true
+                            }
+                        }
+                    }
                     TrashScreen(
                         state = trashState,
                         onRefresh = trashVm::refresh,
-                        onRestore = trashVm::restore,
+                        onToggle = trashVm::toggleSelection,
+                        onRestoreSelected = trashVm::restoreSelected,
                         onPurge = trashVm::purge,
                         onRequestEmpty = trashVm::requestEmptyTrash,
                         onConfirmEmpty = trashVm::confirmEmptyTrash,

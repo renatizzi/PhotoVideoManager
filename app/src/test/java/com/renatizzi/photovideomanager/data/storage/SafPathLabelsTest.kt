@@ -8,8 +8,9 @@ import org.junit.Test
 class SafPathLabelsTest {
     @Test
     fun humanizeDocumentId_primaryPictures() {
+        // Nota ter: niente «Memoria principale» nel path UI.
         assertEquals(
-            "Memoria principale/Pictures",
+            "Pictures",
             SafPathLabels.humanizeDocumentId("primary:Pictures"),
         )
     }
@@ -17,9 +18,30 @@ class SafPathLabelsTest {
     @Test
     fun humanizeDocumentId_decodesUrlPath() {
         assertEquals(
-            "Memoria principale/Movies/Revive",
+            "Movies/Revive",
             SafPathLabels.humanizeDocumentId("primary%3AMovies%2FRevive"),
         )
+    }
+
+    @Test
+    fun humanizeDocumentId_secondaryOmitsSchedaSd() {
+        assertEquals(
+            "Pictures",
+            SafPathLabels.humanizeDocumentId("ABCD-EF01:Pictures"),
+        )
+    }
+
+    @Test
+    fun stripVolumeWords_removesLegacyLabels() {
+        assertEquals(
+            "Pictures",
+            SafPathLabels.stripVolumeWords("Scheda SD / memoria secondaria/Pictures"),
+        )
+        assertEquals(
+            "Pictures/Camera",
+            SafPathLabels.stripVolumeWords("Memoria principale/Pictures/Camera"),
+        )
+        assertEquals("", SafPathLabels.stripVolumeWords("Memoria principale"))
     }
 
     @Test
@@ -153,7 +175,7 @@ class SafPathLabelsTest {
             SafPathLabels.pathUnderName("Google Drive/FilmoraGo", "FilmoraGo", "Google Drive"),
         )
         assertEquals(
-            "Memoria principale/Pictures",
+            "Pictures",
             SafPathLabels.pathUnderName(
                 "Memoria principale/Pictures/MediaManager_test",
                 "MediaManager_test",
@@ -163,6 +185,23 @@ class SafPathLabelsTest {
         assertEquals(
             "",
             SafPathLabels.pathUnderName("Rete / NAS/MediaManager", "MediaManager", "Rete / NAS"),
+        )
+        // displayName = foglia cartella → path sotto il nome resta vuoto dopo strip volume.
+        assertEquals(
+            "",
+            SafPathLabels.pathUnderName(
+                "Scheda SD / memoria secondaria/Pictures",
+                "Pictures",
+                "Tab S9 di RENATO",
+            ),
+        )
+        assertEquals(
+            "Pictures",
+            SafPathLabels.pathUnderName(
+                "Scheda SD / memoria secondaria/Pictures/Camera",
+                "Camera",
+                "Tab S9 di RENATO",
+            ),
         )
     }
 }

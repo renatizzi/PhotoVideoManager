@@ -26,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.renatizzi.photovideomanager.domain.model.Availability
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -97,25 +98,14 @@ fun CleanScreen(
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Medium,
         )
-        Text(
-            text = stringResource(R.string.clean_scraps_manual_hint),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
-        )
-        if (state.scrapsLoaded && state.scraps.isEmpty()) {
-            Text(
-                text = stringResource(R.string.clean_scraps_empty),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
-            )
-        } else {
+        if (state.scraps.isNotEmpty()) {
             state.scraps.forEach { scrap ->
                 CatalogSelectableRow(
                     title = scrap.mediaItem.displayTitle?.ifBlank { null }
                         ?: scrap.mediaItem.id,
                     deviceLabel = scrap.deviceLabel,
                     pathLabel = scrap.pathLabel,
-                    statusLabel = scrap.reason,
+                    statusLabel = CatalogListRowFormat.availabilityLabel(Availability.AVAILABLE),
                     secondary = scrap.isSecondaryVolume,
                     selection = if (scrap.mediaItem.id in state.scrapSelectedIds) {
                         SourceCensusSelection.SELECTED
@@ -137,25 +127,22 @@ fun CleanScreen(
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Medium,
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(
-                selected = state.duplicateAgeFilter == DuplicateAgeFilter.OLDER,
-                onClick = { onDuplicateAgeFilter(DuplicateAgeFilter.OLDER) },
-                enabled = !state.busy && !state.analyzing,
-                label = { Text(stringResource(R.string.clean_dup_filter_older)) },
-            )
-            FilterChip(
-                selected = state.duplicateAgeFilter == DuplicateAgeFilter.NEWER,
-                onClick = { onDuplicateAgeFilter(DuplicateAgeFilter.NEWER) },
-                enabled = !state.busy && !state.analyzing,
-                label = { Text(stringResource(R.string.clean_dup_filter_newer)) },
-            )
+        if (state.groups.isNotEmpty()) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = state.duplicateAgeFilter == DuplicateAgeFilter.OLDER,
+                    onClick = { onDuplicateAgeFilter(DuplicateAgeFilter.OLDER) },
+                    enabled = !state.busy && !state.analyzing,
+                    label = { Text(stringResource(R.string.clean_dup_filter_older)) },
+                )
+                FilterChip(
+                    selected = state.duplicateAgeFilter == DuplicateAgeFilter.NEWER,
+                    onClick = { onDuplicateAgeFilter(DuplicateAgeFilter.NEWER) },
+                    enabled = !state.busy && !state.analyzing,
+                    label = { Text(stringResource(R.string.clean_dup_filter_newer)) },
+                )
+            }
         }
-        Text(
-            text = stringResource(R.string.clean_dup_filter_hint),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
-        )
 
         if (state.analyzing || state.busy) {
             Row(
@@ -166,28 +153,25 @@ fun CleanScreen(
             }
         }
 
-        if (state.hasAnalyzed && state.groups.isEmpty() && !state.analyzing) {
-            Text(
-                text = stringResource(R.string.clean_empty),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
-            )
-        }
-
         state.groups.forEach { group ->
             group.members
                 .distinctBy { it.mediaItem.id }
                 .forEach { member ->
+                    val device = member.deviceLabel
+                        .takeUnless { it.equals("Catalogo", ignoreCase = true) }
+                        .orEmpty()
+                        .ifBlank {
+                            member.locationName.takeUnless {
+                                it.equals("Catalogo", ignoreCase = true) ||
+                                    it.equals("Spazio app", ignoreCase = true)
+                            }.orEmpty()
+                        }
                     CatalogSelectableRow(
                         title = member.mediaItem.displayTitle?.ifBlank { null }
                             ?: member.mediaItem.id,
-                        deviceLabel = member.deviceLabel.ifBlank { member.locationName },
+                        deviceLabel = device,
                         pathLabel = member.pathLabel,
-                        statusLabel = if (member.isSuggestedKeep) {
-                            stringResource(R.string.clean_suggested_keep)
-                        } else {
-                            "Online"
-                        },
+                        statusLabel = CatalogListRowFormat.availabilityLabel(Availability.AVAILABLE),
                         secondary = member.isSecondaryVolume,
                         selection = if (member.mediaItem.id in state.duplicateSelectedIds) {
                             SourceCensusSelection.SELECTED
@@ -203,12 +187,14 @@ fun CleanScreen(
             HorizontalDivider()
         }
 
-        Button(
-            onClick = onRequestTrashPending,
-            enabled = state.totalPendingTrashCount > 0 && !state.analyzing && !state.busy,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(stringResource(R.string.clean_move_to_trash))
+        if (state.totalPendingTrashCount > 0) {
+            Button(
+                onClick = onRequestTrashPending,
+                enabled = !state.analyzing && !state.busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.clean_move_to_trash))
+            }
         }
 
         Spacer(modifier = Modifier.height(8.dp))

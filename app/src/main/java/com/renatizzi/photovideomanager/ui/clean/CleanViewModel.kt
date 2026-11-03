@@ -222,8 +222,10 @@ class CleanViewModel(
                 if (byItem.size < 2) continue
                 val ordered = byItem.values.sortedBy { memberAgeEpochMs(it) }
                 val keep = when (filter) {
-                    DuplicateAgeFilter.OLDER -> ordered.last() // tiene il più recente
-                    DuplicateAgeFilter.NEWER -> ordered.first() // tiene il più vecchio
+                    // Più vecchi da eliminare → tiene il più recente
+                    DuplicateAgeFilter.OLDER -> ordered.last()
+                    // Più recenti da eliminare → tiene il più vecchio
+                    DuplicateAgeFilter.NEWER -> ordered.first()
                 }
                 for (member in ordered) {
                     if (member.mediaItem.id != keep.mediaItem.id) {
@@ -232,6 +234,16 @@ class CleanViewModel(
                 }
             }
             return selected
+        }
+
+        /** Id da tenere (non cestinare) secondo il filtro età corrente. */
+        fun keepIdsForFilter(
+            groups: List<DuplicateGroup>,
+            filter: DuplicateAgeFilter,
+        ): Set<String> {
+            val selected = selectByAgeFilter(groups, filter)
+            return groups.flatMap { g -> g.members.map { it.mediaItem.id } }
+                .toSet() - selected
         }
 
         private fun memberAgeEpochMs(member: DuplicateMember): Long =

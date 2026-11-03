@@ -34,7 +34,13 @@ class CatalogFacade(
     fun catalogSeat() = catalogHubService.currentSeat()
 
     suspend fun configureCatalogSeat(seat: com.renatizzi.photovideomanager.domain.hub.CatalogSeat) =
-        catalogHubService.configureSeat(seat)
+        catalogHubService.configureSeat(seat).also { result ->
+            // Nota ter: modello Setup deve propagarsi alle righe Acquisisci/Importa/Dettaglio.
+            if (result.isSuccess) {
+                val model = result.getOrNull()?.deviceModel?.trim().orEmpty()
+                if (model.isNotBlank()) sourceRegistry.setDeviceAlias(model)
+            }
+        }
 
     suspend fun catalogSeatReachable(): Boolean = catalogHubService.seatReachable()
 
@@ -184,8 +190,12 @@ class CatalogFacade(
     suspend fun listImportExclusions(): List<ImportExclusionSummary> =
         acquisitionService.listImportExclusions()
 
-    suspend fun restoreImportExclusion(storageLocationId: String, opaqueLocator: String) =
+    suspend fun restoreImportExclusion(storageLocationId: String, opaqueLocator: String): Boolean =
         acquisitionService.restoreImportExclusion(storageLocationId, opaqueLocator)
+
+    /** Anteprima live SAF (Dettaglio anche prima di Conferma). */
+    suspend fun listLiveMediaPreview(locationId: String) =
+        sourceRegistry.listLiveMediaPreview(locationId)
 
     suspend fun analyzeExactDuplicates(): DedupAnalysisResult =
         dedupService.analyzeExactDuplicates()

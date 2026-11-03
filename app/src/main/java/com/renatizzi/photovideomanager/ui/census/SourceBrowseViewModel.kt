@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.renatizzi.photovideomanager.application.CatalogFacade
+import com.renatizzi.photovideomanager.application.LiveMediaPreview
 import com.renatizzi.photovideomanager.domain.model.ArchiveEntry
 import com.renatizzi.photovideomanager.domain.model.MediaBrowseSortMode
 import com.renatizzi.photovideomanager.domain.model.MediaKind
@@ -24,6 +25,8 @@ data class SourceBrowseUiState(
     /** Sottocartelle immediate — non mostrate in Dettaglio (NOVITÀ: riga=media). */
     val childFolders: List<String> = emptyList(),
     val entries: List<ArchiveEntry> = emptyList(),
+    /** Anteprima SAF se il Catalogo non ha ancora copie (prima di Conferma). */
+    val livePreviews: List<LiveMediaPreview> = emptyList(),
     val sortMode: MediaBrowseSortMode = MediaBrowseSortMode.NEWEST,
     val loading: Boolean = true,
     val message: String? = null,
@@ -41,6 +44,21 @@ data class SourceBrowseUiState(
                 it.mediaItem.updatedAtEpochMs
             }
         }
+
+    val visibleLivePreviews: List<LiveMediaPreview>
+        get() = when (sortMode) {
+            MediaBrowseSortMode.NAME -> livePreviews.sortedBy { it.displayName.lowercase() }
+            MediaBrowseSortMode.KIND -> livePreviews.sortedWith(
+                compareBy<LiveMediaPreview> { it.kind.name }.thenBy { it.displayName },
+            )
+            MediaBrowseSortMode.NEWEST -> livePreviews
+        }
+
+    val itemCount: Int
+        get() = if (entries.isNotEmpty()) entries.size else livePreviews.size
+
+    val showingLivePreview: Boolean
+        get() = entries.isEmpty() && livePreviews.isNotEmpty()
 }
 
 class SourceBrowseViewModel(
@@ -63,16 +81,22 @@ class SourceBrowseViewModel(
                 val source = sources.firstOrNull { it.locationId == locationId }
                 val entries = catalogFacade.listMediaForLocation(locationId)
                 val folders = catalogFacade.listImmediateChildFolders(locationId)
-                Triple(source, entries, folders)
-            }.onSuccess { (source, entries, folders) ->
+                val live = if (entries.isEmpty()) {
+                    catalogFacade.listLiveMediaPreview(locationId)
+                } else {
+                    emptyList()
+                }
+                BrowsePayload(source, entries, folders, live)
+            }.onSuccess { payload ->
                 _state.update {
                     it.copy(
-                        displayName = source?.displayName.orEmpty(),
-                        deviceLabel = source?.deviceLabel.orEmpty(),
-                        pathLabel = source?.pathLabel.orEmpty(),
-                        isSecondaryVolume = source?.isSecondaryVolume == true,
-                        childFolders = folders,
-                        entries = entries,
+                        displayName = payload.source?.displayName.orEmpty(),
+                        deviceLabel = payload.source?.deviceLabel.orEmpty(),
+                        pathLabel = payload.source?.pathLabel.orEmpty(),
+                        isSecondaryVolume = payload.source?.isSecondaryVolume == true,
+                        childFolders = payload.folders,
+                        entries = payload.entries,
+                        livePreviews = payload.live,
                         loading = false,
                     )
                 }
@@ -105,3 +129,10 @@ class SourceBrowseViewModel(
             }
     }
 }
+
+private data class BrowsePayload(
+    val source: com.renatizzi.photovideomanager.domain.model.SourceSummary?,
+    val entries: List<ArchiveEntry>,
+    val folders: List<String>,
+    val live: List<LiveMediaPreview>,
+)

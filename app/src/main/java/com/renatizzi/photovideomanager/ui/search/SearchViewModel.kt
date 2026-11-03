@@ -28,6 +28,11 @@ data class SearchUiState(
      * così i filtri lavorano sull’elenco completo.
      */
     val selection: Map<String, SourceCensusSelection> = emptyMap(),
+    /**
+     * Stato ciclico del chip Tutti/Foto/Video (Nota ter): ogni click sul chip
+     * avanza ✓ → X → vuoto sulle righe del dominio filtrato.
+     */
+    val chipCycle: Map<SearchKindFilter, SourceCensusSelection> = emptyMap(),
     val seatStatus: CatalogSeatStatus? = null,
     val loading: Boolean = true,
     val message: String? = null,
@@ -64,10 +69,20 @@ class SearchViewModel(
         }
     }
 
-    /** Chip Tutti / Foto / Video: filtra l’elenco; non cambia le selezioni di riga. */
+    /**
+     * Chip Tutti / Foto / Video (Nota ter): filtra l’elenco e avanza il ciclo di selezione
+     * (vuoto → ✓ → X → vuoto) sulle righe del dominio del chip, dopo il reload filtrato.
+     */
     fun onKindFilter(filter: SearchKindFilter) {
-        _state.update { it.copy(kindFilter = filter) }
-        runSearch()
+        val prev = _state.value.chipCycle[filter] ?: SourceCensusSelection.NOT_SELECTED
+        val next = prev.cycleNextCatalog()
+        _state.update {
+            it.copy(
+                kindFilter = filter,
+                chipCycle = it.chipCycle + (filter to next),
+            )
+        }
+        runSearch(bulkSelectionForFilter = next)
     }
 
     /** Ciclo Aggiorna: vuoto → ✓ → X → vuoto. */
@@ -163,7 +178,9 @@ class SearchViewModel(
         }
     }
 
-    private fun runSearch() {
+    private fun runSearch(
+        bulkSelectionForFilter: SourceCensusSelection? = null,
+    ) {
         val query = _state.value.query
         val filter = _state.value.kindFilter
         viewModelScope.launch {
@@ -175,13 +192,16 @@ class SearchViewModel(
                 entries to seat
             }.onSuccess { (entries, seat) ->
                 _state.update { current ->
-                    // Default Aggiorna: deselezionato; conserva solo stati già scelti dall’utente.
                     val selection = buildMap {
+                        // Conserva selezioni di id fuori dal filtro corrente.
+                        putAll(current.selection)
                         for (entry in entries) {
                             val id = entry.mediaItem.id
                             put(
                                 id,
-                                current.selection[id] ?: SourceCensusSelection.NOT_SELECTED,
+                                bulkSelectionForFilter
+                                    ?: current.selection[id]
+                                    ?: SourceCensusSelection.NOT_SELECTED,
                             )
                         }
                     }
