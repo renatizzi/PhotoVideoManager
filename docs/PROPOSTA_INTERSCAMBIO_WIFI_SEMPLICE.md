@@ -53,20 +53,34 @@ Dopo la scelta cartella: la fonte compare sotto il dispositivo. Stesso Acquisisc
 
 ---
 
-## 4. PC e disco di rete — una sola biforcazione (anti-farragine)
+## 4. PC e NAS — simili nell’idea, diversi nei passi
 
-**Domanda unica** (chiusa, sì/no):
+**Idea comune:** cartella già in rete → il telefono la collega e sceglie.  
+**Non sono la stessa procedura.**
+
+### 4.1 Cosa resta uguale (entrambi)
+
+Sul telefono Android serve ancora un ponte verso la share (oggi **CIFS** / «Disco di rete»), poi **Scegli cartella**.  
+«Cartella in rete» = il posto; CIFS = come il telefono ci arriva. La proposta **non** elimina CIFS.
+
+### 4.2 PC / notebook
+
+**Domanda unica** (solo qui):
 
 > «La cartella condivisa è già pronta e la vedi da questo telefono?»
 
 | Risposta | Cosa succede | Cosa **non** succede |
 |---|---|---|
-| **Sì** | Apri collegamento rete (CIFS / Disco di rete) → **Scegli cartella** → fine | Niente USB, niente script, niente checklist lunga |
-| **No** (solo PC) | Guida **breve** già esistente per creare la share sul PC (stessi strumenti del setup Catalogo, non un nuovo motore) → poi stesso «Scegli cartella» | Non inventare un secondo wizard; non obbligare a rifare la sede Catalogo |
+| **Sì** | CIFS / Disco di rete → **Scegli cartella** → fine | Niente USB, niente script |
+| **No** | Guida **breve** già nota per *creare* la share sul PC → poi stesso CIFS → Scegli cartella | Secondo wizard; rifare sede Catalogo |
 
-**Disco di rete / NAS:** di solito la share c’è già → percorso = solo **Sì** (scegli cartella). Niente ramo “crea share”.
+### 4.3 Disco di rete / NAS
 
-**Regola d’oro:** la procedura lunga esiste **una volta** per creare la cartella sul PC; ogni fonte successiva sulla stessa share = solo «Scegli cartella».
+- La share sul NAS **c’è già** → **nessuna** domanda «è pronta?» e **nessuno** script/USB.  
+- Percorso: spiega in 2–3 righe → CIFS / Disco di rete (se non ancora collegato) → **Scegli cartella**.  
+- Più corto del PC, non «la stessa domanda» del PC.
+
+**Regola d’oro:** la procedura lunga esiste **una volta** e **solo sul PC** per creare la share; NAS e usi successivi = collega + scegli cartella.
 
 ---
 

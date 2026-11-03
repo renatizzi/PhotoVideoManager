@@ -1,19 +1,19 @@
 # LOCK — Interscambio Wi‑Fi semplice (fonti dispositivi)
 
-**Stato:** in attesa OK Renato  
+**Stato:** approvato (procedi)  
 **Data:** 2026-11-03  
-**Richiesta / test di riferimento:** chat 03/11 — preoccupazione routine farraginose; OK di direzione sulla cartella condivisa se non c’è alternativa  
-**Approvazione Renato:** in attesa  
+**Richiesta / test di riferimento:** chat 03/11 — routine farraginose; chiarimento PC≠NAS/CIFS; «procedi pure… provo a seguirti»  
+**Approvazione Renato:** 2026-11-03 OK di direzione (procedi)  
 **Proposta di prodotto:** `docs/PROPOSTA_INTERSCAMBIO_WIFI_SEMPLICE.md`
 
 | # | Osservazione (Renato) | Risultato atteso (misurabile) | Fuori scope |
 |---|----------------------|-------------------------------|-------------|
-| 1 | Le routine finiscono per complicare invece di semplificare | Percorso **corto di default**: se la cartella in rete è già pronta → solo collega + **Scegli cartella**. Nessuna checklist USB/script obbligatoria in quel caso | Nuovo wizard inventato; scan Wi‑Fi; peer telefono↔telefono |
-| 2 | Deve essere comprensibile a basso profilo informatico | Una sola idea utente: **«cartella in rete = posto di incontro»**. In Acquisisci → Aggiungi: scelta tipo in linguaggio semplice (Questo telefono / PC / Disco di rete / Drive / Altro telefono). Max **una** schermata di spiegazione prima di Scegli cartella | Gergo SMB/SAF in etichette principali; cloud obbligatorio |
-| 3 | Distinzione mobile / PC / disco di rete | Distinzione **solo** al collegamento (scelta tipo + per PC domanda Sì/No «cartella già pronta?»). Uso quotidiano = stesso Acquisisci→Importa | Tre filiere d’uso diverse dopo il collegamento |
-| 4 | Non ripetere il setup Catalogo/sorgenti in modo pesante | Si **riusa** il meccanismo già noto (CIFS / Disco di rete / +). Non si obbliga a rifare la **sede Catalogo** per aggiungere una fonte foto. Procedura lunga PC solo se utente dice che la share **non** è pronta | Riscrittura completa wizard sede; recupero auto IP |
-| 5 | Altro telefono come sorgente | Nessuna falsa procedura “collega telefono in Wi‑Fi”. Testo onesto: metti i file nella cartella condivisa (o Drive), poi acquisisci da lì. Help cavo/Quick Share solo secondario | Discovery peer MediaManager; Quick Share come percorso principale |
-| 6 | Visibilità in Acquisisci | Dopo il collegamento, il dispositivo/fonte compare in Acquisisci con stato Disponibile / Non in rete; si acquisisce come le altre fonti | Smart TV / IoT |
+| 1 | Le routine finiscono per complicare invece di semplificare | Percorso **corto di default** quando la share esiste già: CIFS/Disco di rete + **Scegli cartella**. USB/script solo se PC e utente dice che la share non è pronta | Nuovo wizard inventato; scan Wi‑Fi; peer telefono↔telefono |
+| 2 | Deve essere comprensibile a basso profilo informatico | Idea utente: **«cartella in rete = posto di incontro»**. Aggiungi: Questo telefono / PC / Disco di rete / Drive / Altro telefono. Max **una** schermata di spiegazione prima di Scegli cartella | Gergo SMB/SAF in etichette principali; cloud obbligatorio |
+| 3 | Distinzione mobile / PC / disco di rete; non equiparare PC e NAS | **PC:** domanda Sì/No «cartella già pronta?» (+ eventuale crea-share). **NAS:** niente quella domanda; share già sul NAS → CIFS + Scegli cartella. **CIFS resta** per entrambi sul telefono. Uso quotidiano = stesso Acquisisci→Importa | Tre filiere d’uso diverse dopo il collegamento; eliminare CIFS per NAS |
+| 4 | Non ripetere il setup Catalogo/sorgenti in modo pesante | Si **riusa** CIFS / Disco di rete / +. Non si obbliga a rifare la **sede Catalogo** per una fonte foto. Procedura lunga solo PC se share assente | Riscrittura completa wizard sede; recupero auto IP |
+| 5 | Altro telefono come sorgente | Nessuna falsa procedura “collega telefono in Wi‑Fi”. Testo onesto: file nella cartella condivisa (o Drive), poi acquisisci. Help cavo/Quick Share solo secondario | Discovery peer MediaManager; Quick Share come percorso principale |
+| 6 | Visibilità in Acquisisci | Dopo il collegamento, dispositivo/fonte in Acquisisci con Disponibile / Non in rete; acquisizione come le altre fonti | Smart TV / IoT |
 
 ## Note operative (agente)
 
