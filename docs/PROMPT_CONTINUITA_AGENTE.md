@@ -20,7 +20,7 @@ La verifica di **0.16.2 è KO**: priorità assoluta correggere i criteri non rec
 ### 0. Regole di collaborazione (permanenti — prevalgono sul metodo di lavoro)
 **Obbligatorio all’avvio di ogni sessione:**  
 `docs/REGOLE_COLLABORAZIONE_MEDIAMANAGER.md` e `AGENTS.md` (radice repo).  
-Adottate 23/10/2026. Comunicazione semplice, niente ricicli, controllo prima del codice, test telefono unitari con istruzioni complete. In contrasto sul *metodo di lavoro*, prevalgono quei documenti.
+Adottate 23/10/2026; aggiornate 3/11/2026 con **§11 Protocollo LOCK** (elenco bug → LOCK approvato → fix solo sulle righe → APK solo a LOCK chiuso). Comunicazione semplice, niente ricicli, controllo prima del codice, test telefono unitari con istruzioni complete. In contrasto sul *metodo di lavoro*, prevalgono quei documenti.
 
 ### 1.1 Repository e branch
 - Repo: `renatizzi/PhotoVideoManager` (anche URL legacy `photovideomanager`)
