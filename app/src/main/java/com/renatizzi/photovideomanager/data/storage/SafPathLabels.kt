@@ -201,14 +201,14 @@ object SafPathLabels {
 
     /** Percorso storage (riga «percorso» in Acquisisci), distinto dal dispositivo. */
     fun storagePathLabel(context: Context, treeUri: Uri): String {
-        humanPath(treeUri)?.let { return stripDevicePrefix(it) }
+        humanPath(treeUri)?.let { return stripVolumeWords(stripDevicePrefix(it)) }
         val docId = runCatching { DocumentsContract.getTreeDocumentId(treeUri) }.getOrNull()
         val decoded = docId?.let { decode(it) }.orEmpty()
         // Alcuni provider rete/Drive usano id tipo share:path/to/folder
         if (decoded.contains(':')) {
             val after = decoded.substringAfter(':').trim('/').replace('\\', '/')
             if (after.isNotBlank() && after.contains('/')) {
-                return stripDevicePrefix(after)
+                return stripVolumeWords(stripDevicePrefix(after))
             }
             if (after.isNotBlank() && providerOf(treeUri) != SafProvider.LOCAL_STORAGE) {
                 val folder = folderTitle(context, treeUri, after)
@@ -218,13 +218,15 @@ object SafPathLabels {
                     !folder.equals(after, ignoreCase = true) && !looksIllegible(folder) -> folder
                     else -> after
                 }
-                return stripDevicePrefix(path)
+                return stripVolumeWords(stripDevicePrefix(path))
             }
         } else if (decoded.contains('/') || decoded.contains('\\')) {
-            return stripDevicePrefix(decoded.trim('/').replace('\\', '/'))
+            return stripVolumeWords(stripDevicePrefix(decoded.trim('/').replace('\\', '/')))
         }
-        return stripDevicePrefix(
-            folderTitle(context, treeUri, defaultFolderFallback(providerOf(treeUri))),
+        return stripVolumeWords(
+            stripDevicePrefix(
+                folderTitle(context, treeUri, defaultFolderFallback(providerOf(treeUri))),
+            ),
         )
     }
 
@@ -262,7 +264,7 @@ object SafPathLabels {
      * path `Memoria principale/Pictures/MediaManager_test` → `Memoria principale/Pictures`.
      */
     fun pathUnderName(path: String, displayName: String, deviceLabel: String = ""): String {
-        var p = stripDevicePrefix(path)
+        var p = stripVolumeWords(stripDevicePrefix(path))
         if (deviceLabel.isNotBlank() && p.equals(deviceLabel, ignoreCase = true)) return ""
         // Ripeti strip se il path inizia ancora col device (es. dopo alias).
         if (deviceLabel.isNotBlank()) {
@@ -280,7 +282,7 @@ object SafPathLabels {
         ) {
             p = p.substring(0, p.length - suffix.length)
         }
-        return p.trim().trim('/')
+        return stripVolumeWords(p.trim().trim('/'))
     }
 
     fun humanizeDocumentId(docId: String): String {
@@ -289,17 +291,12 @@ object SafPathLabels {
             // Non è un id volume:path (tipico Drive) → non inventare Memoria principale.
             return decoded.ifBlank { docId }
         }
-        val volume = decoded.substringBefore(':', missingDelimiterValue = "")
         val path = decoded.substringAfter(':', missingDelimiterValue = "")
             .trim('/')
             .replace('\\', '/')
-        val volumeLabel = volumeLabel(volume)
-        return when {
-            path.isBlank() && volumeLabel.isNotBlank() -> volumeLabel
-            path.isBlank() -> decoded.ifBlank { docId }
-            volumeLabel.isBlank() -> path
-            else -> "$volumeLabel/$path"
-        }
+        // Nota ter: niente «Memoria principale» / «Scheda SD» nel percorso UI —
+        // il badge SD e il dispositivo stanno sulla riga meta, non nel path.
+        return path
     }
 
     fun volumeLabel(volume: String): String = when (volume.lowercase()) {
@@ -311,6 +308,33 @@ object SafPathLabels {
                 "Scheda SD / memoria secondaria"
             else -> volume
         }
+    }
+
+    /**
+     * Nota ter: rimuove dal path termini volume («Memoria principale», «Scheda SD», …)
+     * che non devono comparire in Acquisisci/Importa/Dettaglio.
+     */
+    fun stripVolumeWords(path: String): String {
+        var p = path.trim().trimStart('/').replace('\\', '/')
+        val volumeWords = listOf(
+            "Scheda SD / memoria secondaria",
+            "Scheda SD / Memoria secondaria",
+            "memoria secondaria",
+            "Memoria secondaria",
+            "Scheda SD",
+            "scheda Sd",
+            "scheda sd",
+            "Memoria principale",
+            "memoria principale",
+        )
+        for (word in volumeWords) {
+            if (p.equals(word, ignoreCase = true)) return ""
+            val withSlash = "$word/"
+            if (p.startsWith(withSlash, ignoreCase = true)) {
+                p = p.substring(withSlash.length)
+            }
+        }
+        return p.trim('/').trim()
     }
 
     fun queryTreeDisplayName(context: Context, treeUri: Uri): String? {

@@ -31,8 +31,8 @@ object CatalogListRowFormat {
     }
 
     fun availabilityLabel(availability: Availability): String = when (availability) {
-        Availability.AVAILABLE -> "Online"
-        Availability.UNAVAILABLE -> "Offline"
-        Availability.UNKNOWN -> "Non verificabile"
+        Availability.AVAILABLE -> "🛜 Online"
+        Availability.UNAVAILABLE -> "⚠ Offline"
+        Availability.UNKNOWN -> "? Non verificabile"
     }
 }

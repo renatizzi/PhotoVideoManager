@@ -33,6 +33,10 @@ class AcquisitionService(
     private val catalogStore: CatalogStore,
     private val adapterFactory: StorageAdapterFactory,
     private val permissionGate: PermissionGate,
+    /** Nome dispositivo locale (Setup modello → alias → sistema). */
+    private val localDeviceLabel: () -> String = {
+        SafPathLabels.deviceLabel(appContext)
+    },
 ) {
     /**
      * Originali Importa (candidati tecnici). Se [sourceLocationIds] è non vuoto, limita alle sole fonti
@@ -98,7 +102,7 @@ class AcquisitionService(
                             SafPathLabels.deviceLabelForTree(
                                 appContext,
                                 uri,
-                                SafPathLabels.deviceLabel(appContext),
+                                localDeviceLabel().ifBlank { SafPathLabels.deviceLabel(appContext) },
                             )
                     }
                 }.getOrDefault(location.displayName)
@@ -156,16 +160,14 @@ class AcquisitionService(
         val locations = catalogStore.listStorageLocations().associateBy { it.id }
         return catalogStore.listExclusions().map { ex ->
             val location = locations[ex.storageLocationId]
-            val displayName = ex.opaqueLocator.substringAfterLast('/')
-                .substringAfterLast(':')
-                .ifBlank { "File escluso" }
+            val displayName = humanFileNameFromLocator(ex.opaqueLocator)
             val device = location?.let { loc ->
                 if (loc.adapterKind == StorageAdapterKind.SAF_TREE && loc.opaqueLocator.isNotBlank()) {
                     runCatching {
                         SafPathLabels.deviceLabelForTree(
                             appContext,
                             Uri.parse(loc.opaqueLocator),
-                            SafPathLabels.deviceLabel(appContext),
+                            localDeviceLabel().ifBlank { SafPathLabels.deviceLabel(appContext) },
                         )
                     }.getOrDefault(loc.displayName)
                 } else {
@@ -185,9 +187,68 @@ class AcquisitionService(
         }
     }
 
-    suspend fun restoreImportExclusion(storageLocationId: String, opaqueLocator: String) {
+    /**
+     * Rimuove l’esclusione e, se possibile, reinserisce subito il file come candidato Importa
+     * (senza attendere un nuovo Conferma).
+     */
+    suspend fun restoreImportExclusion(storageLocationId: String, opaqueLocator: String): Boolean {
         require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
         catalogStore.removeExclusion(storageLocationId, opaqueLocator)
+        val existing = catalogStore.findMediaCopyByLocator(storageLocationId, opaqueLocator)
+        if (existing != null) {
+            if (existing.state != MediaCopyState.ACTIVE) {
+                catalogStore.upsertMediaCopy(existing.copy(state = MediaCopyState.ACTIVE))
+            }
+            return true
+        }
+        val location = catalogStore.getStorageLocation(storageLocationId) ?: return false
+        val adapter = runCatching { adapterFactory.create(location) }.getOrNull() ?: return false
+        val metadata = runCatching { adapter.readMetadata(opaqueLocator) }.getOrNull()
+        val displayName = humanFileNameFromLocator(opaqueLocator)
+        val kind = com.renatizzi.photovideomanager.domain.policy.MediaKindDetector.detect(
+            fileName = displayName,
+            mimeType = metadata?.mimeType,
+            locatorHint = opaqueLocator,
+        ) ?: return false
+        val now = System.currentTimeMillis()
+        val itemId = "media.${UUID.randomUUID()}"
+        val copyId = "copy.${UUID.randomUUID()}"
+        catalogStore.upsertMediaItem(
+            com.renatizzi.photovideomanager.domain.model.MediaItem(
+                id = itemId,
+                kind = kind,
+                domainScope = DomainScope.PERSONAL,
+                capturedAtEpochMs = metadata?.lastModifiedEpochMs,
+                displayTitle = displayName,
+                createdAtEpochMs = now,
+                updatedAtEpochMs = now,
+            ),
+        )
+        catalogStore.upsertMediaCopy(
+            MediaCopy(
+                id = copyId,
+                mediaItemId = itemId,
+                storageLocationId = storageLocationId,
+                opaqueLocator = opaqueLocator,
+                byteSize = metadata?.byteSize,
+                mimeType = metadata?.mimeType,
+                state = MediaCopyState.ACTIVE,
+                createdAtEpochMs = now,
+            ),
+        )
+        return true
+    }
+
+    private fun humanFileNameFromLocator(opaqueLocator: String): String {
+        val raw = opaqueLocator.substringAfterLast('/')
+            .substringAfterLast(':')
+            .ifBlank { opaqueLocator }
+        val decoded = runCatching {
+            java.net.URLDecoder.decode(raw, Charsets.UTF_8.name())
+        }.getOrDefault(raw)
+        val leaf = decoded.substringAfterLast('/').substringAfterLast('\\')
+            .ifBlank { decoded }
+        return leaf.ifBlank { "File escluso" }
     }
 
     suspend fun acquireToPersonalArchive(mediaItemIds: Collection<String>): AcquireResult {

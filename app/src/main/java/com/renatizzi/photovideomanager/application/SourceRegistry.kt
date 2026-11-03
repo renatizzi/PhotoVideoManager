@@ -37,6 +37,8 @@ class SourceRegistry(
     private val labelStore: SourceLabelStore,
     /** Etichetta Posizione Catalogo: se coincide con l’alias tablet, non usarla come gruppo fonti. */
     private val catalogSeatLabel: () -> String = { "" },
+    /** Modello dispositivo da Setup Catalogo (prevale sul nome sistema). */
+    private val catalogSeatDeviceModel: () -> String = { "" },
 ) {
     suspend fun bootstrapPersonalArchiveIfNeeded() {
         require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
@@ -191,8 +193,24 @@ class SourceRegistry(
             )
         }
 
+        // Nota ter: se la radice ha media diretti e anche i figli, registra entrambi
+        // (prima si perdevano i file nella cartella genitore).
+        val rootHasDirectMedia = runCatching {
+            rootAdapter.listChildren(rootLocator).any { child ->
+                !child.isDirectory && looksLikeMedia(child.displayName, child.mimeType)
+            }
+        }.getOrDefault(false)
+
         if (mediaChildren.isNotEmpty()) {
-            return mediaChildren
+            if (!rootHasDirectMedia) return mediaChildren
+            val rootName = displayName.ifBlank {
+                SafPathLabels.folderTitle(
+                    appContext,
+                    treeUri,
+                    SafPathLabels.humanPathOrCloud(appContext, treeUri),
+                )
+            }
+            return listOf(SafRegisterTarget(treeUri, rootName)) + mediaChildren
         }
 
         val rootName = displayName.ifBlank {
@@ -338,15 +356,55 @@ class SourceRegistry(
 
     /**
      * Nome del **tablet/telefono** per i gruppi Acquisisci (non la Posizione del Catalogo).
-     * Se l’utente ha rinominato l’alias uguale al Catalogo (caso tipico), torna il nome sistema.
+     * Priorità: modello Setup Catalogo → alias utente → nome sistema.
      */
     fun localDeviceLabelForGrouping(): String {
+        val seatModel = catalogSeatDeviceModel().trim()
+        if (seatModel.isNotBlank()) return seatModel
         val system = SafPathLabels.deviceLabel(appContext).ifBlank { "Questo tablet" }
         val alias = labelStore.deviceAlias()
         if (alias.isNullOrBlank()) return system
         val seat = catalogSeatLabel().trim()
         if (seat.isNotBlank() && alias.equals(seat, ignoreCase = true)) return system
         return alias
+    }
+
+    /**
+     * Anteprima live SAF (Dettaglio prima di Conferma): elenca foto/video senza censimento.
+     */
+    suspend fun listLiveMediaPreview(locationId: String, limit: Int = 500): List<LiveMediaPreview> {
+        val location = catalogStore.getStorageLocation(locationId) ?: return emptyList()
+        if (location.adapterKind != StorageAdapterKind.SAF_TREE) return emptyList()
+        val adapter = runCatching { adapterFactory.create(location) }.getOrNull() ?: return emptyList()
+        val out = ArrayList<LiveMediaPreview>(minOf(64, limit))
+        val queue = ArrayDeque<String>()
+        queue.add(location.opaqueLocator)
+        var dirs = 0
+        while (queue.isNotEmpty() && out.size < limit && dirs < 400) {
+            val current = queue.removeFirst()
+            dirs++
+            val children = runCatching { adapter.listChildren(current) }.getOrDefault(emptyList())
+            for (child in children) {
+                if (child.isDirectory) {
+                    queue.add(child.opaqueLocator)
+                    continue
+                }
+                val kind = com.renatizzi.photovideomanager.domain.policy.MediaKindDetector.detect(
+                    fileName = child.displayName,
+                    mimeType = child.mimeType,
+                    locatorHint = child.opaqueLocator,
+                ) ?: continue
+                out.add(
+                    LiveMediaPreview(
+                        displayName = child.displayName.ifBlank { "media" },
+                        kind = kind,
+                        opaqueLocator = child.opaqueLocator,
+                    ),
+                )
+                if (out.size >= limit) break
+            }
+        }
+        return out
     }
 
     suspend fun removeSource(locationId: String) {
@@ -496,3 +554,10 @@ class SourceRegistry(
         )
     }
 }
+
+/** Anteprima media da SAF senza riga Catalogo (Dettaglio pre-Conferma). */
+data class LiveMediaPreview(
+    val displayName: String,
+    val kind: MediaKind,
+    val opaqueLocator: String,
+)

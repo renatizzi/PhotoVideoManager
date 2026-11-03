@@ -26,6 +26,9 @@ class SearchService(
     private val appContext: Context,
     private val catalogStore: CatalogStore,
     private val permissionGate: PermissionGate,
+    private val localDeviceLabel: () -> String = {
+        SafPathLabels.deviceLabel(appContext)
+    },
 ) {
     suspend fun search(
         query: String,
@@ -123,7 +126,7 @@ class SearchService(
                             SafPathLabels.deviceLabelForTree(
                                 appContext,
                                 uri,
-                                SafPathLabels.deviceLabel(appContext),
+                                localDeviceLabel().ifBlank { SafPathLabels.deviceLabel(appContext) },
                             )
                     }
                 }.getOrDefault(location.displayName)

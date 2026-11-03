@@ -63,6 +63,7 @@ class AppContainer(context: Context) {
         personalRoot = personalRoot,
         labelStore = sourceLabelStore,
         catalogSeatLabel = { catalogSeatStore.seat().displayLabel },
+        catalogSeatDeviceModel = { catalogSeatStore.seat().deviceModel },
     )
 
     val censusService: CensusService = CensusService(
@@ -76,6 +77,7 @@ class AppContainer(context: Context) {
         catalogStore = catalogStore,
         adapterFactory = adapterFactory,
         permissionGate = permissionGate,
+        localDeviceLabel = { sourceRegistry.deviceAliasOrDefault() },
     )
 
     val dedupService: DedupService = DedupService(
@@ -99,6 +101,7 @@ class AppContainer(context: Context) {
         appContext = appContext,
         catalogStore = catalogStore,
         permissionGate = permissionGate,
+        localDeviceLabel = { sourceRegistry.deviceAliasOrDefault() },
     )
 
     val exportService: ExportService = ExportService(

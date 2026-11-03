@@ -21,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.renatizzi.photovideomanager.R
+import com.renatizzi.photovideomanager.application.LiveMediaPreview
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatRowFormatter
 import com.renatizzi.photovideomanager.domain.model.ArchiveEntry
 import com.renatizzi.photovideomanager.domain.model.MediaBrowseSortMode
@@ -35,7 +36,7 @@ fun SourceBrowseScreen(
     onBack: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    val itemCount = state.visibleEntries.size
+    val itemCount = state.itemCount
     val pathDisplay = CatalogSeatRowFormatter.displayPath(
         state.pathLabel.ifBlank { state.displayName }.ifBlank { "—" },
     )
@@ -53,7 +54,6 @@ fun SourceBrowseScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        // Bug 4: ritorno al punto di accesso (Acquisisci).
         OutlinedButton(onClick = onBack) {
             Text(stringResource(R.string.browse_source_back))
         }
@@ -70,7 +70,6 @@ fun SourceBrowseScreen(
             )
         }
 
-        // Ordinamento solo con N. elementi > 0 (nota).
         if (itemCount > 0) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(
@@ -100,22 +99,35 @@ fun SourceBrowseScreen(
             }
         }
 
-        // N. Elementi solo se > 0.
         if (!state.loading && itemCount > 0) {
             Text(
                 text = stringResource(R.string.browse_source_count, itemCount),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium,
             )
+            if (state.showingLivePreview) {
+                Text(
+                    text = stringResource(R.string.browse_source_preview_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                )
+            }
         }
 
         if (!state.loading && itemCount == 0) {
             Text(stringResource(R.string.browse_source_empty))
         }
 
-        state.visibleEntries.forEach { entry ->
-            BrowseRow(entry)
-            HorizontalDivider()
+        if (state.entries.isNotEmpty()) {
+            state.visibleEntries.forEach { entry ->
+                BrowseRow(entry)
+                HorizontalDivider()
+            }
+        } else {
+            state.visibleLivePreviews.forEach { preview ->
+                LiveBrowseRow(preview)
+                HorizontalDivider()
+            }
         }
     }
 }
@@ -132,9 +144,43 @@ private fun BrowseRow(entry: ArchiveEntry) {
     ) {
         MediaThumbnail(copy = entry.mediaCopy, kind = entry.mediaItem.kind)
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                color = MaterialTheme.colorScheme.primary,
+            )
             Text(
                 text = when (entry.mediaItem.kind) {
+                    MediaKind.PHOTO -> stringResource(R.string.media_kind_photo)
+                    MediaKind.VIDEO -> stringResource(R.string.media_kind_video)
+                },
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+    }
+}
+
+@Composable
+private fun LiveBrowseRow(preview: LiveMediaPreview) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = preview.displayName,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Text(
+                text = when (preview.kind) {
                     MediaKind.PHOTO -> stringResource(R.string.media_kind_photo)
                     MediaKind.VIDEO -> stringResource(R.string.media_kind_video)
                 },
