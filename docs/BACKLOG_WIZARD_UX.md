@@ -1,6 +1,6 @@
 # Backlog UX — Wizard Setup Catalogo (PC)
 
-**Aggiornato:** 03/11/2026 — annotato BL-UI-13 rientro Cestino (post OK 0.16.64); proposta Wi‑Fi dispositivi in discussione.  
+**Aggiornato:** 03/11/2026 — BL-UI-13 Cestino; proposta+LOCK interscambio Wi‑Fi semplice (in attesa OK).  
 **Specifica UI:** `docs/reference/videate-utente-setup-catalogo-pc.md`  
 **PPT V2:** `docs/reference/revisione_guida_V2.pptx`  
 **Non usare come specifica:** `docs/reference/template-videate-wizard-pc.md`
@@ -97,4 +97,4 @@ Versione **0.16.64** accettata (path uniformi + Sposta/Ripristina sticky). Resid
 |---|---|---|
 | BL-UI-13 | **Bottone di rientro in Cestino** — manca un modo chiaro per tornare/rientrare nel Cestino dopo le azioni di Ripristina / navigazione correlata | **Backlog** (annotato; non in tranche corrente) |
 
-**Fuori scope immediato (stesso giorno):** proposta lineare «visibilità altri dispositivi Wi‑Fi / interscambio file» — discussione prodotto in chat; niente codice finché non c’è LOCK / convalida.
+**Proposta interscambio Wi‑Fi (03/11):** `docs/PROPOSTA_INTERSCAMBIO_WIFI_SEMPLICE.md` + LOCK `docs/LOCK_INTERSCAMBIO_WIFI_SEMPLICE.md` — in attesa OK Renato; **niente codice** finché LOCK ≠ approvato. Vincolo: percorso corto di default, niente routine parallele al setup sede Catalogo.
