@@ -1,7 +1,7 @@
 # Regole vincolanti di collaborazione e sviluppo — MediaManager
 
 **Stato:** vincolanti e permanenti  
-**Data adozione:** 23/10/2026  
+**Data adozione:** 23/10/2026 (aggiornamento §11 Protocollo LOCK: 3/11/2026)  
 **Applicazione:** tutte le sessioni presenti e future (Cursor Cloud / Composer / agenti).  
 **Riferimento di avvio sessione:** anche `AGENTS.md` (radice del repository).
 
@@ -108,4 +108,51 @@ Dopo un KO telefono sullo **stesso** difetto: non rilasciare un’altra build «
 | `docs/PVM_Nota_Integrata.md` | Requisiti e decisioni di prodotto |
 | `docs/BACKLOG_WIZARD_UX.md` | Backlog Setup Catalogo / Acquisisci |
 | `docs/TERMINOLOGIA_UI.md` | Terminologia UI |
+| `docs/LOCK_TEMPLATE.md` | Modello obbligatorio protocollo LOCK (§11) |
 | `consegna-telefono.bat` | Unico percorso PC → APK di prova |
+
+## 11. Protocollo LOCK → FIX → PROVA (anti-riciclo, adottato 3/11/2026)
+
+Obiettivo: quando Renato dà un elenco chiaro di punti da sistemare, l’agente **non** amplia, non inventa UI/flussi e non apre un nuovo ciclo di «migliorie».
+
+Decisione Renato 3/11/2026: **sì** a (1) LOCK obbligatorio prima del codice su elenco bug, (2) fuori tabella = blocco totale, (3) nuova APK solo a LOCK chiuso in test.
+
+### 11.1 LOCK (obbligatorio prima del codice)
+
+Se la richiesta contiene un elenco numerato di bug / disallineamenti / osservazioni da test (anche con screenshot):
+
+1. L’agente crea o aggiorna un file `docs/LOCK_<argomento>.md` usando `docs/LOCK_TEMPLATE.md`.
+2. Il LOCK è una tabella con **sole** colonne ammesse:
+   - **#** — numero punto
+   - **Osservazione** — testo di Renato (o parafrasi fedele + riferimento screenshot)
+   - **Risultato atteso** — misurabile (conteggi, testi, elementi UI presenti/assenti)
+   - **Fuori scope** — cosa non toccare in questo giro
+3. Vietato aggiungere righe «idea agente», «nice to have», allineamenti estetici non chiesti.
+4. Se manca un LOCK e la richiesta è un elenco di punti: l’agente prepara la bozza LOCK e **attende OK esplicito di Renato** prima di modificare codice (eccezione: typo / stringa letterale già indicata parola per parola).
+5. Se il LOCK è già presente e approvato (o la richiesta indica di usare un LOCK esistente): si passa al FIX senza ripresentare analisi.
+
+### 11.2 Ambito chiuso (fuori tabella = blocco totale)
+
+- È **proibito** modificare UI, flussi, architettura o file non necessari a chiudere una riga `#N` del LOCK attivo.
+- «Allineare», «migliorare», «di passaggio», filiera, refactor non richiesti = **vietati** finché Renato non aggiunge la riga al LOCK.
+- In dubbio su una riga: **fermati e chiedi** (una domanda secca); non interpretare né patchare «per sicurezza».
+- Questo §11 restringe il §7: «se chiaro, procedi» vale **solo entro le righe del LOCK**, non sul prodotto intero.
+
+### 11.3 FIX (una riga = un intervento)
+
+- Ogni `#N` ha causa in codice e fix mirato; preferire commit `fix(LOCK-N): …`.
+- Diff che tocca aree estranee alla causa di `#N`: da scartare o non consegnare in questo giro.
+- Non riaprire decisioni già in Nota / backlog / LOCK precedenti.
+
+### 11.4 PROVA (una sola, contro il LOCK)
+
+- Guida test = checkbox **1:1** sulle righe del LOCK (stessi numeri `#N`).
+- Nuova versione APK (`versionName` / `versionCode`) **solo** se:
+  1. compilazione e test automatici pertinenti OK;
+  2. ogni riga del LOCK ha criterio OK/KO nella guida;
+  3. la guida **non** introduce punti extra fuori LOCK.
+- Vale anche il §9 (gate consegna). Dopo KO telefono sullo stesso `#N`: niente build di speranza; solo ripresa di `#N`.
+
+### 11.5 Chiusura
+
+Il LOCK si considera chiuso quando Renato conferma OK su tutte le righe (o indica esplicitamente quali restano aperte). Solo allora si possono aprire nuovi punti o un nuovo LOCK.
