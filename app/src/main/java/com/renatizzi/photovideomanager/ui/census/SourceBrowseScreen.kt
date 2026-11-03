@@ -26,7 +26,9 @@ import com.renatizzi.photovideomanager.domain.hub.CatalogSeatRowFormatter
 import com.renatizzi.photovideomanager.domain.model.ArchiveEntry
 import com.renatizzi.photovideomanager.domain.model.MediaBrowseSortMode
 import com.renatizzi.photovideomanager.domain.model.MediaKind
+import android.net.Uri
 import com.renatizzi.photovideomanager.ui.common.MediaThumbnail
+import com.renatizzi.photovideomanager.ui.common.MediaThumbnailModel
 
 @Composable
 fun SourceBrowseScreen(
@@ -164,6 +166,7 @@ private fun BrowseRow(entry: ArchiveEntry) {
 
 @Composable
 private fun LiveBrowseRow(preview: LiveMediaPreview) {
+    val model = runCatching { Uri.parse(preview.opaqueLocator) }.getOrNull()
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -171,6 +174,7 @@ private fun LiveBrowseRow(preview: LiveMediaPreview) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        MediaThumbnailModel(model = model, kind = preview.kind)
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = preview.displayName,

@@ -67,9 +67,11 @@ import com.renatizzi.photovideomanager.domain.model.StorageAdapterKind
 import com.renatizzi.photovideomanager.domain.model.cycleNext
 import com.renatizzi.photovideomanager.domain.model.cycleNextCatalog
 import com.renatizzi.photovideomanager.ui.acquire.AcquireUiState
+import com.renatizzi.photovideomanager.ui.acquire.AcquireViewModel
 import com.renatizzi.photovideomanager.ui.census.CensusUiState
 import com.renatizzi.photovideomanager.ui.census.SourceSelectionBox
 import com.renatizzi.photovideomanager.ui.common.MediaThumbnail
+import com.renatizzi.photovideomanager.ui.common.MediaThumbnailModel
 import com.renatizzi.photovideomanager.ui.common.formatBytes
 import com.renatizzi.photovideomanager.ui.search.SearchUiState
 
@@ -680,6 +682,8 @@ fun ImportaStaticScreen(
     onImporta: () -> Unit,
     onContinue: () -> Unit = {},
     onBackToAcquisisci: () -> Unit,
+    onToggleExclusion: (storageLocationId: String, opaqueLocator: String) -> Unit = { _, _ -> },
+    onRestoreSelectedExclusions: () -> Unit = {},
     onRestoreExclusion: (storageLocationId: String, opaqueLocator: String) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier,
 ) {
@@ -810,18 +814,36 @@ fun ImportaStaticScreen(
 
             if (state.exclusions.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = stringResource(R.string.importa_esclusi_intro),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(R.string.importa_esclusi_intro),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+                        modifier = Modifier.weight(1f),
+                    )
+                    Button(
+                        onClick = onRestoreSelectedExclusions,
+                        enabled = !busy && state.selectedExclusionCount > 0,
+                    ) {
+                        Text(stringResource(R.string.importa_esclusi_restore))
+                    }
+                }
                 state.exclusions.forEach { exclusion ->
                     HorizontalDivider()
                     ExclusionRow(
                         exclusion = exclusion,
+                        checked = AcquireViewModel.exclusionKey(exclusion) in
+                            state.selectedExclusionKeys,
                         enabled = !busy,
-                        onRestore = {
-                            onRestoreExclusion(exclusion.storageLocationId, exclusion.opaqueLocator)
+                        onToggle = {
+                            onToggleExclusion(
+                                exclusion.storageLocationId,
+                                exclusion.opaqueLocator,
+                            )
                         },
                     )
                 }
@@ -910,16 +932,35 @@ private fun ImportCandidateRow(
 @Composable
 private fun ExclusionRow(
     exclusion: com.renatizzi.photovideomanager.domain.model.ImportExclusionSummary,
+    checked: Boolean,
     enabled: Boolean,
-    onRestore: () -> Unit,
+    onToggle: () -> Unit,
 ) {
+    val kind = com.renatizzi.photovideomanager.domain.policy.MediaKindDetector.detect(
+        fileName = exclusion.displayName,
+        mimeType = null,
+        locatorHint = exclusion.opaqueLocator,
+    ) ?: MediaKind.PHOTO
+    val model = runCatching { android.net.Uri.parse(exclusion.opaqueLocator) }.getOrNull()
+    val selection = if (checked) {
+        SourceCensusSelection.SELECTED
+    } else {
+        SourceCensusSelection.NOT_SELECTED
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(enabled = enabled, onClick = onToggle)
             .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        SourceSelectionBox(
+            selection = selection,
+            enabled = false,
+            onClick = {},
+        )
+        MediaThumbnailModel(model = model, kind = kind)
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = exclusion.displayName,
@@ -940,12 +981,9 @@ private fun ExclusionRow(
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Normal,
                     fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
-        }
-        OutlinedButton(onClick = onRestore, enabled = enabled) {
-            Text(stringResource(R.string.importa_esclusi_restore))
         }
     }
 }

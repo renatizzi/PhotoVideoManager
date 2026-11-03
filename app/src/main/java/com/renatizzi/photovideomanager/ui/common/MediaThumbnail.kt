@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImagePainter
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
+import coil.decode.VideoFrameDecoder
 import coil.request.ImageRequest
 import coil.size.Size
 import com.renatizzi.photovideomanager.domain.model.MediaCopy
@@ -77,12 +78,16 @@ fun MediaThumbnailModel(
         if (model == null) {
             PlaceholderIcon(kind = kind)
         } else {
+            val requestBuilder = ImageRequest.Builder(context)
+                .data(model)
+                .size(Size(256, 256))
+                .crossfade(true)
+            // .mov / QuickTime: forza frame video (BitmapFactory fallisce senza MIME).
+            if (kind == MediaKind.VIDEO) {
+                requestBuilder.decoderFactory(VideoFrameDecoder.Factory())
+            }
             SubcomposeAsyncImage(
-                model = ImageRequest.Builder(context)
-                    .data(model)
-                    .size(Size(256, 256))
-                    .crossfade(true)
-                    .build(),
+                model = requestBuilder.build(),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize(),

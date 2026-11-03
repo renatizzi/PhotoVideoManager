@@ -37,7 +37,6 @@ fun TrashScreen(
     onRefresh: () -> Unit,
     onToggle: (String) -> Unit,
     onRestoreSelected: () -> Unit,
-    onPurge: (String) -> Unit,
     onRequestEmpty: () -> Unit,
     onConfirmEmpty: () -> Unit,
     onDismissEmpty: () -> Unit,
@@ -113,7 +112,6 @@ fun TrashScreen(
                 checked = entry.mediaItem.id in state.selectedIds,
                 enabled = !state.busy,
                 onToggle = { onToggle(entry.mediaItem.id) },
-                onPurge = { onPurge(entry.mediaItem.id) },
             )
         }
         if (state.entries.isNotEmpty()) HorizontalDivider()
@@ -144,7 +142,6 @@ private fun TrashRow(
     checked: Boolean,
     enabled: Boolean,
     onToggle: () -> Unit,
-    onPurge: () -> Unit,
 ) {
     val title = entry.mediaItem.displayTitle?.ifBlank { null } ?: entry.mediaItem.id
     val device = entry.locationName.takeUnless {
@@ -194,9 +191,6 @@ private fun TrashRow(
                     color = MaterialTheme.colorScheme.primary,
                 )
             }
-        }
-        OutlinedButton(onClick = onPurge, enabled = enabled) {
-            Text(stringResource(R.string.trash_purge))
         }
     }
 }

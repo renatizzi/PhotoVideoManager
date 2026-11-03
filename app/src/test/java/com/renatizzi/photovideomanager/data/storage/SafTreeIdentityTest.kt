@@ -94,4 +94,30 @@ class SafTreeIdentityTest {
             SafTreeIdentity.canonicalKeyFromUriString(doc),
         )
     }
+
+    @Test
+    fun sameDocumentFolder_treeAndDocumentForms() {
+        val doc =
+            "content://com.android.externalstorage.documents/tree/primary%3ATest1/document/primary%3ATest1%2FDuplicati"
+        val tree =
+            "content://com.android.externalstorage.documents/tree/primary%3ATest1%2FDuplicati"
+        assertTrue(SafTreeIdentity.sameDocumentFolder(doc, tree))
+        assertTrue(SafTreeIdentity.isRegisteredFolderRoot(doc, tree))
+    }
+
+    @Test
+    fun isSameOrDescendantDocId_nestedPaths() {
+        assertTrue(
+            SafTreeIdentity.isSameOrDescendantDocId(
+                "primary:Test1/Duplicati/file.mp4",
+                "primary:Test1/Duplicati",
+            ),
+        )
+        assertTrue(
+            SafTreeIdentity.isSameOrDescendantDocId("primary:Test1/Duplicati", "primary:Test1"),
+        )
+        assertFalse(
+            SafTreeIdentity.isSameOrDescendantDocId("primary:Test2", "primary:Test1"),
+        )
+    }
 }
