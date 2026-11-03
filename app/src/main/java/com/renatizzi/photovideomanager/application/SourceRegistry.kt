@@ -522,7 +522,7 @@ internal fun folderPathLabelForFile(
     if (sourceDoc.isNullOrBlank() || SafPathLabels.looksIllegible(sourceDoc)) {
         return sourceLeaf
     }
-    return when {
+    val raw = when {
         parentDoc == sourceDoc -> sourceLeaf
         parentDoc.startsWith("$sourceDoc/") -> {
             val rest = parentDoc.removePrefix("$sourceDoc/")
@@ -534,6 +534,46 @@ internal fun folderPathLabelForFile(
             val after = parentDoc.substringAfter(':', parentDoc).trim('/')
             if (after.isBlank() || SafPathLabels.looksIllegible(after)) sourceLeaf else after
         }
+    }
+    return sanitizeRelativeFolderPath(raw, sourceLeaf, sourceLocator)
+}
+
+/**
+ * Toglie host/share ridondanti dal path UI (es. `MediaManager(sda1)/test3_SDA1` → cartella).
+ */
+internal fun sanitizeRelativeFolderPath(
+    path: String,
+    sourceDisplayName: String,
+    sourceLocator: String,
+): String {
+    var p = path.trim().trim('/').replace('\\', '/')
+    if (p.isBlank() || SafPathLabels.looksIllegible(p)) return sourceDisplayName.trim()
+    // Solo host da URI SMB (non dal path cartella, altrimenti toglie «Test1/» legittimo).
+    val host = SafPathLabels.extractNetworkHostHint(sourceLocator, displayHint = null, path = "")
+        ?.trim().orEmpty()
+    val leaf = sourceDisplayName.trim()
+    if (host.isNotBlank()) {
+        if (p.equals(host, ignoreCase = true)) return leaf.ifBlank { p }
+        val hostSlash = "$host/"
+        if (p.startsWith(hostSlash, ignoreCase = true)) {
+            p = p.substring(hostSlash.length)
+        }
+        val slashHost = "/$host"
+        if (p.endsWith(slashHost, ignoreCase = true)) {
+            p = p.removeSuffix(slashHost).removeSuffix(slashHost.lowercase())
+        }
+        // `cartella/host` tipico CIFS invertito
+        if (leaf.isNotBlank() && p.equals("$leaf/$host", ignoreCase = true)) {
+            return leaf
+        }
+        if (leaf.isNotBlank() && p.equals("$host/$leaf", ignoreCase = true)) {
+            return leaf
+        }
+    }
+    p = p.trim('/')
+    return when {
+        p.isBlank() || SafPathLabels.looksIllegible(p) -> leaf.ifBlank { path.trim() }
+        else -> p
     }
 }
 

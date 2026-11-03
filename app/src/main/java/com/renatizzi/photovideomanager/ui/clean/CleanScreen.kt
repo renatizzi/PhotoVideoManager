@@ -4,10 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -26,7 +24,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.renatizzi.photovideomanager.domain.model.Availability
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -34,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.renatizzi.photovideomanager.R
 import com.renatizzi.photovideomanager.domain.hub.CatalogListRowFormat
+import com.renatizzi.photovideomanager.domain.model.Availability
 import com.renatizzi.photovideomanager.domain.model.SourceCensusSelection
 import com.renatizzi.photovideomanager.ui.census.SourceSelectionBox
 import com.renatizzi.photovideomanager.ui.common.MediaThumbnail
@@ -53,7 +51,6 @@ fun CleanScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -91,37 +88,11 @@ fun CleanScreen(
             )
         }
 
-        HorizontalDivider()
-
         Text(
             text = stringResource(R.string.clean_section_scraps, state.scraps.size),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Medium,
         )
-        if (state.scraps.isNotEmpty()) {
-            state.scraps.forEach { scrap ->
-                CatalogSelectableRow(
-                    title = scrap.mediaItem.displayTitle?.ifBlank { null }
-                        ?: scrap.mediaItem.id,
-                    deviceLabel = scrap.deviceLabel,
-                    pathLabel = scrap.pathLabel,
-                    statusLabel = CatalogListRowFormat.availabilityLabel(Availability.AVAILABLE),
-                    secondary = scrap.isSecondaryVolume,
-                    selection = if (scrap.mediaItem.id in state.scrapSelectedIds) {
-                        SourceCensusSelection.SELECTED
-                    } else {
-                        SourceCensusSelection.NOT_SELECTED
-                    },
-                    previewCopy = scrap.previewCopy,
-                    kind = scrap.mediaItem.kind,
-                    enabled = !state.busy && !state.analyzing,
-                    onToggle = { onToggleScrap(scrap.mediaItem.id) },
-                )
-            }
-        }
-
-        HorizontalDivider()
-
         Text(
             text = stringResource(R.string.clean_section_duplicates, state.groups.size),
             style = MaterialTheme.typography.titleMedium,
@@ -144,49 +115,7 @@ fun CleanScreen(
             }
         }
 
-        if (state.analyzing || state.busy) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                CircularProgressIndicator()
-            }
-        }
-
-        state.groups.forEach { group ->
-            group.members
-                .distinctBy { it.mediaItem.id }
-                .forEach { member ->
-                    val device = member.deviceLabel
-                        .takeUnless { it.equals("Catalogo", ignoreCase = true) }
-                        .orEmpty()
-                        .ifBlank {
-                            member.locationName.takeUnless {
-                                it.equals("Catalogo", ignoreCase = true) ||
-                                    it.equals("Spazio app", ignoreCase = true)
-                            }.orEmpty()
-                        }
-                    CatalogSelectableRow(
-                        title = member.mediaItem.displayTitle?.ifBlank { null }
-                            ?: member.mediaItem.id,
-                        deviceLabel = device,
-                        pathLabel = member.pathLabel,
-                        statusLabel = CatalogListRowFormat.availabilityLabel(Availability.AVAILABLE),
-                        secondary = member.isSecondaryVolume,
-                        selection = if (member.mediaItem.id in state.duplicateSelectedIds) {
-                            SourceCensusSelection.SELECTED
-                        } else {
-                            SourceCensusSelection.NOT_SELECTED
-                        },
-                        previewCopy = member.mediaCopy,
-                        kind = member.mediaItem.kind,
-                        enabled = !state.busy && !state.analyzing,
-                        onToggle = { onToggleDuplicate(member.mediaItem.id) },
-                    )
-                }
-            HorizontalDivider()
-        }
-
+        // LOCK #2: azione sempre visibile (come Pulisci in Aggiorna), sopra la lista.
         if (state.totalPendingTrashCount > 0) {
             Button(
                 onClick = onRequestTrashPending,
@@ -197,7 +126,78 @@ fun CleanScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        if (state.analyzing || state.busy) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(0.dp),
+        ) {
+            if (state.scraps.isNotEmpty()) {
+                state.scraps.forEach { scrap ->
+                    CatalogSelectableRow(
+                        title = scrap.mediaItem.displayTitle?.ifBlank { null }
+                            ?: scrap.mediaItem.id,
+                        deviceLabel = scrap.deviceLabel,
+                        pathLabel = scrap.pathLabel,
+                        statusLabel = CatalogListRowFormat.availabilityLabel(Availability.AVAILABLE),
+                        secondary = scrap.isSecondaryVolume,
+                        selection = if (scrap.mediaItem.id in state.scrapSelectedIds) {
+                            SourceCensusSelection.SELECTED
+                        } else {
+                            SourceCensusSelection.NOT_SELECTED
+                        },
+                        previewCopy = scrap.previewCopy,
+                        kind = scrap.mediaItem.kind,
+                        enabled = !state.busy && !state.analyzing,
+                        onToggle = { onToggleScrap(scrap.mediaItem.id) },
+                    )
+                }
+                HorizontalDivider()
+            }
+
+            state.groups.forEach { group ->
+                group.members
+                    .distinctBy { it.mediaItem.id }
+                    .forEach { member ->
+                        val device = member.deviceLabel
+                            .takeUnless { it.equals("Catalogo", ignoreCase = true) }
+                            .orEmpty()
+                            .ifBlank {
+                                member.locationName.takeUnless {
+                                    it.equals("Catalogo", ignoreCase = true) ||
+                                        it.equals("Spazio app", ignoreCase = true)
+                                }.orEmpty()
+                            }
+                        CatalogSelectableRow(
+                            title = member.mediaItem.displayTitle?.ifBlank { null }
+                                ?: member.mediaItem.id,
+                            deviceLabel = device,
+                            pathLabel = member.pathLabel,
+                            statusLabel = CatalogListRowFormat.availabilityLabel(Availability.AVAILABLE),
+                            secondary = member.isSecondaryVolume,
+                            selection = if (member.mediaItem.id in state.duplicateSelectedIds) {
+                                SourceCensusSelection.SELECTED
+                            } else {
+                                SourceCensusSelection.NOT_SELECTED
+                            },
+                            previewCopy = member.mediaCopy,
+                            kind = member.mediaItem.kind,
+                            enabled = !state.busy && !state.analyzing,
+                            onToggle = { onToggleDuplicate(member.mediaItem.id) },
+                        )
+                    }
+                HorizontalDivider()
+            }
+        }
     }
 
     if (state.pendingTrash) {

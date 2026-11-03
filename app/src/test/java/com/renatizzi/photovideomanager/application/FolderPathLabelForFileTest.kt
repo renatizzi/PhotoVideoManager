@@ -39,4 +39,18 @@ class FolderPathLabelForFileTest {
             folderPathLabelForFile(file, source, "test2_drive"),
         )
     }
+
+    @Test
+    fun sanitize_stripsHostDuplicatedUnderFolder() {
+        val uri =
+            "content://com.wa2c.android.cifsdocumentsprovider.documents/tree/smb%3A%2F%2Ftest3_SDA1%2FMediaManager(sda1)"
+        assertEquals(
+            "MediaManager(sda1)",
+            sanitizeRelativeFolderPath(
+                "MediaManager(sda1)/test3_SDA1",
+                "MediaManager(sda1)",
+                uri,
+            ),
+        )
+    }
 }

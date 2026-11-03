@@ -777,6 +777,28 @@ fun ImportaStaticScreen(
             onSelect = onKindFilter,
         )
 
+        // LOCK #2: Ripristina fisso sopra lo scroll (visibile senza fine lista).
+        if (state.exclusions.isNotEmpty()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.importa_esclusi_intro),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+                    modifier = Modifier.weight(1f),
+                )
+                Button(
+                    onClick = onRestoreSelectedExclusions,
+                    enabled = !busy && state.selectedExclusionCount > 0,
+                ) {
+                    Text(stringResource(R.string.importa_esclusi_restore))
+                }
+            }
+        }
+
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -815,24 +837,6 @@ fun ImportaStaticScreen(
 
             if (state.exclusions.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = stringResource(R.string.importa_esclusi_intro),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
-                        modifier = Modifier.weight(1f),
-                    )
-                    Button(
-                        onClick = onRestoreSelectedExclusions,
-                        enabled = !busy && state.selectedExclusionCount > 0,
-                    ) {
-                        Text(stringResource(R.string.importa_esclusi_restore))
-                    }
-                }
                 state.exclusions.forEach { exclusion ->
                     HorizontalDivider()
                     ExclusionRow(

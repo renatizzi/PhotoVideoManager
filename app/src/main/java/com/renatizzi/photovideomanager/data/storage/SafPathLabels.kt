@@ -53,16 +53,16 @@ object SafPathLabels {
             uriString = treeUri.toString(),
         )
 
-    /** Classificazione testabile senza Android Uri (unit JVM). */
+    /**
+     * Etichetta dispositivo rete per UI (LOCK path): solo il tipo
+     * (`Disco di rete / NAS` / `PC / notebook`), **senza** `· host`
+     * (l’host non va accanto al nome; la cartella sta in `\path`).
+     */
     fun networkDeviceLabelFromHints(
         displayHint: String?,
         path: String,
         uriString: String,
-    ): String {
-        val kind = networkDeviceKindFromHints(displayHint, path, uriString)
-        val host = extractNetworkHostHint(uriString, displayHint, path)
-        return if (host.isNullOrBlank()) kind else "$kind · $host"
-    }
+    ): String = networkDeviceKindFromHints(displayHint, path, uriString)
 
     fun networkDeviceKindFromHints(
         displayHint: String?,

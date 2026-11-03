@@ -100,9 +100,9 @@ class SafPathLabelsTest {
     }
 
     @Test
-    fun networkDeviceLabel_mediaManagerCatalogShareIsPcWithHost() {
+    fun networkDeviceLabel_mediaManagerCatalogShareIsPcWithoutHostSuffix() {
         assertEquals(
-            "${SafPathLabels.DEVICE_PC_NOTEBOOK} · pc",
+            SafPathLabels.DEVICE_PC_NOTEBOOK,
             SafPathLabels.networkDeviceLabelFromHints(
                 displayHint = "MediaManagerCatalog",
                 path = "",
