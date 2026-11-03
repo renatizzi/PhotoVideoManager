@@ -10,10 +10,11 @@ Adottate il 23/10/2026. Valgono per tutte le sessioni. Non basta dichiararle com
 
 1. **Comunicazione:** italiano semplice verso Renato; niente gergo inutile; istruzioni con cosa / dove / risultato.
 2. **Prima del codice:** coerenza con requisiti e piano; in caso di dubbio che cambia il risultato → chiarire; niente ricicli di analisi, niente scope creep.
-3. **Test telefono:** non frammentare; una sessione finale per gruppo di lavoro; ogni test con obiettivo, preparazione, passi numerati, atteso, errori, riscontro.
-4. **Gate consegna (anti-spreco):** niente richiesta prova telefono senza `versionCode` massimo univoco, `assembleDebug` OK, APK in artifact, e (se rete) simulazione interna. Percorso PC: `consegna-telefono.bat` → in caso di KO solo `build-consegna.log`.
-5. **Piano:** non alterare ciò che non è richiesto; riprendere dallo stato già raggiunto.
-6. **Documentazione vincolante di prodotto:** `docs/PVM_Nota_Integrata.md`, `docs/TERMINOLOGIA_UI.md`, backlog pertinenti (es. `docs/BACKLOG_WIZARD_UX.md`).
+3. **Protocollo LOCK (3/11/2026, REGOLE §11):** se Renato manda un elenco di bug/osservazioni → `docs/LOCK_<argomento>.md` da `docs/LOCK_TEMPLATE.md`; **fuori tabella = blocco totale**; nuova APK solo a LOCK chiuso in test. Senza LOCK approvato su elenco punti: bozza + attendere OK, non patchare.
+4. **Test telefono:** non frammentare; una sessione finale per gruppo di lavoro; ogni test con obiettivo, preparazione, passi numerati, atteso, errori, riscontro (checkbox 1:1 sul LOCK se presente).
+5. **Gate consegna (anti-spreco):** niente richiesta prova telefono senza `versionCode` massimo univoco, `assembleDebug` OK, APK in artifact, e (se rete) simulazione interna. Percorso PC: `consegna-telefono.bat` → in caso di KO solo `build-consegna.log`.
+6. **Piano:** non alterare ciò che non è richiesto; riprendere dallo stato già raggiunto.
+7. **Documentazione vincolante di prodotto:** `docs/PVM_Nota_Integrata.md`, `docs/TERMINOLOGIA_UI.md`, backlog pertinenti (es. `docs/BACKLOG_WIZARD_UX.md`).
 
 ## Handoff storico
 

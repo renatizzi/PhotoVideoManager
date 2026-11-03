@@ -81,6 +81,8 @@ class SourceRegistry(
 
     suspend fun listSources(refreshAvailability: Boolean = true): List<SourceSummary> {
         bootstrapPersonalArchiveIfNeeded()
+        // LOCK #1: se restano figli registrati sotto un genitore, collassa a sole root.
+        collapseRegisteredSafDescendants()
         val archives = catalogStore.listArchives().associateBy { it.id }
         // Dedup SAF: stessa cartella con URI stringa diversa non deve apparire due volte.
         val seenSafKeys = mutableSetOf<String>()
@@ -142,84 +144,8 @@ class SourceRegistry(
             }.getOrThrow()
         }
 
-        // NOVITÀ: se la cartella scelta è root di sottocartelle con media,
-        // registra una riga per ogni sottocartella (corrispondenza biunivoca).
-        val targets = resolveRegisterTargets(treeUri, displayName)
-        val summaries = mutableListOf<SourceSummary>()
-        var anyNew = false
-        for (target in targets) {
-            val (summary, created) = registerOneSafTarget(target.uri, target.displayName)
-            summaries += summary
-            if (created) anyNew = true
-        }
-        val first = summaries.first()
-        return RegisterSourceResult(
-            source = first,
-            alreadyPresent = !anyNew,
-            additionalSources = summaries.drop(1),
-        )
-    }
-
-    private data class SafRegisterTarget(val uri: Uri, val displayName: String)
-
-    /**
-     * Se esistono sottocartelle immediate con media nel sottoalbero → quelle;
-     * altrimenti la cartella scelta (foglia / senza figli con media).
-     */
-    private suspend fun resolveRegisterTargets(
-        treeUri: Uri,
-        displayName: String,
-    ): List<SafRegisterTarget> {
-        val rootAdapter = runCatching {
-            adapterFactory.create(
-                StorageLocation(
-                    id = "tmp.resolve",
-                    archiveId = "tmp.resolve",
-                    displayName = displayName,
-                    adapterKind = StorageAdapterKind.SAF_TREE,
-                    opaqueLocator = treeUri.toString(),
-                ),
-            )
-        }.getOrNull() ?: return listOf(SafRegisterTarget(treeUri, displayName.ifBlank { "Cartella" }))
-
-        val rootLocator = treeUri.toString()
-        val childDirs = runCatching {
-            rootAdapter.listChildren(rootLocator).filter { it.isDirectory }
-        }.getOrDefault(emptyList())
-
-        val mediaChildren = childDirs.mapNotNull { child ->
-            val hasMedia = runCatching {
-                hasMediaInSubtree(rootAdapter, child.opaqueLocator)
-            }.getOrDefault(false)
-            if (!hasMedia) return@mapNotNull null
-            // Mantieni document URI sotto il tree genitore: l’adapter usa il parent
-            // (permesso takePersistable) e il censimento parte dal documentId figlio.
-            SafRegisterTarget(
-                uri = Uri.parse(child.opaqueLocator),
-                displayName = child.displayName.trim().ifBlank { displayName },
-            )
-        }
-
-        // Nota ter: se la radice ha media diretti e anche i figli, registra entrambi
-        // (prima si perdevano i file nella cartella genitore).
-        val rootHasDirectMedia = runCatching {
-            rootAdapter.listChildren(rootLocator).any { child ->
-                !child.isDirectory && looksLikeMedia(child.displayName, child.mimeType)
-            }
-        }.getOrDefault(false)
-
-        if (mediaChildren.isNotEmpty()) {
-            if (!rootHasDirectMedia) return mediaChildren
-            val rootName = displayName.ifBlank {
-                SafPathLabels.folderTitle(
-                    appContext,
-                    treeUri,
-                    SafPathLabels.humanPathOrCloud(appContext, treeUri),
-                )
-            }
-            return listOf(SafRegisterTarget(treeUri, rootName)) + mediaChildren
-        }
-
+        // LOCK Tab S9 #1: una scelta SAF = una sola riga (la cartella selezionata).
+        // I media nelle sottocartelle restano nel census ricorsivo — non come fonti extra.
         val rootName = displayName.ifBlank {
             SafPathLabels.folderTitle(
                 appContext,
@@ -227,44 +153,51 @@ class SourceRegistry(
                 SafPathLabels.humanPathOrCloud(appContext, treeUri),
             )
         }
-        return listOf(SafRegisterTarget(treeUri, rootName))
+        removeRegisteredDescendantSources(treeUri)
+        val (summary, created) = registerOneSafTarget(treeUri, rootName)
+        return RegisterSourceResult(
+            source = summary,
+            alreadyPresent = !created,
+            additionalSources = emptyList(),
+        )
+    }
+
+    /** Collassa tutte le sorgenti SAF discendenti sotto un genitore già collegato. */
+    private suspend fun collapseRegisteredSafDescendants() {
+        val saf = catalogStore.listStorageLocations()
+            .filter {
+                it.adapterKind == StorageAdapterKind.SAF_TREE && it.id != PERSONAL_LOCATION_ID
+            }
+            .sortedBy { SafTreeIdentity.documentIdOfLocator(it.opaqueLocator)?.length ?: Int.MAX_VALUE }
+        for (loc in saf) {
+            if (catalogStore.getStorageLocation(loc.id) == null) continue
+            removeRegisteredDescendantSources(Uri.parse(loc.opaqueLocator))
+        }
     }
 
     /**
-     * BFS limitato: true se nel sottoalbero c’è almeno un file foto/video.
-     * Allineato a [CensusService] (MIME + estensione).
+     * Se l’utente collega un genitore già espanso in figli (es. Test1 + Duplicati),
+     * toglie le sorgenti discendenti così in Acquisisci restano 2 root, non 4.
      */
-    private suspend fun hasMediaInSubtree(
-        adapter: StorageAdapter,
-        startLocator: String,
-        maxDirs: Int = 400,
-        maxFiles: Int = 2_000,
-    ): Boolean {
-        val queue = ArrayDeque<String>()
-        queue.add(startLocator)
-        var dirs = 0
-        var files = 0
-        while (queue.isNotEmpty() && dirs < maxDirs && files < maxFiles) {
-            val current = queue.removeFirst()
-            dirs++
-            val children = runCatching { adapter.listChildren(current) }.getOrDefault(emptyList())
-            for (child in children) {
-                if (child.isDirectory) {
-                    queue.add(child.opaqueLocator)
-                    continue
-                }
-                files++
-                if (looksLikeMedia(child.displayName, child.mimeType)) return true
+    private suspend fun removeRegisteredDescendantSources(parentTreeUri: Uri) {
+        val parentLocator = parentTreeUri.toString()
+        val parentDoc = SafTreeIdentity.documentIdOfLocator(parentLocator) ?: return
+        val parentAuth = SafTreeIdentity.authorityOfLocator(parentLocator) ?: return
+        val parentKey = SafTreeIdentity.canonicalKey(parentTreeUri)
+        val doomed = catalogStore.listStorageLocations().filter { loc ->
+            if (loc.adapterKind != StorageAdapterKind.SAF_TREE) return@filter false
+            if (loc.id == PERSONAL_LOCATION_ID) return@filter false
+            val auth = SafTreeIdentity.authorityOfLocator(loc.opaqueLocator) ?: return@filter false
+            if (auth != parentAuth) return@filter false
+            val doc = SafTreeIdentity.documentIdOfLocator(loc.opaqueLocator) ?: return@filter false
+            if (SafTreeIdentity.canonicalKeyFromUriString(loc.opaqueLocator) == parentKey) {
+                return@filter false
             }
+            SafTreeIdentity.isSameOrDescendantDocId(doc, parentDoc) && doc != parentDoc
         }
-        return false
-    }
-
-    private fun looksLikeMedia(fileName: String, mimeType: String?): Boolean {
-        val mime = mimeType?.lowercase().orEmpty()
-        if (mime.startsWith("image/") || mime.startsWith("video/")) return true
-        val ext = fileName.substringAfterLast('.', missingDelimiterValue = "").lowercase()
-        return ext in MEDIA_EXT
+        for (loc in doomed) {
+            runCatching { removeSource(loc.id) }
+        }
     }
 
     /**
@@ -415,6 +348,11 @@ class SourceRegistry(
                         displayName = child.displayName.ifBlank { "media" },
                         kind = kind,
                         opaqueLocator = child.opaqueLocator,
+                        folderPathLabel = folderPathLabelForFile(
+                            fileLocator = child.opaqueLocator,
+                            sourceLocator = location.opaqueLocator,
+                            sourceDisplayName = location.displayName,
+                        ),
                     ),
                 )
                 if (out.size >= limit) break
@@ -562,12 +500,80 @@ class SourceRegistry(
     companion object {
         const val PERSONAL_ARCHIVE_ID = CatalogFacade.PERSONAL_ARCHIVE_ID
         const val PERSONAL_LOCATION_ID = CatalogFacade.PERSONAL_LOCATION_ID
-        private val MEDIA_EXT = setOf(
-            "jpg", "jpeg", "jpe", "jfif", "png", "webp", "heic", "heif",
-            "gif", "bmp", "dng", "tif", "tiff", "raw", "cr2", "nef", "arw",
-            "mp4", "m4v", "mov", "mkv", "webm", "avi", "3gp", "3gpp",
-            "mpeg", "mpg", "wmv", "flv", "ts", "mts", "m2ts",
-        )
+    }
+}
+
+/**
+ * Percorso cartella del file rispetto alla sorgente (LOCK path), es. `Test1/Duplicati`.
+ * Mai stringhe Drive/`encoded=` (LOCK S25 #3).
+ */
+internal fun folderPathLabelForFile(
+    fileLocator: String,
+    sourceLocator: String,
+    sourceDisplayName: String,
+): String {
+    val sourceLeaf = sourceDisplayName.trim()
+    val fileDoc = SafTreeIdentity.documentIdOfLocator(fileLocator)
+        ?: return sourceLeaf
+    if (SafPathLabels.looksIllegible(fileDoc)) return sourceLeaf
+    val parentDoc = fileDoc.substringBeforeLast('/').ifBlank { fileDoc }
+    if (SafPathLabels.looksIllegible(parentDoc)) return sourceLeaf
+    val sourceDoc = SafTreeIdentity.documentIdOfLocator(sourceLocator)
+    if (sourceDoc.isNullOrBlank() || SafPathLabels.looksIllegible(sourceDoc)) {
+        return sourceLeaf
+    }
+    val raw = when {
+        parentDoc == sourceDoc -> sourceLeaf
+        parentDoc.startsWith("$sourceDoc/") -> {
+            val rest = parentDoc.removePrefix("$sourceDoc/")
+            if (SafPathLabels.looksIllegible(rest)) sourceLeaf
+            else if (sourceLeaf.isBlank()) rest
+            else "$sourceLeaf/$rest"
+        }
+        else -> {
+            val after = parentDoc.substringAfter(':', parentDoc).trim('/')
+            if (after.isBlank() || SafPathLabels.looksIllegible(after)) sourceLeaf else after
+        }
+    }
+    return sanitizeRelativeFolderPath(raw, sourceLeaf, sourceLocator)
+}
+
+/**
+ * Toglie host/share ridondanti dal path UI (es. `MediaManager(sda1)/test3_SDA1` → cartella).
+ */
+internal fun sanitizeRelativeFolderPath(
+    path: String,
+    sourceDisplayName: String,
+    sourceLocator: String,
+): String {
+    var p = path.trim().trim('/').replace('\\', '/')
+    if (p.isBlank() || SafPathLabels.looksIllegible(p)) return sourceDisplayName.trim()
+    // Solo host da URI SMB (non dal path cartella, altrimenti toglie «Test1/» legittimo).
+    val host = SafPathLabels.extractNetworkHostHint(sourceLocator, displayHint = null, path = "")
+        ?.trim().orEmpty()
+    val leaf = sourceDisplayName.trim()
+    if (host.isNotBlank()) {
+        if (p.equals(host, ignoreCase = true)) return leaf.ifBlank { p }
+        val hostSlash = "$host/"
+        if (p.startsWith(hostSlash, ignoreCase = true)) {
+            p = p.substring(hostSlash.length)
+        }
+        val slashHost = "/$host"
+        if (p.endsWith(slashHost, ignoreCase = true)) {
+            p = p.removeSuffix(slashHost).removeSuffix(slashHost.lowercase())
+        }
+        // `cartella/host` tipico CIFS invertito
+        if (leaf.isNotBlank() && p.equals("$leaf/$host", ignoreCase = true)) {
+            return leaf
+        }
+        if (leaf.isNotBlank() && p.equals("$host/$leaf", ignoreCase = true)) {
+            return leaf
+        }
+    }
+    p = p.trim('/')
+    return when {
+        p.isBlank() || SafPathLabels.looksIllegible(p) -> leaf.ifBlank { path.trim() }
+        else -> p
     }
 }
 
@@ -576,4 +582,6 @@ data class LiveMediaPreview(
     val displayName: String,
     val kind: MediaKind,
     val opaqueLocator: String,
+    /** Cartella del file per meta riga Dettaglio (sempre valorizzata). */
+    val folderPathLabel: String = "",
 )

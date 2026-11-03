@@ -1,11 +1,19 @@
 package com.renatizzi.photovideomanager.application
 
+import android.content.Context
+import android.net.Uri
+import com.renatizzi.photovideomanager.data.storage.SafPathLabels
+import com.renatizzi.photovideomanager.data.storage.SafTreeIdentity
 import com.renatizzi.photovideomanager.data.storage.StorageAdapterFactory
 import com.renatizzi.photovideomanager.domain.model.Availability
 import com.renatizzi.photovideomanager.domain.model.DedupAnalysisResult
 import com.renatizzi.photovideomanager.domain.model.DomainScope
+import com.renatizzi.photovideomanager.domain.model.DuplicateGroup
+import com.renatizzi.photovideomanager.domain.model.MediaCopy
 import com.renatizzi.photovideomanager.domain.model.MediaCopyState
 import com.renatizzi.photovideomanager.domain.model.MediaFingerprint
+import com.renatizzi.photovideomanager.domain.model.StorageAdapterKind
+import com.renatizzi.photovideomanager.domain.model.StorageLocation
 import com.renatizzi.photovideomanager.domain.policy.ExactDedupGrouping
 import com.renatizzi.photovideomanager.domain.port.CatalogStore
 import com.renatizzi.photovideomanager.domain.port.PermissionGate
@@ -17,9 +25,11 @@ import java.util.UUID
  * Calcola hash mancanti dove la sorgente è leggibile; nessuna eliminazione automatica.
  */
 class DedupService(
+    private val appContext: Context,
     private val catalogStore: CatalogStore,
     private val adapterFactory: StorageAdapterFactory,
     private val permissionGate: PermissionGate,
+    private val localDeviceLabel: () -> String,
 ) {
     suspend fun analyzeExactDuplicates(
         maxHashComputations: Int = DEFAULT_MAX_HASHES,
@@ -87,12 +97,14 @@ class DedupService(
             ExactDedupGrouping.SHA256,
             ExactDedupGrouping.LEVEL,
         )
-        val groups = ExactDedupGrouping.buildGroups(
+        val rawGroups = ExactDedupGrouping.buildGroups(
             itemsById = items,
             copies = copies,
             shaFingerprints = existing,
             locationNames = locationNames,
         )
+        // LOCK S25 #2: meta da sorgente esterna (non solo «Catalogo» / path vuoto).
+        val groups = enrichMemberSourceLabels(rawGroups, allActive, locations)
         val (dupPhotos, dupVideos) = ExactDedupGrouping.extraCountsByKind(groups)
         val message = when {
             copies.isEmpty() ->
@@ -126,8 +138,88 @@ class DedupService(
             ExactDedupGrouping.SHA256,
             ExactDedupGrouping.LEVEL,
         )
-        val groups = ExactDedupGrouping.buildGroups(items, copies, fps, locationNames)
+        val locations = catalogStore.listStorageLocations().associateBy { it.id }
+        val groups = enrichMemberSourceLabels(
+            ExactDedupGrouping.buildGroups(items, copies, fps, locationNames),
+            allActive,
+            locations,
+        )
         return ExactDedupGrouping.extraCountsByKind(groups)
+    }
+
+    private fun enrichMemberSourceLabels(
+        groups: List<DuplicateGroup>,
+        allActive: List<MediaCopy>,
+        locations: Map<String, StorageLocation>,
+    ): List<DuplicateGroup> {
+        val byItem = allActive.groupBy { it.mediaItemId }
+        return groups.map { group ->
+            group.copy(
+                members = group.members.map { member ->
+                    val external = byItem[member.mediaItem.id]?.firstOrNull { copy ->
+                        copy.storageLocationId != CatalogFacade.PERSONAL_LOCATION_ID
+                    }
+                    val loc = locations[external?.storageLocationId]
+                        ?: locations[member.mediaCopy.storageLocationId]
+                    val device = deviceLabelFor(loc)
+                    val path = pathLabelFor(loc, device)
+                    member.copy(
+                        locationName = loc?.displayName?.ifBlank { null } ?: member.locationName,
+                        deviceLabel = device,
+                        pathLabel = path,
+                        isSecondaryVolume = loc?.opaqueLocator
+                            ?.let { SafTreeIdentity.isMobileSecondaryVolume(it) } == true,
+                    )
+                },
+            )
+        }
+    }
+
+    private fun deviceLabelFor(location: StorageLocation?): String {
+        if (location == null) return ""
+        if (location.id == CatalogFacade.PERSONAL_LOCATION_ID) return ""
+        return when (location.adapterKind) {
+            StorageAdapterKind.LOCAL_FS -> ""
+            StorageAdapterKind.MEDIA_STORE -> "Galleria di sistema"
+            StorageAdapterKind.SMB -> SafPathLabels.networkDeviceLabelFromHints(
+                displayHint = location.displayName,
+                path = "",
+                uriString = location.opaqueLocator,
+            )
+            StorageAdapterKind.SAF_TREE -> {
+                if (location.opaqueLocator.isBlank()) return location.displayName
+                runCatching {
+                    val uri = Uri.parse(location.opaqueLocator)
+                    when (SafPathLabels.providerOf(uri)) {
+                        SafPathLabels.SafProvider.NETWORK_NAS ->
+                            SafPathLabels.networkDeviceLabel(uri, location.displayName)
+                        else ->
+                            SafPathLabels.deviceLabelForTree(
+                                appContext,
+                                uri,
+                                localDeviceLabel().ifBlank { SafPathLabels.deviceLabel(appContext) },
+                            )
+                    }
+                }.getOrDefault(location.displayName)
+            }
+        }
+    }
+
+    private fun pathLabelFor(location: StorageLocation?, deviceLabel: String): String {
+        if (location == null) return ""
+        if (location.id == CatalogFacade.PERSONAL_LOCATION_ID) return ""
+        if (location.adapterKind != StorageAdapterKind.SAF_TREE || location.opaqueLocator.isBlank()) {
+            return location.displayName.trim()
+        }
+        return runCatching {
+            val uri = Uri.parse(location.opaqueLocator)
+            val raw = SafPathLabels.storagePathLabel(appContext, uri)
+            if (SafPathLabels.looksIllegible(raw)) {
+                return@runCatching location.displayName.trim()
+            }
+            val under = SafPathLabels.pathUnderName(raw, location.displayName, deviceLabel)
+            under.ifBlank { location.displayName.trim() }
+        }.getOrDefault(location.displayName.trim())
     }
 
     companion object {

@@ -100,13 +100,25 @@ class SafPathLabelsTest {
     }
 
     @Test
-    fun networkDeviceLabel_mediaManagerShareIsPcWithHost() {
+    fun networkDeviceLabel_mediaManagerCatalogShareIsPcWithoutHostSuffix() {
         assertEquals(
-            "${SafPathLabels.DEVICE_PC_NOTEBOOK} · pc",
+            SafPathLabels.DEVICE_PC_NOTEBOOK,
             SafPathLabels.networkDeviceLabelFromHints(
                 displayHint = "MediaManagerCatalog",
                 path = "",
                 uriString = "content://com.wa2c.android.cifsdocumentsprovider.documents/tree/smb%3A%2F%2Fpc%2FMediaManagerCatalog",
+            ),
+        )
+    }
+
+    @Test
+    fun networkDeviceLabel_mediaManagerFolderOnShareIsNas() {
+        assertEquals(
+            SafPathLabels.DEVICE_NETWORK_NAS,
+            SafPathLabels.networkDeviceKindFromHints(
+                displayHint = "MediaManager(sda1)",
+                path = "MediaManager(sda1)",
+                uriString = "content://com.wa2c.android.cifsdocumentsprovider.documents/tree/smb%3A%2F%2Ftest3_SDA1%2FMediaManager(sda1)",
             ),
         )
     }
@@ -124,9 +136,9 @@ class SafPathLabelsTest {
     }
 
     @Test
-    fun networkDeviceLabel_genericShareDefaultsToPc() {
+    fun networkDeviceLabel_genericShareDefaultsToNas() {
         assertEquals(
-            SafPathLabels.DEVICE_PC_NOTEBOOK,
+            SafPathLabels.DEVICE_NETWORK_NAS,
             SafPathLabels.networkDeviceKindFromHints(
                 displayHint = "Foto",
                 path = "",

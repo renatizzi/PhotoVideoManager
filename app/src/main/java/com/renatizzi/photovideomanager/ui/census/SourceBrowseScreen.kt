@@ -22,10 +22,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.renatizzi.photovideomanager.R
 import com.renatizzi.photovideomanager.application.LiveMediaPreview
+import com.renatizzi.photovideomanager.domain.hub.CatalogListRowFormat
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatRowFormatter
 import com.renatizzi.photovideomanager.domain.model.ArchiveEntry
 import com.renatizzi.photovideomanager.domain.model.MediaBrowseSortMode
-import com.renatizzi.photovideomanager.domain.model.MediaKind
 import android.net.Uri
 import com.renatizzi.photovideomanager.ui.common.MediaThumbnail
 import com.renatizzi.photovideomanager.ui.common.MediaThumbnailModel
@@ -122,12 +122,24 @@ fun SourceBrowseScreen(
 
         if (state.entries.isNotEmpty()) {
             state.visibleEntries.forEach { entry ->
-                BrowseRow(entry)
+                BrowseRow(
+                    entry = entry,
+                    deviceLabel = state.deviceLabel,
+                    pathLabel = state.pathLabel.ifBlank { state.displayName },
+                    secondary = state.isSecondaryVolume,
+                )
                 HorizontalDivider()
             }
         } else {
             state.visibleLivePreviews.forEach { preview ->
-                LiveBrowseRow(preview)
+                LiveBrowseRow(
+                    preview = preview,
+                    deviceLabel = state.deviceLabel,
+                    pathLabel = preview.folderPathLabel.ifBlank {
+                        state.pathLabel.ifBlank { state.displayName }
+                    },
+                    secondary = state.isSecondaryVolume,
+                )
                 HorizontalDivider()
             }
         }
@@ -135,7 +147,12 @@ fun SourceBrowseScreen(
 }
 
 @Composable
-private fun BrowseRow(entry: ArchiveEntry) {
+private fun BrowseRow(
+    entry: ArchiveEntry,
+    deviceLabel: String,
+    pathLabel: String,
+    secondary: Boolean,
+) {
     val title = entry.mediaItem.displayTitle?.ifBlank { null } ?: entry.mediaItem.id
     Row(
         modifier = Modifier
@@ -153,19 +170,35 @@ private fun BrowseRow(entry: ArchiveEntry) {
                 fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                 color = MaterialTheme.colorScheme.primary,
             )
-            Text(
-                text = when (entry.mediaItem.kind) {
-                    MediaKind.PHOTO -> stringResource(R.string.media_kind_photo)
-                    MediaKind.VIDEO -> stringResource(R.string.media_kind_video)
-                },
-                style = MaterialTheme.typography.bodySmall,
+            // LOCK #6: path cartella uniforme (come Catalogo), non solo «Tipo:».
+            val meta = CatalogListRowFormat.metaLine(
+                deviceLabel = deviceLabel,
+                pathLabel = pathLabel,
+                statusLabel = CatalogListRowFormat.availabilityLabel(
+                    com.renatizzi.photovideomanager.domain.model.Availability.AVAILABLE,
+                ),
+                secondary = secondary,
             )
+            if (meta.isNotBlank()) {
+                Text(
+                    text = meta,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Normal,
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun LiveBrowseRow(preview: LiveMediaPreview) {
+private fun LiveBrowseRow(
+    preview: LiveMediaPreview,
+    deviceLabel: String,
+    pathLabel: String,
+    secondary: Boolean,
+) {
     val model = runCatching { Uri.parse(preview.opaqueLocator) }.getOrNull()
     Row(
         modifier = Modifier
@@ -183,13 +216,23 @@ private fun LiveBrowseRow(preview: LiveMediaPreview) {
                 fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                 color = MaterialTheme.colorScheme.primary,
             )
-            Text(
-                text = when (preview.kind) {
-                    MediaKind.PHOTO -> stringResource(R.string.media_kind_photo)
-                    MediaKind.VIDEO -> stringResource(R.string.media_kind_video)
-                },
-                style = MaterialTheme.typography.bodySmall,
+            val meta = CatalogListRowFormat.metaLine(
+                deviceLabel = deviceLabel,
+                pathLabel = pathLabel,
+                statusLabel = CatalogListRowFormat.availabilityLabel(
+                    com.renatizzi.photovideomanager.domain.model.Availability.AVAILABLE,
+                ),
+                secondary = secondary,
             )
+            if (meta.isNotBlank()) {
+                Text(
+                    text = meta,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Normal,
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
         }
     }
 }

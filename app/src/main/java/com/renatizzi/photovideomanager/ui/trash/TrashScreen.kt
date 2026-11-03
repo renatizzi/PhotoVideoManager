@@ -45,7 +45,6 @@ fun TrashScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -55,6 +54,7 @@ fun TrashScreen(
             fontWeight = FontWeight.SemiBold,
         )
 
+        // LOCK #2: Ripristina fisso sopra la lista (niente scroll per trovarlo).
         if (state.entries.isNotEmpty()) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -105,16 +105,22 @@ fun TrashScreen(
             }
         }
 
-        state.entries.forEach { entry ->
-            HorizontalDivider()
-            TrashRow(
-                entry = entry,
-                checked = entry.mediaItem.id in state.selectedIds,
-                enabled = !state.busy,
-                onToggle = { onToggle(entry.mediaItem.id) },
-            )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState()),
+        ) {
+            state.entries.forEach { entry ->
+                HorizontalDivider()
+                TrashRow(
+                    entry = entry,
+                    checked = entry.mediaItem.id in state.selectedIds,
+                    enabled = !state.busy,
+                    onToggle = { onToggle(entry.mediaItem.id) },
+                )
+            }
+            if (state.entries.isNotEmpty()) HorizontalDivider()
         }
-        if (state.entries.isNotEmpty()) HorizontalDivider()
     }
 
     if (state.pendingPurgeAll) {
