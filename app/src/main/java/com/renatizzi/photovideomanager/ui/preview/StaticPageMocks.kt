@@ -811,13 +811,8 @@ fun ImportaStaticScreen(
             if (state.exclusions.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = stringResource(R.string.importa_esclusi_title, state.exclusions.size),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium,
-                )
-                Text(
                     text = stringResource(R.string.importa_esclusi_intro),
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
                 )
                 state.exclusions.forEach { exclusion ->
@@ -887,8 +882,9 @@ private fun ImportCandidateRow(
             val path = candidate.sourcePathLabel
             val meta = com.renatizzi.photovideomanager.domain.hub.CatalogListRowFormat.metaLine(
                 deviceLabel = device,
-                pathLabel = path.ifBlank { candidate.sourceLocationName },
-                statusLabel = "Online",
+                pathLabel = path,
+                statusLabel = com.renatizzi.photovideomanager.domain.hub.CatalogListRowFormat
+                    .availabilityLabel(Availability.AVAILABLE),
                 secondary = candidate.isSecondaryVolume,
             )
             if (meta.isNotBlank()) {

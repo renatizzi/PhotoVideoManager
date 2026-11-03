@@ -1,5 +1,6 @@
 package com.renatizzi.photovideomanager.ui.trash
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,7 +15,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -24,14 +24,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.renatizzi.photovideomanager.R
+import com.renatizzi.photovideomanager.domain.hub.CatalogListRowFormat
+import com.renatizzi.photovideomanager.domain.model.Availability
+import com.renatizzi.photovideomanager.domain.model.SourceCensusSelection
 import com.renatizzi.photovideomanager.domain.model.TrashEntry
+import com.renatizzi.photovideomanager.ui.census.SourceSelectionBox
 import com.renatizzi.photovideomanager.ui.common.MediaThumbnail
 
 @Composable
 fun TrashScreen(
     state: TrashUiState,
     onRefresh: () -> Unit,
-    onRestore: (String) -> Unit,
+    onToggle: (String) -> Unit,
+    onRestoreSelected: () -> Unit,
     onPurge: (String) -> Unit,
     onRequestEmpty: () -> Unit,
     onConfirmEmpty: () -> Unit,
@@ -50,35 +55,46 @@ fun TrashScreen(
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold,
         )
-        Text(
-            text = stringResource(R.string.trash_intro),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
-        )
-        Surface(
-            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
+
+        if (state.entries.isNotEmpty()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.trash_restore_prompt),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+                )
+                Button(
+                    onClick = onRestoreSelected,
+                    enabled = !state.loading && !state.busy && state.selectedCount > 0,
+                ) {
+                    Text(stringResource(R.string.trash_restore))
+                }
+            }
+        } else if (!state.loading) {
             Text(
-                text = stringResource(R.string.trash_inline_help),
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(12.dp),
+                text = stringResource(R.string.trash_empty_list),
+                style = MaterialTheme.typography.bodyMedium,
             )
         }
 
-        OutlinedButton(
-            onClick = onRefresh,
-            enabled = !state.loading && !state.busy,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(stringResource(R.string.refresh_sources))
-        }
-        Button(
-            onClick = onRequestEmpty,
-            enabled = !state.loading && !state.busy && state.entries.isNotEmpty(),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(stringResource(R.string.trash_empty))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(
+                onClick = onRefresh,
+                enabled = !state.loading && !state.busy,
+            ) {
+                Text(stringResource(R.string.refresh_sources))
+            }
+            OutlinedButton(
+                onClick = onRequestEmpty,
+                enabled = !state.loading && !state.busy && state.entries.isNotEmpty(),
+            ) {
+                Text(stringResource(R.string.trash_empty))
+            }
         }
 
         if (state.loading || state.busy) {
@@ -90,26 +106,17 @@ fun TrashScreen(
             }
         }
 
-        HorizontalDivider()
-        Text(
-            text = stringResource(R.string.trash_list_title, state.entries.size),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Medium,
-        )
-
-        if (!state.loading && state.entries.isEmpty()) {
-            Text(stringResource(R.string.trash_empty_list))
-        }
-
         state.entries.forEach { entry ->
+            HorizontalDivider()
             TrashRow(
                 entry = entry,
+                checked = entry.mediaItem.id in state.selectedIds,
                 enabled = !state.busy,
-                onRestore = { onRestore(entry.mediaItem.id) },
+                onToggle = { onToggle(entry.mediaItem.id) },
                 onPurge = { onPurge(entry.mediaItem.id) },
             )
-            HorizontalDivider()
         }
+        if (state.entries.isNotEmpty()) HorizontalDivider()
     }
 
     if (state.pendingPurgeAll) {
@@ -134,45 +141,62 @@ fun TrashScreen(
 @Composable
 private fun TrashRow(
     entry: TrashEntry,
+    checked: Boolean,
     enabled: Boolean,
-    onRestore: () -> Unit,
+    onToggle: () -> Unit,
     onPurge: () -> Unit,
 ) {
     val title = entry.mediaItem.displayTitle?.ifBlank { null } ?: entry.mediaItem.id
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+    val device = entry.locationName.takeUnless {
+        it.equals("Catalogo", ignoreCase = true) || it.equals("Spazio app", ignoreCase = true)
+    }.orEmpty()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = enabled, onClick = onToggle)
+            .padding(vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            MediaThumbnail(
-                copy = entry.mediaCopy,
-                kind = entry.mediaItem.kind,
+        SourceSelectionBox(
+            selection = if (checked) {
+                SourceCensusSelection.SELECTED
+            } else {
+                SourceCensusSelection.NOT_SELECTED
+            },
+            enabled = false,
+            onClick = {},
+        )
+        MediaThumbnail(
+            copy = entry.mediaCopy,
+            kind = entry.mediaItem.kind,
+        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                color = MaterialTheme.colorScheme.primary,
             )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+            val meta = CatalogListRowFormat.metaLine(
+                deviceLabel = device,
+                pathLabel = "",
+                statusLabel = CatalogListRowFormat.availabilityLabel(Availability.AVAILABLE),
+                secondary = false,
+            )
+            if (meta.isNotBlank()) {
                 Text(
-                    stringResource(R.string.clean_member_location, entry.locationName),
+                    text = meta,
                     style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Normal,
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                    color = MaterialTheme.colorScheme.primary,
                 )
-                if (entry.isPersonalArchive) {
-                    Text(
-                        stringResource(R.string.trash_personal_note),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.secondary,
-                    )
-                }
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = onRestore, enabled = enabled) {
-                Text(stringResource(R.string.trash_restore))
-            }
-            Button(onClick = onPurge, enabled = enabled) {
-                Text(stringResource(R.string.trash_purge))
-            }
+        OutlinedButton(onClick = onPurge, enabled = enabled) {
+            Text(stringResource(R.string.trash_purge))
         }
     }
 }

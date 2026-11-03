@@ -350,7 +350,7 @@
     <string name="importa_annulla">Annulla</string>
     <string name="importa_back_acquisisci">Annulla</string>
     <string name="importa_esclusi_title">Esclusi: N. %1$d</string>
-    <string name="importa_esclusi_intro">File esclusi dal ri-import. Ripristina per riproporli al prossimo Conferma.</string>
+    <string name="importa_esclusi_intro">Sono stati trovati file esclusi dal Catalogo. Selezionali e clicca [Ripristina in Importa] per recuperarli</string>
     <string name="importa_esclusi_restore">Ripristina in Importa</string>
     <string name="importa_esclusi_status">Escluso</string>
     <string name="componi_album">ALBUM</string>
@@ -465,6 +465,7 @@
     <string name="browse_source_folders_hint">Se manca una cartella (es. famiglia), con + scegli il livello superiore più ampio o quella cartella specifica.</string>
     <string name="browse_source_count">N. Elementi: %1$d</string>
     <string name="browse_source_empty">La cartella selezionata non contiene foto o video: torna su Acquisisci e seleziona un\'altra cartella</string>
+    <string name="browse_source_preview_hint">Anteprima dalla cartella (prima di Conferma). Premi Conferma in Acquisisci per importarli nel Catalogo.</string>
     <string name="sort_name">Nome</string>
     <string name="sort_device">Dispositivo</string>
     <string name="sort_newest">Più recenti</string>
@@ -492,7 +493,7 @@
     <string name="media_kind_video">Tipo: video</string>
     <string name="clean_title">Pulisci</string>
     <string name="clean_subtitle">Sposta nel cestino i file indesiderati</string>
-    <string name="clean_description">Verifica quali sono i file anomali (scarti e i duplicati) da tenere in Catalogo e quelli invece da eliminare. Questi possono essere eventualmente ripristinati usando l\'omologa funzione presente in Ripristina</string>
+    <string name="clean_description">Verifica quali sono i file anomali (scarti e duplicati) da tenere in Catalogo e quelli invece da eliminare. Questi possono essere eventualmente recuperati usando la funzione di ripristino dal Cestino presente in Utility</string>
     <string name="clean_intro">Trova foto e video identici presenti più volte nel Catalogo.</string>
     <string name="clean_intro_v2">Trova contenuti identici (stesso hash) su elementi distinti. Puoi tenere il consigliato e mandare gli altri nel Cestino (con conferma).</string>
     <string name="clean_inline_help">Suggerimento: se hai la stessa foto in due cartelle diverse, dopo Censisci appariranno come due elementi. Toccando Analizza l’app confronta il contenuto (hash SHA-256) e li raggruppa.</string>
@@ -534,6 +535,7 @@
     <string name="clean_confirm_no">NO</string>
     <string name="trash_title">Cestino</string>
     <string name="trash_intro">Elementi tolti dal Catalogo. Puoi ripristinarli o eliminarli definitivamente.</string>
+    <string name="trash_restore_prompt">Sono stati trovati file esclusi dal Catalogo e spostati nel Cestino. Selezionali e clicca [Ripristina] per recuperarli</string>
     <string name="trash_inline_help">I file del dispositivo non vengono cancellati. «Elimina» qui toglie la voce dal Cestino; «Svuota Cestino» può cancellare anche le copie gestite dall’app.</string>
     <string name="trash_list_title">Nel Cestino: %1$d</string>
     <string name="trash_empty_list">Cestino vuoto.</string>

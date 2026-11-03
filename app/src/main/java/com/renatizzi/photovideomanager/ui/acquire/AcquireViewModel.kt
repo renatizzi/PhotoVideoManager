@@ -141,13 +141,28 @@ class AcquireViewModel(
         viewModelScope.launch {
             runCatching {
                 catalogFacade.restoreImportExclusion(storageLocationId, opaqueLocator)
-            }.onSuccess {
+            }.onSuccess { restored ->
+                val sources = _state.value.sourceLocationIds.takeIf { it.isNotEmpty() }
+                val candidates = runCatching {
+                    catalogFacade.listAcquireCandidates(sourceLocationIds = sources)
+                }.getOrDefault(_state.value.candidates)
                 val exclusions = runCatching { catalogFacade.listImportExclusions() }
                     .getOrDefault(emptyList())
-                _state.update {
-                    it.copy(
+                _state.update { current ->
+                    val next = current.copy(
+                        candidates = candidates,
                         exclusions = exclusions,
-                        message = "File ripristinato: al prossimo Conferma tornerà in Importa",
+                        message = if (restored) {
+                            "File ripristinato e già visibile in Importa"
+                        } else {
+                            "Esclusione rimossa: torna ad Acquisisci e premi Conferma"
+                        },
+                    )
+                    next.copy(
+                        selectedIds = next.kindFiltered
+                            .filterNot { it.alreadyInPersonalArchive }
+                            .map { it.mediaItem.id }
+                            .toSet(),
                     )
                 }
             }.onFailure { error ->
