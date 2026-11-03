@@ -1,6 +1,6 @@
 # Backlog UX — Wizard Setup Catalogo (PC)
 
-**Aggiornato:** 20/10/2026 — UIX 0.16.37: videate utente da `videate-utente-setup-catalogo-pc.md` (PPT V2 + Q1–Q7).  
+**Aggiornato:** 03/11/2026 — BL-UI-13 Cestino; proposta+LOCK interscambio Wi‑Fi semplice (in attesa OK).  
 **Specifica UI:** `docs/reference/videate-utente-setup-catalogo-pc.md`  
 **PPT V2:** `docs/reference/revisione_guida_V2.pptx`  
 **Non usare come specifica:** `docs/reference/template-videate-wizard-pc.md`
@@ -88,3 +88,13 @@ Non verificato in questa tranche: help contestuale, Configura stile Utility, Clo
 | BL-UI-08 | Esc vincolante nel setup | In mock; da confermare |
 | BL-UI-09 | Cloud: solo SAF account esistenti (no Aggiungi account) | In attesa chiarimento |
 | BL-UI-10 | Correzione testo Sorgenti «cartella Catalogo» → «cartella da censire» | Applicata in template |
+
+## Residual Organizza / Cestino — Renato 03/11/2026 (dopo OK 0.16.64)
+
+Versione **0.16.64** accettata (path uniformi + Sposta/Ripristina sticky). Residuo **non bloccante**, da fare dopo:
+
+| ID | Voce | Stato |
+|---|---|---|
+| BL-UI-13 | **Bottone di rientro in Cestino** — manca un modo chiaro per tornare/rientrare nel Cestino dopo le azioni di Ripristina / navigazione correlata | **Backlog** (annotato; non in tranche corrente) |
+
+**Proposta interscambio Wi‑Fi (03/11):** `docs/PROPOSTA_INTERSCAMBIO_WIFI_SEMPLICE.md` + LOCK `docs/LOCK_INTERSCAMBIO_WIFI_SEMPLICE.md` — in attesa OK Renato; **niente codice** finché LOCK ≠ approvato. Vincolo: percorso corto di default, niente routine parallele al setup sede Catalogo.
