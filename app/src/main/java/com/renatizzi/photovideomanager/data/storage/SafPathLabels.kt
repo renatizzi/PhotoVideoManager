@@ -73,13 +73,14 @@ object SafPathLabels {
             .joinToString(" ")
             .lowercase()
         return when {
-            blob.contains("mediamanager") ||
-                blob.contains("mediamanagercatalog") -> DEVICE_PC_NOTEBOOK
+            // Solo lo share Catalogo Windows dedicato → PC / notebook.
+            blob.contains("mediamanagercatalog") -> DEVICE_PC_NOTEBOOK
+            // LOCK S25 #1: disco/share di rete (anche cartella «MediaManager(sda1)») = NAS, non PC.
             blob.contains("synology") ||
                 blob.contains("qnap") ||
                 blob.contains("truenas") ||
                 Regex("""\bnas\b""").containsMatchIn(blob) -> DEVICE_NETWORK_NAS
-            else -> DEVICE_PC_NOTEBOOK // target basso profilo: share di rete = di solito il PC
+            else -> DEVICE_NETWORK_NAS
         }
     }
 
@@ -265,12 +266,22 @@ object SafPathLabels {
      */
     fun pathUnderName(path: String, displayName: String, deviceLabel: String = ""): String {
         var p = stripVolumeWords(stripDevicePrefix(path))
+        if (looksIllegible(p)) return ""
         if (deviceLabel.isNotBlank() && p.equals(deviceLabel, ignoreCase = true)) return ""
         // Ripeti strip se il path inizia ancora col device (es. dopo alias).
         if (deviceLabel.isNotBlank()) {
             val withSlash = "${deviceLabel.trim()}/"
             if (p.startsWith(withSlash, ignoreCase = true)) {
                 p = p.substring(withSlash.length)
+            }
+            // LOCK S25 #4: togli host dopo «·» (es. device «Disco di rete / NAS · test3_SDA1»).
+            val host = deviceLabel.substringAfter('·', missingDelimiterValue = "").trim()
+            if (host.isNotBlank()) {
+                if (p.equals(host, ignoreCase = true)) return ""
+                val hostSlash = "$host/"
+                if (p.startsWith(hostSlash, ignoreCase = true)) {
+                    p = p.substring(hostSlash.length)
+                }
             }
         }
         val leaf = displayName.trim()
@@ -282,7 +293,8 @@ object SafPathLabels {
         ) {
             p = p.substring(0, p.length - suffix.length)
         }
-        return stripVolumeWords(p.trim().trim('/'))
+        val cleaned = stripVolumeWords(p.trim().trim('/'))
+        return if (looksIllegible(cleaned)) "" else cleaned
     }
 
     fun humanizeDocumentId(docId: String): String {

@@ -504,27 +504,36 @@ class SourceRegistry(
 }
 
 /**
- * Percorso cartella del file rispetto alla sorgente (LOCK #6), es. `Test1/Duplicati`.
+ * Percorso cartella del file rispetto alla sorgente (LOCK path), es. `Test1/Duplicati`.
+ * Mai stringhe Drive/`encoded=` (LOCK S25 #3).
  */
 internal fun folderPathLabelForFile(
     fileLocator: String,
     sourceLocator: String,
     sourceDisplayName: String,
 ): String {
-    val fileDoc = SafTreeIdentity.documentIdOfLocator(fileLocator) ?: return sourceDisplayName.trim()
+    val sourceLeaf = sourceDisplayName.trim()
+    val fileDoc = SafTreeIdentity.documentIdOfLocator(fileLocator)
+        ?: return sourceLeaf
+    if (SafPathLabels.looksIllegible(fileDoc)) return sourceLeaf
     val parentDoc = fileDoc.substringBeforeLast('/').ifBlank { fileDoc }
+    if (SafPathLabels.looksIllegible(parentDoc)) return sourceLeaf
     val sourceDoc = SafTreeIdentity.documentIdOfLocator(sourceLocator)
-    val sourceLeaf = sourceDisplayName.trim().ifBlank {
-        sourceDoc?.substringAfterLast('/') ?: ""
+    if (sourceDoc.isNullOrBlank() || SafPathLabels.looksIllegible(sourceDoc)) {
+        return sourceLeaf
     }
-    if (sourceDoc.isNullOrBlank()) return sourceLeaf
     return when {
         parentDoc == sourceDoc -> sourceLeaf
         parentDoc.startsWith("$sourceDoc/") -> {
             val rest = parentDoc.removePrefix("$sourceDoc/")
-            if (sourceLeaf.isBlank()) rest else "$sourceLeaf/$rest"
+            if (SafPathLabels.looksIllegible(rest)) sourceLeaf
+            else if (sourceLeaf.isBlank()) rest
+            else "$sourceLeaf/$rest"
         }
-        else -> parentDoc.substringAfter(':', parentDoc).trim('/').ifBlank { sourceLeaf }
+        else -> {
+            val after = parentDoc.substringAfter(':', parentDoc).trim('/')
+            if (after.isBlank() || SafPathLabels.looksIllegible(after)) sourceLeaf else after
+        }
     }
 }
 

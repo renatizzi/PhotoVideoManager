@@ -119,8 +119,11 @@ class AcquisitionService(
         return runCatching {
             val uri = Uri.parse(location.opaqueLocator)
             val raw = SafPathLabels.storagePathLabel(appContext, uri)
+            if (SafPathLabels.looksIllegible(raw)) {
+                return@runCatching location.displayName.trim()
+            }
             val under = SafPathLabels.pathUnderName(raw, location.displayName, deviceLabel)
-            // LOCK #6: se pathUnderName omette la foglia (= nome), tieni comunque la cartella.
+            // Path cartella sempre presente; mai stringhe encoded Drive.
             under.ifBlank { location.displayName.trim() }
         }.getOrDefault(location.displayName.trim())
     }

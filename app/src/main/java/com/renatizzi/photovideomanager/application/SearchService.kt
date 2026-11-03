@@ -143,8 +143,11 @@ class SearchService(
         return runCatching {
             val uri = Uri.parse(location.opaqueLocator)
             val raw = SafPathLabels.storagePathLabel(appContext, uri)
+            if (SafPathLabels.looksIllegible(raw)) {
+                return@runCatching location.displayName.trim()
+            }
             val under = SafPathLabels.pathUnderName(raw, location.displayName, deviceLabel)
-            // LOCK #6: path cartella sempre presente (anche se = nome in grassetto).
+            // Path cartella sempre presente (anche se = nome); mai encoded.
             under.ifBlank { location.displayName.trim() }
         }.getOrDefault(location.displayName.trim())
     }

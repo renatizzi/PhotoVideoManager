@@ -27,4 +27,16 @@ class FolderPathLabelForFileTest {
             folderPathLabelForFile(file, source, "Test1"),
         )
     }
+
+    @Test
+    fun driveEncodedDoc_fallsBackToSourceDisplayName() {
+        val source =
+            "content://com.google.android.apps.docs.storage/tree/test2_drive"
+        val file =
+            "content://com.google.android.apps.docs.storage/tree/test2_drive/document/acc%3D1%3Bdoc%3Dencoded%3DXhl5mDpBTtRf3NRbE6VtBg"
+        assertEquals(
+            "test2_drive",
+            folderPathLabelForFile(file, source, "test2_drive"),
+        )
+    }
 }

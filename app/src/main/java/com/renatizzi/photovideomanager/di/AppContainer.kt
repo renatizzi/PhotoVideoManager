@@ -81,9 +81,11 @@ class AppContainer(context: Context) {
     )
 
     val dedupService: DedupService = DedupService(
+        appContext = appContext,
         catalogStore = catalogStore,
         adapterFactory = adapterFactory,
         permissionGate = permissionGate,
+        localDeviceLabel = { sourceRegistry.deviceAliasOrDefault() },
     )
 
     val trashService: TrashService = TrashService(
