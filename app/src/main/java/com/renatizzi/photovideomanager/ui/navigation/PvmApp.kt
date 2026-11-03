@@ -295,6 +295,8 @@ fun PvmApp(
                             onImporta = { acquireVm.acquireSelected() },
                             onContinue = { acquireVm.continueToAggiorna() },
                             onBackToAcquisisci = { acquireStep = AcquireFlowStep.CENSUS },
+                            onToggleExclusion = acquireVm::toggleExclusion,
+                            onRestoreSelectedExclusions = acquireVm::restoreSelectedExclusions,
                             onRestoreExclusion = acquireVm::restoreExclusion,
                         )
                     }
@@ -398,6 +400,13 @@ fun PvmApp(
                         factory = SearchViewModel.factory(catalogFacade),
                     )
                     val aggiornaState by aggiornaVm.state.collectAsStateWithLifecycle()
+                    val aggiornaLifecycle = LocalLifecycleOwner.current
+                    // Indietro da Pulisci: rileggi elenco (niente 16 stale).
+                    LaunchedEffect(aggiornaLifecycle) {
+                        aggiornaLifecycle.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                            aggiornaVm.refresh()
+                        }
+                    }
                     var pendingExportId by remember { mutableStateOf<String?>(null) }
                     val createDocument = rememberLauncherForActivityResult(
                         contract = ActivityResultContracts.CreateDocument("*/*"),
@@ -519,7 +528,6 @@ fun PvmApp(
                         onRefresh = trashVm::refresh,
                         onToggle = trashVm::toggleSelection,
                         onRestoreSelected = trashVm::restoreSelected,
-                        onPurge = trashVm::purge,
                         onRequestEmpty = trashVm::requestEmptyTrash,
                         onConfirmEmpty = trashVm::confirmEmptyTrash,
                         onDismissEmpty = trashVm::dismissEmptyTrash,

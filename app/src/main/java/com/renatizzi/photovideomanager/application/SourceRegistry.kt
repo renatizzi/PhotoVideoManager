@@ -82,7 +82,14 @@ class SourceRegistry(
     suspend fun listSources(refreshAvailability: Boolean = true): List<SourceSummary> {
         bootstrapPersonalArchiveIfNeeded()
         val archives = catalogStore.listArchives().associateBy { it.id }
-        return catalogStore.listStorageLocations().map { location ->
+        // Dedup SAF: stessa cartella con URI stringa diversa non deve apparire due volte.
+        val seenSafKeys = mutableSetOf<String>()
+        val locations = catalogStore.listStorageLocations().filter { location ->
+            if (location.adapterKind != StorageAdapterKind.SAF_TREE) return@filter true
+            val key = SafTreeIdentity.canonicalKeyFromUriString(location.opaqueLocator)
+            seenSafKeys.add(key)
+        }
+        return locations.map { location ->
             val availability = if (refreshAvailability) {
                 runCatching { adapterFactory.create(location).availability() }
                     .getOrDefault(Availability.UNKNOWN)
@@ -376,6 +383,9 @@ class SourceRegistry(
         val location = catalogStore.getStorageLocation(locationId) ?: return emptyList()
         if (location.adapterKind != StorageAdapterKind.SAF_TREE) return emptyList()
         val adapter = runCatching { adapterFactory.create(location) }.getOrNull() ?: return emptyList()
+        val otherSaf = catalogStore.listStorageLocations().filter {
+            it.id != locationId && it.adapterKind == StorageAdapterKind.SAF_TREE
+        }
         val out = ArrayList<LiveMediaPreview>(minOf(64, limit))
         val queue = ArrayDeque<String>()
         queue.add(location.opaqueLocator)
@@ -386,7 +396,13 @@ class SourceRegistry(
             val children = runCatching { adapter.listChildren(current) }.getOrDefault(emptyList())
             for (child in children) {
                 if (child.isDirectory) {
-                    queue.add(child.opaqueLocator)
+                    val claimed = otherSaf.any { other ->
+                        SafTreeIdentity.isRegisteredFolderRoot(
+                            child.opaqueLocator,
+                            other.opaqueLocator,
+                        )
+                    }
+                    if (!claimed) queue.add(child.opaqueLocator)
                     continue
                 }
                 val kind = com.renatizzi.photovideomanager.domain.policy.MediaKindDetector.detect(

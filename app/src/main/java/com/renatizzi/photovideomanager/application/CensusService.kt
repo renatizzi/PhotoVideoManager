@@ -1,5 +1,6 @@
 package com.renatizzi.photovideomanager.application
 
+import com.renatizzi.photovideomanager.data.storage.SafTreeIdentity
 import com.renatizzi.photovideomanager.data.storage.StorageAdapterFactory
 import com.renatizzi.photovideomanager.domain.model.Availability
 import com.renatizzi.photovideomanager.domain.model.CensusResult
@@ -8,9 +9,10 @@ import com.renatizzi.photovideomanager.domain.model.MediaCopy
 import com.renatizzi.photovideomanager.domain.model.MediaCopyState
 import com.renatizzi.photovideomanager.domain.model.MediaFingerprint
 import com.renatizzi.photovideomanager.domain.model.MediaItem
-import com.renatizzi.photovideomanager.domain.model.MediaKind
 import com.renatizzi.photovideomanager.domain.model.ScanSession
 import com.renatizzi.photovideomanager.domain.model.ScanSessionState
+import com.renatizzi.photovideomanager.domain.model.StorageAdapterKind
+import com.renatizzi.photovideomanager.domain.model.StorageLocation
 import com.renatizzi.photovideomanager.domain.port.CatalogStore
 import com.renatizzi.photovideomanager.domain.port.PermissionGate
 import com.renatizzi.photovideomanager.domain.port.StorageEntry
@@ -80,6 +82,12 @@ class CensusService(
         var mediaSkipped = 0
 
         try {
+            // Tab S9: root+figli registrati → non ri-censire i sottoalberi già sorgenti.
+            val otherSafLocations = catalogStore.listStorageLocations().filter {
+                it.id != locationId && it.adapterKind == StorageAdapterKind.SAF_TREE
+            }
+            purgeCopiesClaimedByRegisteredChildren(location, otherSafLocations)
+
             val queue = ArrayDeque<String>()
             queue.add(location.opaqueLocator)
             var dirsVisited = 0
@@ -92,7 +100,15 @@ class CensusService(
 
                 for (child in children) {
                     if (child.isDirectory) {
-                        queue.add(child.opaqueLocator)
+                        val claimedByOther = otherSafLocations.any { other ->
+                            SafTreeIdentity.isRegisteredFolderRoot(
+                                child.opaqueLocator,
+                                other.opaqueLocator,
+                            )
+                        }
+                        if (!claimedByOther) {
+                            queue.add(child.opaqueLocator)
+                        }
                         continue
                     }
                     filesSeen++
@@ -215,6 +231,44 @@ class CensusService(
                 state = ScanSessionState.FAILED,
                 message = t.message ?: "Errore durante il censimento",
             )
+        }
+    }
+
+    /**
+     * Se questa sorgente è un genitore di altre StorageLocation già registrate,
+     * elimina copie residue censite per errore sotto quei figli (causa del «16»).
+     */
+    private suspend fun purgeCopiesClaimedByRegisteredChildren(
+        location: StorageLocation,
+        otherSafLocations: List<StorageLocation>,
+    ) {
+        if (location.adapterKind != StorageAdapterKind.SAF_TREE) return
+        val parentDoc = SafTreeIdentity.documentIdOfLocator(location.opaqueLocator) ?: return
+        val parentAuth = SafTreeIdentity.authorityOfLocator(location.opaqueLocator) ?: return
+        val childRoots = otherSafLocations.mapNotNull { other ->
+            val auth = SafTreeIdentity.authorityOfLocator(other.opaqueLocator) ?: return@mapNotNull null
+            if (auth != parentAuth) return@mapNotNull null
+            val doc = SafTreeIdentity.documentIdOfLocator(other.opaqueLocator) ?: return@mapNotNull null
+            if (doc == parentDoc) return@mapNotNull null
+            if (SafTreeIdentity.isSameOrDescendantDocId(doc, parentDoc)) doc else null
+        }
+        if (childRoots.isEmpty()) return
+
+        val copies = catalogStore.listAllMediaCopies()
+            .filter { it.storageLocationId == location.id }
+        var removed = false
+        for (copy in copies) {
+            val copyDoc = SafTreeIdentity.documentIdOfLocator(copy.opaqueLocator) ?: continue
+            val underChild = childRoots.any { root ->
+                SafTreeIdentity.isSameOrDescendantDocId(copyDoc, root)
+            }
+            if (!underChild) continue
+            catalogStore.deleteFingerprintsForCopy(copy.id)
+            catalogStore.deleteMediaCopy(copy.id)
+            removed = true
+        }
+        if (removed) {
+            catalogStore.purgeOrphanMediaItems()
         }
     }
 

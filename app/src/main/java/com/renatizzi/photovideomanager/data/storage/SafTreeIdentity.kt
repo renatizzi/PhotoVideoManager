@@ -47,6 +47,47 @@ object SafTreeIdentity {
         canonicalKeyFromUriString(a) == canonicalKeyFromUriString(b)
 
     /**
+     * DocumentId più specifico dell’URI (document/… oppure tree/…).
+     */
+    fun documentIdOfLocator(uriString: String): String? =
+        parseDocumentId(uriString) ?: parseTreeDocumentId(uriString)
+
+    /** Authority `content://…` senza dipendere da [Uri.parse] (test JVM). */
+    fun authorityOfLocator(uriString: String): String? = authorityOf(uriString)
+
+    /**
+     * True se [candidateDocId] è uguale a [ancestorDocId] o un suo discendente
+     * (`primary:Pictures/vacanze` sotto `primary:Pictures`).
+     */
+    fun isSameOrDescendantDocId(candidateDocId: String, ancestorDocId: String): Boolean {
+        val c = decode(candidateDocId)
+        val a = decode(ancestorDocId)
+        if (c.isEmpty() || a.isEmpty()) return false
+        if (c == a) return true
+        return c.startsWith("$a/")
+    }
+
+    /**
+     * True se i due locator puntano alla stessa cartella documento
+     * (stessa authority + stesso documentId), anche con encoding URI diverso.
+     */
+    fun sameDocumentFolder(a: String, b: String): Boolean {
+        val authA = authorityOf(a) ?: return false
+        val authB = authorityOf(b) ?: return false
+        if (authA != authB) return false
+        val docA = documentIdOfLocator(a) ?: return false
+        val docB = documentIdOfLocator(b) ?: return false
+        return decode(docA) == decode(docB)
+    }
+
+    /**
+     * True se [childLocator] è la radice di [registeredLocator]
+     * (sottocartella già registrata come sorgente distinta — non ri-censire).
+     */
+    fun isRegisteredFolderRoot(childLocator: String, registeredLocator: String): Boolean =
+        sameDocumentFolder(childLocator, registeredLocator)
+
+    /**
      * Normalizza un URI documento/albero in tree URI sul documentId più specifico
      * (utile per confronti; non usare come root adapter se manca il permesso sul figlio).
      */

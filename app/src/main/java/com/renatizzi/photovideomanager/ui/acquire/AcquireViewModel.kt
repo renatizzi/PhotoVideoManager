@@ -23,11 +23,14 @@ data class AcquireUiState(
     val kindFilter: SearchKindFilter = SearchKindFilter.ALL,
     val sourceLocationIds: Set<String> = emptySet(),
     val exclusions: List<ImportExclusionSummary> = emptyList(),
+    /** Chiavi `locationId|opaqueLocator` selezionate per Ripristina in Importa. */
+    val selectedExclusionKeys: Set<String> = emptySet(),
     val loading: Boolean = true,
     val acquiring: Boolean = false,
     val catalogCount: Long = 0,
     val message: String? = null,
 ) {
+    val selectedExclusionCount: Int get() = selectedExclusionKeys.size
     /** Pool filtrato per tipo (Tutti/Foto/Video). */
     val kindFiltered: List<AcquireCandidate>
         get() = candidates.filter { candidate ->
@@ -88,11 +91,16 @@ class AcquireViewModel(
                         exclusions = exclusions,
                         loading = false,
                     )
+                    val exclusionKeys = exclusions.map { exclusionKey(it) }.toSet()
                     next.copy(
                         selectedIds = next.kindFiltered
                             .filterNot { it.alreadyInPersonalArchive }
                             .map { it.mediaItem.id }
                             .toSet(),
+                        selectedExclusionKeys = current.selectedExclusionKeys
+                            .filter { it in exclusionKeys }
+                            .toSet()
+                            .ifEmpty { exclusionKeys },
                     )
                 }
             }.onFailure { error ->
@@ -102,6 +110,55 @@ class AcquireViewModel(
                         message = error.message ?: "Errore nel caricamento dei candidati",
                     )
                 }
+            }
+        }
+    }
+
+    fun toggleExclusion(storageLocationId: String, opaqueLocator: String) {
+        val key = exclusionKey(storageLocationId, opaqueLocator)
+        _state.update { current ->
+            val next = current.selectedExclusionKeys.toMutableSet()
+            if (!next.add(key)) next.remove(key)
+            current.copy(selectedExclusionKeys = next)
+        }
+    }
+
+    fun restoreSelectedExclusions() {
+        val keys = _state.value.selectedExclusionKeys.toList()
+        if (keys.isEmpty()) return
+        viewModelScope.launch {
+            var ok = 0
+            for (key in keys) {
+                val sep = key.indexOf('|')
+                if (sep <= 0) continue
+                val locationId = key.substring(0, sep)
+                val locator = key.substring(sep + 1)
+                runCatching {
+                    catalogFacade.restoreImportExclusion(locationId, locator)
+                }.onSuccess { if (it) ok++ }
+            }
+            val sources = _state.value.sourceLocationIds.takeIf { it.isNotEmpty() }
+            val candidates = runCatching {
+                catalogFacade.listAcquireCandidates(sourceLocationIds = sources)
+            }.getOrDefault(_state.value.candidates)
+            val exclusions = runCatching { catalogFacade.listImportExclusions() }
+                .getOrDefault(emptyList())
+            _state.update { current ->
+                val next = current.copy(
+                    candidates = candidates,
+                    exclusions = exclusions,
+                    selectedExclusionKeys = emptySet(),
+                    message = when {
+                        ok > 0 -> "File ripristinati in Importa: $ok"
+                        else -> "Esclusione rimossa: torna ad Acquisisci e premi Conferma"
+                    },
+                )
+                next.copy(
+                    selectedIds = next.kindFiltered
+                        .filterNot { it.alreadyInPersonalArchive }
+                        .map { it.mediaItem.id }
+                        .toSet(),
+                )
             }
         }
     }
@@ -138,39 +195,10 @@ class AcquireViewModel(
     }
 
     fun restoreExclusion(storageLocationId: String, opaqueLocator: String) {
-        viewModelScope.launch {
-            runCatching {
-                catalogFacade.restoreImportExclusion(storageLocationId, opaqueLocator)
-            }.onSuccess { restored ->
-                val sources = _state.value.sourceLocationIds.takeIf { it.isNotEmpty() }
-                val candidates = runCatching {
-                    catalogFacade.listAcquireCandidates(sourceLocationIds = sources)
-                }.getOrDefault(_state.value.candidates)
-                val exclusions = runCatching { catalogFacade.listImportExclusions() }
-                    .getOrDefault(emptyList())
-                _state.update { current ->
-                    val next = current.copy(
-                        candidates = candidates,
-                        exclusions = exclusions,
-                        message = if (restored) {
-                            "File ripristinato e già visibile in Importa"
-                        } else {
-                            "Esclusione rimossa: torna ad Acquisisci e premi Conferma"
-                        },
-                    )
-                    next.copy(
-                        selectedIds = next.kindFiltered
-                            .filterNot { it.alreadyInPersonalArchive }
-                            .map { it.mediaItem.id }
-                            .toSet(),
-                    )
-                }
-            }.onFailure { error ->
-                _state.update {
-                    it.copy(message = error.message ?: "Ripristino esclusione non riuscito")
-                }
-            }
+        _state.update {
+            it.copy(selectedExclusionKeys = setOf(exclusionKey(storageLocationId, opaqueLocator)))
         }
+        restoreSelectedExclusions()
     }
 
     fun acquireSelected() {
@@ -261,6 +289,12 @@ class AcquireViewModel(
         }
 
     companion object {
+        fun exclusionKey(exclusion: ImportExclusionSummary): String =
+            exclusionKey(exclusion.storageLocationId, exclusion.opaqueLocator)
+
+        fun exclusionKey(storageLocationId: String, opaqueLocator: String): String =
+            "$storageLocationId|$opaqueLocator"
+
         fun factory(catalogFacade: CatalogFacade): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
