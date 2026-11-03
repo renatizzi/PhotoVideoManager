@@ -106,14 +106,18 @@ fun AcquisisciStaticScreen(
     var pcGuideOpen by remember { mutableStateOf(false) }
     var pcHelpOpen by remember { mutableStateOf(false) }
     var addDeviceOpen by remember { mutableStateOf(false) }
-    var setupSorgentiStep by remember { mutableStateOf<String?>(null) } // avvio | done
-    var sorgentiKind by remember {
-        mutableStateOf(com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind.LOCAL_DEVICE)
-    }
-    var sorgentiModel by remember { mutableStateOf("") }
-    var sorgentiAwaitingPick by remember { mutableStateOf(false) }
+    var pcReadyOpen by remember { mutableStateOf(false) }
+    var otherPhoneOpen by remember { mutableStateOf(false) }
     var addTip by remember { mutableStateOf<String?>(null) }
     var renameText by remember { mutableStateOf("") }
+    fun openCifsHelper() {
+        val assistant = com.renatizzi.photovideomanager.data.storage.NetworkDriveAssistant
+        if (assistant.isHelperInstalled(context)) {
+            assistant.openHelperApp(context)
+        } else {
+            assistant.openHelperStore(context)
+        }
+    }
     val openTree = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree(),
     ) { uri ->
@@ -124,13 +128,11 @@ fun AcquisisciStaticScreen(
                 context.getString(R.string.external_source_default_name),
             )
             onAddSource(uri, name)
-            if (sorgentiAwaitingPick) {
-                sorgentiAwaitingPick = false
-                setupSorgentiStep = "done"
-                addDeviceOpen = false
-            }
-        } else {
-            sorgentiAwaitingPick = false
+            addDeviceOpen = false
+            addTip = null
+            pcReadyOpen = false
+            pcGuideOpen = false
+            pcHelpOpen = false
         }
     }
     // Fonti con X (escluse in attesa di conferma) restano visibili con la X nel riquadro.
@@ -224,7 +226,7 @@ fun AcquisisciStaticScreen(
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
         )
 
-        // Azioni: refresh, [+], CONFERMA (niente procedura finta Sorgenti — bug 6).
+        // Azioni: refresh, [+] Aggiungi (scelta tipo), CONFERMA — LOCK interscambio Wi‑Fi semplice.
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -234,10 +236,7 @@ fun AcquisisciStaticScreen(
                 Icon(Icons.Outlined.Refresh, contentDescription = stringResource(R.string.refresh_sources))
             }
             IconButton(
-                onClick = {
-                    sorgentiAwaitingPick = false
-                    openTree.launch(null)
-                },
+                onClick = { addDeviceOpen = true },
                 enabled = !busy,
                 modifier = Modifier
                     .clip(CircleShape)
@@ -245,7 +244,7 @@ fun AcquisisciStaticScreen(
             ) {
                 Icon(
                     Icons.Outlined.Add,
-                    contentDescription = stringResource(R.string.sorgenti_choose_folder),
+                    contentDescription = stringResource(R.string.acquisisci_add_device_title),
                     tint = MaterialTheme.colorScheme.onPrimary,
                 )
             }
@@ -319,117 +318,144 @@ fun AcquisisciStaticScreen(
         }
     }
 
-    if (addDeviceOpen && setupSorgentiStep == "avvio") {
+    if (addDeviceOpen) {
         AlertDialog(
-            onDismissRequest = {
-                addDeviceOpen = false
-                setupSorgentiStep = null
-            },
-            title = { Text(stringResource(R.string.sorgenti_wizard_title)) },
+            onDismissRequest = { addDeviceOpen = false },
+            title = { Text(stringResource(R.string.acquisisci_add_device_title)) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = stringResource(R.string.sorgenti_avvio_subtitle),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                    )
-                    Text(
-                        text = stringResource(R.string.sorgenti_avvio_desc),
+                        text = stringResource(R.string.acquisisci_add_device_body),
                         style = MaterialTheme.typography.bodyMedium,
                     )
-                    com.renatizzi.photovideomanager.ui.hub.DeviceKindDropdown(
-                        selected = sorgentiKind,
-                        onSelectKind = { sorgentiKind = it },
-                        enabled = true,
-                    )
-                    OutlinedTextField(
-                        value = sorgentiModel,
-                        onValueChange = { sorgentiModel = it },
+                    TextButton(
+                        onClick = {
+                            addDeviceOpen = false
+                            openTree.launch(null)
+                        },
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        placeholder = { Text(stringResource(R.string.hub_avvio_model_hint)) },
-                        label = { Text(stringResource(R.string.hub_avvio_model_q)) },
-                    )
+                    ) { Text(stringResource(R.string.acquisisci_add_this_device)) }
+                    TextButton(
+                        onClick = {
+                            addDeviceOpen = false
+                            pcReadyOpen = true
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text(stringResource(R.string.acquisisci_add_pc)) }
+                    TextButton(
+                        onClick = {
+                            addDeviceOpen = false
+                            addTip = "nas"
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text(stringResource(R.string.acquisisci_add_nas)) }
+                    TextButton(
+                        onClick = {
+                            addDeviceOpen = false
+                            addTip = "drive"
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text(stringResource(R.string.acquisisci_add_drive)) }
+                    TextButton(
+                        onClick = {
+                            addDeviceOpen = false
+                            otherPhoneOpen = true
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text(stringResource(R.string.acquisisci_add_other_phone)) }
                 }
             },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        when (sorgentiKind) {
-                            com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind.PC_NOTEBOOK -> {
-                                addDeviceOpen = false
-                                setupSorgentiStep = null
-                                sorgentiAwaitingPick = true
-                                pcGuideOpen = true
-                            }
-                            com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind.CLOUD_DRIVE -> {
-                                addDeviceOpen = false
-                                setupSorgentiStep = null
-                                sorgentiAwaitingPick = true
-                                addTip = "drive"
-                            }
-                            com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind.NETWORK_NAS -> {
-                                addDeviceOpen = false
-                                setupSorgentiStep = null
-                                sorgentiAwaitingPick = true
-                                addTip = "nas"
-                            }
-                            else -> {
-                                addDeviceOpen = false
-                                setupSorgentiStep = null
-                                sorgentiAwaitingPick = true
-                                openTree.launch(null)
-                            }
-                        }
-                    },
-                ) {
-                    Text(stringResource(R.string.sorgenti_choose_folder))
-                }
-            },
+            confirmButton = {},
             dismissButton = {
-                TextButton(
-                    onClick = {
-                        addDeviceOpen = false
-                        setupSorgentiStep = null
-                    },
-                ) {
-                    Text(stringResource(R.string.hub_avvio_esc))
+                TextButton(onClick = { addDeviceOpen = false }) {
+                    Text(stringResource(R.string.importa_annulla))
                 }
             },
         )
     }
-    if (setupSorgentiStep == "done") {
+
+    if (pcReadyOpen) {
         AlertDialog(
-            onDismissRequest = { setupSorgentiStep = null },
-            title = { Text(stringResource(R.string.sorgenti_done_title)) },
-            text = { Text(stringResource(R.string.sorgenti_done_body)) },
+            onDismissRequest = { pcReadyOpen = false },
+            title = { Text(stringResource(R.string.acquisisci_add_pc_ready_title)) },
+            text = { Text(stringResource(R.string.acquisisci_add_pc_ready_body)) },
             confirmButton = {
-                Button(onClick = { setupSorgentiStep = null }) {
-                    Text(stringResource(R.string.hub_done_torna_accesso))
+                Button(
+                    onClick = {
+                        pcReadyOpen = false
+                        addTip = "pc_ready"
+                    },
+                ) {
+                    Text(stringResource(R.string.acquisisci_add_pc_ready_yes))
+                }
+            },
+            dismissButton = {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    TextButton(
+                        onClick = {
+                            pcReadyOpen = false
+                            pcGuideOpen = true
+                        },
+                    ) {
+                        Text(stringResource(R.string.acquisisci_add_pc_ready_no))
+                    }
+                    TextButton(onClick = { pcReadyOpen = false }) {
+                        Text(stringResource(R.string.importa_annulla))
+                    }
+                }
+            },
+        )
+    }
+
+    if (otherPhoneOpen) {
+        AlertDialog(
+            onDismissRequest = { otherPhoneOpen = false },
+            title = { Text(stringResource(R.string.acquisisci_add_other_phone_title)) },
+            text = {
+                Text(
+                    text = stringResource(R.string.acquisisci_add_other_phone_body),
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                )
+            },
+            confirmButton = {
+                Button(onClick = { otherPhoneOpen = false }) {
+                    Text(stringResource(R.string.acquisisci_add_other_phone_ok))
                 }
             },
         )
     }
 
     if (addTip != null) {
-        val tipText = when (addTip) {
+        val tipKind = addTip
+        val tipText = when (tipKind) {
             "drive" -> stringResource(R.string.acquisisci_add_drive_tip)
+            "pc_ready" -> stringResource(R.string.acquisisci_add_pc_ready_tip)
             else -> stringResource(R.string.acquisisci_add_nas_tip)
         }
+        val tipTitle = when (tipKind) {
+            "drive" -> stringResource(R.string.acquisisci_add_drive)
+            "pc_ready" -> stringResource(R.string.acquisisci_add_pc)
+            else -> stringResource(R.string.acquisisci_add_nas)
+        }
+        val needsCifs = tipKind == "nas" || tipKind == "pc_ready"
         AlertDialog(
             onDismissRequest = { addTip = null },
-            title = {
-                Text(
-                    if (addTip == "drive") {
-                        stringResource(R.string.acquisisci_add_drive)
-                    } else {
-                        stringResource(R.string.acquisisci_add_nas)
-                    },
-                )
+            title = { Text(tipTitle) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(tipText)
+                    if (needsCifs) {
+                        OutlinedButton(
+                            onClick = { openCifsHelper() },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(stringResource(R.string.acquisisci_add_open_cifs))
+                        }
+                    }
+                }
             },
-            text = { Text(tipText) },
             confirmButton = {
-                TextButton(
+                Button(
                     onClick = {
                         addTip = null
                         openTree.launch(null)
@@ -463,6 +489,12 @@ fun AcquisisciStaticScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     )
+                    OutlinedButton(
+                        onClick = { openCifsHelper() },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.acquisisci_add_open_cifs))
+                    }
                     TextButton(
                         onClick = {
                             pcGuideOpen = false
