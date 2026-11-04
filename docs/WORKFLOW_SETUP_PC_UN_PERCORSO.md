@@ -24,7 +24,7 @@ Obiettivo: l’utente non deve più chiedersi «quale account?».
 | Name | `MyMedia` |
 | Host | IP (automatico o Copia / a mano) |
 | Port | `445` |
-| User | **`NOMEPC\MyMedia` composto dallo script** (`COMPUTERNAME` automatico) → solo Copia. L’utente non digita il nome PC. Fallback se manca il recupero: `MyMedia` |
+| User | **`COMPUTERNAME\MyMedia`** (prova OK: `MINI_IT13\MediaManager`; il bare user era KO) → solo Copia. Non è il campo Host. Fallback help: Domain=COMPUTERNAME + User=MyMedia |
 | Password | Solo **Copia** dall’app (provvisoria) |
 | Domain / Folder | Vuoti; poi aprire la riga share `MyMedia` |
 
