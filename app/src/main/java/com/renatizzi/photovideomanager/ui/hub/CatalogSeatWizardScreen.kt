@@ -192,7 +192,7 @@ fun CatalogSeatWizardScreen(
             WizardStep.W2_ROUTINE_PARAMS,
             -> AvailabilityChecklistStep(
                 onOk = onConfirmAvailability,
-                onBack = { onGoStep(WizardStep.PC_SHARE_READY) },
+                onBack = onBackS0,
                 busy = state.busy,
             )
             WizardStep.PC_USB_PREPARE -> UsbPrepareChecklistStep(
@@ -240,13 +240,8 @@ fun CatalogSeatWizardScreen(
                 onPcHostIpChange = onPcHostIpChange,
                 onOpenCifs = {
                     onRefreshCifs()
-                    if (NetworkDriveAssistant.isHelperInstalled(context)) {
-                        if (!NetworkDriveAssistant.openHelperApp(context)) {
-                            NetworkDriveAssistant.openHelperStore(context)
-                        }
-                    } else {
-                        NetworkDriveAssistant.openHelperStore(context)
-                    }
+                    NetworkDriveAssistant.openHelperOrStore(context)
+                    onRefreshCifs()
                 },
                 onChooseFolder = { if (!state.busy) openTree.launch(null) },
                 onRetry = onRetryVerify,
@@ -256,15 +251,7 @@ fun CatalogSeatWizardScreen(
                 },
                 onAccessNo = onAccessNo,
                 onSalva = onConfirmLocal,
-                onBack = {
-                    onGoStep(
-                        if (state.procedureMode == ProcedureMode.RAPIDA) {
-                            WizardStep.PC_SHARE_READY
-                        } else {
-                            WizardStep.PC_RUN_SCRIPT
-                        },
-                    )
-                },
+                onBack = { onGoStep(WizardStep.PC_RUN_SCRIPT) },
             )
             WizardStep.W3_GUIDE -> FolderChoiceStep(
                 body = stringResource(R.string.hub_folder_choice_desc_cloud),
@@ -281,32 +268,26 @@ fun CatalogSeatWizardScreen(
             WizardStep.W4_GUIDE -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(stringResource(R.string.hub_w4_body))
                 Text(stringResource(R.string.hub_w4_cifs_note))
-                if (state.cifsInstalled) {
-                    Button(
-                        onClick = {
-                            onRefreshCifs()
-                            NetworkDriveAssistant.openHelperApp(context)
+                Button(
+                    onClick = {
+                        NetworkDriveAssistant.openHelperOrStore(context)
+                        onRefreshCifs()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        if (state.cifsInstalled) {
+                            stringResource(R.string.hub_cifs_open)
+                        } else {
+                            stringResource(R.string.hub_cifs_install)
                         },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(stringResource(R.string.hub_cifs_open))
-                    }
-                } else {
-                    Button(
-                        onClick = {
-                            NetworkDriveAssistant.openHelperStore(context)
-                            onRefreshCifs()
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(stringResource(R.string.hub_cifs_install))
-                    }
+                    )
                 }
                 SimpleGuide(
                     body = stringResource(R.string.hub_w4_pick_hint),
                     primary = stringResource(R.string.hub_choose_folder),
                     onPrimary = { if (!state.busy) openTree.launch(null) },
-                    onBack = { onGoStep(WizardStep.PC_SHARE_READY) },
+                    onBack = onBackS0,
                     busy = state.busy,
                 )
             }
@@ -964,14 +945,33 @@ private fun CifsCardStep(
     val password = state.temporaryPassword
     val hasPassword = password.isNotBlank()
     val hostCopyable = state.pcHostIp.isNotBlank()
-    val readyForPick = state.cifsInstalled && hasPassword && cifsSavedConfirmed
+    val userQualified = '\\' in user
+    val readyForPick = state.cifsInstalled && hasPassword && hostCopyable &&
+        userQualified && cifsSavedConfirmed
 
+    // BoxManager pattern: scarica/apri CIFS subito, prima della scheda dati.
+    Button(onClick = onOpenCifs, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
+        Text(
+            if (state.cifsInstalled) {
+                stringResource(R.string.hub_cifs_open)
+            } else {
+                stringResource(R.string.hub_cifs_install)
+            },
+        )
+    }
     Text(stringResource(R.string.hub_cifs_tobe_desc))
     Text(
         stringResource(R.string.hub_pc5_share_visibility),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
     )
+    if (!userQualified) {
+        Text(
+            stringResource(R.string.hub_b5b_user_waiting_pc),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+        )
+    }
     // Stato recupero IP: Riprova sempre accessibile (§D / F2), anche durante recoveringPcData.
     Text(
         text = when {
@@ -1175,16 +1175,6 @@ private fun CifsCardStep(
             stringResource(R.string.hub_pc5_options_hint),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
-        )
-    }
-
-    Button(onClick = onOpenCifs, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
-        Text(
-            if (state.cifsInstalled) {
-                stringResource(R.string.hub_cifs_open)
-            } else {
-                stringResource(R.string.hub_cifs_install)
-            },
         )
     }
 

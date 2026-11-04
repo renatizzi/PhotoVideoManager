@@ -11,9 +11,9 @@ class WindowsCatalogSetupScriptTest {
 
     private fun samplePkg() = WindowsCatalogSetupScript.build(
         WindowsCatalogSetupScript.Params(
-            folderPath = "C:\\MediaManager\\Catalogo",
-            shareName = "MediaManagerCatalog",
-            userName = "MediaManager",
+            folderPath = WindowsCatalogSetupScript.DEFAULT_FOLDER,
+            shareName = WindowsCatalogSetupScript.DEFAULT_SHARE,
+            userName = WindowsCatalogSetupScript.DEFAULT_USER,
             temporaryPassword = "TempPass!23456",
             setupToken = "abc123def456",
         ),
@@ -21,16 +21,16 @@ class WindowsCatalogSetupScriptTest {
 
     @Test
     fun validateFolderPath_acceptsWindowsAbsoluteOnAnyDrive() {
-        assertNull(WindowsCatalogSetupScript.validateFolderPath("C:\\MediaManager\\Catalogo"))
+        assertNull(WindowsCatalogSetupScript.validateFolderPath("C:\\MyMedia"))
         assertNull(WindowsCatalogSetupScript.validateFolderPath("D:\\Foto\\Catalogo"))
-        assertNull(WindowsCatalogSetupScript.validateFolderPath("E:\\MediaManager\\Catalogo"))
+        assertNull(WindowsCatalogSetupScript.validateFolderPath("E:\\MyMedia"))
     }
 
     @Test
-    fun validateFolderPath_requireDriveC_optionalLegacyOnly() {
+    fun validateFolderPath_requireDriveC_forLockedPcPath() {
         assertNull(
             WindowsCatalogSetupScript.validateFolderPath(
-                "C:\\MediaManager\\Catalogo",
+                "C:\\MyMedia",
                 requireDriveC = true,
             ),
         )
@@ -40,7 +40,7 @@ class WindowsCatalogSetupScriptTest {
                 requireDriveC = true,
             ),
         )
-        // Wizard PC: senza requireDriveC accetta disco esterno
+        // Senza requireDriveC accetta ancora altri dischi (legacy/test)
         assertNull(WindowsCatalogSetupScript.validateFolderPath("D:\\Foto\\Catalogo"))
     }
 
@@ -48,14 +48,14 @@ class WindowsCatalogSetupScriptTest {
     fun build_embedsExternalDriveFolderPath() {
         val pkg = WindowsCatalogSetupScript.build(
             WindowsCatalogSetupScript.Params(
-                folderPath = "E:\\MediaManager\\Catalogo",
-                shareName = "MediaManagerCatalog",
-                userName = "MediaManager",
+                folderPath = "E:\\MyMedia",
+                shareName = "MyMedia",
+                userName = "MyMedia",
                 temporaryPassword = "TempPass!23456",
                 setupToken = "tokdrive01",
             ),
         )
-        assertTrue(pkg.ps1Content.contains("'E:\\MediaManager\\Catalogo'"))
+        assertTrue(pkg.ps1Content.contains("'E:\\MyMedia'"))
     }
 
     @Test
@@ -69,9 +69,9 @@ class WindowsCatalogSetupScriptTest {
     fun build_embedsParamsAndKeepsPasswordOutOfResultJsonTemplate() {
         val password = "TempPass!23456"
         val pkg = samplePkg()
-        assertTrue(pkg.ps1Content.contains("'C:\\MediaManager\\Catalogo'"))
+        assertTrue(pkg.ps1Content.contains("'C:\\MyMedia'"))
         assertTrue(pkg.ps1Content.contains(password))
-        assertTrue(pkg.ps1Content.contains("MediaManagerCatalog"))
+        assertTrue(pkg.ps1Content.contains("MyMedia"))
         assertTrue(pkg.ps1Content.contains("#Requires -RunAsAdministrator"))
         assertTrue(pkg.ps1Content.contains("New-LocalUser") || pkg.ps1Content.contains("Set-LocalUser"))
         assertTrue(pkg.ps1Content.contains("MediaManager_setup_result.json"))
@@ -202,18 +202,18 @@ class WindowsCatalogSetupScriptTest {
     }
 
     @Test
-    fun cifsUserCopyText_prefixesNomePcPlaceholder() {
+    fun cifsUserCopyText_usesRealComputerNameNotPlaceholder() {
         assertEquals(
-            "NOMEPC\\MediaManager",
-            WindowsCatalogSetupScript.cifsUserCopyText("MediaManager"),
+            "MyMedia",
+            WindowsCatalogSetupScript.cifsUserCopyText("MyMedia"),
         )
         assertEquals(
-            "NOMEPC\\MediaManager",
-            WindowsCatalogSetupScript.cifsUserCopyText(""),
+            "MINI_IT13\\MyMedia",
+            WindowsCatalogSetupScript.cifsUserCopyText("MyMedia", "MINI_IT13"),
         )
         assertEquals(
-            "MINI_IT13\\MediaManager",
-            WindowsCatalogSetupScript.cifsUserCopyText("MINI_IT13\\MediaManager"),
+            "MINI_IT13\\MyMedia",
+            WindowsCatalogSetupScript.cifsUserCopyText("MINI_IT13\\MyMedia"),
         )
         assertEquals(
             WindowsCatalogSetupScript.CIFS_FOLDER_EMPTY,
