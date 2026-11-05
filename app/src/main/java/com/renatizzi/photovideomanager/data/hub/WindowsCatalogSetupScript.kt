@@ -13,8 +13,15 @@ object WindowsCatalogSetupScript {
     const val DEFAULT_FOLDER = "C:\\MyMedia"
     /** Solo testi help. Non usare come User CIFS da copiare. */
     const val CIFS_USER_PC_PLACEHOLDER = "NOMEPC"
-    /** Folder CIFS: vuoto → elenco share; non il percorso Windows della cartella. */
+    /**
+     * Folder CIFS legacy (vuoto): espone l’elenco share — non usare per la sede Catalogo.
+     * Preferire [cifsFolderPin] / [PcCatalogSeatGate.cifsFolderPin] = nome share.
+     */
     const val CIFS_FOLDER_EMPTY = ""
+
+    /** Folder CIFS da copiare: nome share SMB (pin), non path Windows e non vuoto. */
+    fun cifsFolderPin(shareName: String = DEFAULT_SHARE): String =
+        PcCatalogSeatGate.cifsFolderPin(shareName)
     /** File da avviare (doppio clic). Nome PPT: CONFIGURA. */
     const val CMD_FILE_NAME = "CONFIGURA.cmd"
     /** Supporto interno (non aprire). Nome PPT: sup. */

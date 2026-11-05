@@ -1183,9 +1183,9 @@ private fun CifsCardStep(
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_folder),
-            value = stringResource(R.string.hub_b5b_folder_value),
-            actionLabel = stringResource(R.string.hub_pc5_confirm),
-            onAction = { rowFlags = rowFlags.copyOf().also { it[7] = true } },
+            value = share,
+            actionLabel = stringResource(R.string.hub_copy),
+            onAction = { onCopyField(CifsCopyField.FOLDER) },
             checked = rowFlags[7],
             onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[7] = !it[7] } },
             hint = stringResource(R.string.hub_b5b_folder_hint),
