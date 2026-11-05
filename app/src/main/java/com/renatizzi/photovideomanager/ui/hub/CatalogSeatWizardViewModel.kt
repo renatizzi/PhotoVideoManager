@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.renatizzi.photovideomanager.application.CatalogFacade
+import com.renatizzi.photovideomanager.data.hub.PcCatalogSeatGate
 import com.renatizzi.photovideomanager.data.hub.WindowsCatalogSetupScript
 import com.renatizzi.photovideomanager.data.hub.WindowsSetupExportResult
 import com.renatizzi.photovideomanager.data.hub.SetupLanAnnounce
@@ -628,8 +629,10 @@ class CatalogSeatWizardViewModel(
                     WindowsCatalogSetupScript.cifsUserCopyText(s.userName)
                 }
             CifsCopyField.PASSWORD -> s.temporaryPassword
-            // Folder CIFS: lasciare vuoto (elenco share), non il path Windows.
-            CifsCopyField.FOLDER -> WindowsCatalogSetupScript.CIFS_FOLDER_EMPTY
+            // Folder CIFS: pin sulla share (MyMedia), non path Windows e non vuoto.
+            CifsCopyField.FOLDER -> WindowsCatalogSetupScript.cifsFolderPin(
+                s.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE },
+            )
         }
     }
 
@@ -939,7 +942,7 @@ class CatalogSeatWizardViewModel(
             append("User: $user\n")
             append("Password: ${s.temporaryPassword}\n")
             append("Anonymous: (lascia deselezionato)\n")
-            append("Folder: (lascia vuoto)")
+            append("Folder: ${WindowsCatalogSetupScript.cifsFolderPin(share)}")
         }
     }
 
@@ -1081,14 +1084,21 @@ class CatalogSeatWizardViewModel(
             m.contains("permission") ||
             m.contains("eacces") ||
             m.contains("enoent") ||
-            m.contains("not found")
+            m.contains("not found") ||
+            m.contains("elenco delle share") ||
+            m.contains("folder=") ||
+            m.contains("read only") ||
+            m.contains("non scrivibile")
     }
 
     private fun friendlySeatError(raw: String, unreachable: Boolean): String {
-        return if (unreachable) {
-            "Posizione del Catalogo non raggiungibile o non scrivibile. Controlla CIFS, Wi‑Fi e che il PC non sia in sospensione, poi riprova."
-        } else {
-            raw.ifBlank { "Verifica della Posizione del Catalogo non riuscita. Riprova o torna a CIFS." }
+        val share = _state.value.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
+        return when {
+            raw.contains("elenco delle share", ignoreCase = true) -> raw
+            unreachable -> PcCatalogSeatGate.writableProbeFailureHint(share)
+            else -> raw.ifBlank {
+                "Verifica della Posizione del Catalogo non riuscita. Riprova o torna a CIFS."
+            }
         }
     }
 

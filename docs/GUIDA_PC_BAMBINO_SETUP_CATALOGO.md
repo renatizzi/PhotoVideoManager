@@ -169,7 +169,7 @@ Cosa ha fatto CONFIGURA (in parole semplici): ha creato la cartella, un utente `
 7. **Enable DFS** → spento  
 8. **User** → es. `NOMEPC\MediaManager`  
 9. **Password** → quella di MediaManager (Mostra + Copia)  
-10. **Folder** → **lascia vuoto**  
+10. **Folder** → **MyMedia** (nome share; non vuoto e non path Windows)  
 11. Opzioni varie → lascia i default  
 
 **F5.** In CIFS tocca **Save**.  
@@ -227,7 +227,7 @@ Se un punto è NO: non passare ad altri dispositivi; ripeti solo il pezzo fallit
 |-----------|-----------|
 | Telefono non compare sul PC | Modalità USB = Trasferimento file; altro cavo; telefono sbloccato |
 | CONFIGURA si chiude subito | Conferma UAC; Windows 10/11; non aprire `sup` |
-| CIFS non connette | Stessa Wi‑Fi; Host = IPv4 giusto; Port 445; User/Password da Copia; Folder vuoto |
+| CIFS non connette / Catalogo non raggiungibile | Stessa Wi‑Fi; Host = IPv4; Port 445; User/Password da Copia; Folder=MyMedia; Read only OFF |
 | Vedi elenco share ma non Catalogo | Apri la riga **MediaManagerCatalog**, non la radice |
 | Password sparita in app | Rifai il passo USB/OK che rigenera i file CONFIGURA |
 

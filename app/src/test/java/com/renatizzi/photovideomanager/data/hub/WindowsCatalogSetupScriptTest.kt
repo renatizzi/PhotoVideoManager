@@ -219,6 +219,9 @@ class WindowsCatalogSetupScriptTest {
             WindowsCatalogSetupScript.CIFS_FOLDER_EMPTY,
             "",
         )
+        assertEquals("MyMedia", WindowsCatalogSetupScript.cifsFolderPin())
+        assertEquals("MyMedia", WindowsCatalogSetupScript.cifsFolderPin("MyMedia"))
+        assertEquals("MyMedia", WindowsCatalogSetupScript.cifsFolderPin("  "))
     }
 
     @Test

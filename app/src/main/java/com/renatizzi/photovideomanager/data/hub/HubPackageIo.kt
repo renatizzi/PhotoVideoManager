@@ -27,6 +27,7 @@ class HubPackageIo(
     }
 
     fun probeWritable(seat: CatalogSeat): Result<Unit> = runCatching {
+        assertPcTreeNotShareEnumeration(seat)
         val probe = HubPackage(
             seatId = seat.treeUri ?: "local",
             updatedAtEpochMs = System.currentTimeMillis(),
@@ -37,6 +38,24 @@ class HubPackageIo(
         write(seat, existing ?: probe).getOrThrow()
         if (existing == null && seat.kind == CatalogSeatKind.LOCAL_DEVICE) {
             // ok — created empty hub
+        }
+    }
+
+    /**
+     * Se la tree è ancora l’elenco share CIFS (Folder vuoto), la share Catalogo
+     * compare come figlio → fallisci prima di tentare createDirectory sul host.
+     */
+    private fun assertPcTreeNotShareEnumeration(seat: CatalogSeat) {
+        if (seat.kind != CatalogSeatKind.PC_NOTEBOOK) return
+        val uri = seat.treeUri?.let(Uri::parse) ?: return
+        val root = DocumentFile.fromTreeUri(context, uri) ?: return
+        val names = root.listFiles().mapNotNull { it.name }
+        val assessment = PcCatalogSeatGate.assessChildNames(
+            childNames = names,
+            expectedShare = seat.effectiveCatalogName,
+        )
+        if (!assessment.ok) {
+            error(assessment.reason ?: PcCatalogSeatGate.writableProbeFailureHint(seat.effectiveCatalogName))
         }
     }
 
@@ -70,10 +89,22 @@ class HubPackageIo(
             CatalogSeatKind.NETWORK_NAS,
             -> {
                 val doc = hubDocument(seat, createIfMissing = true)
-                    ?: error("Impossibile creare il fascicolo nella sede")
+                    ?: error(
+                        if (seat.kind == CatalogSeatKind.PC_NOTEBOOK) {
+                            PcCatalogSeatGate.writableProbeFailureHint(seat.effectiveCatalogName)
+                        } else {
+                            "Impossibile creare il fascicolo nella sede"
+                        },
+                    )
                 context.contentResolver.openOutputStream(doc.uri, "wt")?.use { out ->
                     out.write(json.toByteArray(Charsets.UTF_8))
-                } ?: error("Scrittura sede non disponibile")
+                } ?: error(
+                    if (seat.kind == CatalogSeatKind.PC_NOTEBOOK) {
+                        PcCatalogSeatGate.writableProbeFailureHint(seat.effectiveCatalogName)
+                    } else {
+                        "Scrittura sede non disponibile"
+                    },
+                )
             }
         }
     }
