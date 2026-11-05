@@ -7,9 +7,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.data.hub.PcCatalogSeatGate
+import com.renatizzi.photovideomanager.data.hub.SetupHandoffCodec
+import com.renatizzi.photovideomanager.data.hub.SetupLanAnnounce
 import com.renatizzi.photovideomanager.data.hub.WindowsCatalogSetupScript
 import com.renatizzi.photovideomanager.data.hub.WindowsSetupExportResult
-import com.renatizzi.photovideomanager.data.hub.SetupLanAnnounce
 import com.renatizzi.photovideomanager.data.hub.WindowsSetupResult
 import com.renatizzi.photovideomanager.data.hub.WindowsSetupResultParser
 import com.renatizzi.photovideomanager.data.hub.WindowsSetupScriptExporter
@@ -763,7 +764,7 @@ class CatalogSeatWizardViewModel(
         }
         persistDraft()
 
-        // Gia completo mentre eri al Passo 4?
+        // Gia completo (QR/handoff o fast-path LAN) mentre eri al Passo 4?
         val early = cachedLan.get()
         if (early?.isComplete == true) {
             applyLanPayload(early)
@@ -773,11 +774,17 @@ class CatalogSeatWizardViewModel(
             return
         }
 
+        // Fast-path LAN silenzioso e breve — non è il canale primario (QR/handoff).
         val cancelled = AtomicBoolean(false)
         val lan = if (token.isNotBlank()) {
             withContext(Dispatchers.IO) {
                 runCatching {
-                    SetupLanAnnounce.discover(appContext, token, cancelled)
+                    SetupLanAnnounce.discover(
+                        appContext,
+                        token,
+                        cancelled,
+                        discoverMs = SetupLanAnnounce.FASTPATH_DISCOVER_MS,
+                    )
                 }.getOrNull()
             }
         } else {
@@ -811,23 +818,57 @@ class CatalogSeatWizardViewModel(
             }
         }
 
-        // Continua ascolto: manca ancora IPv4 e/o utente.
-        if (token.isNotBlank() && lanJob?.isActive != true) {
-            startBackgroundLanListen()
-        }
-
+        stopBackgroundLanListen()
         val partialUser = _state.value.cifsUserQualified.isNotBlank()
         _state.update {
             it.copy(
                 busy = false,
-                recoveringPcData = true,
+                recoveringPcData = false,
                 setupResultImported = false,
                 errorMessage = if (partialUser) {
-                    "Utente ricevuto ma manca l'IP. Lascia aperta «Tutto pronto» sul PC " +
-                        "(stessa Wi‑Fi); riprovo in automatico, oppure «Riprova recupero dati»."
+                    "Utente parziale, manca l'IP. Su «Tutto pronto» scansiona il QR " +
+                        "(o Incolla il codice pvmsetup) — non dipende dalla Wi‑Fi. " +
+                        "In alternativa digita l'IP nel campo Host."
                 } else {
-                    "Dati del PC non ricevuti. Lascia aperta la finestra «Tutto pronto» " +
-                        "sul PC (stessa Wi‑Fi del telefono) e tocca «Riprova recupero dati»."
+                    "Dati PC non ancora in app. Su «Tutto pronto» apri/scansiona il QR " +
+                        "MediaManager_setup_handoff.png oppure Incolla il codice URI qui sotto. " +
+                        "La Wi‑Fi non serve per questo passo."
+                },
+            )
+        }
+        persistDraft()
+    }
+
+    /**
+     * Primario: applica URI `pvmsetup:2;…` (o JSON legacy) dal QR / Incolla.
+     * Abilita Copia Host appena l'IPv4 è in [pcHostIp].
+     */
+    fun applySetupHandoffRaw(raw: String) {
+        val token = _state.value.setupToken
+        val decoded = SetupHandoffCodec.decode(raw, expectedToken = token)
+        if (!decoded.isOk || decoded.handoff == null) {
+            _state.update {
+                it.copy(
+                    errorMessage = decoded.error?.message
+                        ?: "Codice setup non valido",
+                    statusMessage = null,
+                )
+            }
+            return
+        }
+        val payload = decoded.handoff.toLanPayload()
+        cachedLan.set(SetupLanAnnounce.mergePayloads(cachedLan.get(), payload))
+        applyLanPayload(payload)
+        stopBackgroundLanListen()
+        _state.update {
+            it.copy(
+                recoveringPcData = false,
+                setupResultImported = payload.isComplete,
+                errorMessage = null,
+                statusMessage = if (payload.isComplete) {
+                    "Dati PC ricevuti dal codice: Host e User pronti per Copia verso CIFS."
+                } else {
+                    "Codice parziale: completa Host/User se mancano."
                 },
             )
         }

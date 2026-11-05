@@ -29,6 +29,8 @@ object SetupLanAnnounce {
     const val HTTP_PORT = 38456
     const val MAGIC = "PVMSETUP1"
     const val DISCOVER_MS = 60_000L
+    /** Fast-path silenzioso dopo QR-first: non bloccare l’utente sulla LAN. */
+    const val FASTPATH_DISCOVER_MS = 12_000L
     private const val RECV_TIMEOUT_MS = 800
     private const val HTTP_CONNECT_MS = 400
     private const val HTTP_READ_MS = 400

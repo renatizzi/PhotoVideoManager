@@ -83,6 +83,7 @@ fun CatalogSeatWizardScreen(
     onConfirmCopy: () -> Unit,
     onConfirmScriptRan: () -> Unit,
     onRetryRecoverPcData: () -> Unit,
+    onApplySetupHandoff: (String) -> Unit = {},
     onPcHostIpChange: (String) -> Unit,
     onCifsUserChange: (String) -> Unit = {},
     onCredentialsText: () -> String,
@@ -238,6 +239,7 @@ fun CatalogSeatWizardScreen(
                     if (pwd.isNotBlank()) copyToClipboard(context, pwd)
                 },
                 onRetryRecoverPcData = onRetryRecoverPcData,
+                onApplySetupHandoff = onApplySetupHandoff,
                 onPcHostIpChange = onPcHostIpChange,
                 onCifsUserChange = onCifsUserChange,
                 onOpenCifs = {
@@ -922,6 +924,7 @@ private fun CifsCardStep(
     onCopyField: (CifsCopyField) -> Unit,
     onCopyPassword: () -> Unit,
     onRetryRecoverPcData: () -> Unit,
+    onApplySetupHandoff: (String) -> Unit,
     onPcHostIpChange: (String) -> Unit = {},
     onCifsUserChange: (String) -> Unit = {},
     onOpenCifs: () -> Unit,
@@ -933,6 +936,7 @@ private fun CifsCardStep(
     onBack: () -> Unit,
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
+    var handoffDraft by remember { mutableStateOf("") }
     // Name, Storage, Host, Port, User, Password, Anonymous, Folder
     var rowFlags by remember { mutableStateOf(BooleanArray(8) { false }) }
     var cifsSavedConfirmed by remember { mutableStateOf(false) }
@@ -969,7 +973,6 @@ private fun CifsCardStep(
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
     )
-    // Stato recupero IP: Riprova sempre accessibile (§D / F2), anche durante recoveringPcData.
     Text(
         text = when {
             state.recoveringPcData -> stringResource(R.string.hub_pc5_recovering)
@@ -983,6 +986,26 @@ private fun CifsCardStep(
             else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
         },
     )
+    Text(
+        stringResource(R.string.hub_pc5_handoff_intro),
+        style = MaterialTheme.typography.bodyMedium,
+    )
+    OutlinedTextField(
+        value = handoffDraft,
+        onValueChange = { handoffDraft = it },
+        modifier = Modifier.fillMaxWidth(),
+        minLines = 2,
+        enabled = !state.busy,
+        label = { Text(stringResource(R.string.hub_pc5_handoff_label)) },
+        supportingText = { Text(stringResource(R.string.hub_pc5_handoff_hint)) },
+    )
+    Button(
+        onClick = { onApplySetupHandoff(handoffDraft) },
+        enabled = !state.busy && handoffDraft.isNotBlank(),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.hub_pc5_handoff_apply))
+    }
     OutlinedButton(
         onClick = onRetryRecoverPcData,
         enabled = !state.busy,

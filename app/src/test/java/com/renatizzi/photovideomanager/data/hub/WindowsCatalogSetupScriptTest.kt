@@ -177,9 +177,13 @@ class WindowsCatalogSetupScriptTest {
         assertTrue(ps1.contains("abc123def456"))
         assertTrue(ps1.contains("PVMSETUP1"))
         assertTrue(ps1.contains("FromBase64String"))
-        assertTrue(ps1.contains("Servizio dati per app avviato"))
+        assertTrue(ps1.contains("pvmsetup:2;"))
+        assertTrue(ps1.contains("MediaManager_setup_handoff"))
+        assertTrue(ps1.contains("QRCoder.dll"))
+        assertTrue(ps1.contains("Fast-path rete"))
         assertTrue(ps1.contains("ConvertTo-Json -Compress"))
         assertTrue(ps1.contains("ips"))
+        assertFalse(ps1.contains("recupera da sola"))
         assertFalse(ps1.contains("Esito (fuori dalla condivisione)"))
         assertFalse(
             ps1.lines().any {
@@ -192,8 +196,10 @@ class WindowsCatalogSetupScriptTest {
             },
         )
         assertFalse(ps1.contains("Copia dal Desktop sul telefono"))
-        assertTrue(cmd.contains("Lascia questa finestra aperta"))
+        assertTrue(cmd.contains("MediaManager_setup_handoff.png"))
         assertTrue(cmd.contains("pause"))
+        // Password must never appear in handoff JSON template fields list as a key write.
+        assertFalse(ps1.contains("password = ${'$'}PlainPassword"))
         val ann = WindowsCatalogSetupScript.buildAnnouncerScript()
         assertTrue(ann.contains("TcpListener"))
         assertTrue(ann.contains("__PVM_PAYLOAD__"))

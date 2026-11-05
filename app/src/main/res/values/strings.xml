@@ -228,9 +228,13 @@
     <string name="hub_pc5_intro">L’ultimo passo della procedura prevede la configurazione dell’app denominata CIFS Documents Provider (scaricabile gratuitamente su Google Play).\nEcco i dati da inserire: con il bottone «Copia» puoi incollarli uno alla volta sul form di CIFS:</string>
     <string name="hub_pc5_share_visibility">In CIFS il campo Folder deve essere MyMedia (nome share, non vuoto e non un path Windows tipo C:\\…). Così la connessione punta già alla cartella del Catalogo.</string>
     <string name="hub_pc5_recovering">Recupero automatico di IP e utente dal PC in corso… Lascia aperta la finestra «Tutto pronto» sul PC.</string>
-    <string name="hub_pc5_result_imported">Dati del PC ricevuti: User e Host (IP) sono pronti per Copia.</string>
-    <string name="hub_pc5_result_missing">Dati del PC non ancora ricevuti. Telefono e PC sulla stessa Wi‑Fi; finestra «Tutto pronto» ancora aperta.</string>
-    <string name="hub_pc5_retry_recover">Riprova recupero dati</string>
+    <string name="hub_pc5_result_imported">Dati del PC pronti: User e Host (IP) disponibili per Copia verso CIFS.</string>
+    <string name="hub_pc5_result_missing">Dati PC non ancora in app: usa il codice QR/URI da «Tutto pronto» (primario), oppure digita Host.</string>
+    <string name="hub_pc5_retry_recover">Riprova fast-path rete (opzionale)</string>
+    <string name="hub_pc5_handoff_intro">Primario: dal PC a «Tutto pronto» apri il QR MediaManager_setup_handoff.png (o il file .txt) e incolla qui il codice pvmsetup. Non dipende dalla Wi‑Fi. Poi Host avrà l’IP e Copia funzionerà.</string>
+    <string name="hub_pc5_handoff_label">Codice setup (pvmsetup:2;…)</string>
+    <string name="hub_pc5_handoff_hint">Incolla l’URI dal Desktop del PC. La scansione camera arriverà dopo la prova del codec.</string>
+    <string name="hub_pc5_handoff_apply">Applica codice dal PC</string>
     <string name="hub_pc5_confirm">Conferma</string>
     <string name="hub_pc5_item_saved">Confermo di aver configurato e salvato CIFS Documents Provider secondo le istruzioni sopra indicate</string>
     <string name="hub_pc5_ultima_azione">Ultima azione: clicca su «Attiva collegamento», seleziona la connessione CIFS appena salvata (Name = MyMedia) e premi «Usa questa cartella». Non restare sull\'elenco share del PC.</string>
