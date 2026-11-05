@@ -7,13 +7,11 @@ import java.security.SecureRandom
  * for MediaManager catalog folder + dedicated local SMB user.
  */
 object WindowsCatalogSetupScript {
-    const val DEFAULT_USER = "MediaManager"
-    const val DEFAULT_SHARE = "MediaManagerCatalog"
-    const val DEFAULT_FOLDER = "C:\\MediaManager\\Catalogo"
-    /**
-     * Segnaposto nome PC nel formato User CIFS (`NOMEPC\utente`), allineato a
-     * «Utente SMB» nella finestra Tutto pronto. Il nome reale arriva in app in seguito.
-     */
+    /** Account locale dedicato + share + cartella: un solo vocabolo (LOCK Setup PC). */
+    const val DEFAULT_USER = "MyMedia"
+    const val DEFAULT_SHARE = "MyMedia"
+    const val DEFAULT_FOLDER = "C:\\MyMedia"
+    /** Solo testi help. Non usare come User CIFS da copiare. */
     const val CIFS_USER_PC_PLACEHOLDER = "NOMEPC"
     /** Folder CIFS: vuoto → elenco share; non il percorso Windows della cartella. */
     const val CIFS_FOLDER_EMPTY = ""
@@ -74,10 +72,10 @@ object WindowsCatalogSetupScript {
         val trimmed = path.trim()
         if (trimmed.isEmpty()) return "Indica il percorso della cartella sul PC"
         if (!pathRegex.matches(trimmed)) {
-            return "Percorso non valido. Esempio: C:\\MediaManager\\Catalogo oppure E:\\MediaManager\\Catalogo"
+            return "Percorso non valido. Esempio: C:\\MyMedia"
         }
         if (requireDriveC && !trimmed.uppercase().startsWith("C:\\")) {
-            return "In questa fase la cartella deve essere sul disco C: (esempio: C:\\MediaManager\\Catalogo)"
+            return "In questa fase la cartella deve essere sul disco C: (esempio: C:\\MyMedia)"
         }
         return null
     }
@@ -99,12 +97,14 @@ object WindowsCatalogSetupScript {
     }
 
     /**
-     * Testo User da mostrare/copiare in CIFS: `NOMEPC\MediaManager` (o già
-     * qualificato). Il nome PC reale è quello in «Utente SMB» su Tutto pronto.
+     * User CIFS: prova OK = `COMPUTERNAME\account` (es. `MINI_IT13\MyMedia`).
+     * Non anteporre il placeholder letterale `NOMEPC` (non funziona in CIFS).
      */
-    fun cifsUserCopyText(userName: String): String {
+    fun cifsUserCopyText(userName: String, computerName: String? = null): String {
         val user = userName.trim().ifBlank { DEFAULT_USER }
-        return if ('\\' in user) user else "$CIFS_USER_PC_PLACEHOLDER\\$user"
+        if ('\\' in user) return user
+        val pc = computerName?.trim().orEmpty()
+        return if (pc.isNotEmpty()) "$pc\\$user" else user
     }
 
     fun build(params: Params): Package {

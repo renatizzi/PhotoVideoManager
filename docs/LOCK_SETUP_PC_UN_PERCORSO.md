@@ -1,9 +1,9 @@
 # LOCK — Setup Catalogo PC (un percorso)
 
-**Stato:** in attesa OK Renato (dopo convalida workflow 04/11)  
+**Stato:** approvato (procedi)  
 **Data:** 2026-11-04  
-**Richiesta / test di riferimento:** chat 04/11 — workflow convalidato; account locale ad hoc; cartella fissa MyMedia  
-**Approvazione Renato:** in attesa su questa tabella  
+**Richiesta / test di riferimento:** chat 04/11 — workflow OK; MyMedia; NOMEPC da script; CIFS da app (BoxManager); «puoi iniziare»  
+**Approvazione Renato:** 2026-11-04 OK procedi  
 **Workflow:** `docs/WORKFLOW_SETUP_PC_UN_PERCORSO.md`
 
 | # | Osservazione (Renato) | Risultato atteso (misurabile) | Fuori scope |

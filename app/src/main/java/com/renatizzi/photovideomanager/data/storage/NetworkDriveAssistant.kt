@@ -7,8 +7,10 @@ import android.content.pm.PackageManager
 import android.net.Uri
 
 /**
- * Same pattern as BoxManager: guide the user to CIFS Documents Provider,
- * then MediaManager picks the folder via SAF. No in-app SMB client.
+ * Same pattern as BoxManager: from the app open Play Store to install
+ * CIFS Documents Provider (or launch it if already installed), then the user
+ * configures the connection and MediaManager picks the folder via SAF.
+ * No in-app SMB client.
  */
 object NetworkDriveAssistant {
     const val HELPER_PACKAGE = "com.wa2c.android.cifsdocumentsprovider"
@@ -44,5 +46,17 @@ object NetworkDriveAssistant {
             ?: return false
         context.startActivity(launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         return true
+    }
+
+    /**
+     * BoxManager-style one-tap: open CIFS if installed, otherwise Play Store
+     * download page for CIFS Documents Provider.
+     */
+    fun openHelperOrStore(context: Context) {
+        if (isHelperInstalled(context)) {
+            if (!openHelperApp(context)) openHelperStore(context)
+        } else {
+            openHelperStore(context)
+        }
     }
 }

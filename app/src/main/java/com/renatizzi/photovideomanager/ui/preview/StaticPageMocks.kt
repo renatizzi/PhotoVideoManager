@@ -111,12 +111,8 @@ fun AcquisisciStaticScreen(
     var addTip by remember { mutableStateOf<String?>(null) }
     var renameText by remember { mutableStateOf("") }
     fun openCifsHelper() {
-        val assistant = com.renatizzi.photovideomanager.data.storage.NetworkDriveAssistant
-        if (assistant.isHelperInstalled(context)) {
-            assistant.openHelperApp(context)
-        } else {
-            assistant.openHelperStore(context)
-        }
+        com.renatizzi.photovideomanager.data.storage.NetworkDriveAssistant
+            .openHelperOrStore(context)
     }
     val openTree = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree(),

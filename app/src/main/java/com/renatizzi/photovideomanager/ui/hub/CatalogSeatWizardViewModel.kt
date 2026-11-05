@@ -368,8 +368,27 @@ class CatalogSeatWizardViewModel(
         val model = current.deviceModel.trim().ifBlank {
             suggestedDeviceModel()
         }
+        // LOCK Setup PC: un percorso; path/share/user fissi MyMedia (non editabili).
+        val folderPath = if (kind == CatalogSeatKind.PC_NOTEBOOK) {
+            WindowsCatalogSetupScript.DEFAULT_FOLDER
+        } else {
+            current.folderPath
+        }
+        val shareName = if (kind == CatalogSeatKind.PC_NOTEBOOK) {
+            WindowsCatalogSetupScript.DEFAULT_SHARE
+        } else {
+            current.shareName
+        }
+        val userName = if (kind == CatalogSeatKind.PC_NOTEBOOK) {
+            WindowsCatalogSetupScript.DEFAULT_USER
+        } else {
+            current.userName
+        }
         if (kind == CatalogSeatKind.PC_NOTEBOOK) {
-            val pathErr = WindowsCatalogSetupScript.validateFolderPath(current.folderPath)
+            val pathErr = WindowsCatalogSetupScript.validateFolderPath(
+                folderPath,
+                requireDriveC = true,
+            )
             if (pathErr != null) {
                 _state.update { it.copy(errorMessage = pathErr) }
                 return
@@ -377,9 +396,9 @@ class CatalogSeatWizardViewModel(
         }
         val step = when (kind) {
             CatalogSeatKind.LOCAL_DEVICE -> WizardStep.W1_CONFIRM
-            CatalogSeatKind.PC_NOTEBOOK,
-            CatalogSeatKind.NETWORK_NAS,
-            -> WizardStep.PC_SHARE_READY
+            // Un percorso: niente RAPIDA/GUIDATA. NAS resta guida breve.
+            CatalogSeatKind.PC_NOTEBOOK -> WizardStep.PC_AVAILABILITY
+            CatalogSeatKind.NETWORK_NAS -> WizardStep.W4_GUIDE
             CatalogSeatKind.CLOUD_DRIVE -> WizardStep.W3_GUIDE
             CatalogSeatKind.NONE -> WizardStep.S0_START
         }
@@ -388,12 +407,15 @@ class CatalogSeatWizardViewModel(
             it.copy(
                 catalogName = name,
                 deviceModel = model,
+                folderPath = folderPath,
+                shareName = shareName,
+                userName = userName,
                 step = step,
                 errorMessage = null,
                 statusMessage = null,
                 completedSeat = null,
                 canResumeDraft = false,
-                procedureMode = ProcedureMode.RAPIDA,
+                procedureMode = ProcedureMode.GUIDATA,
             )
         }
         persistDraft()
@@ -458,8 +480,14 @@ class CatalogSeatWizardViewModel(
         prepareWindowsScript()
     }
 
-    /** Passo 3 → 4. */
+    /** Passo 3 → 4. Checkpoint: script già esportato in Download. */
     fun confirmCopyChecked() {
+        if (!_state.value.scriptPrepared) {
+            _state.update {
+                it.copy(errorMessage = "Prima prepara i file (passo precedente): CONFIGURA e sup devono essere in Download.")
+            }
+            return
+        }
         _state.update {
             it.copy(
                 usbCopiedDeclared = true,
@@ -621,14 +649,31 @@ class CatalogSeatWizardViewModel(
         viewModelScope.launch { recoverPcDataAndOpenCifs(token, alreadyOnCifs = true) }
     }
 
-    /** Host CIFS sempre modificabile a mano (§D). */
+    /** Host CIFS sempre modificabile a mano (§D) — sblocca Attiva anche senza LAN. */
     fun setPcHostIp(value: String) {
         val trimmed = value.trim()
         _state.update {
             it.copy(
                 pcHostIp = trimmed,
                 setupResultImported = SetupLanAnnounce.isIpv4(trimmed) &&
-                    it.cifsUserQualified.isNotBlank(),
+                    (it.cifsUserQualified.contains('\\') || it.cifsUserQualified.isNotBlank()),
+                errorMessage = null,
+            )
+        }
+        persistDraft()
+    }
+
+    /**
+     * User CIFS editabile se il recupero automatico non arriva:
+     * incolla da «Tutto pronto» il valore `COMPUTERNAME\MyMedia`.
+     */
+    fun setCifsUserQualified(value: String) {
+        val trimmed = value.trim()
+        _state.update {
+            it.copy(
+                cifsUserQualified = trimmed,
+                setupResultImported = SetupLanAnnounce.isIpv4(it.pcHostIp.trim()) &&
+                    trimmed.isNotBlank(),
                 errorMessage = null,
             )
         }
