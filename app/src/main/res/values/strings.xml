@@ -269,7 +269,11 @@
     <string name="hub_b5b_folder_value">(lascia vuoto)</string>
     <string name="hub_b5b_folder_hint">Lascia vuoto e conferma: dopo il salvataggio compare l\'elenco delle share; apri MyMedia</string>
     <string name="hub_b5b_user_hint">Utente recuperato dal PC a «Tutto pronto» (formato COMPUTERNAME\\MyMedia). Solo Copia — non digitare il nome PC.</string>
-    <string name="hub_b5b_user_waiting_pc">User non ancora qualificato: lascia aperta «Tutto pronto» sul PC e tocca Riprova recupero dati. Non usare lo User senza nome PC.</string>
+    <string name="hub_b5b_user_waiting_pc">User non ancora qualificato: lascia aperta «Tutto pronto» sul PC, tocca Riprova, oppure incolla qui il User completo (es. MINI_IT13\\MyMedia) mostrato nella finestra del PC.</string>
+    <string name="hub_b5b_user_edit_label">User CIFS (modificabile)</string>
+    <string name="hub_b5b_user_edit_hint">Formato COMPUTERNAME\\MyMedia dalla finestra «Tutto pronto». Se il recupero automatico fallisce, incollalo a mano.</string>
+    <string name="hub_pc5_host_required_for_link">Per sbloccare «Attiva collegamento» digita l\'IP anche in questo campo Host (non basta averlo messo solo in CIFS).</string>
+    <string name="hub_pc5_activate_blocked">«Attiva collegamento» è bloccato finché non completi:</string>
     <string name="hub_b5b_label_storage">Storage</string>
     <string name="hub_b5b_label_dfs">Enable DFS (Distributed File System)</string>
     <string name="hub_b5b_domain_value">(lascia vuoto)</string>

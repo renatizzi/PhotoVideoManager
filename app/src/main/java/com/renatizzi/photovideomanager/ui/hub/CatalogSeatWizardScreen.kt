@@ -84,6 +84,7 @@ fun CatalogSeatWizardScreen(
     onConfirmScriptRan: () -> Unit,
     onRetryRecoverPcData: () -> Unit,
     onPcHostIpChange: (String) -> Unit,
+    onCifsUserChange: (String) -> Unit = {},
     onCredentialsText: () -> String,
     onPasswordText: () -> String,
     onFieldText: (CifsCopyField) -> String,
@@ -238,6 +239,7 @@ fun CatalogSeatWizardScreen(
                 },
                 onRetryRecoverPcData = onRetryRecoverPcData,
                 onPcHostIpChange = onPcHostIpChange,
+                onCifsUserChange = onCifsUserChange,
                 onOpenCifs = {
                     onRefreshCifs()
                     NetworkDriveAssistant.openHelperOrStore(context)
@@ -921,6 +923,7 @@ private fun CifsCardStep(
     onCopyPassword: () -> Unit,
     onRetryRecoverPcData: () -> Unit,
     onPcHostIpChange: (String) -> Unit = {},
+    onCifsUserChange: (String) -> Unit = {},
     onOpenCifs: () -> Unit,
     onChooseFolder: () -> Unit,
     onRetry: () -> Unit,
@@ -944,10 +947,11 @@ private fun CifsCardStep(
     }
     val password = state.temporaryPassword
     val hasPassword = password.isNotBlank()
-    val hostCopyable = state.pcHostIp.isNotBlank()
+    val hostReady = state.pcHostIp.trim().isNotBlank()
     val userQualified = '\\' in user
-    val readyForPick = state.cifsInstalled && hasPassword && hostCopyable &&
-        userQualified && cifsSavedConfirmed
+    // LOCK: recupero LAN può fallire — Host digitato in MediaManager sblocca Attiva
+    // (non basta aver messo l'IP solo in CIFS). User qualificato consigliato ma non obbligatorio.
+    val readyForPick = state.cifsInstalled && hasPassword && hostReady && cifsSavedConfirmed
 
     // BoxManager pattern: scarica/apri CIFS subito, prima della scheda dati.
     Button(onClick = onOpenCifs, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
@@ -965,13 +969,6 @@ private fun CifsCardStep(
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
     )
-    if (!userQualified) {
-        Text(
-            stringResource(R.string.hub_b5b_user_waiting_pc),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.error,
-        )
-    }
     // Stato recupero IP: Riprova sempre accessibile (§D / F2), anche durante recoveringPcData.
     Text(
         text = when {
@@ -1002,6 +999,29 @@ private fun CifsCardStep(
         label = { Text(stringResource(R.string.hub_b5b_host_edit_label)) },
         supportingText = { Text(stringResource(R.string.hub_b5b_host_edit_hint)) },
     )
+    if (!hostReady) {
+        Text(
+            stringResource(R.string.hub_pc5_host_required_for_link),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+        )
+    }
+    OutlinedTextField(
+        value = state.cifsUserQualified.ifBlank { user },
+        onValueChange = onCifsUserChange,
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
+        enabled = !state.busy,
+        label = { Text(stringResource(R.string.hub_b5b_user_edit_label)) },
+        supportingText = { Text(stringResource(R.string.hub_b5b_user_edit_hint)) },
+    )
+    if (!userQualified) {
+        Text(
+            stringResource(R.string.hub_b5b_user_waiting_pc),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+        )
+    }
     Text(
         stringResource(R.string.hub_b5b_card_title),
         fontWeight = FontWeight.Medium,
@@ -1057,7 +1077,7 @@ private fun CifsCardStep(
             label = stringResource(R.string.hub_b5b_label_host),
             value = hostValue,
             actionLabel = stringResource(R.string.hub_copy),
-            onAction = if (hostCopyable) {
+            onAction = if (hostReady) {
                 { onCopyField(CifsCopyField.HOST) }
             } else {
                 null
@@ -1065,7 +1085,7 @@ private fun CifsCardStep(
             checked = rowFlags[2],
             onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[2] = !it[2] } },
             hint = stringResource(
-                if (hostCopyable) R.string.hub_b5b_host_hint_ready else R.string.hub_b5b_host_hint,
+                if (hostReady) R.string.hub_b5b_host_hint_ready else R.string.hub_b5b_host_hint,
             ),
             enabled = !state.busy,
         )
@@ -1200,6 +1220,19 @@ private fun CifsCardStep(
         stringResource(R.string.hub_pc5_ultima_azione),
         style = MaterialTheme.typography.bodyMedium,
     )
+    if (!readyForPick) {
+        Text(
+            text = buildString {
+                append(stringResource(R.string.hub_pc5_activate_blocked))
+                if (!state.cifsInstalled) append("\n• ").append(stringResource(R.string.hub_cifs_install))
+                if (!hasPassword) append("\n• ").append(stringResource(R.string.hub_password_missing_hint))
+                if (!hostReady) append("\n• ").append(stringResource(R.string.hub_pc5_host_required_for_link))
+                if (!cifsSavedConfirmed) append("\n• ").append(stringResource(R.string.hub_pc5_item_saved))
+            },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+        )
+    }
     Button(
         onClick = onChooseFolder,
         enabled = !state.busy && readyForPick,

@@ -649,14 +649,31 @@ class CatalogSeatWizardViewModel(
         viewModelScope.launch { recoverPcDataAndOpenCifs(token, alreadyOnCifs = true) }
     }
 
-    /** Host CIFS sempre modificabile a mano (§D). */
+    /** Host CIFS sempre modificabile a mano (§D) — sblocca Attiva anche senza LAN. */
     fun setPcHostIp(value: String) {
         val trimmed = value.trim()
         _state.update {
             it.copy(
                 pcHostIp = trimmed,
                 setupResultImported = SetupLanAnnounce.isIpv4(trimmed) &&
-                    it.cifsUserQualified.isNotBlank(),
+                    (it.cifsUserQualified.contains('\\') || it.cifsUserQualified.isNotBlank()),
+                errorMessage = null,
+            )
+        }
+        persistDraft()
+    }
+
+    /**
+     * User CIFS editabile se il recupero automatico non arriva:
+     * incolla da «Tutto pronto» il valore `COMPUTERNAME\MyMedia`.
+     */
+    fun setCifsUserQualified(value: String) {
+        val trimmed = value.trim()
+        _state.update {
+            it.copy(
+                cifsUserQualified = trimmed,
+                setupResultImported = SetupLanAnnounce.isIpv4(it.pcHostIp.trim()) &&
+                    trimmed.isNotBlank(),
                 errorMessage = null,
             )
         }
