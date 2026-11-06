@@ -33,7 +33,9 @@ class SetupHandoffCodecTest {
         assertEquals("DELLRS\\MyMedia", h.userQualified)
         assertEquals("MyMedia", h.shareName)
         assertEquals("DELLRS", h.computerName)
-        assertTrue(h.toLanPayload().isComplete)
+        // QR/handoff senza password: utile per Host/User, ma NON bundle CIFS completo.
+        assertTrue(h.isComplete)
+        assertFalse(h.toLanPayload().isComplete)
         assertEquals("192.168.68.62", h.toLanPayload().hostForCifs)
     }
 

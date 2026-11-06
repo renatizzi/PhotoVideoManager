@@ -18,7 +18,10 @@ data class SetupCifsBundle(
     val isComplete: Boolean
         get() = SetupLanAnnounce.isIpv4(hostIp) &&
             userQualified.isNotBlank() &&
-            password.isNotBlank()
+            userQualified.contains('\\') &&
+            password.isNotBlank() &&
+            folder.isNotBlank() &&
+            connectionName.isNotBlank()
 
     fun toLanPayload(): SetupLanAnnounce.Payload = SetupLanAnnounce.Payload(
         token = token,
@@ -35,6 +38,7 @@ data class SetupCifsBundle(
     companion object {
         const val DEFAULT_PORT = "445"
         const val BUNDLE_FILE_NAME = "MediaManager_cifs_bundle.json"
+        const val STORAGE_VALUE = "SMB2,3 (jCIFS NG)"
         const val MAGIC = SetupLanAnnounce.MAGIC
 
         fun fromPayload(p: SetupLanAnnounce.Payload): SetupCifsBundle = SetupCifsBundle(

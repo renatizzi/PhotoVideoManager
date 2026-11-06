@@ -588,9 +588,11 @@ try {
   Write-Host "Password PROVVISORIA: cambiala in Windows e aggiorna Archivio sul tablet."
   Write-Host "AVVISO: se il PC va in sospensione, la cartella sparisce dalla rete."
   Write-Host ""
-  Write-Host "IMPORTANTE: il PC deve essere collegato all'HOTSPOT del telefono." -ForegroundColor Cyan
-  Write-Host "Cosi MediaManager riceve da sola IP+User+Password per Copia in CIFS."
-  Write-Host "Lascia questa finestra aperta e torna all'app."
+  Write-Host "PROSSIMO PASSO (Bluetooth):" -ForegroundColor Cyan
+  Write-Host "1) Sul Desktop trovi MediaManager_cifs_bundle.json"
+  Write-Host "2) Invia quel file al telefono via Bluetooth (Invia file)"
+  Write-Host "3) Nell'app: Scarica dati CIFS e seleziona il file ricevuto"
+  Write-Host "Fallback rete: hotspot telefono (opzionale). Torna all'app."
   Write-Host ""
 
   # Bundle CIFS completo (con password) su volume script / Desktop = piano B USB.

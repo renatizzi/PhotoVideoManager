@@ -4,7 +4,9 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.net.Uri
+import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,6 +41,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,6 +55,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.renatizzi.photovideomanager.R
+import com.renatizzi.photovideomanager.data.hub.SetupLanAnnounce
 import com.renatizzi.photovideomanager.data.hub.WindowsCatalogSetupScript
 import com.renatizzi.photovideomanager.data.storage.NetworkDriveAssistant
 import com.renatizzi.photovideomanager.data.storage.OpenDocumentTreeAdvanced
@@ -82,8 +86,11 @@ fun CatalogSeatWizardScreen(
     onConfirmUsbAndPrepare: () -> Unit,
     onConfirmCopy: () -> Unit,
     onConfirmScriptRan: () -> Unit,
+    onShareScriptIntent: () -> Intent? = { null },
+    onShareScriptsHandled: () -> Unit = {},
     onRetryRecoverPcData: () -> Unit,
     onImportCifsBundle: () -> Unit = {},
+    onImportCifsBundleUri: (Uri) -> Unit = {},
     onApplySetupHandoff: (String) -> Unit = {},
     onPcHostIpChange: (String) -> Unit,
     onCifsUserChange: (String) -> Unit = {},
@@ -114,6 +121,21 @@ fun CatalogSeatWizardScreen(
                 context.getString(R.string.hub_seat_folder_fallback),
             )
             onFolderPicked(uri.toString(), label)
+        }
+    }
+    val openBundle = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+    ) { uri: Uri? ->
+        if (uri != null) onImportCifsBundleUri(uri)
+    }
+    // Sequenza sincrona passo 2: share BT prima di avanzare al passo 3.
+    LaunchedEffect(state.pendingShareScripts) {
+        if (state.pendingShareScripts) {
+            val intent = onShareScriptIntent()
+            if (intent != null) {
+                runCatching { context.startActivity(intent) }
+            }
+            onShareScriptsHandled()
         }
     }
 
@@ -198,10 +220,11 @@ fun CatalogSeatWizardScreen(
                 onBack = onBackS0,
                 busy = state.busy,
             )
-            WizardStep.PC_USB_PREPARE -> UsbPrepareChecklistStep(
+            WizardStep.PC_USB_PREPARE -> BtPrepareChecklistStep(
                 onOk = onConfirmUsbAndPrepare,
                 onBack = { onGoStep(WizardStep.PC_AVAILABILITY) },
                 busy = state.busy,
+                statusMessage = state.statusMessage,
             )
             WizardStep.PC_COPY_FILES,
             WizardStep.W2_ROUTINE_READY,
@@ -220,6 +243,21 @@ fun CatalogSeatWizardScreen(
                 onOk = onConfirmScriptRan,
                 onBack = { onGoStep(WizardStep.PC_COPY_FILES) },
                 busy = state.busy,
+            )
+            WizardStep.PC_BT_DOWNLOAD_BUNDLE -> DownloadBundleStep(
+                state = state,
+                onPickBundle = {
+                    openBundle.launch(
+                        arrayOf(
+                            "application/json",
+                            "text/plain",
+                            "application/octet-stream",
+                            "*/*",
+                        ),
+                    )
+                },
+                onBack = { onGoStep(WizardStep.PC_RUN_SCRIPT) },
+                onContinue = { onGoStep(WizardStep.W2_CIFS) },
             )
             WizardStep.W2_CIFS,
             WizardStep.W2_PICK,
@@ -256,7 +294,7 @@ fun CatalogSeatWizardScreen(
                 },
                 onAccessNo = onAccessNo,
                 onSalva = onConfirmLocal,
-                onBack = { onGoStep(WizardStep.PC_RUN_SCRIPT) },
+                onBack = { onGoStep(WizardStep.PC_BT_DOWNLOAD_BUNDLE) },
             )
             WizardStep.W3_GUIDE -> FolderChoiceStep(
                 body = stringResource(R.string.hub_folder_choice_desc_cloud),
@@ -634,12 +672,20 @@ private fun AvailabilityChecklistStep(
 }
 
 @Composable
-private fun UsbPrepareChecklistStep(
+private fun BtPrepareChecklistStep(
     onOk: () -> Unit,
     onBack: () -> Unit,
     busy: Boolean,
+    statusMessage: String? = null,
 ) {
     Text(stringResource(R.string.hub_pc2_intro))
+    statusMessage?.let {
+        Text(
+            it,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+    }
     val items = listOf(
         WizardChecklistItem(stringResource(R.string.hub_pc2_item_unlocked)),
         WizardChecklistItem(stringResource(R.string.hub_pc2_item_connect)),
@@ -654,6 +700,51 @@ private fun UsbPrepareChecklistStep(
         ),
     )
     ChecklistOkBlock(items = items, onOk = onOk, onBack = onBack, busy = busy)
+}
+
+@Composable
+private fun DownloadBundleStep(
+    state: CatalogSeatWizardUiState,
+    onPickBundle: () -> Unit,
+    onBack: () -> Unit,
+    onContinue: () -> Unit,
+) {
+    Text(stringResource(R.string.hub_pc4b_intro))
+    if (!state.setupResultImported) {
+        Text(
+            stringResource(R.string.hub_pc4b_waiting),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+        )
+    } else {
+        Text(
+            state.statusMessage ?: stringResource(R.string.hub_pc4b_item_ready),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+    }
+    Button(
+        onClick = onPickBundle,
+        enabled = !state.busy,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.hub_pc4b_pick))
+    }
+    val items = listOf(
+        WizardChecklistItem(stringResource(R.string.hub_pc4b_item_send)),
+        WizardChecklistItem(stringResource(R.string.hub_pc4b_item_pick)),
+        WizardChecklistItem(stringResource(R.string.hub_pc4b_item_ready)),
+    )
+    ChecklistOkBlock(
+        items = items,
+        onOk = onContinue,
+        onBack = onBack,
+        busy = state.busy,
+        okEnabledExtra = state.setupResultImported &&
+            SetupLanAnnounce.isIpv4(state.pcHostIp) &&
+            state.cifsUserQualified.contains('\\') &&
+            state.temporaryPassword.isNotBlank(),
+    )
 }
 
 @Composable
