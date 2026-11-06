@@ -31,6 +31,7 @@ object WizardStepChrome {
             WizardStep.PC_USB_PREPARE -> Subtitle(pc[2])
             WizardStep.PC_COPY_FILES -> Subtitle(pc[3])
             WizardStep.PC_RUN_SCRIPT -> Subtitle(pc[4])
+            WizardStep.PC_BT_DOWNLOAD_BUNDLE -> Subtitle(pc[5])
             WizardStep.W2_CIFS,
             WizardStep.W2_PICK,
             WizardStep.W2_SUMMARY,
@@ -39,7 +40,7 @@ object WizardStepChrome {
             WizardStep.W2_PREPARE,
             WizardStep.W2_HELP,
             WizardStep.W2_PASSWORD_HELP,
-            -> Subtitle(pc[5])
+            -> Subtitle(pc[6])
             WizardStep.W2_CHOICE,
             WizardStep.W2_ROUTINE_PARAMS,
             -> Subtitle(pc[1])

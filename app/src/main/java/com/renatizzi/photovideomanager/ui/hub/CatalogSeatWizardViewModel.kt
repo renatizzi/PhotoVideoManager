@@ -100,13 +100,15 @@ data class CatalogSeatWizardUiState(
     val verification: SeatVerificationUi = SeatVerificationUi.NONE,
     /** Dopo Scegli cartella: mostra domanda SI/NO (revisione4). */
     val awaitAccessOutcome: Boolean = false,
-    /** Host/User recuperati a «Tutto pronto» (annuncio Wi‑Fi). */
+    /** Host/User recuperati a «Tutto pronto» (bundle BT / rete). */
     val pcHostIp: String = "",
     val cifsUserQualified: String = "",
     val setupResultImported: Boolean = false,
     val setupToken: String = "",
-    /** Ascolto rete in corso dopo OK Passo 4. */
+    /** Ascolto rete in corso (fallback hotspot, non percorso felice). */
     val recoveringPcData: Boolean = false,
+    /** Dopo export: UI deve aprire share Bluetooth prima di passare al passo 3. */
+    val pendingShareScripts: Boolean = false,
 )
 
 /**
@@ -122,12 +124,14 @@ enum class WizardStep {
     PC_SHARE_READY,
     /** Passo 1 — Verifica disponibilità. */
     PC_AVAILABILITY,
-    /** Passo 2 — USB / collegamento; OK esporta CONFIGURA + sup. */
+    /** Passo 2 — Bluetooth + preparazione/invio CONFIGURA + sup. */
     PC_USB_PREPARE,
-    /** Passo 3 — Copia manuale sul Desktop. */
+    /** Passo 3 — File sul Desktop del PC (dopo ricezione BT). */
     PC_COPY_FILES,
     /** Passo 4 — Avvio script (doppio clic + UAC + Tutto pronto). */
     PC_RUN_SCRIPT,
+    /** Passo 4b — Scarica bundle CIFS via Bluetooth (OpenDocument). */
+    PC_BT_DOWNLOAD_BUNDLE,
     /** Passo 5 — Scheda CIFS + collegamento Catalogo (revisione4). */
     W2_CIFS,
     W2_PICK,
@@ -477,16 +481,42 @@ class CatalogSeatWizardViewModel(
         persistDraft()
     }
 
-    /** Passo 2 OK → esporta CONFIGURA/sup in Download, poi passo 3 (copia). */
+    /** Passo 2 OK → esporta CONFIGURA/sup e apre share Bluetooth; solo dopo si va al passo 3. */
     fun confirmUsbAndPrepareFiles() {
-        prepareWindowsScript()
+        prepareWindowsScript(shareAfterExport = true)
     }
 
-    /** Passo 3 → 4. Checkpoint: script già esportato in Download. */
+    fun confirmBtAndPrepareFiles() = confirmUsbAndPrepareFiles()
+
+    /** Chiamato dalla UI dopo aver lanciato (o scartato) il chooser Bluetooth. */
+    fun onShareScriptsHandled() {
+        _state.update {
+            if (!it.scriptPrepared) {
+                it.copy(pendingShareScripts = false)
+            } else {
+                it.copy(
+                    pendingShareScripts = false,
+                    step = WizardStep.PC_COPY_FILES,
+                    statusMessage = null,
+                    errorMessage = null,
+                )
+            }
+        }
+        persistDraft()
+    }
+
+    fun consumePendingShareScripts() {
+        _state.update { it.copy(pendingShareScripts = false) }
+    }
+
+    /** Passo 3 → 4. Checkpoint: script inviato e sul Desktop. */
     fun confirmCopyChecked() {
         if (!_state.value.scriptPrepared) {
             _state.update {
-                it.copy(errorMessage = "Prima prepara i file (passo precedente): CONFIGURA e sup devono essere in Download.")
+                it.copy(
+                    errorMessage =
+                        "Prima invia i file via Bluetooth (passo precedente): CONFIGURA e sup devono essere sul Desktop del PC.",
+                )
             }
             return
         }
@@ -499,8 +529,7 @@ class CatalogSeatWizardViewModel(
             )
         }
         persistDraft()
-        // Ascolto subito: quando sul PC compare Tutto pronto l'app puo gia ricevere IP/User.
-        startBackgroundLanListen()
+        // Nessun ascolto LAN qui: il bundle torna al passo 4b via Bluetooth (sequenza sincrona).
     }
 
     private fun startBackgroundLanListen() {
@@ -620,15 +649,13 @@ class CatalogSeatWizardViewModel(
 
     fun fieldClipboardText(field: CifsCopyField): String {
         val s = _state.value
+        // Solo valori definitivi: niente placeholder Host se bundle assente.
         return when (field) {
             CifsCopyField.NAME -> s.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
-            CifsCopyField.STORAGE -> "SMB2,3 (jCIFS NG)"
+            CifsCopyField.STORAGE -> SetupCifsBundle.STORAGE_VALUE
             CifsCopyField.HOST -> s.pcHostIp.trim()
             CifsCopyField.PORT -> "445"
-            CifsCopyField.USERNAME ->
-                s.cifsUserQualified.trim().ifBlank {
-                    WindowsCatalogSetupScript.cifsUserCopyText(s.userName)
-                }
+            CifsCopyField.USERNAME -> s.cifsUserQualified.trim()
             CifsCopyField.PASSWORD -> s.temporaryPassword
             // Folder CIFS: pin sulla share (MyMedia), non path Windows e non vuoto.
             CifsCopyField.FOLDER -> WindowsCatalogSetupScript.cifsFolderPin(
@@ -636,6 +663,15 @@ class CatalogSeatWizardViewModel(
             )
         }
     }
+
+    val cifsBundleComplete: Boolean
+        get() {
+            val s = _state.value
+            return SetupLanAnnounce.isIpv4(s.pcHostIp) &&
+                s.cifsUserQualified.contains('\\') &&
+                s.temporaryPassword.isNotBlank() &&
+                s.setupResultImported
+        }
 
     /** Riprova ascolto Wi‑Fi (stesso token della sessione). Sempre invocabile (§D / F2). */
     fun retryRecoverPcData() {
@@ -748,12 +784,79 @@ class CatalogSeatWizardViewModel(
         _state.update { it.copy(cifsInstalled = installed) }
     }
 
-    /** Passo 4 OK: ascolto Wi‑Fi dei dati memorizzati a Tutto pronto → passo 5 CIFS. */
+    /**
+     * Passo 4 OK → passo 4b (scarica bundle via BT).
+     * Non parte il recupero hotspot come percorso felice (asincrono rispetto al PC).
+     */
     fun confirmScriptRanOnPc() {
-        val token = _state.value.setupToken
         viewModelScope.launch {
             runCatching { withContext(Dispatchers.IO) { exporter.scrubDownloadsScripts() } }
-            recoverPcDataAndOpenCifs(token, alreadyOnCifs = false)
+            refreshCifsInstalled()
+            _state.update {
+                it.copy(
+                    busy = false,
+                    recoveringPcData = false,
+                    scriptRanDeclared = true,
+                    step = WizardStep.PC_BT_DOWNLOAD_BUNDLE,
+                    statusMessage = null,
+                    errorMessage = null,
+                )
+            }
+            persistDraft()
+        }
+    }
+
+    /** Import bundle JSON ricevuto via Bluetooth (picker file sul telefono). */
+    fun importCifsBundleFromUri(uri: android.net.Uri) {
+        viewModelScope.launch {
+            _state.update { it.copy(busy = true, errorMessage = null, statusMessage = null) }
+            val token = _state.value.setupToken
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    val raw = appContext.contentResolver.openInputStream(uri)?.use { input ->
+                        input.bufferedReader(Charsets.UTF_8).readText()
+                    } ?: error("Impossibile leggere il file")
+                    val bundle = SetupCifsBundle.parse(raw, expectedToken = token.ifBlank { null })
+                        ?: error("File non riconosciuto come bundle MediaManager")
+                    if (!bundle.isComplete) {
+                        error(
+                            "Bundle incompleto (servono Host IPv4, User PC\\utente, Password). " +
+                                "Dal Desktop del PC invia di nuovo MediaManager_cifs_bundle.json via Bluetooth.",
+                        )
+                    }
+                    bundle
+                }
+            }
+            result.fold(
+                onSuccess = { bundle ->
+                    cachedLan.set(
+                        SetupLanAnnounce.mergePayloads(cachedLan.get(), bundle.toLanPayload()),
+                    )
+                    applyLanPayload(bundle.toLanPayload())
+                    stopBackgroundLanListen()
+                    _state.update {
+                        it.copy(
+                            busy = false,
+                            recoveringPcData = false,
+                            setupResultImported = true,
+                            step = WizardStep.W2_CIFS,
+                            statusMessage =
+                                "Dati CIFS pronti: Host, User, Password, Folder — solo Copia, senza modifiche.",
+                            errorMessage = null,
+                        )
+                    }
+                    persistDraft()
+                },
+                onFailure = { e ->
+                    _state.update {
+                        it.copy(
+                            busy = false,
+                            setupResultImported = false,
+                            errorMessage = e.message ?: "Import bundle non riuscito",
+                        )
+                    }
+                },
+            )
         }
     }
 
@@ -931,7 +1034,7 @@ class CatalogSeatWizardViewModel(
         persistDraft()
     }
 
-    fun prepareWindowsScript() {
+    fun prepareWindowsScript(shareAfterExport: Boolean = false) {
         viewModelScope.launch {
             val current = _state.value
             val pathErr = WindowsCatalogSetupScript.validateFolderPath(current.folderPath)
@@ -968,8 +1071,7 @@ class CatalogSeatWizardViewModel(
             result.fold(
                 onSuccess = { export ->
                     lastExport = export
-                    // Nessun statusMessage sotto i bottoni del Passo 3: le istruzioni
-                    // sono nella checklist; «Quando pronto clicca su OK» sta sopra Indietro/OK.
+                    // Sequenza sincrona: prima share BT (resta al passo 2), poi passo 3.
                     _state.update {
                         it.copy(
                             busy = false,
@@ -978,8 +1080,18 @@ class CatalogSeatWizardViewModel(
                             scriptPrepared = true,
                             downloadsSaved = export.downloadsSaved,
                             usbCopiedTo = export.usbCopiedTo,
-                            statusMessage = null,
-                            step = WizardStep.PC_COPY_FILES,
+                            setupResultImported = false,
+                            pendingShareScripts = shareAfterExport && export.shareUris.isNotEmpty(),
+                            statusMessage = if (shareAfterExport) {
+                                "Scegli Bluetooth e invia CONFIGURA + sup. Sul PC deve essere attivo «Ricevi file»."
+                            } else {
+                                null
+                            },
+                            step = if (shareAfterExport) {
+                                WizardStep.PC_USB_PREPARE
+                            } else {
+                                WizardStep.PC_COPY_FILES
+                            },
                         )
                     }
                     persistDraft()
@@ -1007,10 +1119,11 @@ class CatalogSeatWizardViewModel(
         val user = s.cifsUserQualified.trim().ifBlank {
             WindowsCatalogSetupScript.cifsUserCopyText(s.userName)
         }
-        val host = s.pcHostIp.trim().ifBlank { "(IP del PC dalla finestra Tutto pronto)" }
+        if (!cifsBundleComplete) return ""
+        val host = s.pcHostIp.trim()
         return buildString {
             append("Name: $share\n")
-            append("Storage: SMB2,3 (jCIFS NG)\n")
+            append("Storage: ${SetupCifsBundle.STORAGE_VALUE}\n")
             append("Domain: (lascia vuoto)\n")
             append("Host: $host\n")
             append("Port: 445\n")
