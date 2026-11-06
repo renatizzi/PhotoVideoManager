@@ -29,7 +29,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,7 +44,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import android.content.Intent
 import com.renatizzi.photovideomanager.R
+import com.renatizzi.photovideomanager.data.hub.SetupCifsBundle
 import com.renatizzi.photovideomanager.data.hub.WindowsCatalogSetupScript
 import com.renatizzi.photovideomanager.data.storage.NetworkDriveAssistant
 import com.renatizzi.photovideomanager.data.storage.OpenDocumentTreeAdvanced
@@ -64,9 +68,12 @@ fun CatalogSeatWizardScreen(
     onConfirmLocal: () -> Unit,
     onFolderPathChange: (String) -> Unit,
     onConfirmAvailability: () -> Unit,
-    onConfirmUsbAndPrepare: () -> Unit,
+    onConfirmBtAndPrepare: () -> Unit,
     onConfirmCopy: () -> Unit,
     onConfirmScriptRan: () -> Unit,
+    onShareScriptIntent: () -> Intent?,
+    onConsumePendingShare: () -> Unit,
+    onImportCifsBundle: (Uri) -> Unit,
     onCredentialsText: () -> String,
     onPasswordText: () -> String,
     onFieldText: (CifsCopyField) -> String,
@@ -91,6 +98,20 @@ fun CatalogSeatWizardScreen(
                 context.getString(R.string.hub_seat_folder_fallback),
             )
             onFolderPicked(uri.toString(), label)
+        }
+    }
+    val openBundle = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+    ) { uri: Uri? ->
+        if (uri != null) onImportCifsBundle(uri)
+    }
+    LaunchedEffect(state.pendingShareScripts) {
+        if (state.pendingShareScripts) {
+            val intent = onShareScriptIntent()
+            if (intent != null) {
+                runCatching { context.startActivity(intent) }
+            }
+            onConsumePendingShare()
         }
     }
 
@@ -149,8 +170,10 @@ fun CatalogSeatWizardScreen(
                 onBack = onBackIntro,
                 busy = state.busy,
             )
-            WizardStep.PC_USB_PREPARE -> UsbPrepareChecklistStep(
-                onOk = onConfirmUsbAndPrepare,
+            WizardStep.PC_BT_PREPARE,
+            WizardStep.PC_USB_PREPARE,
+            -> BtPrepareChecklistStep(
+                onOk = onConfirmBtAndPrepare,
                 onBack = { onGoStep(WizardStep.PC_AVAILABILITY) },
                 busy = state.busy,
             )
@@ -158,7 +181,7 @@ fun CatalogSeatWizardScreen(
             WizardStep.W2_ROUTINE_READY,
             -> CopyFilesChecklistStep(
                 onOk = onConfirmCopy,
-                onBack = { onGoStep(WizardStep.PC_USB_PREPARE) },
+                onBack = { onGoStep(WizardStep.PC_BT_PREPARE) },
                 busy = state.busy,
                 scriptPrepared = state.scriptPrepared,
             )
@@ -172,6 +195,21 @@ fun CatalogSeatWizardScreen(
                 onBack = { onGoStep(WizardStep.PC_COPY_FILES) },
                 busy = state.busy,
             )
+            WizardStep.PC_BT_DOWNLOAD_BUNDLE -> DownloadBundleStep(
+                state = state,
+                onPickBundle = {
+                    openBundle.launch(
+                        arrayOf(
+                            "application/json",
+                            "text/plain",
+                            "application/octet-stream",
+                            "*/*",
+                        ),
+                    )
+                },
+                onBack = { onGoStep(WizardStep.PC_RUN_SCRIPT) },
+                onContinue = { onGoStep(WizardStep.W2_CIFS) },
+            )
             WizardStep.W2_CIFS,
             WizardStep.W2_CIFS_BRIDGE,
             WizardStep.W2_SUMMARY,
@@ -179,31 +217,52 @@ fun CatalogSeatWizardScreen(
             WizardStep.W2_PREPARE,
             WizardStep.W2_HELP,
             WizardStep.W2_PASSWORD_HELP,
-            -> CifsCardStep(
-                state = state,
-                onCopyField = { field ->
-                    val value = onFieldText(field)
-                    if (value.isNotBlank()) copyToClipboard(context, value)
-                },
-                onCopyPassword = {
-                    val pwd = onPasswordText()
-                    if (pwd.isNotBlank()) copyToClipboard(context, pwd)
-                },
-                onCopyAll = { copyToClipboard(context, onCredentialsText()) },
-                onOpenCifs = {
-                    onRefreshCifs()
-                    if (NetworkDriveAssistant.isHelperInstalled(context)) {
-                        if (!NetworkDriveAssistant.openHelperApp(context)) {
+            -> if (!state.cifsBundleComplete) {
+                DownloadBundleStep(
+                    state = state,
+                    onPickBundle = {
+                        openBundle.launch(
+                            arrayOf(
+                                "application/json",
+                                "text/plain",
+                                "application/octet-stream",
+                                "*/*",
+                            ),
+                        )
+                    },
+                    onBack = { onGoStep(WizardStep.PC_RUN_SCRIPT) },
+                    onContinue = { onGoStep(WizardStep.W2_CIFS) },
+                )
+            } else {
+                CifsCardStep(
+                    state = state,
+                    onCopyField = { field ->
+                        val value = onFieldText(field)
+                        if (value.isNotBlank()) copyToClipboard(context, value)
+                    },
+                    onCopyPassword = {
+                        val pwd = onPasswordText()
+                        if (pwd.isNotBlank()) copyToClipboard(context, pwd)
+                    },
+                    onCopyAll = {
+                        val all = onCredentialsText()
+                        if (all.isNotBlank()) copyToClipboard(context, all)
+                    },
+                    onOpenCifs = {
+                        onRefreshCifs()
+                        if (NetworkDriveAssistant.isHelperInstalled(context)) {
+                            if (!NetworkDriveAssistant.openHelperApp(context)) {
+                                NetworkDriveAssistant.openHelperStore(context)
+                            }
+                        } else {
                             NetworkDriveAssistant.openHelperStore(context)
                         }
-                    } else {
-                        NetworkDriveAssistant.openHelperStore(context)
-                    }
-                },
-                onRefresh = onRefreshCifs,
-                onContinue = { onGoStep(WizardStep.W2_PICK) },
-                onBack = { onGoStep(WizardStep.PC_RUN_SCRIPT) },
-            )
+                    },
+                    onRefresh = onRefreshCifs,
+                    onContinue = { onGoStep(WizardStep.W2_PICK) },
+                    onBack = { onGoStep(WizardStep.PC_BT_DOWNLOAD_BUNDLE) },
+                )
+            }
             WizardStep.W2_PICK -> W2VerifyPickStep(
                 state = state,
                 onChooseFolder = { if (!state.busy) openTree.launch(null) },
@@ -542,7 +601,7 @@ private fun AvailabilityChecklistStep(
 }
 
 @Composable
-private fun UsbPrepareChecklistStep(
+private fun BtPrepareChecklistStep(
     onOk: () -> Unit,
     onBack: () -> Unit,
     busy: Boolean,
@@ -553,10 +612,10 @@ private fun UsbPrepareChecklistStep(
         style = MaterialTheme.typography.bodySmall,
     )
     val labels = listOf(
-        stringResource(R.string.hub_pc2_item_connect),
-        stringResource(R.string.hub_pc2_item_unlocked),
-        stringResource(R.string.hub_pc2_item_transfer),
         stringResource(R.string.hub_pc2_item_allow),
+        stringResource(R.string.hub_pc2_item_unlocked),
+        stringResource(R.string.hub_pc2_item_connect),
+        stringResource(R.string.hub_pc2_item_transfer),
     )
     ChecklistOkBlock(labels = labels, onOk = onOk, onBack = onBack, busy = busy)
 }
@@ -602,8 +661,51 @@ private fun ScriptChecklistStep(
         stringResource(R.string.hub_pc4_item_doubleclick),
         stringResource(R.string.hub_pc4_item_uac),
         stringResource(R.string.hub_pc4_item_wait),
+        stringResource(R.string.hub_pc4_item_bundle),
     )
     ChecklistOkBlock(labels = labels, onOk = onOk, onBack = onBack, busy = busy)
+}
+
+@Composable
+private fun DownloadBundleStep(
+    state: CatalogSeatWizardUiState,
+    onPickBundle: () -> Unit,
+    onBack: () -> Unit,
+    onContinue: () -> Unit,
+) {
+    Text(stringResource(R.string.hub_pc4b_intro))
+    if (!state.cifsBundleComplete) {
+        Text(
+            stringResource(R.string.hub_pc4b_waiting),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+        )
+    } else {
+        Text(
+            state.statusMessage ?: stringResource(R.string.hub_pc4b_item_ready),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+    }
+    Button(
+        onClick = onPickBundle,
+        enabled = !state.busy,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.hub_pc4b_pick))
+    }
+    val labels = listOf(
+        stringResource(R.string.hub_pc4b_item_tap),
+        stringResource(R.string.hub_pc4b_item_send),
+        stringResource(R.string.hub_pc4b_item_ready),
+    )
+    ChecklistOkBlock(
+        labels = labels,
+        onOk = onContinue,
+        onBack = onBack,
+        busy = state.busy,
+        okEnabledExtra = state.cifsBundleComplete,
+    )
 }
 
 @Composable
@@ -652,17 +754,31 @@ private fun CifsCardStep(
     onBack: () -> Unit,
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
-    val share = state.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
-    val user = state.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER }
+    val name = state.cifsConnectionName.ifBlank { state.shareName }
+    val storage = state.cifsStorage.ifBlank { SetupCifsBundle.STORAGE_VALUE }
+    val host = state.cifsHost
+    val port = state.cifsPort.ifBlank { SetupCifsBundle.DEFAULT_PORT }
+    val folder = state.cifsFolder.ifBlank { state.shareName }
+    val user = state.cifsUserQualified
     val password = state.temporaryPassword
     val hasPassword = password.isNotBlank()
+    val formReady = state.cifsBundleComplete &&
+        host.isNotBlank() &&
+        user.contains('\\') &&
+        folder.isNotBlank() &&
+        hasPassword
 
     Text(stringResource(R.string.hub_pc5_intro))
     Text(
         stringResource(R.string.hub_b5b_card_title),
         fontWeight = FontWeight.Medium,
     )
-    // Ordine = form CIFS «Connection» (screenshot PPT V2)
+    if (!formReady) {
+        Text(
+            stringResource(R.string.hub_b5b_bundle_required),
+            color = MaterialTheme.colorScheme.error,
+        )
+    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -678,13 +794,13 @@ private fun CifsCardStep(
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_name),
-            value = share,
-            onCopy = { onCopyField(CifsCopyField.NAME) },
+            value = name,
+            onCopy = if (formReady) ({ onCopyField(CifsCopyField.NAME) }) else null,
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_storage),
-            value = stringResource(R.string.hub_b5b_storage_value),
-            onCopy = { onCopyField(CifsCopyField.STORAGE) },
+            value = storage,
+            onCopy = if (formReady) ({ onCopyField(CifsCopyField.STORAGE) }) else null,
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_domain),
@@ -694,14 +810,19 @@ private fun CifsCardStep(
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_host),
-            value = stringResource(R.string.hub_b5b_host_placeholder),
-            onCopy = null,
+            value = host.ifBlank { stringResource(R.string.hub_b5b_host_placeholder) },
+            onCopy = if (host.isNotBlank()) ({ onCopyField(CifsCopyField.HOST) }) else null,
             hint = stringResource(R.string.hub_b5b_host_hint),
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_port),
-            value = "445",
-            onCopy = { onCopyField(CifsCopyField.PORT) },
+            value = port,
+            onCopy = if (formReady) ({ onCopyField(CifsCopyField.PORT) }) else null,
+        )
+        CifsFieldRow(
+            label = stringResource(R.string.hub_b5b_label_folder),
+            value = folder,
+            onCopy = if (folder.isNotBlank()) ({ onCopyField(CifsCopyField.FOLDER) }) else null,
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_dfs),
@@ -710,9 +831,15 @@ private fun CifsCardStep(
             hint = stringResource(R.string.hub_b5b_dfs_hint),
         )
         CifsFieldRow(
+            label = stringResource(R.string.hub_b5b_label_readonly),
+            value = stringResource(R.string.hub_b5b_readonly_value),
+            onCopy = null,
+            hint = stringResource(R.string.hub_b5b_readonly_hint),
+        )
+        CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_user),
             value = user,
-            onCopy = { onCopyField(CifsCopyField.USERNAME) },
+            onCopy = if (user.isNotBlank()) ({ onCopyField(CifsCopyField.USERNAME) }) else null,
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -766,7 +893,7 @@ private fun CifsCardStep(
             },
         )
     }
-    TextButton(onClick = onCopyAll) {
+    TextButton(onClick = onCopyAll, enabled = formReady) {
         Text(stringResource(R.string.hub_w2_copy_credentials))
     }
     TextButton(onClick = onRefresh) {
@@ -785,7 +912,9 @@ private fun CifsCardStep(
         stringResource(R.string.hub_pc5_item_domain),
         stringResource(R.string.hub_pc5_item_host),
         stringResource(R.string.hub_pc5_item_port),
+        stringResource(R.string.hub_pc5_item_folder),
         stringResource(R.string.hub_pc5_item_dfs),
+        stringResource(R.string.hub_pc5_item_readonly),
         stringResource(R.string.hub_pc5_item_user),
         stringResource(R.string.hub_pc5_item_password),
         stringResource(R.string.hub_pc5_item_save),
@@ -796,7 +925,7 @@ private fun CifsCardStep(
         onOk = onContinue,
         onBack = onBack,
         busy = state.busy,
-        okEnabledExtra = state.cifsInstalled && hasPassword,
+        okEnabledExtra = state.cifsInstalled && formReady,
     )
 }
 

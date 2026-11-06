@@ -23,7 +23,9 @@ object WindowsCatalogSetupScript {
         "MediaManager_Setup_Catalogo",
     )
     const val RESULT_FILE_NAME = "MediaManager_setup_result.json"
+    const val BUNDLE_FILE_NAME = SetupCifsBundle.BUNDLE_FILE_NAME
     const val LOG_FILE_NAME = "MediaManager_setup.log"
+    const val CIFS_STORAGE_VALUE = SetupCifsBundle.STORAGE_VALUE
 
     private val pathRegex =
         Regex("""^[A-Za-z]:\\(?:[^<>:"/\\|?*\r\n]+\\)*[^<>:"/\\|?*\r\n]*$""")
@@ -35,7 +37,16 @@ object WindowsCatalogSetupScript {
         val shareName: String = DEFAULT_SHARE,
         val userName: String = DEFAULT_USER,
         val temporaryPassword: String,
+        /** Token sessione wizard: deve tornare nel bundle per il gate import. */
+        val sessionToken: String = "",
     )
+
+    /** Testo User per CIFS: sempre `COMPUTERNAME\user`. */
+    fun cifsUserCopyText(userName: String, computerName: String): String {
+        val user = userName.trim().ifBlank { DEFAULT_USER }
+        val pc = computerName.trim()
+        return if (pc.isBlank()) user else "$pc\\$user"
+    }
 
     data class Package(
         val params: Params,
@@ -177,7 +188,10 @@ object WindowsCatalogSetupScript {
         val user = psQuote(params.userName.trim())
         val password = psQuote(params.temporaryPassword)
         val resultName = psQuote(RESULT_FILE_NAME)
+        val bundleName = psQuote(BUNDLE_FILE_NAME)
         val logName = psQuote(LOG_FILE_NAME)
+        val sessionToken = psQuote(params.sessionToken.trim())
+        val storageValue = psQuote(CIFS_STORAGE_VALUE)
         val d = "${'$'}"
 
         // PowerShell body: keep parameters at top; exit codes 10/20/30/40/50/60.
@@ -195,7 +209,10 @@ ${d}ShareName      = $share
 ${d}UserName       = $user
 ${d}PlainPassword  = $password
 ${d}ResultFileName = $resultName
+${d}BundleFileName = $bundleName
 ${d}LogFileName    = $logName
+${d}SessionToken   = $sessionToken
+${d}CifsStorage    = $storageValue
 ${d}FirewallGroup  = '@FirewallAPI.dll,-28502'
 ${d}ExitCode       = 1
 
@@ -421,6 +438,27 @@ try {
     Copy-Item -LiteralPath ${d}ResultPath -Destination (Join-Path ${d}desktop ${d}ResultFileName) -Force -ErrorAction SilentlyContinue
   }
 
+  # Bundle CIFS completo sul Desktop (password inclusa). L'app lo scarica via Bluetooth.
+  # Il result JSON resta senza password; questo file e la fonte per Copia in CIFS.
+  ${d}bundleIp = if (${d}primaryIp) { [string]${d}primaryIp } else { '' }
+  ${d}bundle = [pscustomobject]@{
+    hostIp = ${d}bundleIp
+    userQualified = ${d}userHint
+    password = ${d}PlainPassword
+    port = '445'
+    connectionName = ${d}ShareName
+    folder = ${d}ShareName
+    shareName = ${d}ShareName
+    computerName = ${d}pc
+    storage = ${d}CifsStorage
+    token = ${d}SessionToken
+  }
+  ${d}bundlePath = ${d}null
+  if (${d}desktop) {
+    ${d}bundlePath = Join-Path ${d}desktop ${d}BundleFileName
+    (${d}bundle | ConvertTo-Json -Compress) | Set-Content -LiteralPath ${d}bundlePath -Encoding ASCII
+  }
+
   Write-Host ""
   Write-Host "Tutto pronto" -ForegroundColor Green
   Write-Host ("PC:            {0}" -f ${d}pc)
@@ -431,11 +469,14 @@ try {
   Write-Host ("Utente SMB:    {0}" -f ${d}userHint)
   Write-Host ("Password:      {0}" -f ${d}PlainPassword) -ForegroundColor Yellow
   Write-Host ""
+  if (${d}bundlePath) {
+    Write-Host ("Bundle CIFS (invia al telefono via Bluetooth): {0}" -f ${d}bundlePath) -ForegroundColor Cyan
+  }
   Write-Host "Password PROVVISORIA: cambiala in Windows e aggiorna Archivio sul tablet."
   Write-Host ("Esito (fuori dalla condivisione): {0}" -f ${d}ResultPath)
   Write-Host ("Log: {0}" -f ${d}LogPath)
   Write-Host "AVVISO: se il PC va in sospensione, la cartella sparisce dalla rete."
-  Write-Host "Torna all'app MediaManager e continua il Wizard."
+  Write-Host "Torna all'app MediaManager: Scarica dati CIFS, poi continua il Wizard."
   Write-Host ""
 
   # Rimuove lo .ps1 (contiene la password) dopo successo.

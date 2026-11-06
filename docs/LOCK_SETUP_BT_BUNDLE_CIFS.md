@@ -1,6 +1,6 @@
 # LOCK — Setup Catalogo PC via Bluetooth + bundle CIFS completo
 
-**Stato:** LOCK (OK Renato 06/11/2026 Europe/Rome)  
+**Stato:** in implementazione (OK Renato 06/11/2026 Europe/Rome) — app `0.16.70-preview`  
 **Ambito:** ramo wizard «Su un PC/Notebook Windows»  
 **Sostituisce come trasporto file:** percorso USB/MTP (passi 1–3 attuali)  
 **Sostituisce come recupero dati post-«Tutto pronto»:** LAN fragile, QR/URI, digitazione Host, integrazione pezzi tra sessione app e finestra PC  

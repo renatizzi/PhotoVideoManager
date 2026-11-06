@@ -11,6 +11,7 @@ object WizardStepChrome {
 
     @Suppress("UNUSED_PARAMETER", "DEPRECATION")
     fun subtitle(step: WizardStep, kind: CatalogSeatKind): Subtitle {
+        // PC_USB_PREPARE deprecato: stesso sottotitolo di PC_BT_PREPARE.
         val pc = WizardUiContract.PC_STEP_SUBTITLES
         check(WizardUiContract.STEP0_SUBTITLE_HAS_NO_NUMBER)
         check(!pc[0].first().isDigit()) {
@@ -21,10 +22,13 @@ object WizardStepChrome {
             WizardStep.INTRO -> Subtitle(pc[0])
             WizardStep.W1_CONFIRM -> Subtitle("Su questo dispositivo")
             WizardStep.PC_AVAILABILITY -> Subtitle(pc[1])
-            WizardStep.PC_USB_PREPARE -> Subtitle(pc[2])
+            WizardStep.PC_BT_PREPARE,
+            WizardStep.PC_USB_PREPARE,
+            -> Subtitle(pc[2])
             WizardStep.PC_COPY_FILES -> Subtitle(pc[3])
             WizardStep.PC_RUN_SCRIPT -> Subtitle(pc[4])
-            WizardStep.W2_CIFS -> Subtitle(pc[5])
+            WizardStep.PC_BT_DOWNLOAD_BUNDLE -> Subtitle(pc[5])
+            WizardStep.W2_CIFS -> Subtitle(pc[6])
             WizardStep.W2_CHOICE,
             WizardStep.W2_ROUTINE_PARAMS,
             -> Subtitle(pc[1])
@@ -40,7 +44,7 @@ object WizardStepChrome {
             WizardStep.W2_PREPARE,
             WizardStep.W2_HELP,
             WizardStep.W2_PASSWORD_HELP,
-            -> Subtitle(pc[5])
+            -> Subtitle(pc[6])
             // Continuazione operativa dopo CIFS (non è un passo numerato del PPT)
             WizardStep.W2_PICK -> Subtitle("Scegli la cartella del Catalogo")
             WizardStep.W3_GUIDE -> Subtitle("Google Drive")
