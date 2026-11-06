@@ -13,8 +13,8 @@ android {
         applicationId = "com.renatizzi.photovideomanager"
         minSdk = 26
         targetSdk = 35
-        versionCode = 109
-        versionName = "0.16.68-preview"
+        versionCode = 110
+        versionName = "0.16.69-preview"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -74,7 +74,11 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.7.0")
     implementation("io.coil-kt:coil-video:2.7.0")
 
+    // Scan QR handoff PC → app (SetupHandoffCodec)
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+
     testImplementation("junit:junit:4.13.2")
+    testImplementation("com.google.zxing:core:3.5.3")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")

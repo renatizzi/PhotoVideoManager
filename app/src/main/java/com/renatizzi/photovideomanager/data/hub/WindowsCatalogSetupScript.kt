@@ -33,8 +33,16 @@ object WindowsCatalogSetupScript {
         "AVVIA_Configurazione_Catalogo",
         "_non_aprire_supporto_setup",
         "MediaManager_Setup_Catalogo",
+        "QRCoder",
+        "MediaManager_setup_handoff",
     )
     const val RESULT_FILE_NAME = "MediaManager_setup_result.json"
+    /** URI pvmsetup:2;… + istruzioni (Desktop). */
+    const val HANDOFF_FILE_NAME = "MediaManager_setup_handoff.txt"
+    /** QR PNG generato a «Tutto pronto» (Desktop). */
+    const val HANDOFF_QR_FILE_NAME = "MediaManager_setup_handoff.png"
+    /** Encoder QR (MIT) esportato insieme a CONFIGURA/sup. */
+    const val QRCODER_DLL_FILE_NAME = "QRCoder.dll"
     const val LOG_FILE_NAME = "MediaManager_setup.log"
     /** Porte annuncio dopo Tutto pronto (allineate a [SetupLanAnnounce]). */
     const val SETUP_ANNOUNCE_UDP_PORT = SetupLanAnnounce.UDP_PORT
@@ -279,8 +287,8 @@ object WindowsCatalogSetupScript {
           echo  Configurazione NON completata. Codice: %ERR%
           echo  10=cartella 20=utente 30=condivisione 40=NTFS 50=rete/firewall 60=verifica
         ) else (
-          echo  Tutto pronto. Lascia questa finestra aperta qualche minuto:
-          echo  l'app recupera da sola IP e utente. Poi puoi chiuderla.
+          echo  Tutto pronto. Sul Desktop trovi il QR MediaManager_setup_handoff.png
+          echo  In MediaManager: Scansiona codice ^(o Incolla URI^) - non serve la Wi-Fi per i campi.
         )
         echo.
         pause
@@ -578,15 +586,84 @@ try {
   Write-Host ""
   Write-Host "Password PROVVISORIA: cambiala in Windows e aggiorna Archivio sul tablet."
   Write-Host "AVVISO: se il PC va in sospensione, la cartella sparisce dalla rete."
-  Write-Host "Lascia questa finestra aperta. Torna all'app e continua: recupera IP e utente da sola."
   Write-Host ""
 
-  # Servizio locale HTTP+UDP (~5 min) con i dati memorizzati a Tutto pronto.
+  # Handoff durevole (QR / URI): indipendente da Wi-Fi tra PC e telefono.
+  ${d}handoffUri = ''
+  try {
+    ${d}expSec = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() + 2700
+    ${d}handoffJson = ([ordered]@{
+      v = 2
+      m = ${d}AnnounceMagic
+      t = ${d}SetupToken
+      ip = ${d}ipText
+      user = ${d}userHint
+      share = ${d}ShareName
+      pc = ${d}pc
+      exp = ${d}expSec
+    } | ConvertTo-Json -Compress)
+    ${d}handoffBytes = [System.Text.Encoding]::UTF8.GetBytes(${d}handoffJson)
+    ${d}handoffB64 = [Convert]::ToBase64String(${d}handoffBytes).TrimEnd([char]61).Replace([char]43,[char]45).Replace([char]47,[char]95)
+    ${d}handoffUri = 'pvmsetup:2;' + ${d}handoffB64
+    ${d}handoffTxt = @"
+MediaManager - codice setup (scansiona il QR oppure Incolla in app)
+Password NON e' in questo codice: usa solo Copia in MediaManager.
+
+${d}handoffUri
+
+IP: ${d}ipText
+Utente: ${d}userHint
+Share: ${d}ShareName
+"@
+    ${d}handoffPath = Join-Path ${d}ParentDir 'MediaManager_setup_handoff.txt'
+    Set-Content -LiteralPath ${d}handoffPath -Value ${d}handoffTxt -Encoding UTF8
+    if (${d}desktop) {
+      Copy-Item -LiteralPath ${d}handoffPath -Destination (Join-Path ${d}desktop 'MediaManager_setup_handoff.txt') -Force -ErrorAction SilentlyContinue
+    }
+    Write-Host "CODICE APP (URI):" -ForegroundColor Cyan
+    Write-Host ${d}handoffUri
+    Write-Host ""
+    Write-Host "In MediaManager: Scansiona il QR sul Desktop oppure Incolla il codice URI."
+    Write-Host "La Wi-Fi NON serve per copiare IP/User; serve dopo per CIFS."
+    Write-Host ""
+
+    ${d}dllCandidates = @(
+      (Join-Path ${d}PSScriptRoot 'QRCoder.dll'),
+      (Join-Path (Split-Path -Parent ${d}PSScriptRoot) 'QRCoder.dll'),
+      (Join-Path ${d}desktop 'QRCoder.dll'),
+      (Join-Path ${d}ParentDir 'QRCoder.dll')
+    )
+    ${d}dll = ${d}dllCandidates | Where-Object { ${d}_ -and (Test-Path -LiteralPath ${d}_) } | Select-Object -First 1
+    if (${d}dll -and ${d}handoffUri) {
+      try {
+        Add-Type -Path ${d}dll -ErrorAction Stop
+        ${d}gen = New-Object QRCoder.QRCodeGenerator
+        ${d}data = ${d}gen.CreateQrCode(${d}handoffUri, [QRCoder.QRCodeGenerator+ECCLevel]::Q)
+        ${d}png = New-Object QRCoder.PngByteQRCode(${d}data)
+        ${d}bytes = ${d}png.GetGraphic(20)
+        ${d}qrPath = Join-Path ${d}ParentDir 'MediaManager_setup_handoff.png'
+        [System.IO.File]::WriteAllBytes(${d}qrPath, ${d}bytes)
+        if (${d}desktop) {
+          Copy-Item -LiteralPath ${d}qrPath -Destination (Join-Path ${d}desktop 'MediaManager_setup_handoff.png') -Force -ErrorAction SilentlyContinue
+        }
+        Write-Host ("QR salvato: " + ${d}qrPath) -ForegroundColor Green
+        try { Invoke-Item ${d}qrPath } catch {}
+        Write-Step 'Handoff QR generato'
+      } catch {
+        Write-Step 'Handoff QR non generato (manca QRCoder.dll accanto a CONFIGURA?): usa URI in chiaro.'
+      }
+    } else {
+      Write-Step 'Handoff URI scritto; QR non disponibile (copia QRCoder.dll insieme a CONFIGURA).'
+    }
+  } catch {
+    Write-Step 'Handoff URI/QR non generato.'
+  }
+
+  # Fast-path LAN opzionale (non primario): HTTP+UDP ~5 min.
   try {
     ${d}ipsText = (${d}allIps -join ',')
-    # ConvertTo-Json: niente concatenazione di virgolette (piu sicuro per ParseFile / Studio).
     ${d}payload = ([ordered]@{
-      v = 1
+      v = 2
       m = ${d}AnnounceMagic
       t = ${d}SetupToken
       ip = ${d}ipText
@@ -594,6 +671,7 @@ try {
       share = ${d}ShareName
       pc = ${d}pc
       ips = ${d}ipsText
+      exp = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() + 2700
     } | ConvertTo-Json -Compress)
     ${d}announcerPs1 = Join-Path ([System.IO.Path]::GetTempPath()) ('MediaManager_announce_' + ${d}SetupToken + '.ps1')
     ${d}annTpl = [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String('$announcerB64'))
@@ -601,12 +679,12 @@ try {
     Set-Content -LiteralPath ${d}announcerPs1 -Value ${d}annBody -Encoding ASCII
     ${d}annProc = Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-WindowStyle','Hidden','-File', ${d}announcerPs1) -WindowStyle Hidden -PassThru
     if (${d}annProc) {
-      Write-Step ('Servizio dati per app avviato (rete locale). IP=' + ${d}ipText)
+      Write-Step ('Fast-path rete opzionale avviato. IP=' + ${d}ipText)
     } else {
-      Write-Step 'Servizio dati rete non avviato.'
+      Write-Step 'Fast-path rete non avviato (ok: usa QR).'
     }
   } catch {
-    Write-Step 'Servizio dati rete non avviato.'
+    Write-Step 'Fast-path rete non avviato (ok: usa QR).'
   }
 
   ${d}ExitCode = 0

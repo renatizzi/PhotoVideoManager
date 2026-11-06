@@ -16,6 +16,7 @@ data class WindowsSetupExportResult(
     val cacheDir: File,
     val ps1File: File,
     val cmdFile: File,
+    val qrCoderDllFile: File?,
     val downloadsSaved: Boolean,
     val usbCopiedTo: String?,
     val shareUris: List<Uri>,
@@ -39,12 +40,14 @@ class WindowsSetupScriptExporter(
             // CMD: ASCII + CRLF, no BOM (BOM breaks "@echo off").
             it.writeBytes(WindowsCatalogSetupScript.asciiCrlfNoBomBytes(pkg.cmdContent))
         }
+        val qrDll = copyQrCoderDll(dir)
 
-        val downloadsOk = saveToDownloads(ps1, cmd)
-        val usbLabel = copyToRemovableUsb(ps1, cmd)
+        val downloadsOk = saveToDownloads(ps1, cmd, qrDll)
+        val usbLabel = copyToRemovableUsb(ps1, cmd, qrDll)
 
         val authority = "${context.packageName}.fileprovider"
-        val uris = listOf(ps1, cmd).map { file ->
+        val files = listOfNotNull(ps1, cmd, qrDll)
+        val uris = files.map { file ->
             FileProvider.getUriForFile(context, authority, file)
         }
 
@@ -52,10 +55,21 @@ class WindowsSetupScriptExporter(
             cacheDir = dir,
             ps1File = ps1,
             cmdFile = cmd,
+            qrCoderDllFile = qrDll,
             downloadsSaved = downloadsOk,
             usbCopiedTo = usbLabel,
             shareUris = uris,
         )
+    }
+
+    private fun copyQrCoderDll(dir: File): File? = try {
+        val out = File(dir, WindowsCatalogSetupScript.QRCODER_DLL_FILE_NAME)
+        context.assets.open("windows_setup/${WindowsCatalogSetupScript.QRCODER_DLL_FILE_NAME}").use { input ->
+            FileOutputStream(out).use { output -> input.copyTo(output) }
+        }
+        out.takeIf { it.isFile && it.length() > 0L }
+    } catch (_: Exception) {
+        null
     }
 
     /**
@@ -153,19 +167,20 @@ class WindowsSetupScriptExporter(
             )
             putExtra(
                 Intent.EXTRA_TEXT,
-                "Sul Desktop del PC: doppio clic su CONFIGURA " +
-                    "(non sul file sup) e conferma la finestra di Windows. Poi torna all'app MediaManager.",
+                "Copia sul PC: CONFIGURA, sup e QRCoder.dll insieme. " +
+                    "Doppio clic su CONFIGURA (non su sup). A «Tutto pronto» scansiona il QR in MediaManager.",
             )
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         return Intent.createChooser(intent, "Invia script al PC")
     }
 
-    private fun saveToDownloads(ps1: File, cmd: File): Boolean {
+    private fun saveToDownloads(ps1: File, cmd: File, qrDll: File?): Boolean {
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 purgePreviousDownloads()
-                writeMediaStore(ps1) && writeMediaStore(cmd)
+                val dllOk = qrDll == null || writeMediaStore(qrDll)
+                writeMediaStore(ps1) && writeMediaStore(cmd) && dllOk
             } else {
                 @Suppress("DEPRECATION")
                 val downloads = Environment.getExternalStoragePublicDirectory(
@@ -175,6 +190,7 @@ class WindowsSetupScriptExporter(
                 purgeLegacyDownloadFiles(downloads)
                 ps1.copyTo(File(downloads, ps1.name), overwrite = true)
                 cmd.copyTo(File(downloads, cmd.name), overwrite = true)
+                qrDll?.copyTo(File(downloads, qrDll.name), overwrite = true)
                 true
             }
         } catch (_: Exception) {
@@ -237,7 +253,7 @@ class WindowsSetupScriptExporter(
         }
     }
 
-    private fun copyToRemovableUsb(ps1: File, cmd: File): String? {
+    private fun copyToRemovableUsb(ps1: File, cmd: File, qrDll: File?): String? {
         val sm = context.getSystemService(StorageManager::class.java) ?: return null
         for (volume in sm.storageVolumes) {
             if (!volume.isRemovable) continue
@@ -252,6 +268,9 @@ class WindowsSetupScriptExporter(
                 val targetDir = File(root, "MediaManager").apply { mkdirs() }
                 FileOutputStream(File(targetDir, ps1.name)).use { ps1.inputStream().copyTo(it) }
                 FileOutputStream(File(targetDir, cmd.name)).use { cmd.inputStream().copyTo(it) }
+                if (qrDll != null) {
+                    FileOutputStream(File(targetDir, qrDll.name)).use { qrDll.inputStream().copyTo(it) }
+                }
                 volume.getDescription(context) ?: root.absolutePath
             } catch (_: Exception) {
                 null

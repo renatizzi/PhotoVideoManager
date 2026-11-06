@@ -333,6 +333,7 @@ fun PvmApp(
                         onConfirmCopy = wizardVm::confirmCopyChecked,
                         onConfirmScriptRan = wizardVm::confirmScriptRanOnPc,
                         onRetryRecoverPcData = wizardVm::retryRecoverPcData,
+                        onApplySetupHandoff = wizardVm::applySetupHandoffRaw,
                         onPcHostIpChange = wizardVm::setPcHostIp,
                         onCifsUserChange = wizardVm::setCifsUserQualified,
                         onCredentialsText = wizardVm::credentialsClipboardText,
