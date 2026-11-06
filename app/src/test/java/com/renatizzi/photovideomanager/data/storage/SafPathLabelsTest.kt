@@ -96,7 +96,7 @@ class SafPathLabelsTest {
             SafPathLabels.providerOfAuthority("com.example.unknown.cloud"),
         )
         assertEquals("Disco di rete / NAS", SafPathLabels.DEVICE_NETWORK_NAS)
-        assertEquals("PC / notebook", SafPathLabels.DEVICE_PC_NOTEBOOK)
+        assertEquals("PC Windows", SafPathLabels.DEVICE_PC_NOTEBOOK)
     }
 
     @Test
@@ -107,6 +107,18 @@ class SafPathLabelsTest {
                 displayHint = "MediaManagerCatalog",
                 path = "",
                 uriString = "content://com.wa2c.android.cifsdocumentsprovider.documents/tree/smb%3A%2F%2Fpc%2FMediaManagerCatalog",
+            ),
+        )
+    }
+
+    @Test
+    fun networkDeviceLabel_myMediaShareIsPcWindows() {
+        assertEquals(
+            SafPathLabels.DEVICE_PC_NOTEBOOK,
+            SafPathLabels.networkDeviceKindFromHints(
+                displayHint = "MyMedia",
+                path = "MyMedia",
+                uriString = "content://com.wa2c.android.cifsdocumentsprovider.documents/tree/smb%3A%2F%2F192.168.68.65%2FMyMedia",
             ),
         )
     }

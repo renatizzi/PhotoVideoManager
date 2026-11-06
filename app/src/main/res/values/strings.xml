@@ -171,7 +171,7 @@
     <string name="hub_kind_nas_hint">Percorso base</string>
     <string name="hub_s0_pc_guided_intro">Da questa pagina si attiva la procedura guidata per la creazione o modifica della cartella condivisa dove tenere il Catalogo. Per motivi di sicurezza ci sono delle operazioni che puoi fare solo tu.</string>
     <string name="hub_s0_pc_procedure_label">Se hai scelto un PC o Notebook Windows, la procedura prevede:</string>
-    <string name="hub_s0_pc_procedure_steps">1 – Verifica disponibilità (Bluetooth)\n2 – Collegamento Bluetooth e invio di CONFIGURA/sup\n3 – File sul Desktop del PC\n4 – Esecuzione script («Tutto pronto» + bundle sul Desktop)\n4b – Scarica sul telefono i dati CIFS via Bluetooth\n5 – Compila CIFS con sola Copia e attiva il collegamento</string>
+    <string name="hub_s0_pc_procedure_steps">1 – Verifica disponibilità (Bluetooth)\n2 – Bluetooth: già associati oppure pairing dal telefono, poi invio CONFIGURA/sup\n2b – Conferma file sul Desktop del PC\n3 – Esegui CONFIGURA («Tutto pronto» + bundle univoco sul Desktop)\n4 – Importa sul telefono i dati CIFS via Bluetooth\n5 – Compila CIFS con sola Copia e attiva il collegamento</string>
     <string name="hub_s0_valori_modificabili">Valori modificabili</string>
     <string name="hub_s0_local_volume_intro">Scegli dove tenere il Catalogo su questo dispositivo</string>
     <string name="hub_s0_volume_label">Memoria</string>
@@ -190,54 +190,66 @@
     <string name="hub_pc1_item_phone">Telefono Android o tablet dove è stata installata l\'app MediaManager</string>
     <string name="hub_pc1_item_pc">PC/Notebook Windows v. 10 o superiore</string>
     <string name="hub_pc1_item_cable">Bluetooth attivo sul telefono e sul PC</string>
+    <string name="hub_pc1_note_path">Percorso previsto: Bluetooth classico (Invia/Ricevi file). Phone Link, mirroring o «Collegamento a Windows» non sono obbligatori.</string>
 
     <!-- Passo 2 — Bluetooth -->
-    <string name="hub_pc2_intro">Autorizza Bluetooth tra telefono e PC, poi all’OK l’app apre l’invio dei file. Sul PC deve già essere attivo «Ricevi file».</string>
-    <string name="hub_pc2_item_unlocked">PC e telefono sono accesi e sbloccati, con Bluetooth attivo</string>
-    <string name="hub_pc2_item_connect">Ho associato (paired) telefono e PC</string>
-    <string name="hub_pc2_item_transfer">Sul PC: Impostazioni → Bluetooth → «Invia o ricevi file tramite Bluetooth» → Ricevi file. Poi sull’app, all’OK, scegli Bluetooth:</string>
-    <string name="hub_pc2_bullet_notif">Sul PC apri «Invia o ricevi file tramite Bluetooth» (oppure esegui fsquirt)</string>
-    <string name="hub_pc2_bullet_tap">Scegli Ricevi file e lascia la finestra in attesa</string>
-    <string name="hub_pc2_bullet_choose">All’OK dell’app, nel menu Condividi scegli Bluetooth e il tuo PC</string>
-    <string name="hub_pc2_bullet_allow">Sul PC accetta i file CONFIGURA e sup</string>
+    <string name="hub_pc2_intro">Una sola direzione per l’associazione: dal TELEFONO. Se telefono e PC sono già associati, non ripetere il pairing: passa a «Ricevi file» sul PC e all’OK dell’app.</string>
+    <string name="hub_pc2_item_unlocked">TELEFONO + PC: entrambi accesi, sbloccati, con Bluetooth attivo</string>
+    <string name="hub_pc2_item_connect">TELEFONO: telefono e questo PC sono già associati (oppure ho appena fatto Associa/Accoppia dal telefono)</string>
+    <string name="hub_pc2_item_pair_how">Se NON sono ancora associati — TELEFONO: Impostazioni → Connessioni → Bluetooth → Associa/Accoppia nuovo dispositivo → scegli il PC e conferma il codice su entrambi</string>
+    <string name="hub_pc2_item_transfer">PC: Impostazioni → Bluetooth e dispositivi → «Invia o ricevi file tramite Bluetooth» → Ricevi file (finestra aperta in attesa). Poi sull’app, all’OK:</string>
+    <string name="hub_pc2_bullet_notif">PC: apri «Invia o ricevi file tramite Bluetooth» (oppure esegui fsquirt)</string>
+    <string name="hub_pc2_bullet_tap">PC: scegli Ricevi file e lascia la finestra in attesa</string>
+    <string name="hub_pc2_bullet_choose">TELEFONO (app): all’OK, in Condividi scegli Bluetooth → il tuo PC (non altre app)</string>
+    <string name="hub_pc2_bullet_allow">PC: accetta i file CONFIGURA e sup</string>
+    <string name="hub_pc2_tip_phonelink">Opzionale (solo se già usi «Collegamento a Windows» / Phone Link): puoi inviare i file anche da lì. Non è richiesto per MediaManager.</string>
 
     <!-- Passo 3 — File sul Desktop dopo BT -->
-    <string name="hub_pc3_intro">Dopo la ricezione Bluetooth i file devono stare sul Desktop del PC. Poi continua.</string>
-    <string name="hub_pc3_item_download">Ho accettato CONFIGURA e sup sul PC</string>
-    <string name="hub_pc3_b_explorer">Se i file non sono già sul Desktop, aprili dalla cartella di salvataggio Bluetooth</string>
-    <string name="hub_pc3_b_thispc">Spostali sul Desktop del PC se necessario</string>
-    <string name="hub_pc3_b_phone">(Non serve più aprire la memoria del telefono via USB)</string>
-    <string name="hub_pc3_b_dbl">Verifica i nomi: CONFIGURA e sup</string>
+    <string name="hub_pc3_intro">Dopo l’invio Bluetooth torna qui (non restare nella schermata di sistema). Sul PC i file devono essere sul Desktop.</string>
+    <string name="hub_pc3_item_download">PC: ho accettato CONFIGURA e sup dall’invio Bluetooth</string>
+    <string name="hub_pc3_b_explorer">Se non sono sul Desktop, aprili dalla cartella di salvataggio Bluetooth del PC</string>
+    <string name="hub_pc3_b_thispc">Spostali sul Desktop se necessario</string>
+    <string name="hub_pc3_b_phone">(Non serve USB né aprire la memoria del telefono)</string>
+    <string name="hub_pc3_b_dbl">Nomi attesi: CONFIGURA e sup</string>
     <string name="hub_pc3_b_mem">Non aprire il file sup a mano</string>
-    <string name="hub_pc3_item_copy">CONFIGURA e sup sono sul Desktop del PC</string>
-    <string name="hub_pc3_b_search">Controlla sul Desktop la presenza di:</string>
+    <string name="hub_pc3_item_copy">PC: CONFIGURA e sup sono sul Desktop</string>
+    <string name="hub_pc3_b_search">Controlla sul Desktop:</string>
     <string name="hub_pc3_b_file1">CONFIGURA</string>
     <string name="hub_pc3_b_file2">sup</string>
     <string name="hub_pc3_b_ctrlc">(Se serviva spostarli, usa taglia/incolla sul PC)</string>
-    <string name="hub_pc3_b_ctrlv">Conferma che entrambi sono sul Desktop</string>
-    <string name="hub_pc3_item_verify">Verifica finale sul Desktop</string>
-    <string name="hub_pc3_b_verify">Entrambi i file sono visibili sul Desktop prima di avviare CONFIGURA.</string>
+    <string name="hub_pc3_b_ctrlv">Entrambi visibili sul Desktop</string>
+    <string name="hub_pc3_item_verify">TELEFONO: sono di nuovo in MediaManager e posso continuare</string>
+    <string name="hub_pc3_b_verify">Non restare nella pagina Bluetooth di sistema: torna all’app e tocca OK.</string>
 
     <!-- Passo 4 — checklist accorpata Renato -->
-    <string name="hub_pc4_intro">È tutto pronto per lanciare la routine che ti consentirà di creare la cartella dedicata al Catalogo personale. Ecco le istruzioni:</string>
-    <string name="hub_pc4_item_1">Vai sul Desktop del PC/Notebook, seleziona e fai doppio clic sul file CONFIGURA</string>
-    <string name="hub_pc4_item_2">Se compare la finestra di Controllo account utente di Windows, conferma: la routine di configurazione viene così eseguita</string>
-    <string name="hub_pc4_item_3">Al termine compare «Tutto pronto» e sul Desktop anche MediaManager_cifs_bundle.json. Non interrompere la routine. Poi torna all’app per scaricare quel file via Bluetooth</string>
+    <string name="hub_pc4_intro">PC: lancia la routine che crea la cartella Catalogo. Poi torna al telefono.</string>
+    <string name="hub_pc4_item_1">PC: sul Desktop fai doppio clic su CONFIGURA</string>
+    <string name="hub_pc4_item_2">PC: se compare Controllo account utente, conferma</string>
+    <string name="hub_pc4_item_3">PC: attendi «Tutto pronto» e il file bundle univoco sul Desktop (nome indicato nella finestra). Non usare bundle di tentativi precedenti. Poi torna all’app</string>
 
-    <!-- Passo 4b + 5 CIFS -->
-    <string name="hub_pc4b_intro">Ora il PC ha il bundle sul Desktop. Dal PC: Invia file via Bluetooth → MediaManager_cifs_bundle.json. Poi sull’app tocca «Scarica dati CIFS» e seleziona il file ricevuto.</string>
-    <string name="hub_pc4b_pick">Scarica dati CIFS</string>
-    <string name="hub_pc4b_waiting">In attesa del bundle completo. Senza Host, User e Password la scheda CIFS non si apre.</string>
-    <string name="hub_pc4b_item_send">Sul PC ho inviato MediaManager_cifs_bundle.json via Bluetooth</string>
-    <string name="hub_pc4b_item_pick">Ho toccato «Scarica dati CIFS» e scelto il file ricevuto</string>
-    <string name="hub_pc4b_item_ready">L’app conferma che i dati CIFS sono pronti</string>
+    <!-- Passo 4 import + 5 CIFS -->
+    <string name="hub_pc4b_intro">PC → TELEFONO: dal Desktop invia via Bluetooth solo il file bundle di questa sessione (nome MediaManager_cifs_bundle_….json indicato da CONFIGURA). Poi tocca «Importa dati CIFS» e seleziona quel file.</string>
+    <string name="hub_pc4b_pick">Importa dati CIFS</string>
+    <string name="hub_pc4b_waiting">In attesa del bundle. Senza Host, User e Password non si apre CIFS.</string>
+    <string name="hub_pc4b_item_send">PC: ho inviato via Bluetooth il bundle di questa sessione (non un file vecchio omonimo)</string>
+    <string name="hub_pc4b_item_pick">TELEFONO: ho toccato «Importa dati CIFS» e scelto il file ricevuto</string>
+    <string name="hub_pc4b_item_ready">L’app conferma Host, User e Password</string>
+    <string name="hub_pc4b_outcome_title">Dati acquisiti</string>
+    <string name="hub_pc4b_outcome_pc">PC: %1$s</string>
+    <string name="hub_pc4b_outcome_ip">IP (Host): %1$s</string>
+    <string name="hub_pc4b_outcome_share">Condivisione: %1$s</string>
+    <string name="hub_pc4b_outcome_user">Utente: %1$s</string>
+    <string name="hub_pc4b_outcome_password_ok">Password: presente (pronta per Copia)</string>
+    <string name="hub_pc4b_outcome_password_missing">Password: mancante — reinvia il bundle</string>
+    <string name="hub_pc4b_outcome_ip_missing">IP mancante: inseriscilo a mano al passo CIFS oppure reinvia il bundle</string>
+    <string name="hub_pc4b_expected_file">File atteso: %1$s</string>
     <string name="hub_pc5_intro">L’ultimo passo prevede CIFS Documents Provider (Google Play).\nI dati sotto sono già definitivi: usa solo «Copia», senza modificarli o integrarli a mano.</string>
     <string name="hub_pc5_share_visibility">In CIFS il campo Folder deve essere MyMedia (nome share, non vuoto e non un path Windows tipo C:\\…). Così la connessione punta già alla cartella del Catalogo.</string>
     <string name="hub_pc5_recovering">Recupero fallback in corso…</string>
     <string name="hub_pc5_result_imported">Bundle CIFS ricevuto: Host, User, Password e Folder pronti per Copia.</string>
-    <string name="hub_pc5_result_missing">Bundle non ancora caricato: torna al passo 4b e scarica MediaManager_cifs_bundle.json.</string>
-    <string name="hub_pc5_retry_recover">Riprova recupero rete (solo se BT non è disponibile)</string>
-    <string name="hub_pc5_hotspot_intro">Percorso felice: Bluetooth (passo 4b). Hotspot/chiavetta restano solo se il trasferimento BT del bundle non è possibile.</string>
+    <string name="hub_pc5_result_missing">Bundle non ancora caricato: torna al passo 4 e importa il file MediaManager_cifs_bundle_….json.</string>
+    <string name="hub_pc5_retry_recover">Piano B: riprova recupero rete (solo se Bluetooth non è disponibile)</string>
+    <string name="hub_pc5_hotspot_intro">Percorso felice: Bluetooth (passo 4). Hotspot/chiavetta solo se il trasferimento BT del bundle non è possibile.</string>
     <string name="hub_pc5_import_usb_bundle">Piano B: leggi bundle da chiavetta/Download</string>
     <string name="hub_pc5_confirm">Conferma</string>
     <string name="hub_pc5_item_saved">Confermo di aver configurato e salvato CIFS Documents Provider secondo le istruzioni sopra indicate</string>
