@@ -35,6 +35,7 @@ object WindowsCatalogSetupScript {
         "MediaManager_Setup_Catalogo",
         "QRCoder",
         "MediaManager_setup_handoff",
+        "MediaManager_cifs_bundle",
     )
     const val RESULT_FILE_NAME = "MediaManager_setup_result.json"
     /** URI pvmsetup:2;… + istruzioni (Desktop). */
@@ -287,8 +288,8 @@ object WindowsCatalogSetupScript {
           echo  Configurazione NON completata. Codice: %ERR%
           echo  10=cartella 20=utente 30=condivisione 40=NTFS 50=rete/firewall 60=verifica
         ) else (
-          echo  Tutto pronto. Sul Desktop trovi il QR MediaManager_setup_handoff.png
-          echo  In MediaManager: Scansiona codice ^(o Incolla URI^) - non serve la Wi-Fi per i campi.
+          echo  Tutto pronto. Collega il PC all'HOTSPOT del telefono e torna a MediaManager:
+          echo  l'app recupera IP+User+Password. Oppure reinserisci la chiavetta USB.
         )
         echo.
         pause
@@ -587,91 +588,61 @@ try {
   Write-Host "Password PROVVISORIA: cambiala in Windows e aggiorna Archivio sul tablet."
   Write-Host "AVVISO: se il PC va in sospensione, la cartella sparisce dalla rete."
   Write-Host ""
+  Write-Host "IMPORTANTE: il PC deve essere collegato all'HOTSPOT del telefono." -ForegroundColor Cyan
+  Write-Host "Cosi MediaManager riceve da sola IP+User+Password per Copia in CIFS."
+  Write-Host "Lascia questa finestra aperta e torna all'app."
+  Write-Host ""
 
-  # Handoff durevole (QR / URI): indipendente da Wi-Fi tra PC e telefono.
-  ${d}handoffUri = ''
+  # Bundle CIFS completo (con password) su volume script / Desktop = piano B USB.
   try {
-    ${d}expSec = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() + 2700
-    ${d}handoffJson = ([ordered]@{
-      v = 2
+    ${d}bundleObj = [ordered]@{
+      v = 3
       m = ${d}AnnounceMagic
       t = ${d}SetupToken
       ip = ${d}ipText
       user = ${d}userHint
+      password = ${d}PlainPassword
       share = ${d}ShareName
       pc = ${d}pc
-      exp = ${d}expSec
-    } | ConvertTo-Json -Compress)
-    ${d}handoffBytes = [System.Text.Encoding]::UTF8.GetBytes(${d}handoffJson)
-    ${d}handoffB64 = [Convert]::ToBase64String(${d}handoffBytes).TrimEnd([char]61).Replace([char]43,[char]45).Replace([char]47,[char]95)
-    ${d}handoffUri = 'pvmsetup:2;' + ${d}handoffB64
-    ${d}handoffTxt = @"
-MediaManager - codice setup (scansiona il QR oppure Incolla in app)
-Password NON e' in questo codice: usa solo Copia in MediaManager.
-
-${d}handoffUri
-
-IP: ${d}ipText
-Utente: ${d}userHint
-Share: ${d}ShareName
-"@
-    ${d}handoffPath = Join-Path ${d}ParentDir 'MediaManager_setup_handoff.txt'
-    Set-Content -LiteralPath ${d}handoffPath -Value ${d}handoffTxt -Encoding UTF8
-    if (${d}desktop) {
-      Copy-Item -LiteralPath ${d}handoffPath -Destination (Join-Path ${d}desktop 'MediaManager_setup_handoff.txt') -Force -ErrorAction SilentlyContinue
+      port = '445'
+      folder = ${d}ShareName
+      name = ${d}ShareName
+      ips = (${d}allIps -join ',')
     }
-    Write-Host "CODICE APP (URI):" -ForegroundColor Cyan
-    Write-Host ${d}handoffUri
-    Write-Host ""
-    Write-Host "In MediaManager: Scansiona il QR sul Desktop oppure Incolla il codice URI."
-    Write-Host "La Wi-Fi NON serve per copiare IP/User; serve dopo per CIFS."
-    Write-Host ""
-
-    ${d}dllCandidates = @(
-      (Join-Path ${d}PSScriptRoot 'QRCoder.dll'),
-      (Join-Path (Split-Path -Parent ${d}PSScriptRoot) 'QRCoder.dll'),
-      (Join-Path ${d}desktop 'QRCoder.dll'),
-      (Join-Path ${d}ParentDir 'QRCoder.dll')
+    ${d}bundleJson = (${d}bundleObj | ConvertTo-Json -Compress)
+    ${d}bundleName = 'MediaManager_cifs_bundle.json'
+    ${d}bundleTargets = @(
+      (Join-Path ${d}PSScriptRoot ${d}bundleName),
+      (Join-Path ${d}ParentDir ${d}bundleName)
     )
-    ${d}dll = ${d}dllCandidates | Where-Object { ${d}_ -and (Test-Path -LiteralPath ${d}_) } | Select-Object -First 1
-    if (${d}dll -and ${d}handoffUri) {
+    if (${d}desktop) { ${d}bundleTargets += (Join-Path ${d}desktop ${d}bundleName) }
+    foreach (${d}bt in ${d}bundleTargets) {
       try {
-        Add-Type -Path ${d}dll -ErrorAction Stop
-        ${d}gen = New-Object QRCoder.QRCodeGenerator
-        ${d}data = ${d}gen.CreateQrCode(${d}handoffUri, [QRCoder.QRCodeGenerator+ECCLevel]::Q)
-        ${d}png = New-Object QRCoder.PngByteQRCode(${d}data)
-        ${d}bytes = ${d}png.GetGraphic(20)
-        ${d}qrPath = Join-Path ${d}ParentDir 'MediaManager_setup_handoff.png'
-        [System.IO.File]::WriteAllBytes(${d}qrPath, ${d}bytes)
-        if (${d}desktop) {
-          Copy-Item -LiteralPath ${d}qrPath -Destination (Join-Path ${d}desktop 'MediaManager_setup_handoff.png') -Force -ErrorAction SilentlyContinue
-        }
-        Write-Host ("QR salvato: " + ${d}qrPath) -ForegroundColor Green
-        try { Invoke-Item ${d}qrPath } catch {}
-        Write-Step 'Handoff QR generato'
-      } catch {
-        Write-Step 'Handoff QR non generato (manca QRCoder.dll accanto a CONFIGURA?): usa URI in chiaro.'
-      }
-    } else {
-      Write-Step 'Handoff URI scritto; QR non disponibile (copia QRCoder.dll insieme a CONFIGURA).'
+        Set-Content -LiteralPath ${d}bt -Value ${d}bundleJson -Encoding UTF8
+      } catch {}
     }
+    Write-Step ('Bundle CIFS scritto (' + ${d}bundleName + ')')
+    Write-Host ("Bundle salvato anche sulla chiavetta/cartella di CONFIGURA: " + ${d}bundleName)
   } catch {
-    Write-Step 'Handoff URI/QR non generato.'
+    Write-Step 'Bundle CIFS file non scritto.'
   }
 
-  # Fast-path LAN opzionale (non primario): HTTP+UDP ~5 min.
+  # Announce rete (primario su hotspot): HTTP+UDP ~5 min, bundle CON password.
   try {
     ${d}ipsText = (${d}allIps -join ',')
     ${d}payload = ([ordered]@{
-      v = 2
+      v = 3
       m = ${d}AnnounceMagic
       t = ${d}SetupToken
       ip = ${d}ipText
       user = ${d}userHint
+      password = ${d}PlainPassword
       share = ${d}ShareName
       pc = ${d}pc
+      port = '445'
+      folder = ${d}ShareName
+      name = ${d}ShareName
       ips = ${d}ipsText
-      exp = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() + 2700
     } | ConvertTo-Json -Compress)
     ${d}announcerPs1 = Join-Path ([System.IO.Path]::GetTempPath()) ('MediaManager_announce_' + ${d}SetupToken + '.ps1')
     ${d}annTpl = [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String('$announcerB64'))
@@ -679,12 +650,12 @@ Share: ${d}ShareName
     Set-Content -LiteralPath ${d}announcerPs1 -Value ${d}annBody -Encoding ASCII
     ${d}annProc = Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-WindowStyle','Hidden','-File', ${d}announcerPs1) -WindowStyle Hidden -PassThru
     if (${d}annProc) {
-      Write-Step ('Fast-path rete opzionale avviato. IP=' + ${d}ipText)
+      Write-Step ('Servizio bundle per app avviato (hotspot). IP=' + ${d}ipText)
     } else {
-      Write-Step 'Fast-path rete non avviato (ok: usa QR).'
+      Write-Step 'Servizio bundle rete non avviato: usa chiavetta (MediaManager_cifs_bundle.json).'
     }
   } catch {
-    Write-Step 'Fast-path rete non avviato (ok: usa QR).'
+    Write-Step 'Servizio bundle rete non avviato: usa chiavetta (MediaManager_cifs_bundle.json).'
   }
 
   ${d}ExitCode = 0

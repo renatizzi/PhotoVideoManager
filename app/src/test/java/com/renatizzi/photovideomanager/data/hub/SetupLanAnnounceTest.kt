@@ -10,17 +10,19 @@ import org.junit.Test
 class SetupLanAnnounceTest {
 
     @Test
-    fun parsePayload_readsTokenIpAndUser() {
+    fun parsePayload_readsTokenIpUserAndPassword() {
         val raw =
-            "{\"v\":1,\"m\":\"PVMSETUP1\",\"t\":\"tok123\"," +
+            "{\"v\":3,\"m\":\"PVMSETUP1\",\"t\":\"tok123\"," +
                 "\"ip\":\"192.168.1.40\"," +
                 "\"user\":\"MINI_IT13\\\\MediaManager\"," +
+                "\"password\":\"Secret99!\"," +
                 "\"share\":\"MediaManagerCatalog\",\"pc\":\"MINI_IT13\"}"
         val payload = SetupLanAnnounce.parsePayload(raw)
         assertNotNull(payload)
         assertEquals("tok123", payload!!.token)
         assertEquals("192.168.1.40", payload.hostIp)
         assertEquals("MINI_IT13\\MediaManager", payload.userQualified)
+        assertEquals("Secret99!", payload.password)
         assertEquals("MediaManagerCatalog", payload.shareName)
         assertEquals("192.168.1.40", payload.hostForCifs)
         assertTrue(payload.isComplete)
@@ -31,6 +33,7 @@ class SetupLanAnnounceTest {
         val raw =
             "{\"v\":1,\"m\":\"PVMSETUP1\",\"t\":\"tok123\"," +
                 "\"ip\":\"\",\"user\":\"MINI_IT13\\\\MediaManager\"," +
+                "\"password\":\"x\"," +
                 "\"share\":\"MediaManagerCatalog\",\"pc\":\"MINI_IT13\"}"
         val payload = SetupLanAnnounce.parsePayload(raw)
         assertNotNull(payload)

@@ -73,6 +73,60 @@ class WindowsSetupScriptExporter(
     }
 
     /**
+     * Piano B: bundle completo (con password) scritto dallo script sulla chiavetta / Download.
+     */
+    fun findCifsBundle(expectedToken: String): SetupCifsBundle? {
+        val name = SetupCifsBundle.BUNDLE_FILE_NAME
+        val candidates = mutableListOf<File>()
+        try {
+            @Suppress("DEPRECATION")
+            val downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            candidates += File(downloads, name)
+        } catch (_: Exception) {
+        }
+        try {
+            val sm = context.getSystemService(StorageManager::class.java)
+            sm?.storageVolumes?.forEach { volume ->
+                if (!volume.isRemovable) return@forEach
+                val root = volumeDirectory(volume) ?: return@forEach
+                candidates += File(root, name)
+                candidates += File(File(root, "MediaManager"), name)
+            }
+        } catch (_: Exception) {
+        }
+        for (file in candidates) {
+            if (!file.isFile) continue
+            val text = runCatching { file.readText(Charsets.UTF_8) }.getOrNull() ?: continue
+            val bundle = SetupCifsBundle.parse(text, expectedToken) ?: continue
+            if (bundle.isComplete) return bundle
+        }
+        // MediaStore Download (API 29+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            runCatching {
+                val resolver = context.contentResolver
+                val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+                resolver.query(
+                    collection,
+                    arrayOf(MediaStore.Downloads._ID),
+                    "${MediaStore.Downloads.DISPLAY_NAME} = ?",
+                    arrayOf(name),
+                    "${MediaStore.Downloads.DATE_MODIFIED} DESC",
+                )?.use { cursor ->
+                    if (!cursor.moveToFirst()) return@use
+                    val id = cursor.getLong(0)
+                    val uri = android.content.ContentUris.withAppendedId(collection, id)
+                    resolver.openInputStream(uri)?.use { input ->
+                        val text = input.bufferedReader(Charsets.UTF_8).readText()
+                        val bundle = SetupCifsBundle.parse(text, expectedToken)
+                        if (bundle != null && bundle.isComplete) return bundle
+                    }
+                }
+            }
+        }
+        return null
+    }
+
+    /**
      * Cerca `MediaManager_setup_result.json` in Download (copiato dal Desktop del PC).
      */
     fun findSetupResultInDownloads(): WindowsSetupResult? {

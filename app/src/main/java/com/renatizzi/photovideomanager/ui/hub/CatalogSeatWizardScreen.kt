@@ -1,17 +1,11 @@
 package com.renatizzi.photovideomanager.ui.hub
 
-import android.Manifest
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.core.content.ContextCompat
-import com.journeyapps.barcodescanner.ScanContract
-import com.journeyapps.barcodescanner.ScanOptions
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -89,6 +83,7 @@ fun CatalogSeatWizardScreen(
     onConfirmCopy: () -> Unit,
     onConfirmScriptRan: () -> Unit,
     onRetryRecoverPcData: () -> Unit,
+    onImportCifsBundle: () -> Unit = {},
     onApplySetupHandoff: (String) -> Unit = {},
     onPcHostIpChange: (String) -> Unit,
     onCifsUserChange: (String) -> Unit = {},
@@ -245,7 +240,7 @@ fun CatalogSeatWizardScreen(
                     if (pwd.isNotBlank()) copyToClipboard(context, pwd)
                 },
                 onRetryRecoverPcData = onRetryRecoverPcData,
-                onApplySetupHandoff = onApplySetupHandoff,
+                onImportCifsBundle = onImportCifsBundle,
                 onPcHostIpChange = onPcHostIpChange,
                 onCifsUserChange = onCifsUserChange,
                 onOpenCifs = {
@@ -930,7 +925,7 @@ private fun CifsCardStep(
     onCopyField: (CifsCopyField) -> Unit,
     onCopyPassword: () -> Unit,
     onRetryRecoverPcData: () -> Unit,
-    onApplySetupHandoff: (String) -> Unit,
+    onImportCifsBundle: () -> Unit,
     onPcHostIpChange: (String) -> Unit = {},
     onCifsUserChange: (String) -> Unit = {},
     onOpenCifs: () -> Unit,
@@ -942,53 +937,11 @@ private fun CifsCardStep(
     onBack: () -> Unit,
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
-    var handoffDraft by remember { mutableStateOf("") }
-    var cameraDenied by remember { mutableStateOf(false) }
     // Name, Storage, Host, Port, User, Password, Anonymous, Folder
     var rowFlags by remember { mutableStateOf(BooleanArray(8) { false }) }
     var cifsSavedConfirmed by remember { mutableStateOf(false) }
     @Suppress("UNUSED_VARIABLE", "UNUSED_PARAMETER")
     val unusedAccess = onAccessYes to onAccessNo
-    val context = LocalContext.current
-    val qrScanLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
-        val contents = result.contents?.trim().orEmpty()
-        if (contents.isNotEmpty()) {
-            handoffDraft = contents
-            onApplySetupHandoff(contents)
-        }
-    }
-    val cameraPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission(),
-    ) { granted ->
-        if (granted) {
-            cameraDenied = false
-            qrScanLauncher.launch(
-                ScanOptions()
-                    .setDesiredBarcodeFormats(ScanOptions.QR_CODE)
-                    .setPrompt(context.getString(R.string.hub_pc5_handoff_scan_prompt))
-                    .setBeepEnabled(false)
-                    .setOrientationLocked(true),
-            )
-        } else {
-            cameraDenied = true
-        }
-    }
-    fun launchQrScan() {
-        when {
-            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
-                PackageManager.PERMISSION_GRANTED -> {
-                cameraDenied = false
-                qrScanLauncher.launch(
-                    ScanOptions()
-                        .setDesiredBarcodeFormats(ScanOptions.QR_CODE)
-                        .setPrompt(context.getString(R.string.hub_pc5_handoff_scan_prompt))
-                        .setBeepEnabled(false)
-                        .setOrientationLocked(true),
-                )
-            }
-            else -> cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-        }
-    }
     val share = state.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
     val user = state.cifsUserQualified.trim().ifBlank {
         WindowsCatalogSetupScript.cifsUserCopyText(state.userName)
@@ -1034,45 +987,22 @@ private fun CifsCardStep(
         },
     )
     Text(
-        stringResource(R.string.hub_pc5_handoff_intro),
+        stringResource(R.string.hub_pc5_hotspot_intro),
         style = MaterialTheme.typography.bodyMedium,
     )
-    Button(
-        onClick = { if (!state.busy) launchQrScan() },
-        enabled = !state.busy,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Text(stringResource(R.string.hub_pc5_handoff_scan))
-    }
-    if (cameraDenied) {
-        Text(
-            stringResource(R.string.hub_pc5_handoff_camera_denied),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.error,
-        )
-    }
-    OutlinedTextField(
-        value = handoffDraft,
-        onValueChange = { handoffDraft = it },
-        modifier = Modifier.fillMaxWidth(),
-        minLines = 2,
-        enabled = !state.busy,
-        label = { Text(stringResource(R.string.hub_pc5_handoff_label)) },
-        supportingText = { Text(stringResource(R.string.hub_pc5_handoff_hint)) },
-    )
-    OutlinedButton(
-        onClick = { onApplySetupHandoff(handoffDraft) },
-        enabled = !state.busy && handoffDraft.isNotBlank(),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Text(stringResource(R.string.hub_pc5_handoff_apply))
-    }
     OutlinedButton(
         onClick = onRetryRecoverPcData,
         enabled = !state.busy,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Text(stringResource(R.string.hub_pc5_retry_recover))
+    }
+    OutlinedButton(
+        onClick = onImportCifsBundle,
+        enabled = !state.busy,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.hub_pc5_import_usb_bundle))
     }
     OutlinedTextField(
         value = state.pcHostIp,

@@ -228,16 +228,11 @@
     <string name="hub_pc5_intro">L’ultimo passo della procedura prevede la configurazione dell’app denominata CIFS Documents Provider (scaricabile gratuitamente su Google Play).\nEcco i dati da inserire: con il bottone «Copia» puoi incollarli uno alla volta sul form di CIFS:</string>
     <string name="hub_pc5_share_visibility">In CIFS il campo Folder deve essere MyMedia (nome share, non vuoto e non un path Windows tipo C:\\…). Così la connessione punta già alla cartella del Catalogo.</string>
     <string name="hub_pc5_recovering">Recupero automatico di IP e utente dal PC in corso… Lascia aperta la finestra «Tutto pronto» sul PC.</string>
-    <string name="hub_pc5_result_imported">Dati del PC pronti: User e Host (IP) disponibili per Copia verso CIFS.</string>
-    <string name="hub_pc5_result_missing">Dati PC non ancora in app: usa il codice QR/URI da «Tutto pronto» (primario), oppure digita Host.</string>
-    <string name="hub_pc5_retry_recover">Riprova fast-path rete (opzionale)</string>
-    <string name="hub_pc5_handoff_intro">Primario: a «Tutto pronto» sul PC si apre/salva il QR MediaManager_setup_handoff.png. Inquadra quel QR qui sotto: l’app riceve IP e User (senza password). Non dipende dalla Wi‑Fi tra PC e telefono.</string>
-    <string name="hub_pc5_handoff_scan">Scansiona QR dal PC</string>
-    <string name="hub_pc5_handoff_scan_prompt">Inquadra il QR MediaManager_setup_handoff sul PC</string>
-    <string name="hub_pc5_handoff_camera_denied">Permesso fotocamera negato: concedilo oppure incolla il codice dal file .txt sul Desktop.</string>
-    <string name="hub_pc5_handoff_label">Codice setup (alternativa: incolla)</string>
-    <string name="hub_pc5_handoff_hint">Se non usi la fotocamera: apri MediaManager_setup_handoff.txt sul PC e incolla qui la riga pvmsetup:2;…</string>
-    <string name="hub_pc5_handoff_apply">Applica codice incollato</string>
+    <string name="hub_pc5_result_imported">Bundle CIFS ricevuto: Host, User e Password pronti per Copia.</string>
+    <string name="hub_pc5_result_missing">In attesa del bundle dal PC (hotspot attivo? oppure chiavetta USB).</string>
+    <string name="hub_pc5_retry_recover">Riprova recupero da hotspot</string>
+    <string name="hub_pc5_hotspot_intro">Primario: attiva l’hotspot del telefono, collega il PC a quell’SSID, lascia aperta «Tutto pronto». L’app recupera IP+User+Password. Piano B: reinserisci la chiavetta e «Leggi bundle».</string>
+    <string name="hub_pc5_import_usb_bundle">Leggi bundle dalla chiavetta</string>
     <string name="hub_pc5_confirm">Conferma</string>
     <string name="hub_pc5_item_saved">Confermo di aver configurato e salvato CIFS Documents Provider secondo le istruzioni sopra indicate</string>
     <string name="hub_pc5_ultima_azione">Ultima azione: clicca su «Attiva collegamento», seleziona la connessione CIFS appena salvata (Name = MyMedia) e premi «Usa questa cartella». Non restare sull\'elenco share del PC.</string>
