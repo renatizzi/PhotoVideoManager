@@ -115,22 +115,22 @@
     <string name="hub_pc1_intro">Prima di avviare la procedura verifica e conferma di avere a disposizione i seguenti strumenti:</string>
     <string name="hub_pc1_item_phone">Telefono Android o tablet dove è stata installata l\'app MediaManager</string>
     <string name="hub_pc1_item_pc">PC/Notebook Windows v. 10 o superiore</string>
-    <string name="hub_pc1_item_cable">Cavo USB adatto al trasferimento dei dati</string>
+    <string name="hub_pc1_item_cable">Bluetooth attivo sul telefono e sul PC</string>
 
     <!-- Passo 2 — USB / preparazione file (PPT slide 5) -->
-    <string name="hub_pc2_intro">Esegui ora le seguenti verifiche preliminari:</string>
-    <string name="hub_pc2_usb_how">Il cavetto USB è spesso configurato solo per ricaricare. Per trasferire i file: apri le notifiche scorrendo dal bordo superiore, tocca «Ricarica questo dispositivo via USB» (o simile), scegli «Trasferimento di file» (o simile), poi consenti l\'accesso ai dati del telefono.</string>
-    <string name="hub_pc2_item_connect">Collega il telefono al PC/Notebook con un cavetto USB adatto al trasferimento dei dati (meglio se quello fornito in dotazione)</string>
+    <string name="hub_pc2_intro">Autorizza il collegamento Bluetooth tra telefono e PC, poi prepara i file di configurazione.</string>
+    <string name="hub_pc2_usb_how">Sul PC: Impostazioni → Bluetooth e dispositivi → «Invia o ricevi file tramite Bluetooth» → Ricevi file. Sul telefono completa l\'associazione se richiesta. All\'OK l\'app propone l\'invio: scegli Bluetooth.</string>
+    <string name="hub_pc2_item_connect">Ho associato (paired) telefono e PC via Bluetooth</string>
     <string name="hub_pc2_item_unlocked">Verifica che il PC e il telefono siano accesi e sbloccati</string>
-    <string name="hub_pc2_item_transfer">Modifica sul telefono la modalità di collegamento USB da «Solo ricarica» a «Trasferimento di file»</string>
-    <string name="hub_pc2_item_allow">Consenti l\'accesso ai dati del telefono</string>
+    <string name="hub_pc2_item_transfer">Sul PC ho avviato «Ricevi file» e sto attendendo</string>
+    <string name="hub_pc2_item_allow">Bluetooth attivo su telefono e PC</string>
 
     <!-- Passo 3 — Copia file (PPT slide 6; nomi CONFIGURA / sup) -->
-    <string name="hub_pc3_intro">Dopo aver collegato il telefono al PC/Notebook esegui le seguenti operazioni:</string>
-    <string name="hub_pc3_howto">Dal PC: Esplora file → Questo PC → nome del telefono → Memoria interna (o Telefono) → Download. Seleziona i file CONFIGURA e sup, copiali (Ctrl+C) e incollali sul Desktop (Ctrl+V).</string>
-    <string name="hub_pc3_item_download">Accedi dal PC alla cartella Download del telefono</string>
-    <string name="hub_pc3_item_copy">Copia i due file CONFIGURA e sup dalla cartella Download sul Desktop del PC</string>
-    <string name="hub_pc3_item_verify">Verifica che entrambi i file siano presenti sul Desktop</string>
+    <string name="hub_pc3_intro">Dopo la ricezione Bluetooth, i file devono stare sul Desktop del PC.</string>
+    <string name="hub_pc3_howto">Accetta i file CONFIGURA e sup sul PC e, se necessario, spostali sul Desktop. Non aprire il file sup.</string>
+    <string name="hub_pc3_item_download">Ho accettato i file CONFIGURA e sup sul PC</string>
+    <string name="hub_pc3_item_copy">Entrambi i file sono sul Desktop del PC</string>
+    <string name="hub_pc3_item_verify">Non apro il file sup (si usa solo tramite CONFIGURA)</string>
 
     <!-- Passo 4 — Script (PPT slide 8; doppio clic + UAC, non tasto destro) -->
     <string name="hub_pc4_intro">È tutto pronto per lanciare la routine che ti consentirà di creare la cartella dedicata al Catalogo personale. Ecco le istruzioni:</string>
@@ -138,6 +138,13 @@
     <string name="hub_pc4_item_doubleclick">Sul Desktop del PC/Notebook ho fatto doppio clic su CONFIGURA</string>
     <string name="hub_pc4_item_uac">Ho confermato la finestra di Windows (Controllo account utente), se è comparsa</string>
     <string name="hub_pc4_item_wait">Ho atteso senza interrompere finché la routine ha mostrato «Tutto pronto»</string>
+    <string name="hub_pc4_item_bundle">Sul Desktop vedo anche MediaManager_cifs_bundle.json</string>
+    <string name="hub_pc4b_intro">Dal telefono richiedi il file con tutti i dati già pronti per CIFS. Sul PC invia una volta il file bundle dal Desktop via Bluetooth (nessun automatismo nello script).</string>
+    <string name="hub_pc4b_pick">Scarica dati CIFS</string>
+    <string name="hub_pc4b_item_tap">In MediaManager ho toccato «Scarica dati CIFS»</string>
+    <string name="hub_pc4b_item_send">Sul PC ho inviato via Bluetooth MediaManager_cifs_bundle.json</string>
+    <string name="hub_pc4b_item_ready">L\'app conferma «Dati CIFS pronti»</string>
+    <string name="hub_pc4b_waiting">In attesa del bundle completo. Senza Host, User, Password e Folder non si apre la scheda CIFS.</string>
 
     <!-- Passo 5 — CIFS -->
     <string name="hub_pc5_intro">L\'ultimo passo della procedura prevede la configurazione dell\'app denominata CIFS Documents Provider (scaricabile gratuitamente su Google Play).\n\nEcco i dati da inserire: con il bottone «Copia» puoi incollarli uno alla volta sul form di CIFS:</string>
@@ -147,9 +154,11 @@
     <string name="hub_pc5_item_name">Ho copiato e incollato Name</string>
     <string name="hub_pc5_item_storage">Ho impostato Storage su SMB2,3 (jCIFS NG)</string>
     <string name="hub_pc5_item_domain">Ho lasciato Domain vuoto</string>
-    <string name="hub_pc5_item_host">Ho copiato e incollato Host (IP del PC)</string>
-    <string name="hub_pc5_item_port">Ho impostato Port a 445</string>
+    <string name="hub_pc5_item_host">Ho copiato e incollato Host</string>
+    <string name="hub_pc5_item_port">Ho copiato e incollato Port</string>
+    <string name="hub_pc5_item_folder">Ho copiato e incollato Folder</string>
     <string name="hub_pc5_item_dfs">Ho lasciato Enable DFS deselezionato</string>
+    <string name="hub_pc5_item_readonly">Ho lasciato Read only disattivato (se il campo c\'è)</string>
     <string name="hub_pc5_item_user">Ho copiato e incollato User</string>
     <string name="hub_pc5_item_password">Ho copiato e incollato Password</string>
     <string name="hub_pc5_item_save">In CIFS ho toccato Save e sono tornato a MediaManager con Indietro</string>
@@ -172,18 +181,23 @@
     <string name="hub_b5b_label_name">Name</string>
     <string name="hub_b5b_label_host">Host</string>
     <string name="hub_b5b_label_port">Port</string>
+    <string name="hub_b5b_label_folder">Folder</string>
     <string name="hub_b5b_label_domain">Domain</string>
     <string name="hub_b5b_label_user">User</string>
     <string name="hub_b5b_label_password">Password</string>
     <string name="hub_b5b_label_storage">Storage</string>
     <string name="hub_b5b_label_dfs">Enable DFS (Distributed File System)</string>
+    <string name="hub_b5b_label_readonly">Read only</string>
     <string name="hub_b5b_domain_value">(lascia vuoto)</string>
     <string name="hub_b5b_domain_hint">Lascia vuoto</string>
     <string name="hub_b5b_dfs_value">Non attivo</string>
     <string name="hub_b5b_dfs_hint">Lascia deselezionato</string>
-    <string name="hub_b5b_host_placeholder">IP del PC</string>
-    <string name="hub_b5b_host_hint">Sul PC, nella finestra «Tutto pronto», usa l\'IP indicato. Incollalo in Host (non usare la lente di scansione come percorso principale).</string>
+    <string name="hub_b5b_readonly_value">Disattivato</string>
+    <string name="hub_b5b_readonly_hint">Deve restare OFF</string>
+    <string name="hub_b5b_host_placeholder">—</string>
+    <string name="hub_b5b_host_hint">Valore dal bundle: non modificare e non usare la lente di scansione.</string>
     <string name="hub_b5b_storage_value">SMB2,3 (jCIFS NG)</string>
+    <string name="hub_b5b_bundle_required">Scheda non disponibile: scarica prima il bundle CIFS completo.</string>
     <string name="hub_password_missing_hint">Password non disponibile in memoria (es. dopo ripresa bozza). Torna al passo di collegamento USB e conferma di nuovo con OK per rigenerare i file.</string>
     <string name="hub_w2_copy_credentials">Copia tutti i campi noti</string>
     <string name="hub_cifs_install">Installa CIFS Documents Provider</string>

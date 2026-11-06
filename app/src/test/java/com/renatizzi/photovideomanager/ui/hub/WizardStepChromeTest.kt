@@ -28,14 +28,16 @@ class WizardStepChromeTest {
         val expected = WizardUiContract.PC_STEP_SUBTITLES
         assertEquals(expected[0], WizardStepChrome.subtitle(WizardStep.INTRO, kind).text)
         assertEquals(expected[1], WizardStepChrome.subtitle(WizardStep.PC_AVAILABILITY, kind).text)
-        assertEquals(expected[2], WizardStepChrome.subtitle(WizardStep.PC_USB_PREPARE, kind).text)
+        assertEquals(expected[2], WizardStepChrome.subtitle(WizardStep.PC_BT_PREPARE, kind).text)
         assertEquals(expected[3], WizardStepChrome.subtitle(WizardStep.PC_COPY_FILES, kind).text)
         assertEquals(expected[4], WizardStepChrome.subtitle(WizardStep.PC_RUN_SCRIPT, kind).text)
-        assertEquals(expected[5], WizardStepChrome.subtitle(WizardStep.W2_CIFS, kind).text)
+        assertEquals(expected[5], WizardStepChrome.subtitle(WizardStep.PC_BT_DOWNLOAD_BUNDLE, kind).text)
+        assertEquals(expected[6], WizardStepChrome.subtitle(WizardStep.W2_CIFS, kind).text)
 
         val all = WizardStep.entries.map { WizardStepChrome.subtitle(it, kind).text }
         assertFalse(all.any { it.contains("Passo ") && it.contains(" di 10") })
         assertFalse(all.any { it.contains("di 7") })
+        assertTrue(expected[2].contains("Bluetooth", ignoreCase = true))
     }
 
     @Test

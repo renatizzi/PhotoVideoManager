@@ -1,10 +1,11 @@
 # Videate utente — Setup Catalogo personale (ramo PC)
 
-**Stato:** consolidato 20/10/2026 dopo risposte Renato alle Q1–Q7 su `revisione_guida_V2.pptx`.  
-**Fonte testi/struttura:** PPT V2 + decisioni 19/10 + chiarimenti 20/10.  
+**Stato:** allineato a `docs/LOCK_SETUP_BT_BUNDLE_CIFS.md` (OK Renato 06/11/2026 — Bluetooth al posto di USB; form CIFS intero solo-Copia).  
+**Fonte testi/struttura:** PPT V2 + decisioni 19–20/10 + LOCK BT 06/11.  
 **Fuori da questo documento:** help/errori what-if; pagina Configura stile Utility; rami Cloud/NAS/locale oltre allo stub sul passo 0.
 
-Questo file descrive **solo ciò che l’utente vede** nelle videate. Non è il vecchio `template-videate-wizard-pc.md`.
+Questo file descrive **solo ciò che l’utente vede** nelle videate. Non è il vecchio `template-videate-wizard-pc.md`.  
+In caso di conflitto con testi USB/MTP o Host da digitare: **prevale la LOCK**.
 
 ---
 
@@ -69,11 +70,12 @@ Da questa pagina si attiva la procedura guidata per la creazione o modifica dell
 
 **Se hai scelto un PC o Notebook Windows, la procedura prevede:**
 
-1. Verifica della disponibilità di quanto necessario  
-2. Verifica preliminare, preparazione dei file e collegamento  
-3. Copia manuale dei file di configurazione  
-4. Generazione password e altri dati necessari per configurare la cartella condivisa  
-5. Accedere alla cartella del Catalogo mediante CIFS  
+1. Verifica della disponibilità di quanto necessario (Bluetooth)  
+2. Collegamento Bluetooth, preparazione e invio dei file di configurazione  
+3. File di configurazione sul Desktop del PC  
+4. Generazione password e cartella condivisa («Tutto pronto»)  
+4b. Scarica sul telefono i dati CIFS (bundle)  
+5. Accedere alla cartella del Catalogo mediante CIFS (scheda intera, solo Copia)  
 
 Più il riquadro percorso con default `C:\MediaManager\Catalogo` e la riga `Valori modificabili`.
 
@@ -98,124 +100,141 @@ Prima di avviare la procedura verifica e conferma di avere a disposizione i segu
 
 - [ ] Telefono Android o tablet dove è stata installata l’app MediaManager  
 - [ ] PC/Notebook Windows v. 10 o superiore  
-- [ ] Cavo USB adatto al trasferimento dei dati  
+- [ ] Bluetooth attivo sul telefono e sul PC  
 
 **Chiusura:** Quando pronto clicca su OK → **OK**
 
 ---
 
-## Passo 2 — Verifica preliminare, preparazione dei file e collegamento
+## Passo 2 — Collegamento Bluetooth e preparazione dei file
 
-**Sottotitolo:** 2 – Verifica preliminare, preparazione dei file e collegamento  
+**Sottotitolo:** 2 – Collegamento Bluetooth, preparazione e invio dei file  
 
 **Introduzione:**  
-Esegui ora le seguenti verifiche preliminari:
+Autorizza il collegamento Bluetooth tra telefono e PC, poi prepara i file di configurazione.
 
-Testo di supporto (come nel PPT, non come fila di pulsanti problema):
+Testo di supporto:
 
-Il cavetto USB è spesso configurato solo per ricaricare. Per trasferire i file: apri le notifiche scorrendo dal bordo superiore, tocca «Ricarica questo dispositivo via USB» (o simile), scegli «Trasferimento di file» (o simile), poi consenti l’accesso ai dati del telefono.
+Sul PC: Impostazioni → Bluetooth e dispositivi → «Invia o ricevi file tramite Bluetooth» → **Ricevi file**. Sul telefono completa l’associazione se richiesta.
 
 **Checklist** (OK solo se tutte spuntate):
 
-- [ ] Collega il telefono al PC/Notebook con un cavetto USB adatto al trasferimento dei dati (meglio se quello fornito in dotazione)  
-- [ ] Verifica che il PC e il telefono siano accesi e sbloccati  
-- [ ] Modifica sul telefono la modalità di collegamento USB da «Solo ricarica» a «Trasferimento di file»  
-- [ ] Consenti l’accesso ai dati del telefono  
+- [ ] Telefono e PC sono accesi, sbloccati e con Bluetooth attivo  
+- [ ] Ho associato (paired) telefono e PC  
+- [ ] Sul PC ho avviato «Ricevi file» e sto attendendo  
 
-**Comportamento sull’OK:** l’app crea in Download i file **CONFIGURA** e **sup**. Senza questo OK non si avanza e i file non vengono creati.
+**Comportamento sull’OK:** l’app genera **CONFIGURA** e **sup** e avvia l’invio via Bluetooth. Senza questo OK non si avanza e i file non vengono creati/inviati.
 
 **Chiusura:** Quando pronto clicca su OK → **OK**
 
 ---
 
-## Passo 3 — Copia manuale dei file di configurazione
+## Passo 3 — File di configurazione sul Desktop
 
-**Sottotitolo:** 3 – Copia manuale dei file di configurazione  
+**Sottotitolo:** 3 – File di configurazione sul Desktop  
 
 **Introduzione:**  
-Dopo aver collegato il telefono al PC/Notebook esegui le seguenti operazioni:
-
-Testo di supporto (template, nomi nuovi):
-
-Dal PC: Esplora file → Questo PC → nome del telefono → Memoria interna (o Telefono) → Download. Seleziona i file **CONFIGURA** e **sup**, copiali (Ctrl+C) e incollali sul Desktop (Ctrl+V).
+Dopo la ricezione Bluetooth, i file devono stare sul Desktop del PC.
 
 **Checklist** (OK solo se tutte spuntate):
 
-- [ ] Accedi dal PC alla cartella Download del telefono  
-- [ ] Copia i due file CONFIGURA e sup dalla cartella Download sul Desktop del PC  
-- [ ] Verifica che entrambi i file siano presenti sul Desktop  
+- [ ] Ho accettato i file **CONFIGURA** e **sup** sul PC  
+- [ ] Entrambi i file sono sul Desktop del PC  
+- [ ] Non apro il file **sup** (si usa solo tramite CONFIGURA)  
 
 **Chiusura:** Quando pronto clicca su OK → **OK**
 
 ---
 
-## Passo 4 — Generazione password e altri dati per la cartella condivisa
+## Passo 4 — Generazione password e cartella condivisa
 
 **Sottotitolo:** 4 – Generazione password e altri dati necessari per configurare la cartella condivisa  
 
 **Introduzione:**  
-È tutto pronto per lanciare la routine che ti consentirà di creare la cartella dedicata al Catalogo personale. Ecco le istruzioni:
+È tutto pronto per lanciare la routine che crea la cartella dedicata al Catalogo personale.
 
-**Istruzione di avvio (cosa l’utente deve fare davvero):**  
-Sul Desktop, **doppio clic** sul file **CONFIGURA**. Se Windows mostra la finestra di Controllo account utente, **conferma**. Non usare «Esegui come amministratore» dal tasto destro: lo script chiede già l’elevazione da solo. Non aprire il file **sup**.
+**Istruzione di avvio:**  
+Sul Desktop, **doppio clic** su **CONFIGURA**. Se compare il Controllo account utente, **conferma**. Non usare «Esegui come amministratore» dal tasto destro. Non aprire **sup**.
 
-*(«Prendi nota» dei dati dalla finestra PC: **omesso** — i dati per CIFS sono nella scheda del passo 5, con Copia.)*
+A «Tutto pronto» lo script lascia sul Desktop anche il file **`MediaManager_cifs_bundle.json`**. Non trascrivere i dati dalla finestra: li scaricherai al passo successivo.
 
 **Checklist** (OK solo se tutte spuntate):
 
-- [ ] Sul Desktop del PC/Notebook ho fatto doppio clic su CONFIGURA  
-- [ ] Ho confermato la finestra di Windows (Controllo account utente), se è comparsa  
-- [ ] Ho atteso senza interrompere finché la routine ha mostrato «Tutto pronto»  
+- [ ] Sul Desktop ho fatto doppio clic su CONFIGURA  
+- [ ] Ho confermato il Controllo account utente, se è comparso  
+- [ ] Ho atteso senza interrompere finché è comparso «Tutto pronto»  
+- [ ] Sul Desktop vedo anche `MediaManager_cifs_bundle.json`  
 
 **Chiusura:** Quando pronto clicca su OK → **OK**
+
+---
+
+## Passo 4b — Scarica i dati CIFS sul telefono
+
+**Sottotitolo:** 4b – Scarica i dati per CIFS  
+
+**Introduzione:**  
+Dal telefono richiedi il file con tutti i dati già pronti per CIFS. Sul PC non serve alcun automatismo nello script: basta inviare una volta il file bundle già sul Desktop.
+
+**Checklist** (OK solo se tutte spuntate):
+
+- [ ] In MediaManager ho toccato **Scarica dati CIFS**  
+- [ ] Sul PC ho inviato via Bluetooth il file `MediaManager_cifs_bundle.json` (Desktop)  
+- [ ] Sul telefono ho accettato il file e l’app conferma «Dati CIFS pronti»  
+
+Se l’app segnala bundle incompleto: non si avanza; ripetere invio o rieseguire lo script.  
+**Niente** digitazione Host, **niente** ricomposizione User/Password a pezzi.
+
+**Chiusura:** Quando pronto clicca su OK → **OK** *(OK abilitato solo con bundle completo)*
 
 ---
 
 ## Passo 5 — Accedere alla cartella del Catalogo mediante CIFS
 
-*Tutta la configurazione CIFS sta qui. Nessuna pagina «coda» dopo questo passo.*
+*Tutta la configurazione CIFS sta qui. Nessuna pagina «coda» dopo questo passo.*  
+*La scheda si apre solo con bundle completo (passo 4b).*
 
 **Sottotitolo:** 5 – Accedere alla cartella del Catalogo mediante CIFS  
 
 **Introduzione:**  
-L’ultimo passo della procedura prevede la configurazione dell’app denominata CIFS Documents Provider (scaricabile gratuitamente su Google Play).
+Configura CIFS Documents Provider (Google Play) usando **solo Copia** dalla scheda qui sotto. I valori sono già definitivi: non modificarli e non integrarli a mano.
 
-Ecco i dati da inserire: con il bottone «Copia» puoi incollarli uno alla volta sul form di CIFS.
+### Scheda dati *(speculare al form CIFS «Connection» — tutti i campi dati pieni + Copia)*
 
-### Scheda dati *(stesso ordine e stessi nomi del form CIFS «Connection» — screenshot in PPT V2)*
-
-Valori noti all’app dove disponibili; istruzione esplicita anche per campi vuoti o da lasciare al default CIFS.
-
-| Campo form CIFS (nome originale) | Cosa mostra / fa MediaManager | Azione utente |
+| Campo form CIFS | Valore in MediaManager | Azione utente |
 |---|---|---|
-| **ID** | Valore generato da CIFS (UUID) | Non modificare |
-| **Name** | Es. `MediaManagerCatalog` + **Copia** | Incolla in Name |
-| **Storage** | `SMB2,3 (jCIFS NG)` + **Copia** (o conferma se già selezionato) | Seleziona / conferma questa voce |
-| **Domain** | *(lascia vuoto)* | Lascia vuoto |
-| **Host** | IP del PC (se noto all’app) + **Copia**; altrimenti istruzione a usare l’IP dalla finestra «Tutto pronto» sul PC | Incolla l’IP in Host *(non usare la lente di scansione come percorso principale)* |
-| **Port** | `445` + **Copia** | Incolla / conferma 445 |
-| **Enable DFS (Distributed File System)** | Non attivo | Lascia deselezionato |
-| **User** | `MediaManager` (+ eventuale formato `NOMEPC\MediaManager` se serve) + **Copia** | Incolla in User |
-| **Password** | Password generata dall’app + **Mostra/Nascondi** + **Copia** | Incolla in Password *(non trascritta a mano dal PC)* |
+| **ID** | (generato da CIFS) | Non modificare |
+| **Name** | da bundle + **Copia** | Incolla |
+| **Storage** | `SMB2,3 (jCIFS NG)` + **Copia** | Incolla / conferma |
+| **Domain** | *(vuoto)* | Lascia vuoto |
+| **Host** | IPv4 da bundle + **Copia** *(sempre valorizzato)* | Incolla — **non** lente di scansione |
+| **Port** | `445` + **Copia** | Incolla |
+| **Folder** | nome share da bundle + **Copia** *(obbligatorio, mai vuoto)* | Incolla |
+| **Enable DFS** | Non attivo | Lascia deselezionato |
+| **User** | `NOMEPC\MediaManager` (già qualificato) + **Copia** | Incolla così com’è |
+| **Password** | da bundle + **Mostra/Nascondi** + **Copia** | Incolla |
+| **Read only** *(se presente in CIFS)* | deve restare OFF | Lascia disattivato |
 
-Poi in CIFS: **Save**. Torna a MediaManager con il tasto Indietro del telefono (il ritorno non è automatico).
+Poi in CIFS: **Save**. Torna a MediaManager con Indietro (il ritorno non è automatico).
 
 ### Checklist operativa del passo 5
 
-Criterio: **un riquadro per ogni dato da copiare/incollare** (e per le azioni che non sono un campo), più **ultimo riquadro = esito** della configurazione. OK solo se tutte spuntate.
+OK solo se tutte spuntate.
 
 - [ ] Ho installato / aperto CIFS Documents Provider  
 - [ ] Ho creato una nuova Connection e lasciato **ID** com’è  
 - [ ] Ho copiato e incollato **Name**  
-- [ ] Ho impostato **Storage** su SMB2,3 (jCIFS NG)  
+- [ ] Ho copiato / impostato **Storage** su SMB2,3 (jCIFS NG)  
 - [ ] Ho lasciato **Domain** vuoto  
-- [ ] Ho copiato e incollato **Host** (IP del PC)  
-- [ ] Ho impostato **Port** a 445  
+- [ ] Ho copiato e incollato **Host**  
+- [ ] Ho copiato e incollato **Port**  
+- [ ] Ho copiato e incollato **Folder**  
 - [ ] Ho lasciato **Enable DFS** deselezionato  
+- [ ] Ho lasciato **Read only** disattivato *(se il campo c’è)*  
 - [ ] Ho copiato e incollato **User**  
-- [ ] Ho copiato e incollato **Password** (dopo averla mostrata se serve)  
+- [ ] Ho copiato e incollato **Password**  
 - [ ] In CIFS ho toccato **Save** e sono tornato a MediaManager con Indietro  
-- [ ] **Esito:** la connessione in CIFS è salvata e la configurazione è andata a buon fine *(autodichiarazione; non è una verifica automatica dell’app)*  
+- [ ] **Esito:** connessione CIFS salvata e configurazione andata a buon fine *(autodichiarazione)*  
 
 **Chiusura:** Quando pronto clicca su OK → **OK**
 
@@ -227,19 +246,22 @@ Criterio: **un riquadro per ogni dato da copiare/incollare** (e per le azioni ch
 |---|---|
 | Help / «Non riesco» / checkpoint errori | Da sviluppare dopo consolidamento UI |
 | Pagina Configura stile Utility | Lavoro separato (slide 2 PPT) |
-| Elenco passi 1–5 su Cloud / NAS / questo dispositivo | Procedure non ancora definite (stub sul passo 0) |
-| «Prendi nota» / printscreen dei dati a fine script | Sostituito dalla scheda CIFS + Copia al passo 5 |
+| Elenco passi su Cloud / NAS / questo dispositivo | Procedure non ancora definite (stub sul passo 0) |
+| «Prendi nota» / trascrizione da finestra PC | Sostituito da bundle + scheda CIFS solo-Copia |
+| Cavo USB / MTP come percorso felice | Sostituito da Bluetooth (USB solo piano B in LOCK) |
+| Host vuoto o da digitare | Vietato dalla LOCK |
 | Password fissa `mediamanager` | Non adottata |
-| Pagina separata dopo il passo 5 («Scegli cartella» come coda) | Tutto ciò che riguarda CIFS sta nel passo 5 |
+| Pagina coda dopo il passo 5 | Tutto ciò che riguarda CIFS sta nel passo 5 |
 
 ---
 
-## Decisioni recepite (20/10) — sintesi
+## Decisioni recepite — sintesi
 
 1. Percorso: oggi unico `C:\…`; a regime controllo che ridisegna il riquadro per tipo dispositivo.  
-2. Elenco 1–5 solo sul passo 0 dopo scelta PC; altri dispositivi → loro elenco (da definire).  
-3. Passo 0 senza numero nel sottotitolo; la numerazione dipende dalla procedura del dispositivo.  
-4. Avvio CONFIGURA: **doppio clic + UAC** (autoelevazione; niente «Esegui come amministratore»).  
-5. «Prendi nota» omesso se la scheda CIFS è completa (come sopra).  
-6. Campi CIFS = ordine/nomi dello screenshot form Connection nel PPT V2.  
-7. Nessuna coda dopo CIFS; checklist per ogni copia/incolla + ultimo punto sull’esito.
+2. Elenco passi solo sul passo 0 dopo scelta PC; altri dispositivi → loro elenco (da definire).  
+3. Passo 0 senza numero nel sottotitolo.  
+4. Avvio CONFIGURA: **doppio clic + UAC**.  
+5. Trasporto file: **Bluetooth** (andata script, ritorno bundle scaricato dal telefono).  
+6. Form CIFS: **interamente compilato** dal bundle; **solo Copia**; zero integrazioni/modifiche sui dati.  
+7. **Folder** obbligatorio nella scheda (pin share).  
+8. Nessuna coda dopo CIFS; checklist per ogni copia/incolla + esito.

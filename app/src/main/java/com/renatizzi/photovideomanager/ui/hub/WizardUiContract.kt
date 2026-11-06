@@ -17,13 +17,18 @@ object WizardUiContract {
      */
     const val STEP0_SUBTITLE_HAS_NO_NUMBER = true
 
-    /** Sottotitoli filiera PC (passo 0 senza «0 –»). */
+    /**
+     * Sottotitoli filiera PC (passo 0 senza «0 –»).
+     * Indici: 0=intro, 1=disponibilità, 2=BT prepare, 3=Desktop,
+     * 4=script, 5=scarica bundle, 6=CIFS.
+     */
     val PC_STEP_SUBTITLES: List<String> = listOf(
         "Dove tenere il Catalogo",
         "1 – Verifica della disponibilità di quanto necessario",
-        "2 – Verifica preliminare, preparazione dei file e collegamento",
-        "3 – Copia manuale dei file di configurazione",
+        "2 – Collegamento Bluetooth, preparazione e invio dei file",
+        "3 – File di configurazione sul Desktop",
         "4 – Generazione password e altri dati necessari per configurare la cartella condivisa",
+        "4b – Scarica i dati per CIFS",
         "5 – Accedere alla cartella del Catalogo mediante CIFS",
     )
 }

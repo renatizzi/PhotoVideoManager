@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.renatizzi.photovideomanager.application.CatalogFacade
+import android.net.Uri
+import com.renatizzi.photovideomanager.data.hub.SetupCifsBundle
 import com.renatizzi.photovideomanager.data.hub.WindowsCatalogSetupScript
 import com.renatizzi.photovideomanager.data.hub.WindowsSetupExportResult
 import com.renatizzi.photovideomanager.data.hub.WindowsSetupScriptExporter
@@ -26,12 +28,13 @@ enum class SetupMode {
     MODIFY,
 }
 
-/** Campi scheda CIFS — ordine form Connection (screenshot PPT V2). */
+/** Campi scheda CIFS — form Connection + Folder (LOCK BT bundle). */
 enum class CifsCopyField {
     NAME,
     STORAGE,
     HOST,
     PORT,
+    FOLDER,
     USERNAME,
     PASSWORD,
 }
@@ -70,6 +73,17 @@ data class CatalogSeatWizardUiState(
     val statusMessage: String? = null,
     val cifsInstalled: Boolean = false,
     val verification: SeatVerificationUi = SeatVerificationUi.NONE,
+    /** Token sessione scritto nello script e atteso nel bundle. */
+    val setupSessionToken: String = "",
+    val cifsHost: String = "",
+    val cifsFolder: String = "",
+    val cifsUserQualified: String = "",
+    val cifsPort: String = SetupCifsBundle.DEFAULT_PORT,
+    val cifsStorage: String = SetupCifsBundle.STORAGE_VALUE,
+    val cifsConnectionName: String = "",
+    val cifsBundleComplete: Boolean = false,
+    /** Dopo export: UI deve lanciare share Intent (Bluetooth). */
+    val pendingShareScripts: Boolean = false,
 )
 
 /**
@@ -83,13 +97,17 @@ enum class WizardStep {
     W1_CONFIRM,
     /** Passo 1 — Verifica disponibilità. */
     PC_AVAILABILITY,
-    /** Passo 2 — USB / collegamento; OK esporta CONFIGURA + sup. */
-    PC_USB_PREPARE,
-    /** Passo 3 — Copia manuale sul Desktop. */
+    /** Passo 2 — Bluetooth + preparazione/invio CONFIGURA + sup. */
+    PC_BT_PREPARE,
+    /** @deprecated bozze USB; rimappa a [PC_BT_PREPARE]. */
+    @Deprecated("USB sostituito da Bluetooth") PC_USB_PREPARE,
+    /** Passo 3 — File sul Desktop del PC. */
     PC_COPY_FILES,
     /** Passo 4 — Avvio script (doppio clic + UAC + Tutto pronto). */
     PC_RUN_SCRIPT,
-    /** Passo 5 — Scheda CIFS con Copia. */
+    /** Passo 4b — Scarica bundle CIFS via Bluetooth. */
+    PC_BT_DOWNLOAD_BUNDLE,
+    /** Passo 5 — Scheda CIFS con Copia (solo se bundle completo). */
     W2_CIFS,
     W2_PICK,
     W3_GUIDE,
@@ -173,6 +191,15 @@ class CatalogSeatWizardViewModel(
                 temporaryPassword = "",
                 folderPath = WindowsCatalogSetupScript.DEFAULT_FOLDER,
                 shareName = WindowsCatalogSetupScript.DEFAULT_SHARE,
+                setupSessionToken = "",
+                cifsHost = "",
+                cifsFolder = "",
+                cifsUserQualified = "",
+                cifsPort = SetupCifsBundle.DEFAULT_PORT,
+                cifsStorage = SetupCifsBundle.STORAGE_VALUE,
+                cifsConnectionName = "",
+                cifsBundleComplete = false,
+                pendingShareScripts = false,
             )
         }
         persistDraft()
@@ -284,14 +311,21 @@ class CatalogSeatWizardViewModel(
     /** Passo 1 → 2. */
     fun confirmAvailabilityChecked() {
         _state.update {
-            it.copy(step = WizardStep.PC_USB_PREPARE, errorMessage = null, statusMessage = null)
+            it.copy(step = WizardStep.PC_BT_PREPARE, errorMessage = null, statusMessage = null)
         }
         persistDraft()
     }
 
-    /** Passo 2 OK → esporta CONFIGURA/sup in Download, poi passo 3. */
-    fun confirmUsbAndPrepareFiles() {
-        prepareWindowsScript()
+    /** Passo 2 OK → esporta CONFIGURA/sup e chiede share BT, poi passo 3. */
+    fun confirmBtAndPrepareFiles() {
+        prepareWindowsScript(shareAfterExport = true)
+    }
+
+    /** @deprecated alias USB. */
+    fun confirmUsbAndPrepareFiles() = confirmBtAndPrepareFiles()
+
+    fun consumePendingShareScripts() {
+        _state.update { it.copy(pendingShareScripts = false) }
     }
 
     /** Passo 3 → 4. */
@@ -308,10 +342,14 @@ class CatalogSeatWizardViewModel(
     }
 
     fun goStep(step: WizardStep) {
-        val target = normalizeLegacyStep(step)
+        var target = normalizeLegacyStep(step)
+        if (target == WizardStep.W2_CIFS && !_state.value.cifsBundleComplete) {
+            target = WizardStep.PC_BT_DOWNLOAD_BUNDLE
+        }
         if (target == WizardStep.W2_CIFS ||
             target == WizardStep.W2_PICK ||
-            target == WizardStep.W4_GUIDE
+            target == WizardStep.W4_GUIDE ||
+            target == WizardStep.PC_BT_DOWNLOAD_BUNDLE
         ) {
             refreshCifsInstalled()
         }
@@ -319,7 +357,9 @@ class CatalogSeatWizardViewModel(
         persistDraft()
     }
 
+    @Suppress("DEPRECATION")
     fun normalizeLegacyStep(step: WizardStep): WizardStep = when (step) {
+        WizardStep.PC_USB_PREPARE -> WizardStep.PC_BT_PREPARE
         WizardStep.W2_CHOICE,
         WizardStep.W2_ROUTINE_PARAMS,
         -> WizardStep.PC_AVAILABILITY
@@ -335,7 +375,7 @@ class CatalogSeatWizardViewModel(
         WizardStep.W2_PREPARE,
         WizardStep.W2_HELP,
         WizardStep.W2_PASSWORD_HELP,
-        -> WizardStep.W2_CIFS
+        -> if (_state.value.cifsBundleComplete) WizardStep.W2_CIFS else WizardStep.PC_BT_DOWNLOAD_BUNDLE
         else -> step
     }
 
@@ -371,12 +411,14 @@ class CatalogSeatWizardViewModel(
 
     fun fieldClipboardText(field: CifsCopyField): String {
         val s = _state.value
+        if (!s.cifsBundleComplete) return ""
         return when (field) {
-            CifsCopyField.NAME -> s.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
-            CifsCopyField.STORAGE -> "SMB2,3 (jCIFS NG)"
-            CifsCopyField.HOST -> "" // IP solo dal PC; non inventare
-            CifsCopyField.PORT -> "445"
-            CifsCopyField.USERNAME -> s.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER }
+            CifsCopyField.NAME -> s.cifsConnectionName.ifBlank { s.shareName }
+            CifsCopyField.STORAGE -> s.cifsStorage.ifBlank { SetupCifsBundle.STORAGE_VALUE }
+            CifsCopyField.HOST -> s.cifsHost
+            CifsCopyField.PORT -> s.cifsPort.ifBlank { SetupCifsBundle.DEFAULT_PORT }
+            CifsCopyField.FOLDER -> s.cifsFolder.ifBlank { s.shareName }
+            CifsCopyField.USERNAME -> s.cifsUserQualified
             CifsCopyField.PASSWORD -> s.temporaryPassword
         }
     }
@@ -386,14 +428,14 @@ class CatalogSeatWizardViewModel(
         _state.update { it.copy(cifsInstalled = installed) }
     }
 
-    /** Passo 4 OK: Tutto pronto → scrub Download → passo 5 CIFS. */
+    /** Passo 4 OK: Tutto pronto → scrub Download → passo 4b scarica bundle. */
     fun confirmScriptRanOnPc() {
         viewModelScope.launch(Dispatchers.IO) {
             val n = runCatching { exporter.scrubDownloadsScripts() }.getOrDefault(0)
             refreshCifsInstalled()
             _state.update {
                 it.copy(
-                    step = WizardStep.W2_CIFS,
+                    step = WizardStep.PC_BT_DOWNLOAD_BUNDLE,
                     scriptRanDeclared = true,
                     statusMessage = if (n > 0) {
                         "File di supporto rimosso da Download sul telefono (conteneva la password)."
@@ -411,9 +453,93 @@ class CatalogSeatWizardViewModel(
     fun markUsbCopiedAndContinue() = confirmCopyChecked()
 
     fun continueToCifsForm() {
+        if (!_state.value.cifsBundleComplete) {
+            _state.update {
+                it.copy(
+                    step = WizardStep.PC_BT_DOWNLOAD_BUNDLE,
+                    errorMessage = "Scarica prima i dati CIFS completi dal PC.",
+                )
+            }
+            persistDraft()
+            return
+        }
         refreshCifsInstalled()
         _state.update {
             it.copy(step = WizardStep.W2_CIFS, errorMessage = null, statusMessage = null)
+        }
+        persistDraft()
+    }
+
+    /** Import bundle JSON ricevuto via Bluetooth (OpenDocument / Downloads). */
+    fun importCifsBundleFromUri(uri: Uri) {
+        viewModelScope.launch {
+            _state.update { it.copy(busy = true, errorMessage = null, statusMessage = null) }
+            val expected = _state.value.setupSessionToken
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    val raw = appContext.contentResolver.openInputStream(uri)?.use { input ->
+                        input.bufferedReader(Charsets.UTF_8).readText()
+                    } ?: error("Impossibile leggere il file bundle")
+                    val bundle = SetupCifsBundle.parse(raw, expectedToken = expected.ifBlank { null })
+                        ?: error("File non riconosciuto come bundle MediaManager")
+                    if (!bundle.isComplete) {
+                        error(
+                            "Bundle incompleto (servono Host IPv4, User PC\\utente, Password, Folder). " +
+                                "Rinvia il file dal Desktop del PC o riesegui CONFIGURA.",
+                        )
+                    }
+                    bundle
+                }
+            }
+            result.fold(
+                onSuccess = { bundle -> applyCifsBundle(bundle) },
+                onFailure = { e ->
+                    _state.update {
+                        it.copy(
+                            busy = false,
+                            cifsBundleComplete = false,
+                            errorMessage = e.message ?: "Import bundle non riuscito",
+                        )
+                    }
+                },
+            )
+        }
+    }
+
+    fun importCifsBundleFromText(raw: String) {
+        val expected = _state.value.setupSessionToken.ifBlank { null }
+        val bundle = SetupCifsBundle.parse(raw, expectedToken = expected)
+        if (bundle == null || !bundle.isComplete) {
+            _state.update {
+                it.copy(
+                    cifsBundleComplete = false,
+                    errorMessage = "Bundle incompleto o token non valido. Riprova lo scarico dal PC.",
+                )
+            }
+            return
+        }
+        applyCifsBundle(bundle)
+    }
+
+    private fun applyCifsBundle(bundle: SetupCifsBundle) {
+        refreshCifsInstalled()
+        _state.update {
+            it.copy(
+                busy = false,
+                cifsBundleComplete = true,
+                cifsHost = bundle.hostIp,
+                cifsFolder = bundle.folder,
+                cifsUserQualified = bundle.userQualified,
+                cifsPort = bundle.port.ifBlank { SetupCifsBundle.DEFAULT_PORT },
+                cifsStorage = bundle.storage.ifBlank { SetupCifsBundle.STORAGE_VALUE },
+                cifsConnectionName = bundle.connectionName,
+                shareName = bundle.shareName.ifBlank { it.shareName },
+                temporaryPassword = bundle.password,
+                setupSessionToken = bundle.token.ifBlank { it.setupSessionToken },
+                step = WizardStep.W2_CIFS,
+                statusMessage = "Dati CIFS pronti: tutti i campi si possono copiare.",
+                errorMessage = null,
+            )
         }
         persistDraft()
     }
@@ -428,7 +554,7 @@ class CatalogSeatWizardViewModel(
         persistDraft()
     }
 
-    fun prepareWindowsScript() {
+    fun prepareWindowsScript(shareAfterExport: Boolean = false) {
         viewModelScope.launch {
             val current = _state.value
             val pathErr = WindowsCatalogSetupScript.validateFolderPath(
@@ -448,6 +574,7 @@ class CatalogSeatWizardViewModel(
             val password = current.temporaryPassword.ifBlank {
                 WindowsCatalogSetupScript.generatePassword()
             }
+            val token = current.setupSessionToken.ifBlank { SetupCifsBundle.newSessionToken() }
             val result = withContext(Dispatchers.IO) {
                 runCatching {
                     val pkg = WindowsCatalogSetupScript.build(
@@ -456,6 +583,7 @@ class CatalogSeatWizardViewModel(
                             shareName = current.shareName.trim(),
                             userName = current.userName.trim(),
                             temporaryPassword = password,
+                            sessionToken = token,
                         ),
                     )
                     exporter.export(pkg)
@@ -465,23 +593,28 @@ class CatalogSeatWizardViewModel(
                 onSuccess = { export ->
                     lastExport = export
                     val status = buildString {
+                        append("Script pronti. ")
+                        if (shareAfterExport) {
+                            append("Scegli Bluetooth per inviarli al PC (sul PC: Ricevi file). ")
+                        }
                         if (export.downloadsSaved) {
-                            append("File CONFIGURA e sup salvati in Download. ")
+                            append("Copia anche in Download (piano B). ")
                         }
                         if (export.usbCopiedTo != null) {
-                            append("Copiati anche su USB («${export.usbCopiedTo}»). ")
-                        } else {
-                            append("Ora copiali sul Desktop del PC come da istruzioni. ")
+                            append("Copia anche su USB («${export.usbCopiedTo}»). ")
                         }
                     }.trim()
                     _state.update {
                         it.copy(
                             busy = false,
                             temporaryPassword = password,
+                            setupSessionToken = token,
                             scriptPrepared = true,
                             downloadsSaved = export.downloadsSaved,
                             usbCopiedTo = export.usbCopiedTo,
                             statusMessage = status,
+                            pendingShareScripts = shareAfterExport && export.shareUris.isNotEmpty(),
+                            cifsBundleComplete = false,
                             step = WizardStep.PC_COPY_FILES,
                         )
                     }
@@ -506,17 +639,18 @@ class CatalogSeatWizardViewModel(
 
     fun credentialsClipboardText(): String {
         val s = _state.value
-        val share = s.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
-        val user = s.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER }
+        if (!s.cifsBundleComplete) return ""
         return buildString {
-            append("Name: $share\n")
-            append("Storage: SMB2,3 (jCIFS NG)\n")
+            append("Name: ${fieldClipboardText(CifsCopyField.NAME)}\n")
+            append("Storage: ${fieldClipboardText(CifsCopyField.STORAGE)}\n")
             append("Domain: (lascia vuoto)\n")
-            append("Host: (IP del PC dalla finestra Tutto pronto)\n")
-            append("Port: 445\n")
+            append("Host: ${fieldClipboardText(CifsCopyField.HOST)}\n")
+            append("Port: ${fieldClipboardText(CifsCopyField.PORT)}\n")
+            append("Folder: ${fieldClipboardText(CifsCopyField.FOLDER)}\n")
             append("Enable DFS: (lascia deselezionato)\n")
-            append("User: $user\n")
-            append("Password: ${s.temporaryPassword}")
+            append("Read only: (disattivato)\n")
+            append("User: ${fieldClipboardText(CifsCopyField.USERNAME)}\n")
+            append("Password: ${fieldClipboardText(CifsCopyField.PASSWORD)}")
         }
     }
 

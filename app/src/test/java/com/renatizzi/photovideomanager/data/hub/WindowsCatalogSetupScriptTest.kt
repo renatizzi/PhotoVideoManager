@@ -48,16 +48,29 @@ class WindowsCatalogSetupScriptTest {
     }
 
     @Test
-    fun build_embedsParamsAndKeepsPasswordOutOfResultJsonTemplate() {
+    fun build_embedsParamsAndWritesCifsBundleOnDesktop() {
         val password = "TempPass!23456"
-        val pkg = samplePkg()
+        val pkg = WindowsCatalogSetupScript.build(
+            WindowsCatalogSetupScript.Params(
+                folderPath = "C:\\MediaManager\\Catalogo",
+                shareName = "MediaManagerCatalog",
+                userName = "MediaManager",
+                temporaryPassword = password,
+                sessionToken = "tokTest123",
+            ),
+        )
         assertTrue(pkg.ps1Content.contains("'C:\\MediaManager\\Catalogo'"))
         assertTrue(pkg.ps1Content.contains(password))
         assertTrue(pkg.ps1Content.contains("MediaManagerCatalog"))
         assertTrue(pkg.ps1Content.contains("#Requires -RunAsAdministrator"))
         assertTrue(pkg.ps1Content.contains("New-LocalUser") || pkg.ps1Content.contains("Set-LocalUser"))
         assertTrue(pkg.ps1Content.contains("MediaManager_setup_result.json"))
-        assertFalse(pkg.ps1Content.contains("password ="))
+        assertTrue(pkg.ps1Content.contains(SetupCifsBundle.BUNDLE_FILE_NAME))
+        assertTrue(pkg.ps1Content.contains("tokTest123"))
+        assertTrue(pkg.ps1Content.contains("userQualified"))
+        assertTrue(pkg.ps1Content.contains("hostIp"))
+        // Result diagnostico senza password; bundle CIFS la include di proposito.
+        assertTrue(pkg.ps1Content.contains("BundleFileName"))
         assertTrue(pkg.cmdContent.contains(WindowsCatalogSetupScript.PS1_FILE_NAME))
         assertTrue(pkg.cmdContent.contains("powershell"))
         assertEquals("CONFIGURA.cmd", pkg.cmdFileName)
