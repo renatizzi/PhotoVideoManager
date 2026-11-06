@@ -1,11 +1,17 @@
 package com.renatizzi.photovideomanager.ui.hub
 
+import android.Manifest
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.core.content.ContextCompat
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -937,11 +943,52 @@ private fun CifsCardStep(
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
     var handoffDraft by remember { mutableStateOf("") }
+    var cameraDenied by remember { mutableStateOf(false) }
     // Name, Storage, Host, Port, User, Password, Anonymous, Folder
     var rowFlags by remember { mutableStateOf(BooleanArray(8) { false }) }
     var cifsSavedConfirmed by remember { mutableStateOf(false) }
     @Suppress("UNUSED_VARIABLE", "UNUSED_PARAMETER")
     val unusedAccess = onAccessYes to onAccessNo
+    val context = LocalContext.current
+    val qrScanLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
+        val contents = result.contents?.trim().orEmpty()
+        if (contents.isNotEmpty()) {
+            handoffDraft = contents
+            onApplySetupHandoff(contents)
+        }
+    }
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (granted) {
+            cameraDenied = false
+            qrScanLauncher.launch(
+                ScanOptions()
+                    .setDesiredBarcodeFormats(ScanOptions.QR_CODE)
+                    .setPrompt(context.getString(R.string.hub_pc5_handoff_scan_prompt))
+                    .setBeepEnabled(false)
+                    .setOrientationLocked(true),
+            )
+        } else {
+            cameraDenied = true
+        }
+    }
+    fun launchQrScan() {
+        when {
+            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
+                PackageManager.PERMISSION_GRANTED -> {
+                cameraDenied = false
+                qrScanLauncher.launch(
+                    ScanOptions()
+                        .setDesiredBarcodeFormats(ScanOptions.QR_CODE)
+                        .setPrompt(context.getString(R.string.hub_pc5_handoff_scan_prompt))
+                        .setBeepEnabled(false)
+                        .setOrientationLocked(true),
+                )
+            }
+            else -> cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
     val share = state.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
     val user = state.cifsUserQualified.trim().ifBlank {
         WindowsCatalogSetupScript.cifsUserCopyText(state.userName)
@@ -990,6 +1037,20 @@ private fun CifsCardStep(
         stringResource(R.string.hub_pc5_handoff_intro),
         style = MaterialTheme.typography.bodyMedium,
     )
+    Button(
+        onClick = { if (!state.busy) launchQrScan() },
+        enabled = !state.busy,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.hub_pc5_handoff_scan))
+    }
+    if (cameraDenied) {
+        Text(
+            stringResource(R.string.hub_pc5_handoff_camera_denied),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+        )
+    }
     OutlinedTextField(
         value = handoffDraft,
         onValueChange = { handoffDraft = it },
@@ -999,7 +1060,7 @@ private fun CifsCardStep(
         label = { Text(stringResource(R.string.hub_pc5_handoff_label)) },
         supportingText = { Text(stringResource(R.string.hub_pc5_handoff_hint)) },
     )
-    Button(
+    OutlinedButton(
         onClick = { onApplySetupHandoff(handoffDraft) },
         enabled = !state.busy && handoffDraft.isNotBlank(),
         modifier = Modifier.fillMaxWidth(),

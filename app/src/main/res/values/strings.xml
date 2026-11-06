@@ -231,10 +231,13 @@
     <string name="hub_pc5_result_imported">Dati del PC pronti: User e Host (IP) disponibili per Copia verso CIFS.</string>
     <string name="hub_pc5_result_missing">Dati PC non ancora in app: usa il codice QR/URI da «Tutto pronto» (primario), oppure digita Host.</string>
     <string name="hub_pc5_retry_recover">Riprova fast-path rete (opzionale)</string>
-    <string name="hub_pc5_handoff_intro">Primario: dal PC a «Tutto pronto» apri il QR MediaManager_setup_handoff.png (o il file .txt) e incolla qui il codice pvmsetup. Non dipende dalla Wi‑Fi. Poi Host avrà l’IP e Copia funzionerà.</string>
-    <string name="hub_pc5_handoff_label">Codice setup (pvmsetup:2;…)</string>
-    <string name="hub_pc5_handoff_hint">Incolla l’URI dal Desktop del PC. La scansione camera arriverà dopo la prova del codec.</string>
-    <string name="hub_pc5_handoff_apply">Applica codice dal PC</string>
+    <string name="hub_pc5_handoff_intro">Primario: a «Tutto pronto» sul PC si apre/salva il QR MediaManager_setup_handoff.png. Inquadra quel QR qui sotto: l’app riceve IP e User (senza password). Non dipende dalla Wi‑Fi tra PC e telefono.</string>
+    <string name="hub_pc5_handoff_scan">Scansiona QR dal PC</string>
+    <string name="hub_pc5_handoff_scan_prompt">Inquadra il QR MediaManager_setup_handoff sul PC</string>
+    <string name="hub_pc5_handoff_camera_denied">Permesso fotocamera negato: concedilo oppure incolla il codice dal file .txt sul Desktop.</string>
+    <string name="hub_pc5_handoff_label">Codice setup (alternativa: incolla)</string>
+    <string name="hub_pc5_handoff_hint">Se non usi la fotocamera: apri MediaManager_setup_handoff.txt sul PC e incolla qui la riga pvmsetup:2;…</string>
+    <string name="hub_pc5_handoff_apply">Applica codice incollato</string>
     <string name="hub_pc5_confirm">Conferma</string>
     <string name="hub_pc5_item_saved">Confermo di aver configurato e salvato CIFS Documents Provider secondo le istruzioni sopra indicate</string>
     <string name="hub_pc5_ultima_azione">Ultima azione: clicca su «Attiva collegamento», seleziona la connessione CIFS appena salvata (Name = MyMedia) e premi «Usa questa cartella». Non restare sull\'elenco share del PC.</string>
