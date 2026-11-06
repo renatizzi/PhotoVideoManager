@@ -17,7 +17,7 @@ class CensusUiStateGroupingTest {
                 source("loc.personal", "Catalogo", "Catalogo", builtIn = true),
                 source("loc.cam", "Camera", "Telefono Renato"),
                 source("loc.dcim", "DCIM", "Telefono Renato"),
-                source("loc.share", "MediaManagerCatalog", "PC / notebook"),
+                source("loc.share", "MediaManagerCatalog", "PC Windows"),
                 source("loc.drive", "Foto", "Google Drive", Availability.UNAVAILABLE),
             ),
             selection = emptyMap(),
@@ -26,7 +26,7 @@ class CensusUiStateGroupingTest {
         val groups = state.deviceGroups
         assertEquals(3, groups.size)
         assertEquals(
-            listOf("Google Drive", "PC / notebook", "Telefono Renato"),
+            listOf("Google Drive", "PC Windows", "Telefono Renato"),
             groups.map { it.deviceLabel },
         )
         val phone = groups.first { it.deviceLabel == "Telefono Renato" }

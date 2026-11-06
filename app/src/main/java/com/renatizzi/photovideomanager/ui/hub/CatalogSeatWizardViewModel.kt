@@ -103,8 +103,12 @@ data class CatalogSeatWizardUiState(
     /** Host/User recuperati a «Tutto pronto» (bundle BT / rete). */
     val pcHostIp: String = "",
     val cifsUserQualified: String = "",
+    /** Nome PC dal bundle (es. DELLRS), per riepilogo import. */
+    val pcComputerName: String = "",
     val setupResultImported: Boolean = false,
     val setupToken: String = "",
+    /** Nome file bundle atteso (univoco per sessione). */
+    val expectedBundleFileName: String = "",
     /** Ascolto rete in corso (fallback hotspot, non percorso felice). */
     val recoveringPcData: Boolean = false,
     /** Dopo export: UI deve aprire share Bluetooth prima di passare al passo 3. */
@@ -497,7 +501,9 @@ class CatalogSeatWizardViewModel(
                 it.copy(
                     pendingShareScripts = false,
                     step = WizardStep.PC_COPY_FILES,
-                    statusMessage = null,
+                    statusMessage =
+                        "Sei di nuovo in MediaManager. Sul PC i file devono essere sul Desktop: " +
+                            "poi spunta e OK.",
                     errorMessage = null,
                 )
             }
@@ -743,6 +749,7 @@ class CatalogSeatWizardViewModel(
             it.copy(
                 cifsUserQualified = userOut,
                 pcHostIp = host,
+                pcComputerName = payload.computerName.ifBlank { it.pcComputerName },
                 temporaryPassword = passwordOut,
                 shareName = payload.shareName.ifBlank { it.shareName },
                 setupResultImported = complete,
@@ -752,7 +759,7 @@ class CatalogSeatWizardViewModel(
                     complete ->
                         "Dati CIFS ricevuti (IP, User, Password): usa Copia su tutti i campi."
                     userOut.isNotBlank() && host.isBlank() ->
-                        "Utente ricevuto; in attesa dell'IP (PC collegato all'hotspot del telefono?)…"
+                        "Utente ricevuto; manca l'IP — inseriscilo a mano nel campo Host oppure reinvia il bundle."
                     host.isNotBlank() && passwordOut.isBlank() ->
                         "Host ricevuto; manca ancora la password nel bundle dal PC…"
                     else -> null
@@ -769,10 +776,15 @@ class CatalogSeatWizardViewModel(
             it.copy(
                 cifsUserQualified = user,
                 pcHostIp = ip,
+                pcComputerName = result.computerName.ifBlank { it.pcComputerName },
                 shareName = result.shareName.ifBlank { it.shareName },
-                setupResultImported = true,
+                setupResultImported = SetupLanAnnounce.isIpv4(ip) && user.isNotBlank(),
                 recoveringPcData = false,
-                errorMessage = null,
+                errorMessage = if (ip.isBlank()) {
+                    "IP non presente nel result: inseriscilo a mano nel campo Host."
+                } else {
+                    null
+                },
                 statusMessage = null,
             )
         }
@@ -811,17 +823,33 @@ class CatalogSeatWizardViewModel(
         viewModelScope.launch {
             _state.update { it.copy(busy = true, errorMessage = null, statusMessage = null) }
             val token = _state.value.setupToken
+            val expectedName = _state.value.expectedBundleFileName
+                .ifBlank { SetupCifsBundle.bundleFileNameForToken(token) }
             val result = withContext(Dispatchers.IO) {
                 runCatching {
                     val raw = appContext.contentResolver.openInputStream(uri)?.use { input ->
                         input.bufferedReader(Charsets.UTF_8).readText()
                     } ?: error("Impossibile leggere il file")
-                    val bundle = SetupCifsBundle.parse(raw, expectedToken = token.ifBlank { null })
-                        ?: error("File non riconosciuto come bundle MediaManager")
-                    if (!bundle.isComplete) {
+                    if (SetupCifsBundle.looksLikeSetupResultNotBundle(raw)) {
                         error(
-                            "Bundle incompleto (servono Host IPv4, User PC\\utente, Password). " +
-                                "Dal Desktop del PC invia di nuovo MediaManager_cifs_bundle.json via Bluetooth.",
+                            "Hai selezionato MediaManager_setup_result.json (senza password). " +
+                                "Dal Desktop del PC invia $expectedName via Bluetooth e seleziona quello.",
+                        )
+                    }
+                    val bundle = SetupCifsBundle.parse(raw, expectedToken = token.ifBlank { null })
+                        ?: error(
+                            "File non riconosciuto come bundle MediaManager. " +
+                                "Serve $expectedName (non setup_result).",
+                        )
+                    if (!bundle.isComplete) {
+                        val missing = buildList {
+                            if (!SetupLanAnnounce.isIpv4(bundle.hostIp)) add("Host IPv4")
+                            if (bundle.userQualified.isBlank()) add("User")
+                            if (bundle.password.isBlank()) add("Password")
+                        }.joinToString(", ")
+                        error(
+                            "Bundle incompleto (manca: $missing). " +
+                                "Dal Desktop del PC invia di nuovo $expectedName via Bluetooth.",
                         )
                     }
                     bundle
@@ -839,9 +867,11 @@ class CatalogSeatWizardViewModel(
                             busy = false,
                             recoveringPcData = false,
                             setupResultImported = true,
-                            step = WizardStep.W2_CIFS,
+                            pcComputerName = bundle.computerName.ifBlank { it.pcComputerName },
+                            // Resta su 4b per mostrare l'esito; OK porta a CIFS.
+                            step = WizardStep.PC_BT_DOWNLOAD_BUNDLE,
                             statusMessage =
-                                "Dati CIFS pronti: Host, User, Password, Folder — solo Copia, senza modifiche.",
+                                "Import riuscito: Host, User e Password pronti. Tocca OK per CIFS.",
                             errorMessage = null,
                         )
                     }
@@ -1071,19 +1101,22 @@ class CatalogSeatWizardViewModel(
             result.fold(
                 onSuccess = { export ->
                     lastExport = export
-                    // Sequenza sincrona: prima share BT (resta al passo 2), poi passo 3.
+                    val bundleName = SetupCifsBundle.bundleFileNameForToken(setupToken)
+                    // Sequenza sincrona: prima share BT (resta al passo 2), poi passo 2b.
                     _state.update {
                         it.copy(
                             busy = false,
                             temporaryPassword = password,
                             setupToken = setupToken,
+                            expectedBundleFileName = bundleName,
                             scriptPrepared = true,
                             downloadsSaved = export.downloadsSaved,
                             usbCopiedTo = export.usbCopiedTo,
                             setupResultImported = false,
                             pendingShareScripts = shareAfterExport && export.shareUris.isNotEmpty(),
                             statusMessage = if (shareAfterExport) {
-                                "Scegli Bluetooth e invia CONFIGURA + sup. Sul PC deve essere attivo «Ricevi file»."
+                                "TELEFONO: nel menu Condividi scegli Bluetooth e il PC. " +
+                                    "Sul PC deve essere già aperto «Ricevi file»."
                             } else {
                                 null
                             },

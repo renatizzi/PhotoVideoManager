@@ -73,15 +73,22 @@ class WindowsSetupScriptExporter(
     }
 
     /**
-     * Piano B: bundle completo (con password) scritto dallo script sulla chiavetta / Download.
+     * Piano B: bundle completo (con password) su chiavetta / Download.
+     * Preferisce il file più recente tra `MediaManager_cifs_bundle*.json` (nome univoco o legacy).
      */
     fun findCifsBundle(expectedToken: String): SetupCifsBundle? {
-        val name = SetupCifsBundle.BUNDLE_FILE_NAME
-        val candidates = mutableListOf<File>()
+        val files = mutableListOf<File>()
+        fun collectFromDir(dir: File?) {
+            if (dir == null || !dir.isDirectory) return
+            dir.listFiles()
+                ?.filter { it.isFile && SetupCifsBundle.isBundleFileName(it.name) }
+                ?.let { files += it }
+        }
         try {
             @Suppress("DEPRECATION")
-            val downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-            candidates += File(downloads, name)
+            collectFromDir(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+            )
         } catch (_: Exception) {
         }
         try {
@@ -89,36 +96,38 @@ class WindowsSetupScriptExporter(
             sm?.storageVolumes?.forEach { volume ->
                 if (!volume.isRemovable) return@forEach
                 val root = volumeDirectory(volume) ?: return@forEach
-                candidates += File(root, name)
-                candidates += File(File(root, "MediaManager"), name)
+                collectFromDir(root)
+                collectFromDir(File(root, "MediaManager"))
             }
         } catch (_: Exception) {
         }
-        for (file in candidates) {
-            if (!file.isFile) continue
-            val text = runCatching { file.readText(Charsets.UTF_8) }.getOrNull() ?: continue
-            val bundle = SetupCifsBundle.parse(text, expectedToken) ?: continue
+        files.sortedByDescending { it.lastModified() }.forEach { file ->
+            val text = runCatching { file.readText(Charsets.UTF_8) }.getOrNull() ?: return@forEach
+            val bundle = SetupCifsBundle.parse(text, expectedToken) ?: return@forEach
             if (bundle.isComplete) return bundle
         }
-        // MediaStore Download (API 29+)
+        // MediaStore Download (API 29+): LIKE sul prefisso, ordine data desc.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             runCatching {
                 val resolver = context.contentResolver
                 val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
                 resolver.query(
                     collection,
-                    arrayOf(MediaStore.Downloads._ID),
-                    "${MediaStore.Downloads.DISPLAY_NAME} = ?",
-                    arrayOf(name),
+                    arrayOf(MediaStore.Downloads._ID, MediaStore.Downloads.DISPLAY_NAME),
+                    "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
+                    arrayOf("${SetupCifsBundle.BUNDLE_FILE_PREFIX}%"),
                     "${MediaStore.Downloads.DATE_MODIFIED} DESC",
                 )?.use { cursor ->
-                    if (!cursor.moveToFirst()) return@use
-                    val id = cursor.getLong(0)
-                    val uri = android.content.ContentUris.withAppendedId(collection, id)
-                    resolver.openInputStream(uri)?.use { input ->
-                        val text = input.bufferedReader(Charsets.UTF_8).readText()
-                        val bundle = SetupCifsBundle.parse(text, expectedToken)
-                        if (bundle != null && bundle.isComplete) return bundle
+                    while (cursor.moveToNext()) {
+                        val display = cursor.getString(1).orEmpty()
+                        if (!SetupCifsBundle.isBundleFileName(display)) continue
+                        val id = cursor.getLong(0)
+                        val uri = android.content.ContentUris.withAppendedId(collection, id)
+                        resolver.openInputStream(uri)?.use { input ->
+                            val text = input.bufferedReader(Charsets.UTF_8).readText()
+                            val bundle = SetupCifsBundle.parse(text, expectedToken)
+                            if (bundle != null && bundle.isComplete) return bundle
+                        }
                     }
                 }
             }
