@@ -10,6 +10,8 @@
 
 **Tesi utente (valutata):** *senza autorizzazione il PC non è governabile dal telefono; se si autorizza via Bluetooth si possono scambiare file e interagire col PC.*
 
+**Seguito prodotto (06/11):** percorso approvato come **BT corriere + script manuale + download bundle dal telefono** — vedi `docs/LOCK_SETUP_BT_BUNDLE_CIFS.md` (form CIFS intero, solo Copia).
+
 ---
 
 ## Verdetto in una frase
