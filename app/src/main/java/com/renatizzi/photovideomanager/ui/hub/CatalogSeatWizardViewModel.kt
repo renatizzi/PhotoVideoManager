@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.renatizzi.photovideomanager.application.CatalogFacade
 import com.renatizzi.photovideomanager.data.hub.PcCatalogSeatGate
-import com.renatizzi.photovideomanager.data.hub.SetupHandoffCodec
+import com.renatizzi.photovideomanager.data.hub.SetupCifsBundle
 import com.renatizzi.photovideomanager.data.hub.SetupLanAnnounce
 import com.renatizzi.photovideomanager.data.hub.WindowsCatalogSetupScript
 import com.renatizzi.photovideomanager.data.hub.WindowsSetupExportResult
@@ -700,18 +700,25 @@ class CatalogSeatWizardViewModel(
                 else -> "" // non usare DESKTOP-xxx come Host CIFS
             }
             val userOut = user.ifBlank { it.cifsUserQualified }
-            val complete = SetupLanAnnounce.isIpv4(host) && userOut.isNotBlank()
+            val passwordOut = payload.password.ifBlank { it.temporaryPassword }
+            val complete = SetupLanAnnounce.isIpv4(host) &&
+                userOut.isNotBlank() &&
+                passwordOut.isNotBlank()
             it.copy(
                 cifsUserQualified = userOut,
                 pcHostIp = host,
+                temporaryPassword = passwordOut,
                 shareName = payload.shareName.ifBlank { it.shareName },
                 setupResultImported = complete,
                 recoveringPcData = !complete,
                 errorMessage = null,
                 statusMessage = when {
-                    complete -> null
+                    complete ->
+                        "Dati CIFS ricevuti (IP, User, Password): usa Copia su tutti i campi."
                     userOut.isNotBlank() && host.isBlank() ->
-                        "Utente ricevuto; cerco ancora l'IP del PC sulla Wi‑Fi…"
+                        "Utente ricevuto; in attesa dell'IP (PC collegato all'hotspot del telefono?)…"
+                    host.isNotBlank() && passwordOut.isBlank() ->
+                        "Host ricevuto; manca ancora la password nel bundle dal PC…"
                     else -> null
                 },
             )
@@ -774,7 +781,7 @@ class CatalogSeatWizardViewModel(
             return
         }
 
-        // Fast-path LAN silenzioso e breve — non è il canale primario (QR/handoff).
+        // Primario: announce bundle completo su hotspot telefono (topologia controllata).
         val cancelled = AtomicBoolean(false)
         val lan = if (token.isNotBlank()) {
             withContext(Dispatchers.IO) {
@@ -783,7 +790,7 @@ class CatalogSeatWizardViewModel(
                         appContext,
                         token,
                         cancelled,
-                        discoverMs = SetupLanAnnounce.FASTPATH_DISCOVER_MS,
+                        discoverMs = SetupLanAnnounce.DISCOVER_MS,
                     )
                 }.getOrNull()
             }
@@ -818,61 +825,89 @@ class CatalogSeatWizardViewModel(
             }
         }
 
-        stopBackgroundLanListen()
-        val partialUser = _state.value.cifsUserQualified.isNotBlank()
+        // Piano B: bundle USB scritto dallo script sullo stesso volume di CONFIGURA.
+        val usbBundle = withContext(Dispatchers.IO) {
+            runCatching { exporter.findCifsBundle(token) }.getOrNull()
+        }
+        if (usbBundle != null && usbBundle.isComplete) {
+            cachedLan.set(SetupLanAnnounce.mergePayloads(cachedLan.get(), usbBundle.toLanPayload()))
+            applyLanPayload(usbBundle.toLanPayload())
+            stopBackgroundLanListen()
+            _state.update { it.copy(busy = false, recoveringPcData = false) }
+            persistDraft()
+            return
+        }
+
+        if (token.isNotBlank() && lanJob?.isActive != true) {
+            startBackgroundLanListen()
+        }
         _state.update {
             it.copy(
                 busy = false,
-                recoveringPcData = false,
+                recoveringPcData = true,
                 setupResultImported = false,
-                errorMessage = if (partialUser) {
-                    "Utente parziale, manca l'IP. Su «Tutto pronto» scansiona il QR " +
-                        "(o Incolla il codice pvmsetup) — non dipende dalla Wi‑Fi. " +
-                        "In alternativa digita l'IP nel campo Host."
-                } else {
-                    "Dati PC non ancora in app. Su «Tutto pronto» apri/scansiona il QR " +
-                        "MediaManager_setup_handoff.png oppure Incolla il codice URI qui sotto. " +
-                        "La Wi‑Fi non serve per questo passo."
-                },
+                errorMessage =
+                    "Bundle CIFS non ricevuto. Verifica: 1) hotspot telefono ON e PC collegato a quell'SSID; " +
+                        "2) finestra «Tutto pronto» ancora aperta. Oppure reinserisci la chiavetta USB " +
+                        "da cui hai lanciato CONFIGURA e tocca «Leggi bundle dalla chiavetta».",
             )
         }
         persistDraft()
     }
 
-    /**
-     * Primario: applica URI `pvmsetup:2;…` (o JSON legacy) dal QR / Incolla.
-     * Abilita Copia Host appena l'IPv4 è in [pcHostIp].
-     */
+    /** Piano B: rilegge [SetupCifsBundle.BUNDLE_FILE_NAME] da USB/Download. */
+    fun importCifsBundleFromRemovable() {
+        viewModelScope.launch {
+            val token = _state.value.setupToken
+            _state.update { it.copy(busy = true, errorMessage = null) }
+            val bundle = withContext(Dispatchers.IO) {
+                runCatching { exporter.findCifsBundle(token) }.getOrNull()
+            }
+            if (bundle == null || !bundle.isComplete) {
+                _state.update {
+                    it.copy(
+                        busy = false,
+                        errorMessage =
+                            "Bundle non trovato. Reinserisci la chiavetta usata con CONFIGURA " +
+                                "(file ${SetupCifsBundle.BUNDLE_FILE_NAME}) oppure ripeti con hotspot.",
+                    )
+                }
+                return@launch
+            }
+            cachedLan.set(SetupLanAnnounce.mergePayloads(cachedLan.get(), bundle.toLanPayload()))
+            applyLanPayload(bundle.toLanPayload())
+            stopBackgroundLanListen()
+            _state.update { it.copy(busy = false, recoveringPcData = false) }
+            persistDraft()
+        }
+    }
+
+    /** @deprecated QR bocciato; tenuto solo per bozze vecchie. Preferire bundle hotspot/USB. */
     fun applySetupHandoffRaw(raw: String) {
         val token = _state.value.setupToken
-        val decoded = SetupHandoffCodec.decode(raw, expectedToken = token)
-        if (!decoded.isOk || decoded.handoff == null) {
+        val fromBundle = SetupCifsBundle.parse(raw, expectedToken = token)
+        if (fromBundle != null && fromBundle.isComplete) {
+            cachedLan.set(SetupLanAnnounce.mergePayloads(cachedLan.get(), fromBundle.toLanPayload()))
+            applyLanPayload(fromBundle.toLanPayload())
+            stopBackgroundLanListen()
             _state.update {
                 it.copy(
-                    errorMessage = decoded.error?.message
-                        ?: "Codice setup non valido",
-                    statusMessage = null,
+                    recoveringPcData = false,
+                    setupResultImported = true,
+                    errorMessage = null,
+                    statusMessage = "Bundle CIFS applicato (IP, User, Password).",
                 )
             }
+            persistDraft()
             return
         }
-        val payload = decoded.handoff.toLanPayload()
-        cachedLan.set(SetupLanAnnounce.mergePayloads(cachedLan.get(), payload))
-        applyLanPayload(payload)
-        stopBackgroundLanListen()
         _state.update {
             it.copy(
-                recoveringPcData = false,
-                setupResultImported = payload.isComplete,
-                errorMessage = null,
-                statusMessage = if (payload.isComplete) {
-                    "Dati PC ricevuti dal codice: Host e User pronti per Copia verso CIFS."
-                } else {
-                    "Codice parziale: completa Host/User se mancano."
-                },
+                errorMessage =
+                    "Serve il bundle completo con password (hotspot o file USB), " +
+                        "non il vecchio codice QR senza password.",
             )
         }
-        persistDraft()
     }
 
     /** @deprecated bozze: usa [confirmCopyChecked]. */

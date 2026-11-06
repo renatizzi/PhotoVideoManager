@@ -19,18 +19,19 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
 /**
- * Recupero IP/User dopo «Tutto pronto»:
- * - il PC espone i dati in HTTP (porta [HTTP_PORT]) e invia anche UDP;
- * - l’app cerca in HTTP sulla rete locale e ascolta UDP;
- * - non si ferma al primo pacchetto parziale: serve un IPv4 reale + utente.
+ * Recupero bundle CIFS dopo «Tutto pronto» (primario su **hotspot telefono**):
+ * - il PC espone il bundle in HTTP (porta [HTTP_PORT]) e UDP;
+ * - payload completo: IP, User, **Password**, share/folder/name/port;
+ * - non si ferma al primo pacchetto parziale.
  */
 object SetupLanAnnounce {
     const val UDP_PORT = 38455
     const val HTTP_PORT = 38456
     const val MAGIC = "PVMSETUP1"
+    /** Su hotspot (topologia controllata) attendiamo il bundle pieno. */
     const val DISCOVER_MS = 60_000L
-    /** Fast-path silenzioso dopo QR-first: non bloccare l’utente sulla LAN. */
-    const val FASTPATH_DISCOVER_MS = 12_000L
+    /** Tentativo breve se non in percorso hotspot. */
+    const val FASTPATH_DISCOVER_MS = 15_000L
     private const val RECV_TIMEOUT_MS = 800
     private const val HTTP_CONNECT_MS = 400
     private const val HTTP_READ_MS = 400
@@ -43,6 +44,10 @@ object SetupLanAnnounce {
         val userQualified: String,
         val shareName: String,
         val computerName: String,
+        val password: String = "",
+        val port: String = SetupCifsBundle.DEFAULT_PORT,
+        val folder: String = WindowsCatalogSetupScript.DEFAULT_SHARE,
+        val connectionName: String = WindowsCatalogSetupScript.DEFAULT_SHARE,
     ) {
         /** Host da mettere in CIFS: solo IPv4; mai il solo nome PC. */
         val hostForCifs: String
@@ -53,8 +58,10 @@ object SetupLanAnnounce {
         val hasUser: Boolean
             get() = userQualified.isNotBlank() || computerName.isNotBlank()
 
-        /** Pronto per compilare il form CIFS senza altri tentativi. */
-        val isComplete: Boolean get() = hasIpv4 && hasUser
+        val hasPassword: Boolean get() = password.isNotBlank()
+
+        /** Pronto per Copia CIFS completo (Host + User + Password). */
+        val isComplete: Boolean get() = hasIpv4 && hasUser && hasPassword
     }
 
     fun isIpv4(value: String): Boolean {
@@ -81,13 +88,20 @@ object SetupLanAnnounce {
         }
         val user = field(text, "user").orEmpty()
         val pc = field(text, "pc").orEmpty()
-        if (!isIpv4(ip) && user.isBlank() && pc.isBlank()) return null
+        val password = field(text, "password").orEmpty()
+        if (!isIpv4(ip) && user.isBlank() && pc.isBlank() && password.isBlank()) return null
         return Payload(
             token = token,
             hostIp = ip,
             userQualified = user,
             shareName = field(text, "share").orEmpty(),
             computerName = pc,
+            password = password,
+            port = field(text, "port").orEmpty().ifBlank { SetupCifsBundle.DEFAULT_PORT },
+            folder = field(text, "folder").orEmpty()
+                .ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE },
+            connectionName = field(text, "name").orEmpty()
+                .ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE },
         )
     }
 
@@ -103,6 +117,10 @@ object SetupLanAnnounce {
             userQualified = incoming.userQualified.ifBlank { current.userQualified },
             shareName = incoming.shareName.ifBlank { current.shareName },
             computerName = incoming.computerName.ifBlank { current.computerName },
+            password = incoming.password.ifBlank { current.password },
+            port = incoming.port.ifBlank { current.port },
+            folder = incoming.folder.ifBlank { current.folder },
+            connectionName = incoming.connectionName.ifBlank { current.connectionName },
         )
     }
 

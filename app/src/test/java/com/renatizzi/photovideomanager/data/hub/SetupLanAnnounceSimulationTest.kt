@@ -25,7 +25,7 @@ class SetupLanAnnounceSimulationTest {
     fun httpDiscover_fillsIpv4AndUser_firstShot() {
         val token = "simhttp" + System.nanoTime().toString(16).takeLast(8)
         val body =
-            """{"v":1,"m":"PVMSETUP1","t":"$token","ip":"","user":"DESKTOP-E5C1L4E\\MediaManager","share":"MediaManagerCatalog","pc":"DESKTOP-E5C1L4E","ips":""}"""
+            """{"v":3,"m":"PVMSETUP1","t":"$token","ip":"","user":"DESKTOP-E5C1L4E\\MediaManager","password":"SimPass1!","share":"MediaManagerCatalog","pc":"DESKTOP-E5C1L4E","ips":""}"""
         val server = startHttpAnnouncer(body)
         try {
             val got = SetupLanAnnounce.discoverNetwork(
@@ -47,7 +47,7 @@ class SetupLanAnnounceSimulationTest {
     fun udpDiscover_usesPacketSourceIp_whenJsonIpEmpty() {
         val token = "simudp" + System.nanoTime().toString(16).takeLast(8)
         val body =
-            """{"v":1,"m":"PVMSETUP1","t":"$token","ip":"","user":"DESKTOP-E5C1L4E\\MediaManager","share":"MediaManagerCatalog","pc":"DESKTOP-E5C1L4E"}"""
+            """{"v":3,"m":"PVMSETUP1","t":"$token","ip":"","user":"DESKTOP-E5C1L4E\\MediaManager","password":"SimPass1!","share":"MediaManagerCatalog","pc":"DESKTOP-E5C1L4E"}"""
         val stop = AtomicBoolean(false)
         val sender = startUdpBlast(body, stop)
         try {
@@ -73,7 +73,7 @@ class SetupLanAnnounceSimulationTest {
     @Test
     fun merge_doesNotStopOnUserOnly_untilIpv4Arrives() {
         val userOnly = SetupLanAnnounce.parsePayload(
-            """{"v":1,"m":"PVMSETUP1","t":"tok","ip":"","user":"PC\\MediaManager","share":"S","pc":"PC"}""",
+            """{"v":3,"m":"PVMSETUP1","t":"tok","ip":"","user":"PC\\MediaManager","password":"p","share":"S","pc":"PC"}""",
         )!!
         assertTrue(userOnly.hasUser)
         assertTrue(!userOnly.hasIpv4)
@@ -81,19 +81,20 @@ class SetupLanAnnounceSimulationTest {
         assertEquals("", userOnly.hostForCifs)
 
         val withIp = SetupLanAnnounce.parsePayload(
-            """{"v":1,"m":"PVMSETUP1","t":"tok","ip":"192.168.68.68","user":"","share":"S","pc":"PC"}""",
+            """{"v":3,"m":"PVMSETUP1","t":"tok","ip":"192.168.68.68","user":"","password":"","share":"S","pc":"PC"}""",
         )!!
         val merged = SetupLanAnnounce.mergePayloads(userOnly, withIp)
         assertTrue(merged.isComplete)
         assertEquals("192.168.68.68", merged.hostForCifs)
         assertEquals("PC\\MediaManager", merged.userQualified)
+        assertEquals("p", merged.password)
     }
 
     @Test
     fun stress_httpDiscover_succeedsEveryTime() {
         val token = "stress" + System.nanoTime().toString(16).takeLast(8)
         val body =
-            """{"v":1,"m":"PVMSETUP1","t":"$token","ip":"10.0.0.9","user":"DESKTOP-E5C1L4E\\MediaManager","share":"MediaManagerCatalog","pc":"DESKTOP-E5C1L4E","ips":"10.0.0.9,192.168.68.68"}"""
+            """{"v":3,"m":"PVMSETUP1","t":"$token","ip":"10.0.0.9","user":"DESKTOP-E5C1L4E\\MediaManager","password":"SimPass1!","share":"MediaManagerCatalog","pc":"DESKTOP-E5C1L4E","ips":"10.0.0.9,192.168.68.68"}"""
         val server = startHttpAnnouncer(body)
         val ok = AtomicInteger(0)
         try {
@@ -119,7 +120,7 @@ class SetupLanAnnounceSimulationTest {
     @Test
     fun parse_ipsField_fallbackWhenIpEmpty() {
         val p = SetupLanAnnounce.parsePayload(
-            """{"v":1,"m":"PVMSETUP1","t":"t1","ip":"","user":"A\\B","share":"S","pc":"A","ips":"192.168.68.68,10.0.0.1"}""",
+            """{"v":3,"m":"PVMSETUP1","t":"t1","ip":"","user":"A\\B","password":"z","share":"S","pc":"A","ips":"192.168.68.68,10.0.0.1"}""",
         )
         assertNotNull(p)
         assertEquals("192.168.68.68", p!!.hostIp)

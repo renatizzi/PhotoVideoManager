@@ -75,7 +75,9 @@ class WindowsCatalogSetupScriptTest {
         assertTrue(pkg.ps1Content.contains("#Requires -RunAsAdministrator"))
         assertTrue(pkg.ps1Content.contains("New-LocalUser") || pkg.ps1Content.contains("Set-LocalUser"))
         assertTrue(pkg.ps1Content.contains("MediaManager_setup_result.json"))
-        assertFalse(pkg.ps1Content.contains("password ="))
+        assertTrue(pkg.ps1Content.contains("MediaManager_cifs_bundle.json"))
+        // Bundle include password; il result.json storico no (solo metadati).
+        assertTrue(pkg.ps1Content.contains("password ="))
         assertTrue(pkg.cmdContent.contains(WindowsCatalogSetupScript.PS1_FILE_NAME))
         assertTrue(pkg.cmdContent.contains("powershell"))
         assertEquals("CONFIGURA.cmd", pkg.cmdFileName)
@@ -177,13 +179,13 @@ class WindowsCatalogSetupScriptTest {
         assertTrue(ps1.contains("abc123def456"))
         assertTrue(ps1.contains("PVMSETUP1"))
         assertTrue(ps1.contains("FromBase64String"))
-        assertTrue(ps1.contains("pvmsetup:2;"))
-        assertTrue(ps1.contains("MediaManager_setup_handoff"))
-        assertTrue(ps1.contains("QRCoder.dll"))
-        assertTrue(ps1.contains("Fast-path rete"))
+        assertTrue(ps1.contains("MediaManager_cifs_bundle.json"))
+        assertTrue(ps1.contains("HOTSPOT"))
+        assertTrue(ps1.contains("password = ${'$'}PlainPassword") || ps1.contains("password ="))
         assertTrue(ps1.contains("ConvertTo-Json -Compress"))
         assertTrue(ps1.contains("ips"))
-        assertFalse(ps1.contains("recupera da sola"))
+        assertFalse(ps1.contains("pvmsetup:2;"))
+        assertFalse(ps1.contains("Scansiona il QR"))
         assertFalse(ps1.contains("Esito (fuori dalla condivisione)"))
         assertFalse(
             ps1.lines().any {
@@ -196,10 +198,8 @@ class WindowsCatalogSetupScriptTest {
             },
         )
         assertFalse(ps1.contains("Copia dal Desktop sul telefono"))
-        assertTrue(cmd.contains("MediaManager_setup_handoff.png"))
+        assertTrue(cmd.contains("HOTSPOT") || cmd.contains("chiavetta"))
         assertTrue(cmd.contains("pause"))
-        // Password must never appear in handoff JSON template fields list as a key write.
-        assertFalse(ps1.contains("password = ${'$'}PlainPassword"))
         val ann = WindowsCatalogSetupScript.buildAnnouncerScript()
         assertTrue(ann.contains("TcpListener"))
         assertTrue(ann.contains("__PVM_PAYLOAD__"))
