@@ -1,10 +1,11 @@
 # Backlog UX — Wizard Setup Catalogo (PC)
 
-**Aggiornato:** 23/10/2026 — proposta unica visibilità fonti; IP recovery parcheggiato.  
+**Aggiornato:** 08/11/2026 — nota BT: nomi file + unica versione sul Desktop.  
 **Specifica UI:** `docs/reference/videate-utente-setup-catalogo-pc.md`  
 **PPT V2:** `docs/reference/revisione_guida_V2.pptx`  
 **Non usare come specifica:** `docs/reference/template-videate-wizard-pc.md`  
-**Proposta blocco P0 Acquisisci (convalidata → 0.16.51):** `docs/PROPOSTA_VISIBILITA_FONTI_ACQUISISCI.md` · prova: `docs/GUIDA_TEST_0.16.51_ACQUISISCI.md`
+**Proposta blocco P0 Acquisisci (convalidata → 0.16.51):** `docs/PROPOSTA_VISIBILITA_FONTI_ACQUISISCI.md` · prova: `docs/GUIDA_TEST_0.16.51_ACQUISISCI.md`  
+**Lock BT:** `docs/LOCK_SETUP_BT_BUNDLE_CIFS.md`
 
 ---
 
@@ -59,6 +60,15 @@
 10. **Istruzione avvio** — ✅ doppio clic + UAC.  
 11. **Chrome titolo/sottotitolo** — ✅ passi PPT 0–5 (non «Passo N di 10»).
 
+### P1 — Setup PC Bluetooth (annotato Renato 08/11/2026) — **solo nota, non implementare ora**
+
+16. **Nomi file comprensibili (come fatto per CONFIGURA/sup)** — I JSON post «Tutto pronto» (`MediaManager_cifs_bundle_….json`, `MediaManager_setup_result.json`) confondono: l’utente non sa quale inviare. Rivedere i nomi in stile chiaro/azione (stesso criterio usato per `CONFIGURA` / `sup`), e allineare testi app + messaggi script.  
+17. **Una sola versione sul Desktop (overwrite)** — A ogni nuovo tentativo i file sul Desktop del PC devono **sostituire** quelli precedenti: resta solo l’ultima versione. Vale per:
+    - i file post-script (bundle + result);
+    - i **3 file** della preparazione CONFIGURA (es. `CONFIGURA`, `sup`, e l’eventuale terzo del pacchetto di sessione).  
+    Evitare accumulo di omonimi / versioni obsolete che spingono a scegliere il file sbagliato.  
+    *Stato:* backlog aperto; **nessuna modifica codice** in questa annotazione.
+
 ### P2 — Fuori Wizard PC immediato
 12. Pagina **Configura** «stile Utility» (slide 2 PPT).  
 13. Completare rami Cloud/NAS (oggi stub).  
@@ -105,4 +115,6 @@ Aperti:
 - **BL-UI-10** Setup Sorgenti «cartella da censire» (landing dedicata)
 - **BL-UI-11** Uniformare stile bottoni / microfono ricerca non su tutti i motori
 - **BL-UI-12** Funzione di **pulizia dati app** (prefs Catalogo, bozze wizard, indici/censimenti, cache MediaManager) — richiesta Renato 01/11 con Tranche A 0.16.57; non cancellare i file utente nelle cartelle SAF
+- **BL-BT-01** Nomi file post-script comprensibili (bundle/result) — come CONFIGURA/sup (Renato 08/11)
+- **BL-BT-02** Desktop: overwrite unica versione (bundle/result + 3 file CONFIGURA) (Renato 08/11)
 - Font/stile carattere — correzione UI differita (accordo 30/10)
