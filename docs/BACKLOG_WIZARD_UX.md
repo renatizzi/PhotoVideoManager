@@ -60,14 +60,11 @@
 10. **Istruzione avvio** — ✅ doppio clic + UAC.  
 11. **Chrome titolo/sottotitolo** — ✅ passi PPT 0–5 (non «Passo N di 10»).
 
-### P1 — Setup PC Bluetooth (annotato Renato 08/11/2026) — **solo nota, non implementare ora**
+### P1 — Setup PC Bluetooth (annotato Renato 08/11/2026; template convalidato 09/11)
 
-16. **Nomi file comprensibili (come fatto per CONFIGURA/sup)** — I JSON post «Tutto pronto» (`MediaManager_cifs_bundle_….json`, `MediaManager_setup_result.json`) confondono: l’utente non sa quale inviare. Rivedere i nomi in stile chiaro/azione (stesso criterio usato per `CONFIGURA` / `sup`), e allineare testi app + messaggi script.  
-17. **Una sola versione sul Desktop (overwrite)** — A ogni nuovo tentativo i file sul Desktop del PC devono **sostituire** quelli precedenti: resta solo l’ultima versione. Vale per:
-    - i file post-script (bundle + result);
-    - i **3 file** della preparazione CONFIGURA (es. `CONFIGURA`, `sup`, e l’eventuale terzo del pacchetto di sessione).  
-    Evitare accumulo di omonimi / versioni obsolete che spingono a scegliere il file sbagliato.  
-    *Stato:* backlog aperto; **nessuna modifica codice** in questa annotazione.
+16. **Nomi file comprensibili (come fatto per CONFIGURA/sup)** — JSON post «Tutto pronto» → TO-BE `DATI_CIFS.json` (da inviare/importare) e `no_pw.json` (ignorare). Allineare testi app + messaggi script.  
+17. **Una sola versione sul Desktop (overwrite)** — A ogni nuovo tentativo i file sul Desktop devono **sostituire** quelli precedenti (bundle/result + 3 file CONFIGURA).  
+18. **UX Ottimizzazione BT (template v2 convalidato 09/11)** — Specifica statica: `docs/reference/PVM_Template_Statici_Ottimizzazione_Setup_PC_BT_v2.pdf`. Raccomandazioni congelate: (1) guida sempre sul telefono, stampa opzionale; (2) punti accordion anti-scroll; (3) riepilogo fasi in **unica pagina** (flag auto + OK + Indietro fase; piede Annulla|CONFERMA); (4) rami B/C coerenti con A. *Stato:* template OK — **sviluppo solo dopo autorizzazione esplicita**.
 
 ### P2 — Fuori Wizard PC immediato
 12. Pagina **Configura** «stile Utility» (slide 2 PPT).  
