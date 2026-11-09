@@ -17,7 +17,7 @@ object SafPathLabels {
     const val DEVICE_GOOGLE_DRIVE = "Google Drive"
     const val DEVICE_DOWNLOADS = "Download"
     /** Share Catalogo / PC Windows tipico (CIFS Documents Provider). */
-    const val DEVICE_PC_NOTEBOOK = "PC / notebook"
+    const val DEVICE_PC_NOTEBOOK = "PC Windows"
     const val DEVICE_NETWORK_NAS = "Disco di rete / NAS"
     const val DEVICE_CLOUD_OTHER = "Cloud / altro archivio"
 
@@ -55,7 +55,7 @@ object SafPathLabels {
 
     /**
      * Etichetta dispositivo rete per UI (LOCK path): solo il tipo
-     * (`Disco di rete / NAS` / `PC / notebook`), **senza** `· host`
+     * (`Disco di rete / NAS` / `PC Windows`), **senza** `· host`
      * (l’host non va accanto al nome; la cartella sta in `\path`).
      */
     fun networkDeviceLabelFromHints(
@@ -73,8 +73,9 @@ object SafPathLabels {
             .joinToString(" ")
             .lowercase()
         return when {
-            // Solo lo share Catalogo Windows dedicato → PC / notebook.
-            blob.contains("mediamanagercatalog") -> DEVICE_PC_NOTEBOOK
+            // Share Catalogo Windows dedicato (MyMedia o legacy MediaManagerCatalog) → PC.
+            blob.contains("mediamanagercatalog") ||
+                Regex("""\bmymedia\b""").containsMatchIn(blob) -> DEVICE_PC_NOTEBOOK
             // LOCK S25 #1: disco/share di rete (anche cartella «MediaManager(sda1)») = NAS, non PC.
             blob.contains("synology") ||
                 blob.contains("qnap") ||

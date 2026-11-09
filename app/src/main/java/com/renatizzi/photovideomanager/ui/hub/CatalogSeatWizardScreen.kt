@@ -55,6 +55,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.renatizzi.photovideomanager.R
+import com.renatizzi.photovideomanager.data.hub.SetupCifsBundle
 import com.renatizzi.photovideomanager.data.hub.SetupLanAnnounce
 import com.renatizzi.photovideomanager.data.hub.WindowsCatalogSetupScript
 import com.renatizzi.photovideomanager.data.storage.NetworkDriveAssistant
@@ -233,6 +234,7 @@ fun CatalogSeatWizardScreen(
                 onBack = { onGoStep(WizardStep.PC_USB_PREPARE) },
                 busy = state.busy,
                 scriptPrepared = state.scriptPrepared,
+                statusMessage = state.statusMessage,
             )
             WizardStep.PC_RUN_SCRIPT,
             WizardStep.W2_SCRIPT_FIND,
@@ -663,6 +665,11 @@ private fun AvailabilityChecklistStep(
     busy: Boolean,
 ) {
     Text(stringResource(R.string.hub_pc1_intro))
+    Text(
+        stringResource(R.string.hub_pc1_note_path),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+    )
     val items = listOf(
         WizardChecklistItem(stringResource(R.string.hub_pc1_item_phone)),
         WizardChecklistItem(stringResource(R.string.hub_pc1_item_pc)),
@@ -689,6 +696,7 @@ private fun BtPrepareChecklistStep(
     val items = listOf(
         WizardChecklistItem(stringResource(R.string.hub_pc2_item_unlocked)),
         WizardChecklistItem(stringResource(R.string.hub_pc2_item_connect)),
+        WizardChecklistItem(stringResource(R.string.hub_pc2_item_pair_how)),
         WizardChecklistItem(
             label = stringResource(R.string.hub_pc2_item_transfer),
             nestedBullets = listOf(
@@ -700,6 +708,11 @@ private fun BtPrepareChecklistStep(
         ),
     )
     ChecklistOkBlock(items = items, onOk = onOk, onBack = onBack, busy = busy)
+    Text(
+        stringResource(R.string.hub_pc2_tip_phonelink),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+    )
 }
 
 @Composable
@@ -710,6 +723,16 @@ private fun DownloadBundleStep(
     onContinue: () -> Unit,
 ) {
     Text(stringResource(R.string.hub_pc4b_intro))
+    val expected = state.expectedBundleFileName.ifBlank {
+        SetupCifsBundle.bundleFileNameForToken(state.setupToken)
+    }
+    if (expected.isNotBlank()) {
+        Text(
+            stringResource(R.string.hub_pc4b_expected_file, expected),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+    }
     if (!state.setupResultImported) {
         Text(
             stringResource(R.string.hub_pc4b_waiting),
@@ -718,10 +741,39 @@ private fun DownloadBundleStep(
         )
     } else {
         Text(
-            state.statusMessage ?: stringResource(R.string.hub_pc4b_item_ready),
-            style = MaterialTheme.typography.bodySmall,
+            stringResource(R.string.hub_pc4b_outcome_title),
+            style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
         )
+        val pc = state.pcComputerName.ifBlank { "—" }
+        val ip = state.pcHostIp.trim().ifBlank { "—" }
+        val share = state.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
+        val user = state.cifsUserQualified.ifBlank { "—" }
+        Text(stringResource(R.string.hub_pc4b_outcome_pc, pc))
+        Text(stringResource(R.string.hub_pc4b_outcome_ip, ip))
+        Text(stringResource(R.string.hub_pc4b_outcome_share, share))
+        Text(stringResource(R.string.hub_pc4b_outcome_user, user))
+        Text(
+            if (state.temporaryPassword.isNotBlank()) {
+                stringResource(R.string.hub_pc4b_outcome_password_ok)
+            } else {
+                stringResource(R.string.hub_pc4b_outcome_password_missing)
+            },
+        )
+        if (!SetupLanAnnounce.isIpv4(state.pcHostIp)) {
+            Text(
+                stringResource(R.string.hub_pc4b_outcome_ip_missing),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
+        state.statusMessage?.let {
+            Text(
+                it,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
     }
     Button(
         onClick = onPickBundle,
@@ -753,8 +805,16 @@ private fun CopyFilesChecklistStep(
     onBack: () -> Unit,
     busy: Boolean,
     scriptPrepared: Boolean,
+    statusMessage: String? = null,
 ) {
     Text(stringResource(R.string.hub_pc3_intro))
+    statusMessage?.let {
+        Text(
+            it,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+    }
     val items = listOf(
         WizardChecklistItem(
             label = stringResource(R.string.hub_pc3_item_download),

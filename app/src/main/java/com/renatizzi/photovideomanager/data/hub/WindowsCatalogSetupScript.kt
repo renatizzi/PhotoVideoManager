@@ -69,6 +69,8 @@ object WindowsCatalogSetupScript {
         val cmdFileName: String = CMD_FILE_NAME,
         val ps1Content: String,
         val cmdContent: String,
+        /** Nome univoco del bundle JSON prodotto a «Tutto pronto». */
+        val bundleFileName: String = SetupCifsBundle.BUNDLE_FILE_NAME,
     )
 
     fun generatePassword(length: Int = 14): String {
@@ -132,10 +134,12 @@ object WindowsCatalogSetupScript {
             "Token setup non valido"
         }
 
+        val bundleFileName = SetupCifsBundle.bundleFileNameForToken(params.setupToken)
         val pkg = Package(
             params = params,
-            ps1Content = buildPs1(params),
-            cmdContent = buildCmd(),
+            ps1Content = buildPs1(params, bundleFileName),
+            cmdContent = buildCmd(bundleFileName),
+            bundleFileName = bundleFileName,
         )
         assertAsciiDeliverable(pkg.ps1Content, "ps1")
         assertAsciiDeliverable(pkg.cmdContent, "cmd")
@@ -266,7 +270,7 @@ object WindowsCatalogSetupScript {
         """.trimIndent().replace("\n", "\r\n") + "\r\n"
     }
 
-    private fun buildCmd(): String = crlf(
+    private fun buildCmd(bundleFileName: String): String = crlf(
         """
         @echo off
         setlocal
@@ -288,8 +292,10 @@ object WindowsCatalogSetupScript {
           echo  Configurazione NON completata. Codice: %ERR%
           echo  10=cartella 20=utente 30=condivisione 40=NTFS 50=rete/firewall 60=verifica
         ) else (
-          echo  Tutto pronto. Collega il PC all'HOTSPOT del telefono e torna a MediaManager:
-          echo  l'app recupera IP+User+Password. Oppure reinserisci la chiavetta USB.
+          echo  Tutto pronto. PROSSIMO PASSO: Bluetooth
+          echo  1^) Sul Desktop trovi $bundleFileName
+          echo  2^) Invia QUEL file al telefono via Bluetooth ^(Invia file^)
+          echo  3^) Nell'app: Scarica dati CIFS e seleziona il file ricevuto
         )
         echo.
         pause
@@ -301,13 +307,14 @@ object WindowsCatalogSetupScript {
     private fun psQuote(value: String): String =
         "'" + value.replace("'", "''") + "'"
 
-    private fun buildPs1(params: Params): String {
+    private fun buildPs1(params: Params, bundleFileName: String): String {
         val folder = psQuote(params.folderPath.trim())
         val share = psQuote(params.shareName.trim())
         val user = psQuote(params.userName.trim())
         val password = psQuote(params.temporaryPassword)
         val setupToken = psQuote(params.setupToken.trim())
         val resultName = psQuote(RESULT_FILE_NAME)
+        val bundleNameQuoted = psQuote(bundleFileName)
         val logName = psQuote(LOG_FILE_NAME)
         val announceUdp = SETUP_ANNOUNCE_UDP_PORT
         val announceHttp = SETUP_ANNOUNCE_HTTP_PORT
@@ -332,6 +339,7 @@ ${d}UserName       = $user
 ${d}PlainPassword  = $password
 ${d}SetupToken     = $setupToken
 ${d}ResultFileName = $resultName
+${d}BundleFileName = $bundleNameQuoted
 ${d}LogFileName    = $logName
 ${d}AnnounceUdp    = $announceUdp
 ${d}AnnounceHttp   = $announceHttp
@@ -589,10 +597,10 @@ try {
   Write-Host "AVVISO: se il PC va in sospensione, la cartella sparisce dalla rete."
   Write-Host ""
   Write-Host "PROSSIMO PASSO (Bluetooth):" -ForegroundColor Cyan
-  Write-Host "1) Sul Desktop trovi MediaManager_cifs_bundle.json"
-  Write-Host "2) Invia quel file al telefono via Bluetooth (Invia file)"
+  Write-Host ("1) Sul Desktop trovi " + ${d}BundleFileName)
+  Write-Host "2) Invia QUEL file al telefono via Bluetooth (Invia file)"
   Write-Host "3) Nell'app: Scarica dati CIFS e seleziona il file ricevuto"
-  Write-Host "Fallback rete: hotspot telefono (opzionale). Torna all'app."
+  Write-Host "Non usare file MediaManager_cifs_bundle di tentativi precedenti."
   Write-Host ""
 
   # Bundle CIFS completo (con password) su volume script / Desktop = piano B USB.
@@ -612,7 +620,7 @@ try {
       ips = (${d}allIps -join ',')
     }
     ${d}bundleJson = (${d}bundleObj | ConvertTo-Json -Compress)
-    ${d}bundleName = 'MediaManager_cifs_bundle.json'
+    ${d}bundleName = ${d}BundleFileName
     ${d}bundleTargets = @(
       (Join-Path ${d}PSScriptRoot ${d}bundleName),
       (Join-Path ${d}ParentDir ${d}bundleName)
@@ -629,7 +637,7 @@ try {
     Write-Step 'Bundle CIFS file non scritto.'
   }
 
-  # Announce rete (primario su hotspot): HTTP+UDP ~5 min, bundle CON password.
+  # Announce rete (fallback hotspot/LAN): HTTP+UDP ~5 min, bundle CON password.
   try {
     ${d}ipsText = (${d}allIps -join ',')
     ${d}payload = ([ordered]@{
@@ -652,12 +660,12 @@ try {
     Set-Content -LiteralPath ${d}announcerPs1 -Value ${d}annBody -Encoding ASCII
     ${d}annProc = Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-WindowStyle','Hidden','-File', ${d}announcerPs1) -WindowStyle Hidden -PassThru
     if (${d}annProc) {
-      Write-Step ('Servizio bundle per app avviato (hotspot). IP=' + ${d}ipText)
+      Write-Step ('Servizio bundle rete (fallback) avviato. IP=' + ${d}ipText)
     } else {
-      Write-Step 'Servizio bundle rete non avviato: usa chiavetta (MediaManager_cifs_bundle.json).'
+      Write-Step ('Servizio bundle rete non avviato: usa Bluetooth o chiavetta (' + ${d}BundleFileName + ').')
     }
   } catch {
-    Write-Step 'Servizio bundle rete non avviato: usa chiavetta (MediaManager_cifs_bundle.json).'
+    Write-Step ('Servizio bundle rete non avviato: usa Bluetooth o chiavetta (' + ${d}BundleFileName + ').')
   }
 
   ${d}ExitCode = 0
