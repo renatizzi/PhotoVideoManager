@@ -1,6 +1,6 @@
 # Backlog UX — Wizard Setup Catalogo (PC)
 
-**Aggiornato:** 08/11/2026 — nota BT: nomi file + unica versione sul Desktop.  
+**Aggiornato:** 16/11/2026 — template BT v3 da Ultime modifiche (3 rami, 4 fasi).  
 **Specifica UI:** `docs/reference/videate-utente-setup-catalogo-pc.md`  
 **PPT V2:** `docs/reference/revisione_guida_V2.pptx`  
 **Non usare come specifica:** `docs/reference/template-videate-wizard-pc.md`  
@@ -64,7 +64,7 @@
 
 16. **Nomi file comprensibili (come fatto per CONFIGURA/sup)** — JSON post «Tutto pronto» → TO-BE `DATI_CIFS.json` (da inviare/importare) e `no_pw.json` (ignorare). Allineare testi app + messaggi script.  
 17. **Una sola versione sul Desktop (overwrite)** — A ogni nuovo tentativo i file sul Desktop devono **sostituire** quelli precedenti (bundle/result + 3 file CONFIGURA).  
-18. **UX Ottimizzazione BT (template v2 convalidato 09/11)** — Specifica statica: `docs/reference/PVM_Template_Statici_Ottimizzazione_Setup_PC_BT_v2.pdf`. Raccomandazioni congelate: (1) guida sempre sul telefono, stampa opzionale; (2) punti accordion anti-scroll; (3) riepilogo fasi in **unica pagina** (flag auto + OK + Indietro fase; piede Annulla|CONFERMA); (4) rami B/C coerenti con A. *Stato:* template OK — **sviluppo solo dopo autorizzazione esplicita**.
+18. **UX Ottimizzazione BT (template v3 — Ultime modifiche 16/11)** — Specifica: `docs/reference/PVM_Template_Statici_Ottimizzazione_Setup_PC_BT_v3.pdf`. Congelato: niente A/B/C; solo «Telefono»; topbar consolidata; 4 fasi accordion; stampa = icona in descrizione; tre rami (già associati / pairing / USB) stesso scheletro; conferma lineare 1×1 + checkpoint sotto OK; messaggi conferma letterali senza BT/USB. Flusso primario consigliato: guida+conferma nella stessa videata ramo (riepilogo dedicato opzionale). *Stato:* template aggiornato — **nessuno sviluppo finché non autorizzato**.
 
 ### P2 — Fuori Wizard PC immediato
 12. Pagina **Configura** «stile Utility» (slide 2 PPT).  

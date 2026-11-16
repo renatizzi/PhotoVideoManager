@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>MediaManager — Template statici Setup PC BT v3 (Ultime modifiche)</title>
+<style>
+  :root {
+    --bg:#f6f4ef; --ink:#1a1a1a; --muted:#5c5c5c; --line:#d7d2c8;
+    --accent:#1565c0; --accent2:#0d47a1; --ok:#2e7d32; --warn:#b26a00; --off:#b71c1c;
+    --phone:#fff; --top:#1565c0; --chip:#e8eef7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Calibri,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.35}
+  header.doc,section,footer,.banner{max-width:1120px;margin:0 auto;padding:0 24px}
+  header.doc{padding-top:28px;padding-bottom:8px}
+  header.doc h1{margin:0 0 6px;font-size:1.35rem}
+  header.doc p,.muted{color:var(--muted);font-size:.9rem}
+  .banner{background:#fff8e1;border:1px solid #f0c36d;padding:12px 16px;margin:12px auto}
+  .banner.ok{background:#e8f5e9;border-color:#81c784}
+  .banner.warn{background:#fff3e0;border-color:#ffb74d}
+  section{margin-bottom:26px;page-break-inside:avoid}
+  section h2{border-bottom:2px solid var(--ink);padding-bottom:6px;font-size:1.1rem}
+  section h3{margin-top:12px;font-size:.98rem}
+  .note,.decision,.incongr,.okbox{background:#fff;border-left:4px solid var(--accent);padding:10px 12px;margin:10px 0;font-size:.88rem}
+  .decision{border-left-color:var(--ok)}
+  .incongr{border-left-color:var(--warn)}
+  .okbox{border-left-color:var(--ok)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;margin-top:12px}
+  .phone{background:var(--phone);border:1px solid var(--line);border-radius:18px;overflow:hidden;max-width:330px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+  /* Topbar consolidata (Nota bis / TO-BE) */
+  .bar{background:var(--top);color:#fff;padding:8px 10px;font-size:.72rem;display:flex;justify-content:space-between;align-items:center}
+  .bar .app{font-weight:700;font-size:.85rem}
+  .bar .meta{opacity:.9}
+  .body{padding:12px;min-height:560px;display:flex;flex-direction:column}
+  .title{font-size:1.02rem;font-weight:700;margin:0 0 2px}
+  .subtitle{font-size:.78rem;font-style:italic;color:var(--muted);margin:0 0 6px}
+  .desc{font-size:.74rem;margin:0 0 8px}
+  .print{display:inline-flex;align-items:center;gap:4px;color:var(--accent);font-weight:600}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 0}
+  .foot{margin-top:auto;padding-top:10px}
+  .btn{display:inline-block;border:1px solid var(--accent);color:var(--accent);padding:6px 10px;border-radius:4px;font-size:.74rem;background:#fff}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.wide{flex:1;text-align:center}
+  .btn.ghost{border-color:var(--line);color:var(--muted)}
+  .btn.sm{padding:3px 7px;font-size:.68rem}
+  .btn.dim{opacity:.38}
+  .select{border:1px solid var(--accent);padding:8px;border-radius:4px;font-size:.74rem;background:#f7fbff;margin:6px 0}
+  .acc{border:1px solid var(--line);border-radius:6px;margin:5px 0;background:#fafafa;overflow:hidden}
+  .acc .hd{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;font-size:.74rem;font-weight:600;background:#fff}
+  .acc .hd .chev{color:var(--accent)}
+  .acc.open .hd{border-bottom:1px solid var(--line)}
+  .acc .bd{display:none;padding:8px 10px;font-size:.68rem;color:var(--muted)}
+  .acc.open .bd{display:block}
+  .confirm{border:1px dashed var(--accent);border-radius:6px;padding:8px;margin-top:8px;background:#f3f8ff;font-size:.7rem}
+  .box{display:inline-block;width:14px;height:14px;border:2px solid var(--accent);vertical-align:middle;margin-right:6px;border-radius:2px}
+  .box.on{background:var(--accent)}
+  .phase{border:1px solid var(--line);border-radius:8px;padding:9px;margin:7px 0;background:#fff}
+  .phase .ph-title{font-size:.74rem;font-weight:600}
+  .phase .ph-desc{font-size:.68rem;color:var(--muted);margin:4px 0 7px}
+  .rowbtns{display:flex;gap:8px;align-items:center}
+  .iconbtn{width:26px;height:26px;border:1px solid var(--line);border-radius:13px;display:inline-flex;align-items:center;justify-content:center;font-size:.85rem;color:var(--muted);background:#fff}
+  .pill{display:inline-block;font-size:.65rem;padding:2px 7px;border-radius:10px;background:var(--chip);color:var(--accent2);margin-right:4px}
+  .pill.ok{background:#e8f5e9;color:var(--ok)}
+  .pill.warn{background:#fff3e0;color:var(--warn)}
+  .pill.no{background:#ffebee;color:var(--off)}
+  .bottom{display:flex;justify-content:space-around;padding:8px;border-top:1px solid var(--line);font-size:.62rem;color:var(--muted);background:#fafafa}
+  .bottom .on{color:var(--accent);font-weight:700}
+  .cap{font-size:.74rem;color:var(--muted);margin-top:8px}
+  table{width:100%;border-collapse:collapse;font-size:.82rem;background:#fff}
+  th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:#eee}
+  code{font-size:.85em}
+  footer{padding:24px;color:var(--muted);font-size:.84rem}
+  .flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.76rem;margin:10px 0}
+  .flow span{background:#fff;border:1px solid var(--line);padding:5px 8px;border-radius:4px}
+  .flow .arrow{border:none;background:transparent;padding:0;color:var(--muted)}
+  @media print {
+    body{background:#fff}
+    section{page-break-after:always}
+    section:last-of-type{page-break-after:auto}
+    .phone{box-shadow:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="doc">
+  <h1>MediaManager — Template statici Setup PC BT v3</h1>
+  <p>Fonte: <code>Ultime modifiche.pdf</code> (16/11) + Ottimizzazione + convalida 09/11 · topbar consolidata Nota bis · <strong>nessun codice</strong>.</p>
+  <p class="muted">PDF dettagliato con i tre rami: già associati · non ancora associati · cavo USB. Terminologia: sempre «Telefono».</p>
+</header>
+
+<div class="banner ok">
+  Valutazione: le modifiche proposte sono <strong>corrette e coerenti</strong> con i problemi reali di UX.
+  Correzioni minori applicate nei template: typo «paring»→«pairing»; «Telefono e PCi»→«Telefono e PC»; naming file <code>DATI_CIFS.json</code>.
+</div>
+
+<section>
+  <h2>0. Valutazione obiettiva (Ultime modifiche)</h2>
+  <table>
+    <tr><th>Richiesta</th><th>Giudizio</th><th>Note</th></tr>
+    <tr><td>Niente numeri/lettere A-B-C sulle opzioni</td><td><span class="pill ok">OK</span></td><td>Ogni voce autoconsistente.</td></tr>
+    <tr><td>Solo «Telefono» (no dispositivo mobile / tablet)</td><td><span class="pill ok">OK</span></td><td>Semplifica i testi su tutte le pagine.</td></tr>
+    <tr><td>Topbar formato consolidato</td><td><span class="pill ok">OK</span></td><td>v2 aveva chrome arbitrario («Setup · BT»): corretto qui.</td></tr>
+    <tr><td>4 fasi macro (non 7 micro-passi)</td><td><span class="pill ok">OK</span></td><td>Allinea a Ottimizzazione i–iv; dettaglio nell’accordion.</td></tr>
+    <tr><td>Icona stampa nella descrizione (no bottone)</td><td><span class="pill ok">OK</span></td><td>Stampa = supporto; guida primaria sul telefono.</td></tr>
+    <tr><td>Stesso scheletro per i 3 rami</td><td><span class="pill ok">OK</span></td><td>Cambiano sottotitolo e testi fasi (BT vs USB).</td></tr>
+    <tr><td>Riepilogo 4 fasi senza BT/USB nel titolo</td><td><span class="pill ok">OK</span></td><td>Una sola pagina di conferma per tutti i rami.</td></tr>
+    <tr><td>Esito checkpoint subito dopo OK</td><td><span class="pill ok">OK</span></td><td>Niente pagina riepilogo ad hoc post-controllo.</td></tr>
+    <tr><td>Compattare conferma nella guida (videata 2)</td><td><span class="pill ok">CONSIGLIATO</span></td><td>Vedi §1: adotto il flusso lineare come TO-BE primario.</td></tr>
+  </table>
+
+  <h3>1. Decisione sul flusso lineare (punto «valutare»)</h3>
+  <div class="decision">
+    <strong>Raccomandazione: sì, compattare.</strong>
+    Nella guida (videata ramo) resta l’accordion delle 4 fasi + icona stampa.
+    La conferma avviene <em>una fase alla volta</em> sotto la fase corrente (messaggio + OK + esito checkpoint),
+    senza una seconda pagina di riepilogo monolitica.
+    Se serve ancora una pagina «Riepilogo e conferma» come rete di sicurezza, resta opzionale/collassata;
+    nel TO-BE primario <strong>non</strong> è una tappa obbligatoria separata.
+  </div>
+
+  <div class="flow">
+    <span>Avvio</span><span class="arrow">→</span>
+    <span>Verifica</span><span class="arrow">→</span>
+    <span>Scelta modalità</span><span class="arrow">→</span>
+    <span>Guida ramo (4 fasi accordion + conferma 1×1)</span><span class="arrow">→</span>
+    <span>Import DATI_CIFS</span><span class="arrow">→</span>
+    <span>Copia CIFS</span>
+  </div>
+</section>
+
+<section>
+  <h2>2. Videata scelta — Modalità di associazione</h2>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span class="meta">Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Modalità di associazione tra Telefono e PC</p>
+          <p class="desc">Attiva il collegamento tra il tuo telefono e il PC dove hai deciso di tenere il Catalogo delle foto e video.</p>
+          <p class="desc"><strong>Seleziona l’opzione:</strong></p>
+          <div class="select">Telefono e PC sono già associati (lo vedo in ‘Il mio Computer’) ▾</div>
+          <p class="muted" style="font-size:.66rem;margin:6px 0">
+            Altre voci (senza lettere):<br/>
+            · Telefono e PC NON sono ancora associati (devo fare il pairing)<br/>
+            · Voglio usare il collegamento tramite cavo USB (non posso usare il BT)
+          </p>
+          <div class="foot">
+            <div class="actions">
+              <span class="btn wide ghost">Indietro</span>
+              <span class="btn wide primary">OK</span>
+            </div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">OK apre la guida del ramo scelto. Nessun A/B/C.</p>
+    </div>
+    <div>
+      <div class="note">
+        <strong>Topbar consolidata</strong><br/>
+        Formato: <code>MediaManager</code> a sinistra · contesto <code>Setup</code> a destra (come Nota bis / template 0.16.57).<br/>
+        Niente etichette «Setup · BT / Guida A».
+      </div>
+      <div class="incongr">
+        File: inviare/importare solo <code>DATI_CIFS.json</code>; ignorare <code>no_pw.json</code>.
+        Desktop: overwrite unica versione (BL-BT-02).
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== RAMO GIÀ ASSOCIATI ========== -->
+<section>
+  <h2>3. Ramo — Telefono e PC già associati</h2>
+  <p class="muted">Sottotitolo e descrizione letterali da Ultime modifiche. 4 fasi. Stampa = icona in descrizione.</p>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span class="meta">Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Collegamento BT tra Telefono e PC già associati</p>
+          <p class="desc">Attiva la procedura semiautomatica per l’interscambio dei file di configurazione tra il tuo telefono e il PC. Segui la guida cliccando sulla freccia accanto al titolo della fase per espandere il contenuto. L’intera guida può essere stampata qui <span class="print">🖨</span></p>
+
+          <div class="acc open">
+            <div class="hd"><span>Invio BT (dal Telefono al PC) dei file di configurazione</span><span class="chev">▾</span></div>
+            <div class="bd">
+              1) Nel popup Condividi scegli l’opzione che invia i 3 file al PC (es. Bluetooth / Collegamento… Invia al PC).<br/>
+              2) Conferma sul nome del PC proposto.<br/>
+              3) Sul PC trova i file (di solito Download; altrimenti Impostazioni → Bluetooth → Dispositivi mobili → cartella trasferimenti).<br/>
+              4) Copia i 3 file sul Desktop (sostituisci versioni precedenti).
+            </div>
+          </div>
+          <div class="confirm">
+            <span class="box"></span>
+            Confermo di aver inviato il set di file dal Telefono al PC secondo le modalità descritte nella guida<br/>
+            <div class="rowbtns" style="margin-top:6px">
+              <span class="btn sm primary">OK</span>
+              <span class="iconbtn">‹</span>
+            </div>
+            <div class="muted" style="margin-top:4px;font-size:.65rem">Dopo OK: esito checkpoint subito sotto (ok / riprova) — niente nuova pagina.</div>
+          </div>
+
+          <div class="acc">
+            <div class="hd"><span>Lancio (dal desktop del PC) dello script ricevuto</span><span class="chev">▸</span></div>
+          </div>
+          <div class="acc">
+            <div class="hd"><span>Invio BT (dal PC al Telefono) dei file generati dallo script</span><span class="chev">▸</span></div>
+          </div>
+          <div class="acc">
+            <div class="hd"><span>Configurazione CIFS e attivazione del Catalogo</span><span class="chev">▸</span></div>
+          </div>
+
+          <div class="foot">
+            <div class="actions">
+              <span class="btn wide ghost">Annulla</span>
+              <span class="btn wide dim">CONFERMA</span>
+            </div>
+            <p class="muted" style="font-size:.64rem;margin:6px 0 0">Annulla → scelta modalità. CONFERMA attiva quando le 4 fasi hanno OK+checkpoint.</p>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Pattern: una conferma per volta sotto la fase corrente (flusso lineare).</p>
+    </div>
+
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span class="meta">Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Collegamento BT tra Telefono e PC già associati</p>
+          <p class="desc">… L’intera guida può essere stampata qui <span class="print">🖨</span></p>
+
+          <div class="acc">
+            <div class="hd"><span>Invio BT (dal Telefono al PC) dei file di configurazione</span><span class="chev">▸</span></div>
+          </div>
+          <div class="acc open">
+            <div class="hd"><span>Lancio (dal desktop del PC) dello script ricevuto</span><span class="chev">▾</span></div>
+            <div class="bd">
+              Sul Desktop: doppio clic su <code>CONFIGURA</code>. Se compare UAC, conferma.
+              Non aprire i file di supporto. Attendi il messaggio verde «Tutto pronto».
+              Sul Desktop compare <code>DATI_CIFS.json</code> (e <code>no_pw.json</code> da non usare).
+            </div>
+          </div>
+          <div class="confirm">
+            <span class="box on"></span>
+            Confermo di aver lanciato lo script ricevuto sul PC e di aver atteso il messaggio «Tutto pronto», secondo le modalità descritte nella guida<br/>
+            <div class="rowbtns" style="margin-top:6px"><span class="btn sm primary">OK</span><span class="iconbtn">‹</span></div>
+            <div style="margin-top:4px;font-size:.65rem;color:var(--ok)">Checkpoint: dichiarato · puoi passare alla fase successiva</div>
+          </div>
+          <div class="acc">
+            <div class="hd"><span>Invio BT (dal PC al Telefono) dei file generati dallo script</span><span class="chev">▸</span></div>
+          </div>
+          <div class="acc">
+            <div class="hd"><span>Configurazione CIFS e attivazione del Catalogo</span><span class="chev">▸</span></div>
+          </div>
+          <div class="foot">
+            <div class="actions">
+              <span class="btn wide ghost">Annulla</span>
+              <span class="btn wide dim">CONFERMA</span>
+            </div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Espansione fase 2 + conferma (esempio stato intermedio).</p>
+    </div>
+  </div>
+
+  <h3>Testi espansione — fasi 3 e 4 (ramo già associati)</h3>
+  <table>
+    <tr><th>Fase</th><th>Contenuto accordion (da Ottimizzazione, adattato)</th></tr>
+    <tr>
+      <td>Invio BT PC → Telefono</td>
+      <td>Dal Desktop seleziona solo <code>DATI_CIFS.json</code>. Invia via Bluetooth (Invia file). Phone Link solo se già attivo (non obbligatorio). Torna a MediaManager: non restare sulla pagina Invio/Ricevi di sistema.</td>
+    </tr>
+    <tr>
+      <td>Configurazione CIFS</td>
+      <td>Nell’app: Importa <code>DATI_CIFS.json</code> → OK. Poi Apri CIFS Documents Provider, Copia Host/User/Password/Folder (MyMedia), salva, Attiva collegamento → Usa questa cartella.</td>
+    </tr>
+  </table>
+</section>
+
+<!-- ========== RAMO NON ASSOCIATI ========== -->
+<section>
+  <h2>4. Ramo — Telefono e PC NON ancora associati</h2>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span class="meta">Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Collegamento BT tra Telefono e PC non ancora associati</p>
+          <p class="desc">Attiva la procedura semiautomatica per l’interscambio dei file di configurazione tra il tuo telefono e il PC. Segui la guida cliccando sulla freccia accanto al titolo della fase per espandere il contenuto. L’intera guida può essere stampata qui <span class="print">🖨</span></p>
+
+          <div class="acc open">
+            <div class="hd"><span>Invio BT (dal Telefono al PC) dei file di configurazione</span><span class="chev">▾</span></div>
+            <div class="bd">
+              <strong>Prima: pairing dal Telefono.</strong> Impostazioni → Connessioni → Bluetooth → Associa/Accoppia nuovo dispositivo → scegli il PC → conferma il codice su entrambi.<br/><br/>
+              Poi: come nel ramo «già associati» — popup Condividi → invia i 3 file → conferma nome PC → trova i file sul PC → copia sul Desktop.
+            </div>
+          </div>
+          <div class="confirm">
+            <span class="box"></span>
+            Confermo di aver inviato il set di file dal Telefono al PC secondo le modalità descritte nella guida<br/>
+            <div class="rowbtns" style="margin-top:6px"><span class="btn sm primary">OK</span><span class="iconbtn">‹</span></div>
+          </div>
+          <div class="acc"><div class="hd"><span>Lancio (dal desktop del PC) dello script ricevuto</span><span class="chev">▸</span></div></div>
+          <div class="acc"><div class="hd"><span>Invio BT (dal PC al Telefono) dei file generati dallo script</span><span class="chev">▸</span></div></div>
+          <div class="acc"><div class="hd"><span>Configurazione CIFS e attivazione del Catalogo</span><span class="chev">▸</span></div></div>
+          <div class="foot">
+            <div class="actions">
+              <span class="btn wide ghost">Annulla</span>
+              <span class="btn wide dim">CONFERMA</span>
+            </div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Stesso scheletro del ramo precedente; solo prima fase arricchita con pairing.</p>
+    </div>
+    <div>
+      <div class="okbox">
+        Fasi 2–4: <strong>identiche</strong> al ramo «già associati» (stessi titoli BT e stessi messaggi di conferma).
+        Differenza solo nell’espansione della fase 1 (pairing + invio).
+      </div>
+      <div class="note">
+        Messaggi conferma (comuni a BT già/non associati e USB, senza citare il canale):
+        <ol style="margin:6px 0 0 18px;padding:0;font-size:.82rem">
+          <li>Confermo di aver inviato il set di file dal Telefono al PC secondo le modalità descritte nella guida</li>
+          <li>Confermo di aver lanciato lo script ricevuto sul PC e di aver atteso il messaggio «Tutto pronto», secondo le modalità descritte nella guida</li>
+          <li>Confermo di aver inviato il set di file dal PC al Telefono secondo le modalità descritte nella guida</li>
+          <li>Confermo di aver configurato CIFS e di aver attivato il collegamento secondo le modalità descritte nella guida</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== RAMO USB ========== -->
+<section>
+  <h2>5. Ramo — Collegamento USB</h2>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span class="meta">Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Collegamento USB tra Telefono e PC</p>
+          <p class="desc">Attiva la procedura semiautomatica per l’interscambio dei file di configurazione tra il tuo telefono e il PC. Segui la guida cliccando sulla freccia accanto al titolo della fase per espandere il contenuto. L’intera guida può essere stampata qui <span class="print">🖨</span></p>
+
+          <div class="acc open">
+            <div class="hd"><span>Invio USB (dal Telefono al PC) dei file di configurazione</span><span class="chev">▾</span></div>
+            <div class="bd">
+              Collega il Telefono al PC con cavo USB e sblocca il Telefono.
+              Sul PC: Esplora file → Telefono → Memoria interna → individua i 3 file generati dall’app (o dalla cartella Download del Telefono).
+              Copiali sul Desktop del PC (overwrite versioni precedenti). Non aprire i file di supporto.
+            </div>
+          </div>
+          <div class="confirm">
+            <span class="box"></span>
+            Confermo di aver inviato il set di file dal Telefono al PC secondo le modalità descritte nella guida<br/>
+            <div class="rowbtns" style="margin-top:6px"><span class="btn sm primary">OK</span><span class="iconbtn">‹</span></div>
+          </div>
+          <div class="acc"><div class="hd"><span>Lancio (dal desktop del PC) dello script ricevuto</span><span class="chev">▸</span></div></div>
+          <div class="acc open">
+            <div class="hd" style="opacity:.95"><span>Invio USB (dal PC al Telefono) dei file generati dallo script</span><span class="chev">▸</span></div>
+          </div>
+          <div class="acc"><div class="hd"><span>Configurazione CIFS e attivazione del Catalogo</span><span class="chev">▸</span></div></div>
+          <div class="foot">
+            <div class="actions">
+              <span class="btn wide ghost">Annulla</span>
+              <span class="btn wide dim">CONFERMA</span>
+            </div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Titoli fasi con USB al posto di BT; messaggi conferma invariati (senza citare USB).</p>
+    </div>
+    <div>
+      <table>
+        <tr><th>Fase USB</th><th>Espansione</th></tr>
+        <tr>
+          <td>Lancio script</td>
+          <td>Come BT: doppio clic <code>CONFIGURA</code> → UAC → «Tutto pronto» → <code>DATI_CIFS.json</code> sul Desktop.</td>
+        </tr>
+        <tr>
+          <td>Invio USB PC → Telefono</td>
+          <td>Copia <code>DATI_CIFS.json</code> dal Desktop alla cartella Download del Telefono (via USB). Poi torna all’app e importa il file.</td>
+        </tr>
+        <tr>
+          <td>CIFS</td>
+          <td>Identico agli altri rami.</td>
+        </tr>
+      </table>
+      <div class="incongr" style="margin-top:10px">
+        Phone Link / mirroring: mai obbligatori. Nel ramo USB non compaiono.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>6. Riepilogo (opzionale) — se non si adotta solo il flusso lineare</h2>
+  <p class="muted">Se in sviluppo si preferisce ancora una pagina dedicata (rete di sicurezza), ecco il TO-BE da Ultime modifiche. Nel flusso primario consigliato questa pagina <strong>non</strong> è obbligatoria.</p>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span class="meta">Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Riepilogo e conferma delle attività svolte</p>
+          <p class="desc">Leggi e conferma di aver regolarmente ultimato le singole fasi della procedura semiautomatica per la configurazione del Catalogo.</p>
+
+          <div class="phase">
+            <div class="ph-title"><span class="box on"></span> Invio (dal Telefono al PC) dei file di configurazione</div>
+            <div class="ph-desc">Confermo di aver inviato il set di file dal Telefono al PC secondo le modalità descritte nella guida</div>
+            <div class="rowbtns"><span class="btn sm primary">OK</span><span class="iconbtn">‹</span></div>
+          </div>
+          <div class="phase">
+            <div class="ph-title"><span class="box"></span> Lancio (dal desktop del PC) dello script ricevuto</div>
+            <div class="ph-desc">Confermo di aver lanciato lo script… «Tutto pronto»…</div>
+            <div class="rowbtns"><span class="btn sm">OK</span><span class="iconbtn">‹</span></div>
+          </div>
+          <div class="phase">
+            <div class="ph-title"><span class="box"></span> Invio (dal PC al Telefono) dei file generati dallo script</div>
+            <div class="ph-desc">Confermo di aver inviato il set di file dal PC al Telefono…</div>
+            <div class="rowbtns"><span class="btn sm dim">OK</span><span class="iconbtn">‹</span></div>
+          </div>
+          <div class="phase">
+            <div class="ph-title"><span class="box"></span> Configurazione CIFS e attivazione del Catalogo</div>
+            <div class="ph-desc">Confermo di aver configurato CIFS e di aver attivato il collegamento…</div>
+            <div class="rowbtns"><span class="btn sm dim">OK</span><span class="iconbtn">‹</span></div>
+          </div>
+
+          <div class="foot">
+            <div class="actions">
+              <span class="btn wide ghost">Annulla</span>
+              <span class="btn wide dim">CONFERMA</span>
+            </div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">4 fasi senza BT/USB nei titoli · flag auto su OK · checkpoint sotto OK.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>7. Import + CIFS (invariati rispetto a Ottimizzazione)</h2>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span class="meta">Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Importa i dati da copiare su CIFS</p>
+          <p class="desc">Seleziona ed importa il file «DATI_CIFS.json» ricevuto dal PC (Download / Bluetooth / file ricevuti). Selettore file.</p>
+          <p class="desc"><strong>File atteso:</strong> DATI_CIFS.json</p>
+          <p class="desc" style="color:var(--ok)"><strong>Import riuscito</strong></p>
+          <div class="actions"><span class="btn wide primary">Importa dati CIFS</span></div>
+          <p class="desc" style="margin-top:12px">Quando pronto clicca su [OK] per copiare i dati su CIFS</p>
+          <div class="foot">
+            <div class="actions">
+              <span class="btn wide ghost">Indietro</span>
+              <span class="btn wide primary">OK</span>
+            </div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span class="meta">Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Copia i dati su CIFS e attivazione collegamento</p>
+          <p class="desc">Trascrivi uno alla volta con Copia. Multitasking del Telefono per passare a CIFS. Installa CIFS Documents Provider se manca.</p>
+          <div class="actions"><span class="btn wide primary">Apri CIFS Documents Provider</span></div>
+          <div class="select" style="background:#fff">Host · User · Password · Folder/Name = MyMedia — solo Copia</div>
+          <div class="foot">
+            <div class="actions"><span class="btn wide primary">Attiva collegamento</span></div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Niente Piano B in pagina.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>8. Criteri di accettazione v3 (prima del codice)</h2>
+  <ol>
+    <li>Nessuna lettera A/B/C né numerazione progressiva sulle opzioni/fasi guida (titoli autoconsistenti).</li>
+    <li>Terminologia: sempre «Telefono» (mai «dispositivo mobile» / «telefono/tablet»).</li>
+    <li>Topbar consolidata: MediaManager | Setup.</li>
+    <li>Tre rami con stesso scheletro; 4 fasi; stampa solo icona in descrizione.</li>
+    <li>Conferma lineare una fase alla volta + esito checkpoint sotto OK; CONFERMA in fondo.</li>
+    <li>Messaggi conferma letterali (4) senza citare BT/USB.</li>
+    <li>File: <code>DATI_CIFS.json</code> / <code>no_pw.json</code>; overwrite Desktop.</li>
+    <li>Import + CIFS semplificati (come Ottimizzazione).</li>
+  </ol>
+  <div class="banner ok">
+    Template v3 pronto. <strong>Nessuno sviluppo</strong> finché non autorizzi esplicitamente l’implementazione.
+  </div>
+</section>
+
+<footer>
+  MediaManager · Template statici Setup PC BT v3 · Ultime modifiche 16/11/2026 · nessun codice applicato.
+</footer>
+</body>
+</html>
