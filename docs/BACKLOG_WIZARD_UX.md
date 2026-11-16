@@ -64,7 +64,7 @@
 
 16. **Nomi file comprensibili (come fatto per CONFIGURA/sup)** — JSON post «Tutto pronto» → TO-BE `DATI_CIFS.json` (da inviare/importare) e `no_pw.json` (ignorare). Allineare testi app + messaggi script.  
 17. **Una sola versione sul Desktop (overwrite)** — A ogni nuovo tentativo i file sul Desktop devono **sostituire** quelli precedenti (bundle/result + 3 file CONFIGURA).  
-18. **UX Ottimizzazione BT (template v3 — Ultime modifiche 16/11)** — Specifica: `docs/reference/PVM_Template_Statici_Ottimizzazione_Setup_PC_BT_v3.pdf`. Congelato: niente A/B/C; solo «Telefono»; topbar consolidata; 4 fasi accordion; stampa = icona in descrizione; tre rami (già associati / pairing / USB) stesso scheletro; conferma lineare 1×1 + checkpoint sotto OK; messaggi conferma letterali senza BT/USB. Flusso primario consigliato: guida+conferma nella stessa videata ramo (riepilogo dedicato opzionale). *Stato:* template aggiornato — **nessuno sviluppo finché non autorizzato**.
+18. **UX Ottimizzazione BT (template v3 — Ultime modifiche 16/11)** — Specifica: `docs/reference/PVM_Template_Statici_Ottimizzazione_Setup_PC_BT_v3.pdf`. Congelato: niente A/B/C; solo «Telefono»; topbar consolidata; 4 fasi accordion; stampa = icona in descrizione; tre rami (già associati / pairing / USB) stesso scheletro; conferma lineare 1×1 + checkpoint sotto OK; messaggi conferma letterali senza BT/USB. Flusso primario consigliato: guida+conferma nella stessa videata ramo (riepilogo dedicato opzionale). *Stato:* **in sviluppo 0.16.73** — LOCK `docs/LOCK_SETUP_BT_V3_ANALOGIA.md` (OK Renato 16/11).
 
 ### P2 — Fuori Wizard PC immediato
 12. Pagina **Configura** «stile Utility» (slide 2 PPT).  
