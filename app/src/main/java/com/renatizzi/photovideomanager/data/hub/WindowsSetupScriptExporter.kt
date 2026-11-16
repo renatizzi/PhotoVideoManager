@@ -74,7 +74,7 @@ class WindowsSetupScriptExporter(
 
     /**
      * Piano B: bundle completo (con password) su chiavetta / Download.
-     * Preferisce il file più recente tra `MediaManager_cifs_bundle*.json` (nome univoco o legacy).
+     * Preferisce `DATI_CIFS.json`, poi legacy `MediaManager_cifs_bundle*.json` (più recente).
      */
     fun findCifsBundle(expectedToken: String): SetupCifsBundle? {
         val files = mutableListOf<File>()
@@ -101,32 +101,48 @@ class WindowsSetupScriptExporter(
             }
         } catch (_: Exception) {
         }
-        files.sortedByDescending { it.lastModified() }.forEach { file ->
+        // Preferisci il nome fisso DATI_CIFS.json, poi il più recente.
+        files.sortedWith(
+            compareByDescending<File> {
+                it.name.equals(SetupCifsBundle.BUNDLE_FILE_NAME, ignoreCase = true)
+            }.thenByDescending { it.lastModified() },
+        ).forEach { file ->
             val text = runCatching { file.readText(Charsets.UTF_8) }.getOrNull() ?: return@forEach
             val bundle = SetupCifsBundle.parse(text, expectedToken) ?: return@forEach
             if (bundle.isComplete) return bundle
         }
-        // MediaStore Download (API 29+): LIKE sul prefisso, ordine data desc.
+        // MediaStore Download (API 29+): DATI_CIFS.json + legacy prefix, ordine data desc.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             runCatching {
                 val resolver = context.contentResolver
                 val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-                resolver.query(
-                    collection,
-                    arrayOf(MediaStore.Downloads._ID, MediaStore.Downloads.DISPLAY_NAME),
-                    "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
-                    arrayOf("${SetupCifsBundle.BUNDLE_FILE_PREFIX}%"),
-                    "${MediaStore.Downloads.DATE_MODIFIED} DESC",
-                )?.use { cursor ->
-                    while (cursor.moveToNext()) {
-                        val display = cursor.getString(1).orEmpty()
-                        if (!SetupCifsBundle.isBundleFileName(display)) continue
-                        val id = cursor.getLong(0)
-                        val uri = android.content.ContentUris.withAppendedId(collection, id)
-                        resolver.openInputStream(uri)?.use { input ->
-                            val text = input.bufferedReader(Charsets.UTF_8).readText()
-                            val bundle = SetupCifsBundle.parse(text, expectedToken)
-                            if (bundle != null && bundle.isComplete) return bundle
+                val patterns = listOf(
+                    SetupCifsBundle.BUNDLE_FILE_NAME,
+                    "${SetupCifsBundle.LEGACY_BUNDLE_FILE_PREFIX}%",
+                )
+                for (pattern in patterns) {
+                    val selection = if (pattern.contains('%')) {
+                        "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?"
+                    } else {
+                        "${MediaStore.Downloads.DISPLAY_NAME} = ?"
+                    }
+                    resolver.query(
+                        collection,
+                        arrayOf(MediaStore.Downloads._ID, MediaStore.Downloads.DISPLAY_NAME),
+                        selection,
+                        arrayOf(pattern),
+                        "${MediaStore.Downloads.DATE_MODIFIED} DESC",
+                    )?.use { cursor ->
+                        while (cursor.moveToNext()) {
+                            val display = cursor.getString(1).orEmpty()
+                            if (!SetupCifsBundle.isBundleFileName(display)) continue
+                            val id = cursor.getLong(0)
+                            val uri = android.content.ContentUris.withAppendedId(collection, id)
+                            resolver.openInputStream(uri)?.use { input ->
+                                val text = input.bufferedReader(Charsets.UTF_8).readText()
+                                val bundle = SetupCifsBundle.parse(text, expectedToken)
+                                if (bundle != null && bundle.isComplete) return bundle
+                            }
                         }
                     }
                 }
@@ -136,7 +152,7 @@ class WindowsSetupScriptExporter(
     }
 
     /**
-     * Cerca `MediaManager_setup_result.json` in Download (copiato dal Desktop del PC).
+     * Cerca `no_pw.json` (o legacy `MediaManager_setup_result.json`) in Download.
      */
     fun findSetupResultInDownloads(): WindowsSetupResult? {
         return try {
@@ -147,9 +163,16 @@ class WindowsSetupScriptExporter(
                 val downloads = Environment.getExternalStoragePublicDirectory(
                     Environment.DIRECTORY_DOWNLOADS,
                 )
-                val file = File(downloads, WindowsCatalogSetupScript.RESULT_FILE_NAME)
-                if (!file.isFile) return null
-                WindowsSetupResultParser.parse(file.readText(Charsets.UTF_8))
+                for (name in listOf(
+                    WindowsCatalogSetupScript.RESULT_FILE_NAME,
+                    WindowsCatalogSetupScript.LEGACY_RESULT_FILE_NAME,
+                )) {
+                    val file = File(downloads, name)
+                    if (!file.isFile) continue
+                    val parsed = WindowsSetupResultParser.parse(file.readText(Charsets.UTF_8))
+                    if (parsed != null) return parsed
+                }
+                null
             }
         } catch (_: Exception) {
             null
@@ -159,20 +182,24 @@ class WindowsSetupScriptExporter(
     private fun readResultFromMediaStore(): WindowsSetupResult? {
         val resolver = context.contentResolver
         val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-        val name = WindowsCatalogSetupScript.RESULT_FILE_NAME
-        resolver.query(
-            collection,
-            arrayOf(MediaStore.Downloads._ID),
-            "${MediaStore.Downloads.DISPLAY_NAME} = ?",
-            arrayOf(name),
-            "${MediaStore.Downloads.DATE_MODIFIED} DESC",
-        )?.use { cursor ->
-            if (!cursor.moveToFirst()) return null
-            val id = cursor.getLong(0)
-            val uri = android.content.ContentUris.withAppendedId(collection, id)
-            resolver.openInputStream(uri)?.use { input ->
-                val text = input.bufferedReader(Charsets.UTF_8).readText()
-                return WindowsSetupResultParser.parse(text)
+        for (name in listOf(
+            WindowsCatalogSetupScript.RESULT_FILE_NAME,
+            WindowsCatalogSetupScript.LEGACY_RESULT_FILE_NAME,
+        )) {
+            resolver.query(
+                collection,
+                arrayOf(MediaStore.Downloads._ID),
+                "${MediaStore.Downloads.DISPLAY_NAME} = ?",
+                arrayOf(name),
+                "${MediaStore.Downloads.DATE_MODIFIED} DESC",
+            )?.use { cursor ->
+                if (!cursor.moveToFirst()) return@use
+                val id = cursor.getLong(0)
+                val uri = android.content.ContentUris.withAppendedId(collection, id)
+                resolver.openInputStream(uri)?.use { input ->
+                    val text = input.bufferedReader(Charsets.UTF_8).readText()
+                    return WindowsSetupResultParser.parse(text)
+                }
             }
         }
         return null

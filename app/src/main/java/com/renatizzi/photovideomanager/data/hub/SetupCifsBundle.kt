@@ -37,24 +37,32 @@ data class SetupCifsBundle(
 
     companion object {
         const val DEFAULT_PORT = "445"
-        /** Prefisso file bundle (nome univoco = prefisso + token corto). */
-        const val BUNDLE_FILE_PREFIX = "MediaManager_cifs_bundle"
-        /** Nome legacy (pre-0.16.72); ancora accettato in lettura. */
-        const val BUNDLE_FILE_NAME = "MediaManager_cifs_bundle.json"
+        /**
+         * Nome fisso del bundle da inviare/importare (BL-BT-01).
+         * Evita file omonimi per-token sul Desktop (BL-BT-02 overwrite).
+         */
+        const val BUNDLE_FILE_NAME = "DATI_CIFS.json"
+        /** Prefisso legacy (pre-DATI_CIFS); ancora accettato in lettura. */
+        const val LEGACY_BUNDLE_FILE_PREFIX = "MediaManager_cifs_bundle"
+        /** Alias legacy del prefisso (import / MediaStore LIKE). */
+        const val BUNDLE_FILE_PREFIX = LEGACY_BUNDLE_FILE_PREFIX
+        /** Nome legacy esatto (pre-0.16.72); ancora accettato in lettura. */
+        const val LEGACY_BUNDLE_FILE_NAME = "MediaManager_cifs_bundle.json"
         const val STORAGE_VALUE = "SMB2,3 (jCIFS NG)"
         const val MAGIC = SetupLanAnnounce.MAGIC
 
-        /** Nome univoco per questa sessione (evita file omonimi sul Desktop/Download). */
-        fun bundleFileNameForToken(setupToken: String): String {
-            val short = setupToken.filter { it.isLetterOrDigit() }.take(8).lowercase()
-                .ifBlank { "session" }
-            return "${BUNDLE_FILE_PREFIX}_$short.json"
-        }
+        /**
+         * Nome file bundle per la sessione: fisso [BUNDLE_FILE_NAME].
+         * Il token resta validato nel JSON, non nel nome file.
+         */
+        @Suppress("UNUSED_PARAMETER")
+        fun bundleFileNameForToken(setupToken: String): String = BUNDLE_FILE_NAME
 
         fun isBundleFileName(name: String): Boolean {
             val n = name.trim()
             if (n.equals(BUNDLE_FILE_NAME, ignoreCase = true)) return true
-            return n.startsWith(BUNDLE_FILE_PREFIX, ignoreCase = true) &&
+            if (n.equals(LEGACY_BUNDLE_FILE_NAME, ignoreCase = true)) return true
+            return n.startsWith(LEGACY_BUNDLE_FILE_PREFIX, ignoreCase = true) &&
                 n.endsWith(".json", ignoreCase = true)
         }
 

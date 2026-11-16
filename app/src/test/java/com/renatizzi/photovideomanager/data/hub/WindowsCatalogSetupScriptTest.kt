@@ -74,14 +74,20 @@ class WindowsCatalogSetupScriptTest {
         assertTrue(pkg.ps1Content.contains("MyMedia"))
         assertTrue(pkg.ps1Content.contains("#Requires -RunAsAdministrator"))
         assertTrue(pkg.ps1Content.contains("New-LocalUser") || pkg.ps1Content.contains("Set-LocalUser"))
-        assertTrue(pkg.ps1Content.contains("MediaManager_setup_result.json"))
+        assertTrue(pkg.ps1Content.contains("no_pw.json"))
+        assertTrue(pkg.ps1Content.contains("DATI_CIFS.json"))
         assertTrue(pkg.ps1Content.contains(pkg.bundleFileName))
-        assertTrue(pkg.bundleFileName.startsWith("MediaManager_cifs_bundle_"))
-        // Bundle include password; il result.json storico no (solo metadati).
+        assertEquals("DATI_CIFS.json", pkg.bundleFileName)
+        assertEquals(SetupCifsBundle.BUNDLE_FILE_NAME, pkg.bundleFileName)
+        // Bundle include password; no_pw.json no (solo metadati).
         assertTrue(pkg.ps1Content.contains("password ="))
         assertTrue(pkg.cmdContent.contains(WindowsCatalogSetupScript.PS1_FILE_NAME))
         assertTrue(pkg.cmdContent.contains("powershell"))
         assertTrue(pkg.cmdContent.contains(pkg.bundleFileName))
+        assertTrue(pkg.cmdContent.contains("no_pw.json") || pkg.ps1Content.contains("Ignora"))
+        // BL-BT-02: Desktop overwrite (Set-Content/Copy-Item -Force + ripulisci legacy)
+        assertTrue(pkg.ps1Content.contains("-Force"))
+        assertTrue(pkg.ps1Content.contains("MediaManager_cifs_bundle*.json"))
         assertEquals("CONFIGURA.cmd", pkg.cmdFileName)
         assertEquals("sup.ps1", pkg.ps1FileName)
         assertFalse(pkg.cmdFileName.substringBeforeLast('.') == pkg.ps1FileName.substringBeforeLast('.'))
@@ -195,6 +201,15 @@ class WindowsCatalogSetupScriptTest {
                 it.contains("Write-Host") && it.contains("MediaManager_setup_result.json")
             },
         )
+        assertTrue(
+            ps1.lines().any {
+                it.contains("Write-Host") && it.contains("DATI_CIFS.json")
+            } || ps1.contains("BundleFileName"),
+        )
+        assertTrue(ps1.contains("no_pw.json"))
+        assertTrue(SetupCifsBundle.isBundleFileName(pkg.bundleFileName))
+        assertFalse(SetupCifsBundle.isBundleFileName(WindowsCatalogSetupScript.RESULT_FILE_NAME))
+        assertTrue(SetupCifsBundle.isBundleFileName("MediaManager_cifs_bundle_abc123de.json"))
         assertFalse(
             ps1.lines().any {
                 it.contains("Write-Host") && it.contains("MediaManager_setup.log")

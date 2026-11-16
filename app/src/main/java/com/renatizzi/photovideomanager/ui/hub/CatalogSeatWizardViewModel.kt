@@ -832,14 +832,14 @@ class CatalogSeatWizardViewModel(
                     } ?: error("Impossibile leggere il file")
                     if (SetupCifsBundle.looksLikeSetupResultNotBundle(raw)) {
                         error(
-                            "Hai selezionato MediaManager_setup_result.json (senza password). " +
+                            "Hai selezionato no_pw.json (senza password). " +
                                 "Dal Desktop del PC invia $expectedName via Bluetooth e seleziona quello.",
                         )
                     }
                     val bundle = SetupCifsBundle.parse(raw, expectedToken = token.ifBlank { null })
                         ?: error(
                             "File non riconosciuto come bundle MediaManager. " +
-                                "Serve $expectedName (non setup_result).",
+                                "Serve $expectedName (non no_pw.json).",
                         )
                     if (!bundle.isComplete) {
                         val missing = buildList {
@@ -1101,7 +1101,7 @@ class CatalogSeatWizardViewModel(
             result.fold(
                 onSuccess = { export ->
                     lastExport = export
-                    val bundleName = SetupCifsBundle.bundleFileNameForToken(setupToken)
+                    val bundleName = SetupCifsBundle.BUNDLE_FILE_NAME
                     // Sequenza sincrona: prima share BT (resta al passo 2), poi passo 2b.
                     _state.update {
                         it.copy(

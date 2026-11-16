@@ -225,13 +225,13 @@
     <string name="hub_pc4_intro">PC: lancia la routine che crea la cartella Catalogo. Poi torna al telefono.</string>
     <string name="hub_pc4_item_1">PC: sul Desktop fai doppio clic su CONFIGURA</string>
     <string name="hub_pc4_item_2">PC: se compare Controllo account utente, conferma</string>
-    <string name="hub_pc4_item_3">PC: attendi «Tutto pronto» e il file bundle univoco sul Desktop (nome indicato nella finestra). Non usare bundle di tentativi precedenti. Poi torna all’app</string>
+    <string name="hub_pc4_item_3">PC: attendi «Tutto pronto» e DATI_CIFS.json sul Desktop (unica versione / overwrite). Ignora no_pw.json. Poi torna all’app</string>
 
     <!-- Passo 4 import + 5 CIFS -->
-    <string name="hub_pc4b_intro">PC → TELEFONO: dal Desktop invia via Bluetooth solo il file bundle di questa sessione (nome MediaManager_cifs_bundle_….json indicato da CONFIGURA). Poi tocca «Importa dati CIFS» e seleziona quel file.</string>
+    <string name="hub_pc4b_intro">PC → TELEFONO: dal Desktop invia via Bluetooth solo DATI_CIFS.json. Ignora no_pw.json. Poi tocca «Importa dati CIFS» e seleziona quel file.</string>
     <string name="hub_pc4b_pick">Importa dati CIFS</string>
     <string name="hub_pc4b_waiting">In attesa del bundle. Senza Host, User e Password non si apre CIFS.</string>
-    <string name="hub_pc4b_item_send">PC: ho inviato via Bluetooth il bundle di questa sessione (non un file vecchio omonimo)</string>
+    <string name="hub_pc4b_item_send">PC: ho inviato via Bluetooth DATI_CIFS.json (non no_pw.json né un file vecchio)</string>
     <string name="hub_pc4b_item_pick">TELEFONO: ho toccato «Importa dati CIFS» e scelto il file ricevuto</string>
     <string name="hub_pc4b_item_ready">L’app conferma Host, User e Password</string>
     <string name="hub_pc4b_outcome_title">Dati acquisiti</string>
@@ -247,7 +247,7 @@
     <string name="hub_pc5_share_visibility">In CIFS il campo Folder deve essere MyMedia (nome share, non vuoto e non un path Windows tipo C:\\…). Così la connessione punta già alla cartella del Catalogo.</string>
     <string name="hub_pc5_recovering">Recupero fallback in corso…</string>
     <string name="hub_pc5_result_imported">Bundle CIFS ricevuto: Host, User, Password e Folder pronti per Copia.</string>
-    <string name="hub_pc5_result_missing">Bundle non ancora caricato: torna al passo 4 e importa il file MediaManager_cifs_bundle_….json.</string>
+    <string name="hub_pc5_result_missing">Bundle non ancora caricato: torna al passo 4 e importa il file DATI_CIFS.json.</string>
     <string name="hub_pc5_retry_recover">Piano B: riprova recupero rete (solo se Bluetooth non è disponibile)</string>
     <string name="hub_pc5_hotspot_intro">Percorso felice: Bluetooth (passo 4). Hotspot/chiavetta solo se il trasferimento BT del bundle non è possibile.</string>
     <string name="hub_pc5_import_usb_bundle">Piano B: leggi bundle da chiavetta/Download</string>
