@@ -113,6 +113,13 @@ data class CatalogSeatWizardUiState(
     val recoveringPcData: Boolean = false,
     /** Dopo export: UI deve aprire share Bluetooth prima di passare al passo 3. */
     val pendingShareScripts: Boolean = false,
+    /** Ramo associazione PC (template v3). */
+    val pcLinkMode: PcLinkMode = PcLinkMode.ALREADY_PAIRED,
+    /**
+     * Conferme linea guida PC: per ciascuna delle 4 fasi,
+     * true dopo OK + checkpoint dichiarato.
+     */
+    val guidePhaseDone: List<Boolean> = List(PcSetupGuideContent.PHASE_COUNT) { false },
 )
 
 /**
@@ -128,13 +135,17 @@ enum class WizardStep {
     PC_SHARE_READY,
     /** Passo 1 — Verifica disponibilità. */
     PC_AVAILABILITY,
-    /** Passo 2 — Bluetooth + preparazione/invio CONFIGURA + sup. */
+    /** Scelta ramo: già associati / pairing / USB (template v3). */
+    PC_LINK_MODE,
+    /** Guida ramo: 4 fasi accordion + conferma lineare. */
+    PC_GUIDE,
+    /** Passo 2 — Bluetooth + preparazione/invio CONFIGURA + sup. (legacy → PC_GUIDE) */
     PC_USB_PREPARE,
-    /** Passo 3 — File sul Desktop del PC (dopo ricezione BT). */
+    /** Passo 3 — File sul Desktop del PC (dopo ricezione BT). (legacy → PC_GUIDE) */
     PC_COPY_FILES,
-    /** Passo 4 — Avvio script (doppio clic + UAC + Tutto pronto). */
+    /** Passo 4 — Avvio script (doppio clic + UAC + Tutto pronto). (legacy → PC_GUIDE) */
     PC_RUN_SCRIPT,
-    /** Passo 4b — Scarica bundle CIFS via Bluetooth (OpenDocument). */
+    /** Import DATI_CIFS.json (ex 4b). */
     PC_BT_DOWNLOAD_BUNDLE,
     /** Passo 5 — Scheda CIFS + collegamento Catalogo (revisione4). */
     W2_CIFS,
@@ -477,17 +488,106 @@ class CatalogSeatWizardViewModel(
         }
     }
 
-    /** Passo 1 → 2. */
+    /** Passo 1 → scelta ramo associazione. */
     fun confirmAvailabilityChecked() {
         _state.update {
-            it.copy(step = WizardStep.PC_USB_PREPARE, errorMessage = null, statusMessage = null)
+            it.copy(
+                step = WizardStep.PC_LINK_MODE,
+                guidePhaseDone = List(PcSetupGuideContent.PHASE_COUNT) { false },
+                errorMessage = null,
+                statusMessage = null,
+            )
+        }
+        persistDraft()
+    }
+
+    fun selectPcLinkMode(mode: PcLinkMode) {
+        _state.update {
+            it.copy(
+                pcLinkMode = mode,
+                guidePhaseDone = List(PcSetupGuideContent.PHASE_COUNT) { false },
+                errorMessage = null,
+            )
+        }
+        persistDraft()
+    }
+
+    /** Scelta ramo → guida accordion. */
+    fun confirmPcLinkMode() {
+        _state.update {
+            it.copy(
+                step = WizardStep.PC_GUIDE,
+                guidePhaseDone = List(PcSetupGuideContent.PHASE_COUNT) { false },
+                errorMessage = null,
+                statusMessage = null,
+            )
+        }
+        persistDraft()
+    }
+
+    /**
+     * OK su una fase della guida (0..3).
+     * Fase 0: esporta CONFIGURA/sup (+ share BT se non USB).
+     */
+    fun confirmGuidePhase(index: Int) {
+        if (index !in 0 until PcSetupGuideContent.PHASE_COUNT) return
+        val current = _state.value
+        if (index > 0 && !current.guidePhaseDone.take(index).all { it }) {
+            _state.update {
+                it.copy(errorMessage = "Conferma prima le fasi precedenti.")
+            }
+            return
+        }
+        if (index == 0 && !current.scriptPrepared) {
+            val share = current.pcLinkMode != PcLinkMode.USB
+            prepareWindowsScript(shareAfterExport = share)
+            return
+        }
+        markGuidePhaseDone(index)
+    }
+
+    private fun markGuidePhaseDone(index: Int) {
+        _state.update { s ->
+            val next = s.guidePhaseDone.toMutableList()
+            if (index in next.indices) next[index] = true
+            s.copy(
+                guidePhaseDone = next,
+                usbCopiedDeclared = next.getOrElse(0) { false },
+                scriptRanDeclared = next.getOrElse(1) { false },
+                errorMessage = null,
+                statusMessage = when (index) {
+                    0 -> "Fase 1 dichiarata. Continua con il lancio di CONFIGURA sul PC."
+                    1 -> "Fase 2 dichiarata. Invia DATI_CIFS.json al Telefono."
+                    2 -> "Fase 3 dichiarata. Importa DATI_CIFS.json e configura CIFS."
+                    else -> "Tutte le fasi dichiarate. Tocca CONFERMA."
+                },
+            )
+        }
+        persistDraft()
+    }
+
+    /** CONFERMA guida → import DATI_CIFS. */
+    fun confirmPcGuide() {
+        val s = _state.value
+        if (!s.guidePhaseDone.all { it }) {
+            _state.update {
+                it.copy(errorMessage = "Conferma tutte e 4 le fasi della guida prima di continuare.")
+            }
+            return
+        }
+        _state.update {
+            it.copy(
+                step = WizardStep.PC_BT_DOWNLOAD_BUNDLE,
+                errorMessage = null,
+                statusMessage = null,
+            )
         }
         persistDraft()
     }
 
     /** Passo 2 OK → esporta CONFIGURA/sup e apre share Bluetooth; solo dopo si va al passo 3. */
     fun confirmUsbAndPrepareFiles() {
-        prepareWindowsScript(shareAfterExport = true)
+        prepareWindowsScript(shareAfterExport = _state.value.pcLinkMode != PcLinkMode.USB)
     }
 
     fun confirmBtAndPrepareFiles() = confirmUsbAndPrepareFiles()
@@ -498,14 +598,31 @@ class CatalogSeatWizardViewModel(
             if (!it.scriptPrepared) {
                 it.copy(pendingShareScripts = false)
             } else {
-                it.copy(
-                    pendingShareScripts = false,
-                    step = WizardStep.PC_COPY_FILES,
-                    statusMessage =
-                        "Sei di nuovo in MediaManager. Sul PC i file devono essere sul Desktop: " +
-                            "poi spunta e OK.",
-                    errorMessage = null,
-                )
+                val onGuide = it.step == WizardStep.PC_GUIDE ||
+                    it.step == WizardStep.PC_USB_PREPARE
+                if (onGuide) {
+                    val next = it.guidePhaseDone.toMutableList()
+                    if (next.isNotEmpty()) next[0] = true
+                    it.copy(
+                        pendingShareScripts = false,
+                        step = WizardStep.PC_GUIDE,
+                        guidePhaseDone = next,
+                        usbCopiedDeclared = true,
+                        statusMessage =
+                            "Sei di nuovo in MediaManager. Sul PC i file devono essere sul Desktop " +
+                                "(overwrite). Poi conferma la fase e continua.",
+                        errorMessage = null,
+                    )
+                } else {
+                    it.copy(
+                        pendingShareScripts = false,
+                        step = WizardStep.PC_COPY_FILES,
+                        statusMessage =
+                            "Sei di nuovo in MediaManager. Sul PC i file devono essere sul Desktop: " +
+                                "poi spunta e OK.",
+                        errorMessage = null,
+                    )
+                }
             }
         }
         persistDraft()
@@ -593,12 +710,15 @@ class CatalogSeatWizardViewModel(
         WizardStep.W2_CHOICE,
         WizardStep.W2_ROUTINE_PARAMS,
         -> WizardStep.PC_AVAILABILITY
-        WizardStep.W2_ROUTINE_READY -> WizardStep.PC_COPY_FILES
+        WizardStep.PC_USB_PREPARE,
+        WizardStep.PC_COPY_FILES,
+        WizardStep.PC_RUN_SCRIPT,
+        WizardStep.W2_ROUTINE_READY,
         WizardStep.W2_SCRIPT_FIND,
         WizardStep.W2_SCRIPT_LAUNCH,
         WizardStep.W2_SCRIPT_RESULT,
         WizardStep.W2_ROUTINE_CONFIRM,
-        -> WizardStep.PC_RUN_SCRIPT
+        -> WizardStep.PC_GUIDE
         WizardStep.W2_CIFS_BRIDGE,
         WizardStep.W2_SUMMARY,
         WizardStep.W2_CIFS_METHOD,
@@ -1102,8 +1222,17 @@ class CatalogSeatWizardViewModel(
                 onSuccess = { export ->
                     lastExport = export
                     val bundleName = SetupCifsBundle.BUNDLE_FILE_NAME
-                    // Sequenza sincrona: prima share BT (resta al passo 2), poi passo 2b.
+                    val onGuide = current.step == WizardStep.PC_GUIDE ||
+                        current.step == WizardStep.PC_LINK_MODE
+                    val willShare = shareAfterExport && export.shareUris.isNotEmpty()
                     _state.update {
+                        val phaseDone = if (onGuide && !willShare) {
+                            it.guidePhaseDone.toMutableList().also { list ->
+                                if (list.isNotEmpty()) list[0] = true
+                            }
+                        } else {
+                            it.guidePhaseDone
+                        }
                         it.copy(
                             busy = false,
                             temporaryPassword = password,
@@ -1113,17 +1242,22 @@ class CatalogSeatWizardViewModel(
                             downloadsSaved = export.downloadsSaved,
                             usbCopiedTo = export.usbCopiedTo,
                             setupResultImported = false,
-                            pendingShareScripts = shareAfterExport && export.shareUris.isNotEmpty(),
-                            statusMessage = if (shareAfterExport) {
-                                "TELEFONO: nel menu Condividi scegli Bluetooth e il PC. " +
-                                    "Sul PC deve essere già aperto «Ricevi file»."
-                            } else {
-                                null
+                            pendingShareScripts = willShare,
+                            guidePhaseDone = phaseDone,
+                            usbCopiedDeclared = phaseDone.getOrElse(0) { false },
+                            statusMessage = when {
+                                willShare ->
+                                    "TELEFONO: nel menu Condividi scegli Bluetooth e il PC. " +
+                                        "Poi torna a MediaManager (non restare su Invio/Ricevi)."
+                                onGuide ->
+                                    "File pronti sul Telefono. Copiali sul Desktop del PC via USB " +
+                                        "(overwrite), poi conferma la fase."
+                                else -> null
                             },
-                            step = if (shareAfterExport) {
-                                WizardStep.PC_USB_PREPARE
-                            } else {
-                                WizardStep.PC_COPY_FILES
+                            step = when {
+                                onGuide -> WizardStep.PC_GUIDE
+                                shareAfterExport -> WizardStep.PC_USB_PREPARE
+                                else -> WizardStep.PC_COPY_FILES
                             },
                         )
                     }

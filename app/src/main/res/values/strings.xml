@@ -185,12 +185,22 @@
     <string name="hub_choose_folder">Seleziona Cartella</string>
     <string name="hub_seat_folder_fallback">Cartella Catalogo</string>
 
-    <!-- Passo 1 — Disponibilità (PPT slide 5) -->
+    <!-- Passo 1 — Disponibilità (template v3 + note Renato 16/11) -->
     <string name="hub_pc1_intro">Prima di avviare la procedura verifica e conferma di avere a disposizione i seguenti strumenti:</string>
-    <string name="hub_pc1_item_phone">Telefono Android o tablet dove è stata installata l\'app MediaManager</string>
+    <string name="hub_pc1_item_phone">Telefono con l\'app MediaManager installata</string>
     <string name="hub_pc1_item_pc">PC/Notebook Windows v. 10 o superiore</string>
-    <string name="hub_pc1_item_cable">Bluetooth attivo sul telefono e sul PC</string>
+    <string name="hub_pc1_item_cable">Bluetooth attivo sul Telefono e sul PC (oppure cavo USB se non puoi usare il BT)</string>
+    <string name="hub_pc1_note_phone">Con «Telefono» si intende anche un Tablet Android.</string>
+    <string name="hub_pc1_note_bt_free">Il collegamento Bluetooth, sia sul PC sia sul Telefono, non deve essere già impegnato da un altro flusso attivo: altrimenti i due dispositivi non si vedono.</string>
     <string name="hub_pc1_note_path">Percorso previsto: Bluetooth classico (Invia/Ricevi file). Phone Link, mirroring o «Collegamento a Windows» non sono obbligatori.</string>
+    <string name="hub_pc_link_mode_prompt">Seleziona l\'opzione:</string>
+    <string name="hub_pc_guide_confirm">CONFERMA</string>
+    <string name="hub_pc_guide_cancel">Annulla</string>
+    <string name="hub_pc_guide_checkpoint_ok">Checkpoint: dichiarato · puoi passare alla fase successiva</string>
+    <string name="hub_pc_guide_print">Stampa guida</string>
+    <string name="hub_pc4b_intro_v3">Seleziona ed importa il file «DATI_CIFS.json» ricevuto dal PC (Download / Bluetooth / file ricevuti). Ignora no_pw.json.</string>
+    <string name="hub_pc4b_file_expected_v3">File atteso: DATI_CIFS.json</string>
+    <string name="hub_import_ok">Import riuscito</string>
 
     <!-- Passo 2 — Bluetooth -->
     <string name="hub_pc2_intro">Una sola direzione per l’associazione: dal TELEFONO. Se telefono e PC sono già associati, non ripetere il pairing: passa a «Ricevi file» sul PC e all’OK dell’app.</string>

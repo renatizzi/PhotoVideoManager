@@ -1,8 +1,7 @@
 package com.renatizzi.photovideomanager.ui.hub
 
 /**
- * Contratto UIX Setup Catalogo — allineato al TO-BE pin integrazione 30/10
- * (`PVM_Proposta_Editing_UI_Template_TOBE.html` @ c1ef993).
+ * Contratto UIX Setup Catalogo — template BT v3 + Avvio procedura.
  */
 object WizardUiContract {
     /**
@@ -17,16 +16,15 @@ object WizardUiContract {
     const val STEP0_SUBTITLE_HAS_NO_NUMBER = true
 
     /**
-     * Sottotitoli filiera PC (GUIDATA 1–4 + import BT + CIFS).
-     * Indice 0 = legacy INTRO; 1–4 GUIDATA; 5 = importa bundle; 6 = Collegamento CIFS.
+     * Sottotitoli filiera PC (template v3).
+     * Indice: 0 intro, 1 prerequisiti, 2 modalità, 3 guida (dinamica), 4 import, 5 CIFS.
      */
     val PC_STEP_SUBTITLES: List<String> = listOf(
         "Dove tenere il Catalogo",
-        "1 – Verifica della disponibilità di quanto necessario",
-        "2 – Bluetooth: associazione e invio al PC",
-        "2b – Conferma file sul Desktop",
-        "3 – Esegui CONFIGURA sul PC",
-        "4 – Importa i dati CIFS sul telefono",
-        "Collegamento CIFS",
+        "Verifica della disponibilità di quanto necessario",
+        "Modalità di associazione tra Telefono e PC",
+        "Guida collegamento Telefono e PC",
+        "Importa i dati da copiare su CIFS",
+        "Copia i dati su CIFS e attivazione collegamento",
     )
 }
