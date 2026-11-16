@@ -37,9 +37,33 @@ data class SetupCifsBundle(
 
     companion object {
         const val DEFAULT_PORT = "445"
+        /** Prefisso file bundle (nome univoco = prefisso + token corto). */
+        const val BUNDLE_FILE_PREFIX = "MediaManager_cifs_bundle"
+        /** Nome legacy (pre-0.16.72); ancora accettato in lettura. */
         const val BUNDLE_FILE_NAME = "MediaManager_cifs_bundle.json"
         const val STORAGE_VALUE = "SMB2,3 (jCIFS NG)"
         const val MAGIC = SetupLanAnnounce.MAGIC
+
+        /** Nome univoco per questa sessione (evita file omonimi sul Desktop/Download). */
+        fun bundleFileNameForToken(setupToken: String): String {
+            val short = setupToken.filter { it.isLetterOrDigit() }.take(8).lowercase()
+                .ifBlank { "session" }
+            return "${BUNDLE_FILE_PREFIX}_$short.json"
+        }
+
+        fun isBundleFileName(name: String): Boolean {
+            val n = name.trim()
+            if (n.equals(BUNDLE_FILE_NAME, ignoreCase = true)) return true
+            return n.startsWith(BUNDLE_FILE_PREFIX, ignoreCase = true) &&
+                n.endsWith(".json", ignoreCase = true)
+        }
+
+        /** True se il JSON è il result senza password (non importabile come bundle). */
+        fun looksLikeSetupResultNotBundle(raw: String): Boolean {
+            val t = raw.trim()
+            if (t.contains(MAGIC)) return false
+            return t.contains("\"ipv4\"") && t.contains("\"status\"")
+        }
 
         fun fromPayload(p: SetupLanAnnounce.Payload): SetupCifsBundle = SetupCifsBundle(
             token = p.token,

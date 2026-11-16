@@ -17,16 +17,16 @@ object WizardUiContract {
     const val STEP0_SUBTITLE_HAS_NO_NUMBER = true
 
     /**
-     * Sottotitoli filiera PC (GUIDATA 1–4 + 4b BT + CIFS).
-     * Indice 0 = legacy INTRO; 1–4 GUIDATA; 5 = scarica bundle; 6 = Collegamento CIFS.
+     * Sottotitoli filiera PC (GUIDATA 1–4 + import BT + CIFS).
+     * Indice 0 = legacy INTRO; 1–4 GUIDATA; 5 = importa bundle; 6 = Collegamento CIFS.
      */
     val PC_STEP_SUBTITLES: List<String> = listOf(
         "Dove tenere il Catalogo",
         "1 – Verifica della disponibilità di quanto necessario",
-        "2 – Collegamento Bluetooth e invio dei file",
-        "3 – File di configurazione sul Desktop",
-        "4 – Generazione password e dati",
-        "4b – Scarica i dati per CIFS",
+        "2 – Bluetooth: associazione e invio al PC",
+        "2b – Conferma file sul Desktop",
+        "3 – Esegui CONFIGURA sul PC",
+        "4 – Importa i dati CIFS sul telefono",
         "Collegamento CIFS",
     )
 }

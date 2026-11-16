@@ -60,6 +60,27 @@ class SetupCifsBundleTest {
     }
 
     @Test
+    fun bundleFileNameForToken_isUniqueAndRecognized() {
+        val name = SetupCifsBundle.bundleFileNameForToken("abc123def456")
+        assertEquals("MediaManager_cifs_bundle_abc123de.json", name)
+        assertTrue(SetupCifsBundle.isBundleFileName(name))
+        assertTrue(SetupCifsBundle.isBundleFileName(SetupCifsBundle.BUNDLE_FILE_NAME))
+        assertFalse(SetupCifsBundle.isBundleFileName("MediaManager_setup_result.json"))
+    }
+
+    @Test
+    fun looksLikeSetupResultNotBundle_detectsResultJson() {
+        val result =
+            "{\"status\":\"completed\",\"computerName\":\"DELLRS\"," +
+                "\"userFormatHint\":\"DELLRS\\\\MyMedia\",\"ipv4\":[\"192.168.68.62\"]}"
+        assertTrue(SetupCifsBundle.looksLikeSetupResultNotBundle(result))
+        val bundle =
+            "{\"m\":\"PVMSETUP1\",\"t\":\"t\",\"ip\":\"1.2.3.4\"," +
+                "\"user\":\"A\\\\MyMedia\",\"password\":\"x\"}"
+        assertFalse(SetupCifsBundle.looksLikeSetupResultNotBundle(bundle))
+    }
+
+    @Test
     fun lanPayload_isCompleteOnlyWithPassword() {
         val p = SetupLanAnnounce.parsePayload(
             "{\"m\":\"PVMSETUP1\",\"t\":\"t\",\"ip\":\"1.2.3.4\"," +

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>MediaManager — Template statici Ottimizzazione Setup PC BT v2 (convalidato)</title>
+<style>
+  :root {
+    --bg:#f6f4ef; --ink:#1a1a1a; --muted:#5c5c5c; --line:#d7d2c8;
+    --accent:#1565c0; --accent2:#0d47a1; --ok:#2e7d32; --warn:#b26a00; --off:#b71c1c;
+    --phone:#fff; --top:#1565c0; --chip:#e8eef7; --grey:#bdbdbd;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Calibri,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.35}
+  header.doc,section,footer,.banner{max-width:1100px;margin:0 auto;padding:0 24px}
+  header.doc{padding-top:28px;padding-bottom:8px}
+  header.doc h1{margin:0 0 6px;font-size:1.4rem}
+  header.doc p,.muted{color:var(--muted);font-size:.92rem}
+  .banner{background:#fff8e1;border:1px solid #f0c36d;padding:12px 16px;margin:12px auto}
+  .banner.ok{background:#e8f5e9;border-color:#81c784}
+  section{margin-bottom:28px;page-break-inside:avoid}
+  section h2{border-bottom:2px solid var(--ink);padding-bottom:6px;font-size:1.12rem}
+  section h3{margin-top:14px;font-size:1rem}
+  .note,.decision,.incongr{background:#fff;border-left:4px solid var(--accent);padding:10px 12px;margin:10px 0;font-size:.9rem}
+  .decision{border-left-color:var(--ok)}
+  .incongr{border-left-color:var(--warn)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;margin-top:14px}
+  .phone{background:var(--phone);border:1px solid var(--line);border-radius:18px;overflow:hidden;max-width:320px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+  .bar{background:var(--top);color:#fff;padding:8px 10px;font-size:.72rem}
+  .bar .app{font-weight:700;font-size:.85rem}
+  .body{padding:12px;min-height:540px;display:flex;flex-direction:column}
+  .title{font-size:1.02rem;font-weight:700;margin:0 0 2px}
+  .subtitle{font-size:.78rem;font-style:italic;color:var(--muted);margin:0 0 6px}
+  .desc{font-size:.76rem;margin:0 0 8px}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 0}
+  .foot{margin-top:auto;padding-top:10px}
+  .btn{display:inline-block;border:1px solid var(--accent);color:var(--accent);padding:6px 10px;border-radius:4px;font-size:.74rem;background:#fff}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.wide{flex:1;text-align:center}
+  .btn.ghost{border-color:var(--line);color:var(--muted)}
+  .btn.dim{opacity:.38}
+  .btn.sm{padding:3px 7px;font-size:.68rem}
+  .field{border:1px solid var(--line);padding:8px;margin:6px 0;border-radius:4px;font-size:.76rem;background:#fff}
+  .field label{display:block;font-size:.68rem;color:var(--muted);margin-bottom:2px}
+  .field .val{font-style:italic;color:var(--accent)}
+  .select{border:1px solid var(--accent);padding:8px;border-radius:4px;font-size:.76rem;background:#f7fbff;margin:6px 0}
+  .acc{border:1px solid var(--line);border-radius:6px;margin:6px 0;background:#fafafa;overflow:hidden}
+  .acc .hd{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;font-size:.76rem;font-weight:600;background:#fff}
+  .acc .hd .chev{color:var(--accent);font-size:.85rem}
+  .acc.open .hd{border-bottom:1px solid var(--line)}
+  .acc .bd{display:none;padding:8px 10px;font-size:.7rem;color:var(--muted)}
+  .acc.open .bd{display:block}
+  .phase{border:1px solid var(--line);border-radius:8px;padding:10px;margin:8px 0;background:#fff}
+  .phase .top{display:flex;gap:8px;align-items:flex-start}
+  .box{width:16px;height:16px;border:2px solid var(--accent);flex:0 0 16px;margin-top:2px;border-radius:2px}
+  .box.on{background:var(--accent);position:relative}
+  .box.on::after{content:"";position:absolute;left:3px;top:0;width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+  .phase .ph-title{font-size:.76rem;font-weight:600}
+  .phase .ph-desc{font-size:.7rem;color:var(--muted);margin:4px 0 8px}
+  .phase .rowbtns{display:flex;gap:8px;align-items:center}
+  .iconbtn{width:28px;height:28px;border:1px solid var(--line);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:.85rem;color:var(--muted);background:#fff}
+  .pill{display:inline-block;font-size:.66rem;padding:2px 7px;border-radius:10px;background:var(--chip);color:var(--accent2);margin-right:4px}
+  .pill.ok{background:#e8f5e9;color:var(--ok)}
+  .pill.chg{background:#fff3e0;color:var(--warn)}
+  .bottom{display:flex;justify-content:space-around;padding:8px;border-top:1px solid var(--line);font-size:.64rem;color:var(--muted);background:#fafafa}
+  .bottom .on{color:var(--accent);font-weight:700}
+  .cap{font-size:.76rem;color:var(--muted);margin-top:8px}
+  table{width:100%;border-collapse:collapse;font-size:.84rem;background:#fff}
+  th,td{border:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+  th{background:#eee}
+  code{font-size:.85em}
+  footer{padding:24px;color:var(--muted);font-size:.85rem}
+  .flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.78rem;margin:10px 0}
+  .flow span{background:#fff;border:1px solid var(--line);padding:5px 8px;border-radius:4px}
+  .flow .arrow{border:none;background:transparent;padding:0;color:var(--muted)}
+  @media print {
+    body{background:#fff}
+    section{page-break-after:always}
+    section:last-of-type{page-break-after:auto}
+    .phone{box-shadow:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="doc">
+  <h1>MediaManager — Template statici Setup PC BT v2 (convalidato)</h1>
+  <p>Fonte: <code>Ottimizzazione.pdf</code> + convalida utente 09/11/2026 · base app <strong>0.16.72</strong> · form cornici telefono.</p>
+  <p class="muted">Delta vs v1: istruzioni sempre sul telefono; punti espandibili; conferma fasi in <strong>unica pagina</strong>; rami B/C coerenti. Nessun codice finché non avvii lo sviluppo.</p>
+</header>
+
+<div class="banner ok">
+  <strong>Convalida recepita.</strong> Quattro raccomandazioni integrate nei mock sotto. Stampa = supporto opzionale; guida primaria = telefono.
+</div>
+
+<section>
+  <h2>0. Raccomandazioni congelate (09/11)</h2>
+  <table>
+    <tr><th>#</th><th>Raccomandazione</th><th>Come compare nei template</th></tr>
+    <tr><td>1</td><td>Istruzioni visibili sul telefono; stampa solo supporto</td><td>Accordion guida in-app sempre presente; bottone «Stampa» secondario</td></tr>
+    <tr><td>2</td><td>Niente scrolling invasivo: punti espandibili</td><td>Ogni passo 1–7 = riga compressa; tap apre il dettaglio</td></tr>
+    <tr><td>3</td><td>Conferme fasi in un’unica pagina</td><td>Per ogni fase: riquadro (flag auto) + descrizione + OK + icona Indietro; in fondo Annulla | CONFERMA</td></tr>
+    <tr><td>4</td><td>Opzioni B e C coerenti con A</td><td>Stessa struttura (guida accordion + stessa pagina conferme); cambiano solo i testi dei punti</td></tr>
+  </table>
+  <div class="decision">
+    Flusso TO-BE: Avvio → Verifica → Associazione (A/B/C) → Guida accordion → Riepilogo fasi (unica pagina) → Import DATI_CIFS → Copia CIFS.
+  </div>
+</section>
+
+<section>
+  <h2>1. Associazione BT — scelta ramo</h2>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><div class="app">MediaManager</div>Setup · BT</div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Associazione con Bluetooth del dispositivo mobile e pc</p>
+          <p class="desc">Attiva il collegamento Bluetooth tra telefono/tablet e il PC dove hai le foto e i video.</p>
+          <p class="desc"><strong>Seleziona lo stato del collegamento:</strong></p>
+          <div class="select">A) Dispositivo mobile e PC sono già associati ▾</div>
+          <p class="muted" style="font-size:.68rem">B) NON ancora associati (pairing) · C) Voglio usare USB</p>
+          <div class="foot">
+            <div class="actions">
+              <span class="btn wide ghost">Indietro</span>
+              <span class="btn wide primary">OK</span>
+            </div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">OK → apre la guida del ramo scelto (stesso layout per A/B/C).</p>
+    </div>
+    <div>
+      <div class="note">
+        <strong>Coerenza B/C (raccomandazione 4)</strong><br/>
+        Stesso scheletro UI del ramo A. Differiscono solo i contenuti accordion:<br/>
+        • <em>B</em>: punto 0 = pairing dal telefono, poi stessi passi di A<br/>
+        • <em>C</em>: punti 1–4 = copia USB sul Desktop (niente Invio BT andata); ritorno bundle può restare BT
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>2. Guida sul telefono — accordion + stampa opzionale</h2>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><div class="app">MediaManager</div>Setup · Guida A</div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Associazione con Bluetooth del dispositivo mobile e pc</p>
+          <p class="desc">Procedura semiautomatica. Tocca un punto per leggerlo. La stampa è solo un aiuto.</p>
+          <div class="acc open">
+            <div class="hd"><span>1. Invia i 3 file al PC</span><span class="chev">▾</span></div>
+            <div class="bd">Nel popup Condividi scegli l’opzione che invia al PC (es. Bluetooth / Collegamento…). Conferma sul nome del PC.</div>
+          </div>
+          <div class="acc">
+            <div class="hd"><span>2. Conferma invio</span><span class="chev">▸</span></div>
+            <div class="bd">Clicca sul nome dispositivo proposto nella videata successiva.</div>
+          </div>
+          <div class="acc">
+            <div class="hd"><span>3. Dove sono i file sul PC</span><span class="chev">▸</span></div>
+            <div class="bd">Di solito Download. Altrimenti Impostazioni Windows → Bluetooth → Dispositivi mobili → cartella trasferimenti.</div>
+          </div>
+          <div class="acc">
+            <div class="hd"><span>4. Copia sul Desktop</span><span class="chev">▸</span></div>
+            <div class="bd">Copia i 3 file ricevuti sul Desktop (unica versione / overwrite).</div>
+          </div>
+          <div class="acc">
+            <div class="hd"><span>5. Lancia CONFIGURA</span><span class="chev">▸</span></div>
+            <div class="bd">Doppio clic CONFIGURA → attendi «Tutto pronto» (verde). Non interrompere.</div>
+          </div>
+          <div class="acc">
+            <div class="hd"><span>6. Invia DATI_CIFS.json al telefono</span><span class="chev">▸</span></div>
+            <div class="bd">Solo quel file. BT classico; Phone Link opzionale se già attivo. Ignora no_pw.json.</div>
+          </div>
+          <div class="acc">
+            <div class="hd"><span>7. Torna all’app</span><span class="chev">▸</span></div>
+            <div class="bd">Non restare sulla pagina Invio/Ricevi di sistema: torna a MediaManager.</div>
+          </div>
+          <div class="actions">
+            <span class="btn sm ghost">🖨 Stampa (opzionale)</span>
+          </div>
+          <div class="foot">
+            <div class="actions">
+              <span class="btn wide ghost">Indietro</span>
+              <span class="btn wide primary">Continua</span>
+            </div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap"><span class="pill ok">R1+R2</span> Guida completa sul telefono; un solo punto aperto per volta (anti-scroll).</p>
+    </div>
+    <div>
+      <div class="phone">
+        <div class="bar"><div class="app">MediaManager</div>Setup · Guida B</div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Associazione con Bluetooth del dispositivo mobile e pc</p>
+          <p class="desc">Ramo B — stessi controlli, contenuti coerenti.</p>
+          <div class="acc open">
+            <div class="hd"><span>0. Pairing dal telefono</span><span class="chev">▾</span></div>
+            <div class="bd">Impostazioni → Bluetooth → Associa/Accoppia il PC. Conferma il codice su entrambi. Poi prosegui come in A.</div>
+          </div>
+          <div class="acc"><div class="hd"><span>1. Invia i 3 file al PC</span><span class="chev">▸</span></div></div>
+          <div class="acc"><div class="hd"><span>2 … 7</span><span class="chev">▸</span></div></div>
+          <div class="actions"><span class="btn sm ghost">🖨 Stampa (opzionale)</span></div>
+          <div class="foot">
+            <div class="actions">
+              <span class="btn wide ghost">Indietro</span>
+              <span class="btn wide primary">Continua</span>
+            </div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap"><span class="pill chg">R4</span> Ramo C analogo: punti 1–4 USB; 5–7 come A.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>3. Riepilogo attività — unica pagina (pattern fase)</h2>
+  <div class="decision">
+    <strong>Pattern obbligatorio per ogni fase (i, ii, iii)</strong> sulla stessa pagina scrollabile breve:
+    riquadro selezione (flag automatico al tap OK) · descrizione fase · bottone OK · icona Indietro (fase precedente).
+    In fondo pagina fisso: <em>Annulla</em> (ingresso Associazione BT) · <em>CONFERMA</em> (recepisce tutte le fasi OK → Import).
+  </div>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><div class="app">MediaManager</div>Setup · Riepilogo</div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Riepilogo attività svolte</p>
+          <p class="desc">Conferma le attività svolte. Ogni fase ha il suo OK.</p>
+
+          <div class="phase">
+            <div class="top">
+              <div class="box on"></div>
+              <div>
+                <div class="ph-title">Fase i — File inviati al PC</div>
+                <div class="ph-desc">Confermo di aver inviato al PC il set di file generati dall’app (CONFIGURA + altri 2 file).</div>
+                <div class="rowbtns">
+                  <span class="btn sm primary">OK</span>
+                  <span class="iconbtn" title="Indietro fase">‹</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="phase">
+            <div class="top">
+              <div class="box"></div>
+              <div>
+                <div class="ph-title">Fase ii — CONFIGURA eseguito</div>
+                <div class="ph-desc">Confermo di aver lanciato CONFIGURA dal Desktop e di aver atteso «Tutto pronto».</div>
+                <div class="rowbtns">
+                  <span class="btn sm">OK</span>
+                  <span class="iconbtn">‹</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="phase">
+            <div class="top">
+              <div class="box"></div>
+              <div>
+                <div class="ph-title">Fase iii — DATI_CIFS inviato</div>
+                <div class="ph-desc">Confermo di aver inviato dal PC al telefono il file DATI_CIFS.json.</div>
+                <div class="rowbtns">
+                  <span class="btn sm dim">OK</span>
+                  <span class="iconbtn">‹</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="foot">
+            <div class="actions">
+              <span class="btn wide ghost">Annulla</span>
+              <span class="btn wide dim">CONFERMA</span>
+            </div>
+            <p class="muted" style="font-size:.65rem;margin:6px 0 0">CONFERMA si attiva quando le tre fasi hanno il flag.</p>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap"><span class="pill ok">R3</span> Unica pagina · flag auto su OK · Annulla/CONFERMA in fondo.</p>
+    </div>
+    <div>
+      <div class="phone">
+        <div class="bar"><div class="app">MediaManager</div>Setup · Riepilogo OK</div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Riepilogo attività svolte</p>
+          <p class="desc">Tutte le fasi confermate.</p>
+          <div class="phase">
+            <div class="top"><div class="box on"></div><div><div class="ph-title">Fase i — File inviati al PC</div><div class="ph-desc">Confermato.</div></div></div>
+          </div>
+          <div class="phase">
+            <div class="top"><div class="box on"></div><div><div class="ph-title">Fase ii — CONFIGURA eseguito</div><div class="ph-desc">Confermato.</div></div></div>
+          </div>
+          <div class="phase">
+            <div class="top"><div class="box on"></div><div><div class="ph-title">Fase iii — DATI_CIFS inviato</div><div class="ph-desc">Confermato.</div></div></div>
+          </div>
+          <div class="foot">
+            <div class="actions">
+              <span class="btn wide ghost">Annulla</span>
+              <span class="btn wide primary">CONFERMA</span>
+            </div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">CONFERMA → pagina Import. Annulla → ritorno all’ingresso Associazione BT.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>4. Import + CIFS (invariati rispetto a v1, allineati naming)</h2>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><div class="app">MediaManager</div>Setup · Import</div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Importa i dati da copiare su CIFS</p>
+          <p class="desc">Seleziona ed importa «DATI_CIFS.json» (Download / Bluetooth / file ricevuti). Selettore file.</p>
+          <p class="desc"><strong>File atteso:</strong> DATI_CIFS.json</p>
+          <p class="desc" style="color:var(--ok)"><strong>Import riuscito</strong></p>
+          <div class="actions"><span class="btn wide primary">Importa dati CIFS</span></div>
+          <p class="desc" style="margin-top:12px">Quando pronto clicca su [OK] per copiare i dati su CIFS</p>
+          <div class="foot">
+            <div class="actions">
+              <span class="btn wide ghost">Indietro</span>
+              <span class="btn wide primary">OK</span>
+            </div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Niente checklist · niente riepilogo campi.</p>
+    </div>
+    <div>
+      <div class="phone">
+        <div class="bar"><div class="app">MediaManager</div>Setup · CIFS</div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Copia i dati su CIFS e attivazione collegamento</p>
+          <p class="desc">Trascrivi uno alla volta con Copia. Multitasking telefono per passare a CIFS. Installa CIFS Documents Provider se manca.</p>
+          <div class="actions"><span class="btn wide primary">Apri CIFS Documents Provider</span></div>
+          <div class="field"><label>Host</label><div class="val">192.168.68.65 · Copia</div></div>
+          <div class="field"><label>User</label><div class="val">DELLRS\MyMedia · Copia</div></div>
+          <div class="field"><label>Password</label><div class="val">•••••••• · Copia</div></div>
+          <div class="field"><label>Folder / Name</label><div class="val">MyMedia · Copia</div></div>
+          <div class="foot">
+            <div class="actions"><span class="btn wide primary">Attiva collegamento</span></div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Niente Piano B in pagina.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>5. Criteri di accettazione aggiornati</h2>
+  <ol>
+    <li>Guida completa leggibile sul telefono (accordion); stampa non obbligatoria.</li>
+    <li>Un solo punto accordion aperto di default / tap per espandere — evita muro di testo.</li>
+    <li>Riepilogo: unica pagina con 3 fasi (flag auto + OK + Indietro fase); piede Annulla | CONFERMA.</li>
+    <li>CONFERMA attiva solo con tutte le fasi flaggate; Annulla → ingresso Associazione.</li>
+    <li>Rami B e C: stesso layout di A; solo testi accordion diversi.</li>
+    <li>File: <code>DATI_CIFS.json</code> da importare; <code>no_pw.json</code> da ignorare.</li>
+    <li>Import/CIFS come v1 (semplificati).</li>
+  </ol>
+  <div class="flow">
+    <span>Avvio</span><span class="arrow">→</span>
+    <span>Verifica</span><span class="arrow">→</span>
+    <span>A/B/C</span><span class="arrow">→</span>
+    <span>Guida accordion</span><span class="arrow">→</span>
+    <span>Riepilogo 1 pagina</span><span class="arrow">→</span>
+    <span>Import</span><span class="arrow">→</span>
+    <span>CIFS</span>
+  </div>
+  <div class="banner ok">
+    Template v2 convalidato con le 4 raccomandazioni. Pronto per sviluppo quando lo autorizzi.
+  </div>
+</section>
+
+<footer>
+  MediaManager · Template statici Ottimizzazione Setup PC BT v2 · convalida 09/11/2026 · nessun codice applicato.
+</footer>
+
+</body>
+</html>
