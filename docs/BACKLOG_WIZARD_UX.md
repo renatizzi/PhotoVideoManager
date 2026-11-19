@@ -64,7 +64,7 @@
 
 16. **Nomi file comprensibili (come fatto per CONFIGURA/sup)** — JSON post «Tutto pronto» → TO-BE `DATI_CIFS.json` (da inviare/importare) e `no_pw.json` (ignorare). Allineare testi app + messaggi script.  
 17. **Una sola versione sul Desktop (overwrite)** — A ogni nuovo tentativo i file sul Desktop devono **sostituire** quelli precedenti (bundle/result + 3 file CONFIGURA). **Nota Renato 19/11:** in pratica i file **non** vengono sostituiti: il sistema crea `nome (1)`, `nome (2)`, … e **blocca** il processo (sessione ambigua). Da risolvere in script/export/BT ricezione + istruzioni guida.  
-18. **UX Ottimizzazione BT** — Evoluzione: proposta v4 (REV5) → **REV9** (`docs/reference/Guida_Setup_Catalogo_MediaManager_REV9.pdf` + template `PVM_Proposta_Setup_BT_REV9_v5.pdf`). Parte 1 = PDF guida integrale (stampa/visualizza); Parte 2 = istruzioni sintetiche online (una fase alla volta; Fase 1 solo ramo scelto; Fase 3 stesso metodo). *Stato:* **proposta docs, nessun codice** fino a convalida.
+18. **UX Ottimizzazione BT** — Template **v7** (`PVM_Proposta_Setup_BT_REV9_v7.pdf`): Parte 1 PDF REV9; Parte 2 online una fase; porte/CTA; lampade; ascolto DATI_CIFS; maggiordomo overwrite. *Stato:* **in sviluppo 0.16.74** (OK Renato 19/11).
 
 ### P2 — Fuori Wizard PC immediato
 12. Pagina **Configura** «stile Utility» (slide 2 PPT).  
@@ -114,6 +114,6 @@ Aperti:
 - **BL-UI-12** Funzione di **pulizia dati app** (prefs Catalogo, bozze wizard, indici/censimenti, cache MediaManager) — richiesta Renato 01/11 con Tranche A 0.16.57; non cancellare i file utente nelle cartelle SAF
 - **BL-BT-01** Nomi file post-script comprensibili (bundle/result) — come CONFIGURA/sup (Renato 08/11)
 - **BL-BT-02** Desktop: overwrite unica versione (bundle/result + 3 file CONFIGURA) (Renato 08/11)
-- **BL-BT-03** Bypass ricerca Desktop/Download: esegui-dove-arriva + script maggiordomo + ascolto MediaStore/LAN (analisi v6, in attesa convalida) (Renato 19/11)
-- **BL-BT-04** Indicatori fase onesti + modello a porte (no Continua/Puoi passare) (analisi v6, in attesa convalida) (Renato 19/11)
+- **BL-BT-03** Bypass ricerca Desktop/Download: esegui-dove-arriva + script maggiordomo + ascolto MediaStore/LAN — in 0.16.74 (Renato 19/11)
+- **BL-BT-04** Indicatori fase onesti + modello a porte (no Continua/Puoi passare) — in 0.16.74 (Renato 19/11)
 - Font/stile carattere — correzione UI differita (accordo 30/10)

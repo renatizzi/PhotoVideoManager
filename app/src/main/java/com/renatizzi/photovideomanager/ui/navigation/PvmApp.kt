@@ -333,6 +333,7 @@ fun PvmApp(
                         onConfirmPcLinkMode = wizardVm::confirmPcLinkMode,
                         onConfirmGuidePhase = wizardVm::confirmGuidePhase,
                         onConfirmPcGuide = wizardVm::confirmPcGuide,
+                        onRetryBundleDetection = wizardVm::retryBundleDetection,
                         onConfirmUsbAndPrepare = wizardVm::confirmUsbAndPrepareFiles,
                         onConfirmCopy = wizardVm::confirmCopyChecked,
                         onConfirmScriptRan = wizardVm::confirmScriptRanOnPc,

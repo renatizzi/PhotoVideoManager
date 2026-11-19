@@ -3,14 +3,16 @@ package com.renatizzi.photovideomanager.ui.hub
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.net.Uri
 import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,14 +21,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.focus.onFocusEvent
-import kotlinx.coroutines.launch
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -45,15 +46,23 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusEvent
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import com.renatizzi.photovideomanager.R
 import com.renatizzi.photovideomanager.data.hub.SetupCifsBundle
 import com.renatizzi.photovideomanager.data.hub.SetupLanAnnounce
@@ -62,6 +71,8 @@ import com.renatizzi.photovideomanager.data.storage.NetworkDriveAssistant
 import com.renatizzi.photovideomanager.data.storage.OpenDocumentTreeAdvanced
 import com.renatizzi.photovideomanager.data.storage.SafPathLabels
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind
+import java.io.File
+import kotlinx.coroutines.launch
 
 @Composable
 fun CatalogSeatWizardScreen(
@@ -88,6 +99,7 @@ fun CatalogSeatWizardScreen(
     onConfirmPcLinkMode: () -> Unit = {},
     onConfirmGuidePhase: (Int) -> Unit = {},
     onConfirmPcGuide: () -> Unit = {},
+    onRetryBundleDetection: () -> Unit = {},
     onConfirmUsbAndPrepare: () -> Unit,
     onConfirmCopy: () -> Unit,
     onConfirmScriptRan: () -> Unit,
@@ -244,12 +256,21 @@ fun CatalogSeatWizardScreen(
             WizardStep.W2_SCRIPT_RESULT,
             WizardStep.W2_ROUTINE_CONFIRM,
             -> PcGuideStep(
-                mode = state.pcLinkMode,
-                phaseDone = state.guidePhaseDone,
+                state = state,
                 busy = state.busy,
-                statusMessage = state.statusMessage,
                 onConfirmPhase = onConfirmGuidePhase,
                 onConfirmAll = onConfirmPcGuide,
+                onRetryDetect = onRetryBundleDetection,
+                onPickBundle = {
+                    openBundle.launch(
+                        arrayOf(
+                            "application/json",
+                            "text/plain",
+                            "application/octet-stream",
+                            "*/*",
+                        ),
+                    )
+                },
                 onCancel = { onGoStep(WizardStep.PC_LINK_MODE) },
             )
             WizardStep.PC_BT_DOWNLOAD_BUNDLE -> DownloadBundleStep(
@@ -847,112 +868,258 @@ private fun PcLinkModeStep(
 
 @Composable
 private fun PcGuideStep(
-    mode: PcLinkMode,
-    phaseDone: List<Boolean>,
+    state: CatalogSeatWizardUiState,
     busy: Boolean,
-    statusMessage: String?,
     onConfirmPhase: (Int) -> Unit,
     onConfirmAll: () -> Unit,
+    onRetryDetect: () -> Unit,
+    onPickBundle: () -> Unit,
     onCancel: () -> Unit,
 ) {
     val context = LocalContext.current
+    val mode = state.pcLinkMode
     val phases = remember(mode) { PcSetupGuideContent.phases(mode) }
-    var expandedIndex by remember(mode) {
-        mutableStateOf(phaseDone.indexOfFirst { !it }.takeIf { it >= 0 } ?: 0)
-    }
-    Text(PcSetupGuideContent.guideDescription())
-    TextButton(
-        onClick = {
-            val text = buildString {
-                appendLine(PcSetupGuideContent.guideSubtitle(mode))
-                appendLine()
-                phases.forEachIndexed { i, p ->
-                    appendLine("${i + 1}. ${p.title}")
-                    appendLine(p.body)
-                    appendLine()
-                }
-            }
-            val send = Intent(Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(Intent.EXTRA_SUBJECT, PcSetupGuideContent.guideSubtitle(mode))
-                putExtra(Intent.EXTRA_TEXT, text)
-            }
-            runCatching {
-                context.startActivity(Intent.createChooser(send, context.getString(R.string.hub_pc_guide_print)))
+    val phaseDone = state.guidePhaseDone
+    val currentIndex = when {
+        !phaseDone.getOrElse(0) { false } -> 0
+        !phaseDone.getOrElse(1) { false } -> 1
+        state.setupResultImported -> 3
+        state.bundleDetected -> 2
+        state.listeningForBundle -> 1
+        else -> 2
+    }.coerceIn(0, phases.lastIndex)
+    val phase = phases[currentIndex]
+
+    Text(
+        text = buildAnnotatedString {
+            append(PcSetupGuideContent.guideDescription())
+            append(' ')
+            withStyle(
+                SpanStyle(
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                ),
+            ) {
+                append("🖨")
             }
         },
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = Modifier.clickable { openSetupGuidePdf(context) },
+    )
+    Text(
+        PcSetupGuideContent.guideSubtitle(mode) + " · Fase ${currentIndex + 1} di 4",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+    )
+
+    // Flowchart strip (4 riquadri).
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Text("🖨 ${stringResource(R.string.hub_pc_guide_print)}")
-    }
-    statusMessage?.let {
-        Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
-    }
-    phases.forEachIndexed { index, phase ->
-        val done = phaseDone.getOrElse(index) { false }
-        val unlocked = index == 0 || phaseDone.take(index).all { it }
-        val open = expandedIndex == index
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(6.dp))
-                .padding(10.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            Row(
+        phases.forEachIndexed { index, p ->
+            val done = phaseDone.getOrElse(index) { false }
+            val on = index == currentIndex
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(enabled = unlocked) {
-                        expandedIndex = if (open) -1 else index
-                    },
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                    .weight(1f)
+                    .border(
+                        1.dp,
+                        when {
+                            on -> MaterialTheme.colorScheme.primary
+                            done -> Color(0xFF81C784)
+                            else -> MaterialTheme.colorScheme.outlineVariant
+                        },
+                        RoundedCornerShape(6.dp),
+                    )
+                    .background(
+                        when {
+                            on -> MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                            done -> Color(0xFFE8F5E9)
+                            else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                        },
+                        RoundedCornerShape(6.dp),
+                    )
+                    .padding(6.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = phase.title,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.weight(1f),
+                    "${index + 1}",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = if (on) FontWeight.Bold else FontWeight.Normal,
+                    color = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                 )
-                Text(if (open) "▾" else "▸", color = MaterialTheme.colorScheme.primary)
-            }
-            if (open) {
                 Text(
-                    phase.body,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                    p.title.substringAfter("— ").take(18).ifBlank { p.title.take(18) },
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
-                if (!done && unlocked) {
-                    Text(phase.confirmMessage, style = MaterialTheme.typography.bodySmall)
-                    Button(
-                        onClick = { onConfirmPhase(index) },
-                        enabled = !busy,
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(stringResource(R.string.hub_avanti))
-                    }
-                }
-                if (done) {
-                    Text(
-                        stringResource(R.string.hub_pc_guide_checkpoint_ok),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
             }
         }
     }
-    val allDone = phaseDone.size >= PcSetupGuideContent.PHASE_COUNT && phaseDone.all { it }
+
+    // Lampade oneste.
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        repeat(PcSetupGuideContent.PHASE_COUNT) { index ->
+            val done = phaseDone.getOrElse(index) { false }
+            val lampColor = when {
+                index == 2 && state.errorMessage != null && !state.setupResultImported -> Color(0xFFEF9A9A)
+                done || (index == 2 && state.setupResultImported) -> Color(0xFF66BB6A)
+                index == currentIndex || (index == 1 && state.listeningForBundle) ||
+                    (index == 2 && state.bundleDetected) -> Color(0xFFFFCC80)
+                else -> Color(0xFFDDDDDD)
+            }
+            val detail = when {
+                index == 0 && done -> "inviato"
+                index == 1 && state.listeningForBundle && !state.setupResultImported -> "in attesa"
+                index == 2 && state.bundleDetected && !state.setupResultImported -> "ricevuti — da usare"
+                index == 2 && state.setupResultImported -> "ricevuti"
+                done -> "completata"
+                index == currentIndex -> "corrente"
+                else -> "bloccata"
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(12.dp)
+                        .background(lampColor, CircleShape)
+                        .border(1.dp, Color(0xFF999999), CircleShape),
+                )
+                Text(
+                    "${PcSetupGuideContent.lampLabel(index)} — $detail",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        }
+    }
+
+    Text(phase.title, fontWeight = FontWeight.SemiBold)
+    Text(
+        phase.body,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+    )
+
+    state.statusMessage?.let {
+        Text(
+            it,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f), RoundedCornerShape(4.dp))
+                .padding(8.dp),
+        )
+    }
+    state.errorMessage?.let {
+        Text(
+            it,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.error.copy(alpha = 0.08f), RoundedCornerShape(4.dp))
+                .padding(8.dp),
+        )
+    }
+
+    when {
+        currentIndex == 0 -> {
+            Button(
+                onClick = { onConfirmPhase(0) },
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.hub_pc_guide_send_set))
+            }
+        }
+        currentIndex == 1 && !phaseDone.getOrElse(1) { false } -> {
+            Button(
+                onClick = { onConfirmPhase(1) },
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.hub_pc_guide_open_script))
+            }
+        }
+        currentIndex == 1 && !state.bundleDetected && !state.setupResultImported -> {
+            if (state.listeningForBundle) {
+                Text(
+                    stringResource(R.string.hub_pc_guide_waiting_pc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+            OutlinedButton(
+                onClick = {
+                    onRetryDetect()
+                    onPickBundle()
+                },
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.hub_pc_guide_recovery))
+            }
+        }
+        currentIndex == 2 && state.bundleDetected && !state.setupResultImported -> {
+            Button(
+                onClick = { onConfirmPhase(2) },
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.hub_pc_guide_use_data))
+            }
+            OutlinedButton(
+                onClick = onPickBundle,
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.hub_pc4b_pick))
+            }
+        }
+        state.setupResultImported -> {
+            Button(
+                onClick = onConfirmAll,
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(phases[3].actionLabel)
+            }
+        }
+    }
+
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedButton(onClick = onCancel, enabled = !busy, modifier = Modifier.weight(1f)) {
             Text(stringResource(R.string.hub_pc_guide_cancel))
         }
-        Button(
-            onClick = onConfirmAll,
-            enabled = !busy && allDone,
-            modifier = Modifier.weight(1f),
-        ) {
-            Text(stringResource(R.string.hub_pc_guide_confirm))
+    }
+}
+
+private fun openSetupGuidePdf(context: Context) {
+    runCatching {
+        val dir = File(context.cacheDir, "setup_guide").apply { mkdirs() }
+        val out = File(dir, "Guida_Setup_Catalogo_MediaManager_REV9.pdf")
+        if (!out.isFile || out.length() == 0L) {
+            context.assets.open(PcSetupGuideContent.GUIDE_PDF_ASSET).use { input ->
+                out.outputStream().use { output -> input.copyTo(output) }
+            }
         }
+        val uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            out,
+        )
+        val view = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, "application/pdf")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(view)
     }
 }
 

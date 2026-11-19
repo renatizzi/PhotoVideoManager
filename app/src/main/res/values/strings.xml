@@ -196,9 +196,17 @@
     <string name="hub_pc_link_mode_prompt">Seleziona l\'opzione:</string>
     <string name="hub_pc_guide_confirm">CONFERMA</string>
     <string name="hub_pc_guide_cancel">Annulla</string>
-    <string name="hub_pc_guide_checkpoint_ok">Checkpoint: dichiarato · puoi passare alla fase successiva</string>
+    <string name="hub_pc_guide_checkpoint_ok">Fase terminata correttamente</string>
     <string name="hub_pc_guide_print">Stampa guida</string>
-    <string name="hub_pc4b_intro_v3">Seleziona ed importa il file «DATI_CIFS.json» ricevuto dal PC (Download / Bluetooth / file ricevuti). Ignora no_pw.json.</string>
+    <string name="hub_pc_guide_waiting_pc">In attesa dei dati dal PC</string>
+    <string name="hub_pc_guide_bundle_ready">Dati CIFS ricevuti</string>
+    <string name="hub_pc_guide_use_data">Usa questi dati</string>
+    <string name="hub_pc_guide_send_set">Invia set di configurazione</string>
+    <string name="hub_pc_guide_open_script">Apri istruzioni script</string>
+    <string name="hub_pc_guide_recovery">Non arriva? Opzioni di recupero</string>
+    <string name="hub_pc_guide_retry_detect">Riprova rilevamento</string>
+    <string name="hub_pc_guide_ko">Qualcosa è andata storta. Riprova</string>
+    <string name="hub_pc4b_intro_v3">Seleziona ed importa il file «DATI_CIFS.json» ricevuto dal PC (Download / Bluetooth / file ricevuti). Ignora no_pw.json e file con (1)/(2).</string>
     <string name="hub_pc4b_file_expected_v3">File atteso: DATI_CIFS.json</string>
     <string name="hub_import_ok">Import riuscito</string>
 
@@ -264,7 +272,7 @@
     <string name="hub_pc5_confirm">Conferma</string>
     <string name="hub_pc5_item_saved">Confermo di aver configurato e salvato CIFS Documents Provider secondo le istruzioni sopra indicate</string>
     <string name="hub_pc5_ultima_azione">Ultima azione: clicca su «Attiva collegamento», seleziona la connessione CIFS appena salvata (Name = MyMedia) e premi «Usa questa cartella». Non restare sull\'elenco share del PC.</string>
-    <string name="hub_pc5_activate_link">Attiva collegamento</string>
+    <string name="hub_pc5_activate_link">Attiva Catalogo</string>
     <string name="hub_pc5_access_question">La prova di accesso al Catalogo è andata a buon fine?</string>
     <string name="hub_pc5_access_yes">Sì</string>
     <string name="hub_pc5_access_no">No</string>

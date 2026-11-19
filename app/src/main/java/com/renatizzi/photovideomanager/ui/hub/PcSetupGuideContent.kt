@@ -1,8 +1,8 @@
 package com.renatizzi.photovideomanager.ui.hub
 
 /**
- * Contenuti guida Setup PC — template v3 + Ottimizzazione + Difficoltà_BT (6/11).
- * Messaggi di conferma letterali (senza citare BT/USB).
+ * Contenuti guida Setup PC — REV9 Parte 2 (online) + integrazioni v7 (porte / ascolto).
+ * Una fase alla volta; nessun messaggio «Confermo di aver…».
  */
 enum class PcLinkMode {
     ALREADY_PAIRED,
@@ -13,24 +13,27 @@ enum class PcLinkMode {
 data class PcGuidePhase(
     val title: String,
     val body: String,
-    val confirmMessage: String,
+    /** Etichetta CTA d’azione (non un assenso vuoto). */
+    val actionLabel: String,
 )
 
 object PcSetupGuideContent {
     const val PHASE_COUNT = 4
+    const val GUIDE_PDF_ASSET = "setup_guide/Guida_Setup_Catalogo_MediaManager_REV9.pdf"
 
-    val CONFIRM_SEND_TO_PC =
-        "Confermo di aver inviato il set di file dal Telefono al PC secondo le modalità descritte nella guida"
-    val CONFIRM_SCRIPT =
-        "Confermo di aver lanciato lo script ricevuto sul PC e di aver atteso il messaggio «Tutto pronto», secondo le modalità descritte nella guida"
-    val CONFIRM_SEND_TO_PHONE =
-        "Confermo di aver inviato il set di file dal PC al Telefono secondo le modalità descritte nella guida"
-    val CONFIRM_CIFS =
-        "Confermo di aver configurato CIFS e di aver attivato il collegamento secondo le modalità descritte nella guida"
+    /** @deprecated Usato solo da test legacy; UI v7 non mostra autodichiarazioni. */
+    @Deprecated("v7: niente autodichiarazioni")
+    val CONFIRM_SEND_TO_PC = ""
+    @Deprecated("v7: niente autodichiarazioni")
+    val CONFIRM_SCRIPT = ""
+    @Deprecated("v7: niente autodichiarazioni")
+    val CONFIRM_SEND_TO_PHONE = ""
+    @Deprecated("v7: niente autodichiarazioni")
+    val CONFIRM_CIFS = ""
 
     fun modeLabel(mode: PcLinkMode): String = when (mode) {
         PcLinkMode.ALREADY_PAIRED ->
-            "Telefono e PC sono già associati (lo vedo in ‘Il mio Computer’)"
+            "Telefono e PC sono già associati (lo vedo in Bluetooth)"
         PcLinkMode.NEED_PAIRING ->
             "Telefono e PC NON sono ancora associati (devo fare il pairing)"
         PcLinkMode.USB ->
@@ -38,90 +41,94 @@ object PcSetupGuideContent {
     }
 
     fun guideSubtitle(mode: PcLinkMode): String = when (mode) {
-        PcLinkMode.ALREADY_PAIRED -> "Collegamento BT tra Telefono e PC già associati"
-        PcLinkMode.NEED_PAIRING -> "Collegamento BT tra Telefono e PC non ancora associati"
-        PcLinkMode.USB -> "Collegamento USB tra Telefono e PC"
+        PcLinkMode.ALREADY_PAIRED -> "Guida — Fase corrente (Bluetooth già associati)"
+        PcLinkMode.NEED_PAIRING -> "Guida — Fase corrente (Bluetooth non associati)"
+        PcLinkMode.USB -> "Guida — Fase corrente (USB)"
     }
 
     fun guideDescription(): String =
-        "Attiva la procedura semiautomatica per l’interscambio dei file di configurazione tra il tuo telefono e il PC. " +
-            "Segui la guida cliccando sulla freccia accanto al titolo della fase per espandere il contenuto. " +
-            "L’intera guida può essere stampata qui"
+        "Segui la fase corrente. L’intera guida può essere stampata qui"
 
     fun associationSubtitle(): String = "Modalità di associazione tra Telefono e PC"
 
     fun associationDescription(): String =
-        "Attiva il collegamento tra il tuo telefono e il PC dove hai deciso di tenere il Catalogo delle foto e video."
+        "Attiva il collegamento tra il tuo telefono e il PC dove hai deciso di tenere il Catalogo delle foto e video. " +
+            "Mantieni lo stesso metodo anche per riportare DATI_CIFS.json."
 
-    fun phases(mode: PcLinkMode): List<PcGuidePhase> {
-        val sendTitle = when (mode) {
-            PcLinkMode.USB -> "Invio USB (dal Telefono al PC) dei file di configurazione"
-            else -> "Invio BT (dal Telefono al PC) dei file di configurazione"
-        }
-        val returnTitle = when (mode) {
-            PcLinkMode.USB -> "Invio USB (dal PC al Telefono) dei file generati dallo script"
-            else -> "Invio BT (dal PC al Telefono) dei file generati dallo script"
-        }
-        return listOf(
-            PcGuidePhase(sendTitle, sendBody(mode), CONFIRM_SEND_TO_PC),
-            PcGuidePhase(
-                "Lancio (dal desktop del PC) dello script ricevuto",
-                SCRIPT_BODY,
-                CONFIRM_SCRIPT,
-            ),
-            PcGuidePhase(returnTitle, returnBody(mode), CONFIRM_SEND_TO_PHONE),
-            PcGuidePhase(
-                "Configurazione CIFS e attivazione del Catalogo",
-                CIFS_BODY,
-                CONFIRM_CIFS,
-            ),
-        )
+    fun phases(mode: PcLinkMode): List<PcGuidePhase> = listOf(
+        PcGuidePhase(
+            title = "Fase 1 — Trasferisci i tre file dal Telefono al PC",
+            body = sendBody(mode),
+            actionLabel = "Invia set di configurazione",
+        ),
+        PcGuidePhase(
+            title = "Fase 2 — Esegui lo script sul PC",
+            body = SCRIPT_BODY,
+            actionLabel = "Apri istruzioni script",
+        ),
+        PcGuidePhase(
+            title = "Fase 3 — Trasferisci DATI_CIFS.json al Telefono",
+            body = returnBody(mode),
+            actionLabel = "Usa questi dati",
+        ),
+        PcGuidePhase(
+            title = "Fase 4 — Importa i dati e configura CIFS",
+            body = CIFS_BODY,
+            actionLabel = "Vai a configurazione CIFS",
+        ),
+    )
+
+    fun lampLabel(index: Int): String = when (index) {
+        0 -> "1 Invio set"
+        1 -> "2 Script PC"
+        2 -> "3 Dati CIFS"
+        else -> "4 Attivazione"
     }
 
     private fun sendBody(mode: PcLinkMode): String = when (mode) {
         PcLinkMode.ALREADY_PAIRED ->
-            "Se Telefono e PC sono già associati, non ripetere il pairing.\n\n" +
-                "1) Nell’app, all’OK di questa fase, nel popup Condividi scegli l’opzione che invia i 3 file al PC " +
-                "(es. Bluetooth / Collegamento… Invia al PC).\n" +
-                "2) Conferma sul nome del PC proposto.\n" +
-                "3) Sul PC trova i file (di solito Download; altrimenti Impostazioni → Bluetooth e dispositivi → " +
-                "Dispositivi mobili → cartella trasferimenti).\n" +
-                "4) Copia i 3 file sul Desktop (sostituisci le versioni precedenti: deve restare solo l’ultima).\n" +
-                "5) Non restare sulla pagina Invio/Ricevi di sistema: torna a MediaManager."
+            "Se il nome del PC compare già nell’elenco Bluetooth del Telefono, non ripetere il pairing. " +
+                "Attiva Bluetooth su entrambi.\n\n" +
+                "PC: Trasferimento file Bluetooth → Ricevi file.\n" +
+                "Telefono: tap su «Invia set di configurazione» → seleziona il PC.\n\n" +
+                "I file non arrivano sul Desktop: cerca la cartella di ricezione (es. File ricevuti), " +
+                "copia sul Desktop CONFIGURA.CMD, QRCoder.dll e sup.ps1 " +
+                "(sostituisci le versioni precedenti; evita nomi con (1)/(2)).\n" +
+                "In alternativa puoi avviare CONFIGURA.CMD direttamente dalla cartella di ricezione."
         PcLinkMode.NEED_PAIRING ->
-            "Prima: pairing dal Telefono (non dal PC).\n" +
-                "Impostazioni → Connessioni → Bluetooth → Associa/Accoppia nuovo dispositivo → scegli il PC → " +
-                "conferma il codice su entrambi.\n\n" +
-                "Importante: il Bluetooth sul PC e sul Telefono non deve essere già impegnato da un altro " +
-                "collegamento esclusivo, altrimenti i due dispositivi non si vedono.\n\n" +
-                "Poi: come nel ramo «già associati» — popup Condividi → invia i 3 file → conferma nome PC → " +
-                "trova i file sul PC → copia sul Desktop (overwrite) → torna a MediaManager."
+            "PC: Impostazioni → Bluetooth (attiva e lascia aperto).\n" +
+                "Telefono: Impostazioni → Bluetooth → cerca il PC → seleziona → " +
+                "verifica il codice e conferma su entrambi.\n\n" +
+                "Poi PC: Trasferimento file Bluetooth → Ricevi file.\n" +
+                "Telefono: tap su «Invia set di configurazione» → seleziona il PC.\n\n" +
+                "I file non arrivano sul Desktop: cercali nella cartella di ricezione e copiali sul Desktop " +
+                "(overwrite; niente (1)/(2)), oppure avvia CONFIGURA dalla cartella di ricezione."
         PcLinkMode.USB ->
-            "Collega il Telefono al PC con cavo USB e sblocca il Telefono.\n" +
-                "Sul PC: Esplora file → Telefono → Memoria interna → individua i 3 file generati dall’app " +
-                "(o dalla cartella Download del Telefono).\n" +
-                "Copiali sul Desktop del PC (overwrite versioni precedenti). Non aprire i file di supporto."
+            "Collega il cavo dati; sul Telefono seleziona Trasferimento file / MTP.\n" +
+                "PC: Questo PC → Telefono → Memoria interna → Download → " +
+                "copia sul Desktop CONFIGURA.CMD, QRCoder.dll e sup.ps1 (overwrite, niente (1)/(2))."
     }
 
     private const val SCRIPT_BODY =
-        "Sul Desktop: doppio clic su CONFIGURA. Se compare UAC, conferma.\n" +
-            "Non aprire i file di supporto. Attendi il messaggio verde «Tutto pronto».\n" +
-            "Sul Desktop compare DATI_CIFS.json (e no_pw.json da non usare). " +
-            "Ogni nuovo tentativo deve sostituire i file precedenti."
+        "Sul PC: doppio clic su CONFIGURA.CMD (Desktop oppure cartella di ricezione).\n" +
+            "Segui le istruzioni; non chiudere la finestra.\n" +
+            "Al termine deve comparire DATI_CIFS.json. Lo script ripulisce i duplicati (1)/(2).\n" +
+            "Se lo script segnala un errore o il JSON non viene creato, fermati.\n\n" +
+            "Resta su questa schermata: l’app ascolta l’arrivo di DATI_CIFS.json."
 
     private fun returnBody(mode: PcLinkMode): String = when (mode) {
         PcLinkMode.USB ->
-            "Copia solo DATI_CIFS.json dal Desktop alla cartella Download del Telefono (via USB). " +
-                "Ignora no_pw.json e file omonimi vecchi.\n" +
-                "Poi torna all’app e importa DATI_CIFS.json."
+            "Se i dati non sono già stati rilevati: copia DATI_CIFS.json dal Desktop del PC " +
+                "alla cartella Download del Telefono (solo il file senza (1)/(2)).\n" +
+                "L’app lo intercetta automaticamente; il selettore file resta come recupero."
         else ->
-            "Dal Desktop seleziona solo DATI_CIFS.json. Invia via Bluetooth (Invia file). " +
-                "Phone Link / «Collegamento al telefono» solo se già attivo (non obbligatorio).\n" +
-                "Ignora no_pw.json. Torna a MediaManager: non restare sulla pagina Invio/Ricevi di sistema, " +
-                "poi importa DATI_CIFS.json."
+            "Se i dati non sono già stati rilevati: PC → Desktop → tasto destro su DATI_CIFS.json → " +
+                "Invia a dispositivo Bluetooth → Telefono → accetta.\n" +
+                "L’app lo intercetta automaticamente; il selettore file resta come recupero."
     }
 
     private const val CIFS_BODY =
-        "Nell’app: Importa DATI_CIFS.json → OK. Poi Apri CIFS Documents Provider, " +
-            "Copia Host/User/Password/Folder (MyMedia), salva, Attiva collegamento → Usa questa cartella."
+        "Usa i dati ricevuti: Apri CIFS Documents Provider, Copia Host/User/Password/Folder un campo alla volta, " +
+            "salva. Verifica che la cartella/dispositivo compaia nella lista CIFS. " +
+            "Solo dopo: Attiva Catalogo."
 }

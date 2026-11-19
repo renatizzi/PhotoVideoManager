@@ -20,35 +20,48 @@ class PcSetupGuideContentTest {
     }
 
     @Test
-    fun alreadyPaired_doesNotForcePairing() {
+    fun alreadyPaired_doesNotForcePairing_andMentionsDesktopCopy() {
         val body = PcSetupGuideContent.phases(PcLinkMode.ALREADY_PAIRED)[0].body
-        assertTrue(body.contains("già associati") || body.contains("non ripetere"))
+        assertTrue(body.contains("non ripetere"))
         assertTrue(body.contains("Desktop"))
-        assertTrue(body.contains("MediaManager"))
+        assertTrue(body.contains("ricezione") || body.contains("File ricevuti"))
+        assertFalse(body.contains("Confermo di aver"))
     }
 
     @Test
-    fun needPairing_startsFromPhoneAndMentionsBusyLink() {
+    fun needPairing_startsFromPhoneSettings() {
         val body = PcSetupGuideContent.phases(PcLinkMode.NEED_PAIRING)[0].body
-        assertTrue(body.contains("dal Telefono"))
-        assertTrue(body.contains("impegnato") || body.contains("non si vedono"))
+        assertTrue(body.contains("Bluetooth"))
+        assertTrue(body.contains("codice"))
     }
 
     @Test
-    fun scriptPhase_mentionsDatiCifsAndIgnoreNoPw() {
+    fun scriptPhase_mentionsDatiCifsAndListening() {
         val body = PcSetupGuideContent.phases(PcLinkMode.ALREADY_PAIRED)[1].body
         assertTrue(body.contains("DATI_CIFS.json"))
-        assertTrue(body.contains("no_pw.json"))
         assertTrue(body.contains("CONFIGURA"))
+        assertTrue(body.contains("ascolta") || body.contains("ascolto"))
     }
 
     @Test
-    fun confirmMessages_areIdenticalAcrossModes() {
-        val a = PcSetupGuideContent.phases(PcLinkMode.ALREADY_PAIRED).map { it.confirmMessage }
-        val b = PcSetupGuideContent.phases(PcLinkMode.NEED_PAIRING).map { it.confirmMessage }
-        val c = PcSetupGuideContent.phases(PcLinkMode.USB).map { it.confirmMessage }
+    fun actionLabels_areIdenticalAcrossModes_andNotConfirmations() {
+        val a = PcSetupGuideContent.phases(PcLinkMode.ALREADY_PAIRED).map { it.actionLabel }
+        val b = PcSetupGuideContent.phases(PcLinkMode.NEED_PAIRING).map { it.actionLabel }
+        val c = PcSetupGuideContent.phases(PcLinkMode.USB).map { it.actionLabel }
         assertEquals(a, b)
         assertEquals(a, c)
         assertEquals(4, a.size)
+        a.forEach { label ->
+            assertFalse(label.contains("Confermo"))
+            assertFalse(label.equals("Continua", ignoreCase = true))
+            assertFalse(label.contains("Puoi passare"))
+        }
+        assertTrue(a[0].contains("Invia"))
+        assertTrue(a[2].contains("Usa questi dati"))
+    }
+
+    @Test
+    fun guideDescription_hasInlinePrintAnchor() {
+        assertTrue(PcSetupGuideContent.guideDescription().endsWith("qui"))
     }
 }

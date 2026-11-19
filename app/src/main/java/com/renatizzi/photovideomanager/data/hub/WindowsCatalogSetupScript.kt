@@ -389,6 +389,41 @@ function Record(${d}name, ${d}ok, ${d}detail) {
   ${d}steps.Add([pscustomobject]@{ name = ${d}name; ok = [bool]${d}ok; detail = [string]${d}detail }) | Out-Null
 }
 
+function Invoke-PvmMaggiordomo([string]${d}destDir) {
+  # Consolida i 3 file e rimuove duplicati (1)/(2) da Desktop / Download / File ricevuti / cartella script.
+  ${d}desk = [Environment]::GetFolderPath('Desktop')
+  ${d}dl = Join-Path ${d}env:USERPROFILE 'Downloads'
+  ${d}recv1 = Join-Path ${d}env:USERPROFILE 'Documents\Bluetooth Exchange Folder'
+  ${d}recv2 = Join-Path ${d}env:USERPROFILE 'Documents\File ricevuti'
+  ${d}dirs = New-Object System.Collections.Generic.List[string]
+  foreach (${d}cand in @(${d}PSScriptRoot, ${d}desk, ${d}dl, ${d}recv1, ${d}recv2, ${d}destDir)) {
+    if (${d}cand -and (Test-Path -LiteralPath ${d}cand) -and -not (${d}dirs -contains ${d}cand)) {
+      ${d}dirs.Add(${d}cand) | Out-Null
+    }
+  }
+  foreach (${d}need in @('CONFIGURA.cmd','sup.ps1','QRCoder.dll')) {
+    ${d}best = ${d}null
+    ${d}like = ${d}need + ' (*)'
+    foreach (${d}dir in ${d}dirs) {
+      ${d}hit = Get-ChildItem -LiteralPath ${d}dir -File -ErrorAction SilentlyContinue |
+        Where-Object { ${d}_.Name -ieq ${d}need -or ${d}_.Name -like ${d}like } |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 1
+      if (${d}hit -and (-not ${d}best -or ${d}hit.LastWriteTime -gt ${d}best.LastWriteTime)) {
+        ${d}best = ${d}hit
+      }
+    }
+    if (${d}best -and ${d}destDir -and (Test-Path -LiteralPath ${d}destDir)) {
+      Copy-Item -LiteralPath ${d}best.FullName -Destination (Join-Path ${d}destDir ${d}need) -Force -ErrorAction SilentlyContinue
+    }
+  }
+  foreach (${d}dir in ${d}dirs) {
+    Get-ChildItem -LiteralPath ${d}dir -File -ErrorAction SilentlyContinue |
+      Where-Object { ${d}_.Name -match '^(CONFIGURA|sup|QRCoder|DATI_CIFS|no_pw).*\([0-9]+\)' } |
+      ForEach-Object { Remove-Item -LiteralPath ${d}_.FullName -Force -ErrorAction SilentlyContinue }
+  }
+}
+
 try {
   Write-Host ""
   Write-Host "=== MediaManager: configurazione Catalogo ===" -ForegroundColor Cyan
@@ -397,6 +432,14 @@ try {
   Write-Host ""
   Write-Host "Passo 1 di 6 - Controlli preliminari" -ForegroundColor Cyan
   Write-Host ""
+  try {
+    Invoke-PvmMaggiordomo -destDir ${d}PSScriptRoot
+    ${d}desk0 = [Environment]::GetFolderPath('Desktop')
+    if (${d}desk0) { Invoke-PvmMaggiordomo -destDir ${d}desk0 }
+    Write-Step 'Maggiordomo: file consolidati, duplicati (1)/(2) rimossi.'
+  } catch {
+    Write-Step 'Maggiordomo: salto (continua comunque).'
+  }
 
   ${d}identity = [Security.Principal.WindowsIdentity]::GetCurrent()
   ${d}principal = New-Object Security.Principal.WindowsPrincipal(${d}identity)
@@ -650,6 +693,11 @@ try {
         Set-Content -LiteralPath ${d}bt -Value ${d}bundleJson -Encoding UTF8 -Force
       } catch {}
     }
+    try {
+      ${d}deskClean = [Environment]::GetFolderPath('Desktop')
+      if (${d}deskClean) { Invoke-PvmMaggiordomo -destDir ${d}deskClean }
+      Invoke-PvmMaggiordomo -destDir ${d}PSScriptRoot
+    } catch {}
     Write-Step ('Bundle CIFS scritto (' + ${d}bundleName + ')')
     Write-Host ("Bundle salvato anche sulla chiavetta/cartella di CONFIGURA: " + ${d}bundleName)
   } catch {

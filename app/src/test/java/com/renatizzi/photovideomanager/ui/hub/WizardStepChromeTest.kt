@@ -72,18 +72,17 @@ class WizardStepChromeTest {
     }
 
     @Test
-    fun pcGuide_confirmMessagesAreChannelAgnostic() {
-        assertFalse(PcSetupGuideContent.CONFIRM_SEND_TO_PC.contains("BT", ignoreCase = true))
-        assertFalse(PcSetupGuideContent.CONFIRM_SEND_TO_PC.contains("USB", ignoreCase = true))
-        assertFalse(PcSetupGuideContent.CONFIRM_SCRIPT.contains("BT", ignoreCase = true))
-        assertFalse(PcSetupGuideContent.CONFIRM_SEND_TO_PHONE.contains("USB", ignoreCase = true))
-        assertEquals(4, PcSetupGuideContent.phases(PcLinkMode.NEED_PAIRING).size)
-        assertTrue(
-            PcSetupGuideContent.phases(PcLinkMode.NEED_PAIRING)[0].body.contains("pairing", ignoreCase = true),
-        )
-        assertTrue(
-            PcSetupGuideContent.phases(PcLinkMode.USB)[0].title.contains("USB"),
-        )
+    fun pcGuide_actionLabelsAreChannelAgnostic() {
+        val phases = PcSetupGuideContent.phases(PcLinkMode.NEED_PAIRING)
+        assertEquals(4, phases.size)
+        phases.forEach { p ->
+            assertFalse(p.actionLabel.contains("Confermo", ignoreCase = true))
+            assertFalse(p.actionLabel.contains("BT", ignoreCase = true))
+            assertFalse(p.actionLabel.contains("USB", ignoreCase = true))
+        }
+        assertTrue(phases[0].body.contains("codice") || phases[0].body.contains("Bluetooth"))
+        assertTrue(PcSetupGuideContent.phases(PcLinkMode.USB)[0].body.contains("USB") ||
+            PcSetupGuideContent.phases(PcLinkMode.USB)[0].body.contains("MTP"))
     }
 
     @Test

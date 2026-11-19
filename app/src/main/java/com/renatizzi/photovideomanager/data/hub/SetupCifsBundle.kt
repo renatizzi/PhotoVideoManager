@@ -60,6 +60,8 @@ data class SetupCifsBundle(
 
         fun isBundleFileName(name: String): Boolean {
             val n = name.trim()
+            // Happy path: rifiuta DATI_CIFS (1).json e simili (BL-BT-02).
+            if (n.contains("(") && n.contains(")")) return false
             if (n.equals(BUNDLE_FILE_NAME, ignoreCase = true)) return true
             if (n.equals(LEGACY_BUNDLE_FILE_NAME, ignoreCase = true)) return true
             return n.startsWith(LEGACY_BUNDLE_FILE_PREFIX, ignoreCase = true) &&
