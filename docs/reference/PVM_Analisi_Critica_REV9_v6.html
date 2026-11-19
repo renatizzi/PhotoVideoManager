@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<title>MediaManager — Analisi critica REV9 + proposta controllo fasi v6</title>
+<style>
+  :root{--ink:#1a1a1a;--muted:#555;--line:#d0cbc0;--bg:#f7f5f0;--ok:#1b5e20;--warn:#8a5a00;--bad:#8b1a1a;--accent:#0d47a1}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Calibri,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.4}
+  header,section,footer{max-width:980px;margin:0 auto;padding:0 22px}
+  header{padding-top:26px}
+  h1{font-size:1.28rem;margin:0 0 6px}
+  h2{font-size:1.05rem;border-bottom:2px solid var(--ink);padding-bottom:5px;margin-top:26px}
+  h3{font-size:.95rem;margin:14px 0 6px}
+  p,li{font-size:.9rem}
+  .muted{color:var(--muted);font-size:.86rem}
+  .banner{background:#fff8e1;border:1px solid #f0c36d;padding:10px 12px;margin:12px 22px;max-width:980px}
+  .banner.ok{background:#e8f5e9;border-color:#81c784}
+  .card{background:#fff;border:1px solid var(--line);padding:12px 14px;margin:10px 0}
+  .bad{border-left:4px solid var(--bad)}
+  .warn{border-left:4px solid #e6a23c}
+  .ok{border-left:4px solid var(--ok)}
+  .info{border-left:4px solid var(--accent)}
+  table{width:100%;border-collapse:collapse;background:#fff;font-size:.84rem;margin:8px 0}
+  th,td{border:1px solid var(--line);padding:7px 8px;vertical-align:top;text-align:left}
+  th{background:#eee}
+  code{font-size:.86em}
+  .phone{background:#fff;border:1px solid var(--line);border-radius:16px;max-width:320px;overflow:hidden;margin:10px 0}
+  .bar{background:#1565c0;color:#fff;padding:8px 10px;font-size:.75rem;font-weight:700}
+  .body{padding:12px;min-height:420px}
+  .title{font-weight:700;margin:0 0 4px}
+  .row{display:flex;gap:8px;align-items:center;margin:6px 0;font-size:.78rem}
+  .lamp{width:12px;height:12px;border-radius:50%;display:inline-block;border:1px solid #999}
+  .lamp.off{background:#ddd}
+  .lamp.wait{background:#ffcc80}
+  .lamp.on{background:#66bb6a}
+  .lamp.ko{background:#ef9a9a}
+  .cta{display:inline-block;background:#1565c0;color:#fff;padding:8px 12px;border-radius:4px;font-size:.78rem;margin-top:8px}
+  .cta.sec{background:#fff;color:#1565c0;border:1px solid #1565c0}
+  .state{font-size:.72rem;padding:6px 8px;background:#f3f8ff;border-radius:4px;margin-top:8px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media print{section{page-break-inside:avoid} .grid{grid-template-columns:1fr}}
+  footer{padding:22px;color:var(--muted);font-size:.82rem}
+</style>
+</head>
+<body>
+<header>
+  <h1>Analisi critica REV9 + proposta controllo fasi</h1>
+  <p class="muted">Documento di riesame pre-sviluppo · 19/11/2026 · <strong>nessun codice</strong> · fonte: Guida REV9 + capacità attuali app/script 0.16.73</p>
+</header>
+<div class="banner">Risponde alle 4 richieste: incongruenze; bypass ricerca Desktop/Download; indicatori di fase; alternativa a «Continua / Puoi passare…».</div>
+
+<section>
+  <h2>1. Esame critico della guida — incongruenze</h2>
+
+  <div class="card bad">
+    <strong>I1 — Destinazione BT ≠ Desktop (critica alta)</strong><br/>
+    REV9 impone che i 3 file siano sul <em>Desktop</em> anche nel ramo Bluetooth. In Windows, «Ricevi file» Bluetooth deposita tipicamente in «File ricevuti» / Download / cartella scelta dal wizard OPP, <strong>non</strong> sul Desktop. L’utente deve quindi fare una seconda ricerca+copia non descritta in modo esplicito nel ramo BT (è implicita solo nella verifica Desktop). È la stessa frizione che hai segnalato.
+  </div>
+  <div class="card bad">
+    <strong>I2 — Overwrite vs «verifica copie precedenti»</strong><br/>
+    La guida dice di verificare che i file siano della sessione corrente, ma non dà un criterio operativo. Con <code>nome (1)</code>/<code>(2)</code> l’utente non distingue: la verifica diventa un vicolo cieco. Contraddice l’obiettivo «una sola versione».
+  </div>
+  <div class="card warn">
+    <strong>I3 — Casing <code>DATI_CIFS.JSON</code> vs <code>DATI_CIFS.json</code></strong><br/>
+    REV9 usa <code>.JSON</code>; l’app/script usano <code>.json</code>. Su Windows di solito non conta; su Android/MediaStore può creare ambiguità nella ricerca automatica.
+  </div>
+  <div class="card warn">
+    <strong>I4 — Fase 3 vs Fase 4 confondono «trasferisci» e «importa»</strong><br/>
+    Parte 1 Fase 3 = solo trasferimento file; import = Fase 4. Parte 2 è coerente, ma nelle proposte UI precedenti l’import è stato mescolato nella Fase 3. Va tenuto un confine netto: <em>arrivo file</em> ≠ <em>interpretazione JSON</em>.
+  </div>
+  <div class="card warn">
+    <strong>I5 — Parte 2 Fase 1 dice ancora «Scegli Bluetooth oppure USB»</strong><br/>
+    Se l’app ha già fatto scegliere il ramo, ripetere la scelta online è ridondante e rischia di far cambiare metodo a metà. Criterio REV9 («solo il ramo scelto») è corretto: il testo sintetico non deve ripresentare la scelta.
+  </div>
+  <div class="card warn">
+    <strong>I6 — Checkpoint CIFS lista cartelle non è osservabile da MediaManager</strong><br/>
+    REV9 eleva a «esito atteso» la presenza in lista CIFS Documents Provider. MediaManager non può leggerla. È un checkpoint <em>umano</em>, non automatico: va etichettato come tale, altrimenti si ripete l’errore delle autodichiarazioni finte.
+  </div>
+  <div class="card warn">
+    <strong>I7 — Controllo finale mescola prerequisiti e risultato</strong><br/>
+    «I 3 file sono sul Desktop» a fine procedura non è un esito utile (possono essere stati spostati/cancellati). Meglio: Catalogo attivato + share raggiungibile.
+  </div>
+  <div class="card info">
+    <strong>I8 — Capacità già presenti ma assenti dalla guida</strong><br/>
+    Lo script espone già un annuncio LAN (HTTP/UDP) del bundle a «Tutto pronto»; l’app sa già cercare <code>DATI_CIFS.json</code> in Download/MediaStore. REV9 non li menziona: si perde un’ancora di recupero quando BT/USB falliscono sulla ricerca cartelle.
+  </div>
+  <div class="card info">
+    <strong>I9 — Numerazione passi USB (4–7) dopo BT (1–3)</strong><br/>
+    Chi legge solo USB parte dal passo 4. Minore, ma confonde in stampa.
+  </div>
+</section>
+
+<section>
+  <h2>2. Evitare ricerca/copia Desktop e Download — fattibilità</h2>
+  <p>Obiettivo: l’utente non deve «cacciare» cartelle. Una parte avvia, l’altra completa.</p>
+
+  <h3>Cosa non possiamo fare (limiti reali)</h3>
+  <ul>
+    <li>MediaManager sul Telefono <strong>non vede</strong> il Desktop Windows né può forzarvi la copia via Bluetooth OPP.</li>
+    <li>Finché CONFIGURA non è eseguito, sul PC non c’è un agente nostro in ascolto.</li>
+    <li>USB/MTP è pilotato dal PC: l’app Android non può «spingere» file sul Desktop mentre è montata come memoria.</li>
+  </ul>
+
+  <h3>Cosa possiamo fare — proposta a tre leve</h3>
+  <table>
+    <tr><th>Leva</th><th>Direzione</th><th>Effetto</th><th>Nota</th></tr>
+    <tr>
+      <td><strong>A. Esegui dove arriva</strong></td>
+      <td>Telefono → PC</td>
+      <td>Elimina la copia Desktop in Fase 1 BT</td>
+      <td>CONFIGURA già usa la cartella dello script (<code>PSScriptRoot</code>). Istruzione: «Apri la cartella File ricevuti e fai doppio clic su CONFIGURA.CMD». Desktop diventa opzionale, non obbligatorio.</td>
+    </tr>
+    <tr>
+      <td><strong>B. Script = maggiordomo</strong></td>
+      <td>PC locale</td>
+      <td>Alla partenza, lo script cerca i 3 file omonimi (Desktop, File ricevuti, Download), li consolida, cancella <code>(1)/(2)</code>, scrive solo l’ultima versione</td>
+      <td>Risolve I1+I2 senza chiedere all’utente di navigare.</td>
+    </tr>
+    <tr>
+      <td><strong>C. Ritorno dati senza caccia</strong></td>
+      <td>PC → Telefono</td>
+      <td>1) App in ascolto MediaStore: appena compare <code>DATI_CIFS.json</code> (sessione/token) → «File ricevuto». 2) In parallelo silenzioso: se stessa Wi‑Fi, pull LAN dello script (già esiste). 3) USB: resta copia mirata, ma l’app evita il picker se trova il file in Download.</td>
+      <td>L’utente non cerca Download: l’app lo fa. Il picker resta solo fallback.</td>
+    </tr>
+  </table>
+
+  <div class="card ok">
+    <strong>Raccomandazione</strong><br/>
+    Non inventare un nuovo protocollo. Combinare A+B+C: BT/USB restano il trasporto; la <em>localizzazione</em> dei file diventa automatica (script sul PC, MediaStore/LAN sul Telefono). La guida smette di dire «vai in Download / Desktop e copia» come passo felice; lo releghiamo a «Se non compare…».
+  </div>
+
+  <h3>USB</h3>
+  <p>Non eliminabile al 100% senza un tool PC preinstallato. Mitigazione: percorso primario BT + auto-localizzazione; USB documentato come piano B con path fisso e overwrite obbligatorio.</p>
+</section>
+
+<section>
+  <h2>3. Indicatori di fase — espedienti utili (senza fingere)</h2>
+  <p>Principio: ogni lampada deve dire <em>cosa sappiamo davvero</em>. Mai «fase ok» se non c’è evidenza.</p>
+  <table>
+    <tr><th>Fase</th><th>Segnale osservabile</th><th>Indicatore proposto</th><th>Cosa NON è</th></tr>
+    <tr>
+      <td>1 Invio set</td>
+      <td>App: export 3 file OK + intent Condividi/BT avviato (timestamp)</td>
+      <td><span class="lamp wait"></span> «Set inviato dal Telefono» (ambra)</td>
+      <td>Non prova che il PC li abbia ricevuti</td>
+    </tr>
+    <tr>
+      <td>1 bis</td>
+      <td>Nessun canale diretto Telefono→Desktop</td>
+      <td>Resta ambra finché non parte Fase 2; oppure verde solo se in futuro lo script manda ACK (LAN) — fuori scope immediato</td>
+      <td>Non chiedere «Confermo di aver…»</td>
+    </tr>
+    <tr>
+      <td>2 Script</td>
+      <td>Invisibile all’app finché non torna un artefatto</td>
+      <td><span class="lamp wait"></span> «In attesa dei dati dal PC»</td>
+      <td>Non c’è modo onesto di sapere se la console PC è andata a buon fine</td>
+    </tr>
+    <tr>
+      <td>3 Ricezione DATI_CIFS</td>
+      <td><strong>Reale:</strong> file in MediaStore/Download con nome corretto, età recente, token sessione; oppure payload LAN</td>
+      <td><span class="lamp on"></span> «Dati CIFS ricevuti»</td>
+      <td>Rifiutare <code>(1)/(2)</code> e file senza token</td>
+    </tr>
+    <tr>
+      <td>4 Import</td>
+      <td><strong>Reale:</strong> JSON completo (IP/user/password/folder)</td>
+      <td><span class="lamp on"></span> «Dati pronti da copiare»</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td>4 CIFS</td>
+      <td>Solo azione umana + prova SAF/cartella se già prevista</td>
+      <td><span class="lamp wait"></span> «Copia in CIFS» → verde solo su attivazione Catalogo riuscita in-app</td>
+      <td>Lista CIFS di terze parti non è leggibile</td>
+    </tr>
+  </table>
+
+  <div class="card info">
+    <strong>Espediente chiave</strong><br/>
+    Non monitoriamo «il PC». Monitoriamo <em>gli artefatti che il PC deve produrre</em> quando tornano sul Telefono (o via LAN). La Fase 2 resta «in attesa»; il passaggio automatico a «ricevuto» avviene quando compare <code>DATI_CIFS.json</code> valido. Questo assiste l’utente senza checkpoint finti.
+  </div>
+</section>
+
+<section>
+  <h2>4. Alternativa a «Continua / Puoi passare…»</h2>
+  <p>Condivido la critica: quei messaggi non chiudono nulla e non aprono nulla. Propongo un modello a <strong>porte</strong>.</p>
+
+  <div class="card ok">
+    <strong>Modello a porte (una fase alla volta)</strong>
+    <ul>
+      <li>È visibile solo la fase corrente + lo stato delle precedenti (lampade).</li>
+      <li>Il CTA primario è <em>l’azione concreta</em> della fase, non «Continua».</li>
+      <li>La fase successiva si sblocca solo con evidenza (dove esiste) o con un’azione nominata che avvia il lavoro successivo (non un assenso vuoto).</li>
+      <li>Niente banner «Puoi passare…». Al massimo uno stato: «In corso / In attesa / Completata / Da ripetere».</li>
+    </ul>
+  </div>
+
+  <table>
+    <tr><th>Fase</th><th>CTA primario (sostituisce Continua)</th><th>Sblocco fase successiva</th></tr>
+    <tr>
+      <td>1</td>
+      <td><strong>Invia set di configurazione</strong> (avvia BT/share) oppure istruzioni USB fisse</td>
+      <td>Dopo invio: stato «Inviato — sul PC avvia CONFIGURA». CTA diventa <strong>Apri istruzioni script</strong> → sblocca Fase 2 (il gate soft è accettabile qui: senza script non esiste artefatto)</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Solo istruzioni «Doppio clic CONFIGURA» + stato <strong>In attesa dei dati dal PC</strong></td>
+      <td>Nessun bottone «avanti». La Fase 3 si apre da sola quando l’app rileva DATI_CIFS (o LAN). Fallback: <strong>Non arriva? Rinvia / Importa file…</strong></td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>Se file rilevato: <strong>Usa questi dati</strong>. Se no: istruzione invio da PC + ascolto attivo</td>
+      <td>Import/validazione OK → sblocca Fase 4. KO → «Da ripetere» sulla stessa fase</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><strong>Apri CIFS</strong> + Copia campi + <strong>Attiva Catalogo</strong></td>
+      <td>Attivazione Catalogo riuscita chiude il wizard. Nessun «Continua» intermedio</td>
+    </tr>
+  </table>
+
+  <h3>Mock — stessa logica, CTA diversi</h3>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar">MediaManager · Setup</div>
+      <div class="body">
+        <p class="title">Setup Catalogo personale</p>
+        <p class="muted" style="font-size:.75rem">Fase corrente: 1 di 4 — Invio set</p>
+        <div class="row"><span class="lamp wait"></span> 1 Invio set — Inviato dal Telefono</div>
+        <div class="row"><span class="lamp off"></span> 2 Script PC — Bloccata</div>
+        <div class="row"><span class="lamp off"></span> 3 Dati CIFS — Bloccata</div>
+        <div class="row"><span class="lamp off"></span> 4 Attivazione — Bloccata</div>
+        <p style="font-size:.78rem;margin-top:10px">Istruzioni ramo BT già associati (Parte 2)… Stampa guida completa <strong>qui 🖨</strong></p>
+        <span class="cta">Invia set di configurazione</span>
+        <div class="state">Stato: pronto all’invio. Dopo l’invio apparirà «Apri istruzioni script».</div>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="bar">MediaManager · Setup</div>
+      <div class="body">
+        <p class="title">Setup Catalogo personale</p>
+        <p class="muted" style="font-size:.75rem">Fase corrente: 2 di 4 — Script PC</p>
+        <div class="row"><span class="lamp on"></span> 1 Invio set — Completata (inviato)</div>
+        <div class="row"><span class="lamp wait"></span> 2 Script PC — In attesa dei dati</div>
+        <div class="row"><span class="lamp off"></span> 3 Dati CIFS — In ascolto…</div>
+        <div class="row"><span class="lamp off"></span> 4 Attivazione — Bloccata</div>
+        <p style="font-size:.78rem;margin-top:10px">Sul PC: nella cartella dove hai ricevuto i file, doppio clic su <code>CONFIGURA.CMD</code>. Non chiudere la finestra.</p>
+        <div class="state">Nessun «Continua». Resta su questa schermata finché arrivano i dati (o tap su «Non arriva?…»).</div>
+        <span class="cta sec">Non arriva? Opzioni di recupero</span>
+      </div>
+    </div>
+  </div>
+  <div class="phone">
+    <div class="bar">MediaManager · Setup</div>
+    <div class="body">
+      <p class="title">Setup Catalogo personale</p>
+      <p class="muted" style="font-size:.75rem">Fase corrente: 3 di 4 — Dati ricevuti</p>
+      <div class="row"><span class="lamp on"></span> 1 Completata</div>
+      <div class="row"><span class="lamp on"></span> 2 Completata (inferita dall’artefatto)</div>
+      <div class="row"><span class="lamp on"></span> 3 Dati CIFS ricevuti</div>
+      <div class="row"><span class="lamp wait"></span> 4 Da attivare</div>
+      <div class="state">Rilevato <code>DATI_CIFS.json</code> (sessione corrente).</div>
+      <span class="cta">Usa questi dati</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>5. Sintesi decisioni proposte (per convalida)</h2>
+  <ol>
+    <li>Correggere la guida: ramo BT non obbliga Desktop; «esegui dove arriva» + script consolida/overwrite.</li>
+    <li>Automazione ricerca: PC = script maggiordomo; Telefono = ascolto MediaStore + LAN silenziosa; picker solo fallback.</li>
+    <li>Indicatori onesti: ambra su invio/attesa; verde solo su artefatti verificabili (file/token/import/attivazione).</li>
+    <li>Sostituire Continua/Puoi passare con CTA d’azione e sblocco a porte.</li>
+    <li>Rifiutare <code>(1)/(2)</code> nel happy path; allineare nome a <code>DATI_CIFS.json</code>.</li>
+  </ol>
+  <div class="banner ok">Nessuno sviluppo finché non convalidi questa direzione. Se ok, aggiorno i template PDF e solo dopo il codice.</div>
+</section>
+<footer>MediaManager · Analisi critica REV9 v6 · pre-sviluppo · 19/11/2026</footer>
+</body>
+</html>

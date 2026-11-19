@@ -114,4 +114,6 @@ Aperti:
 - **BL-UI-12** Funzione di **pulizia dati app** (prefs Catalogo, bozze wizard, indici/censimenti, cache MediaManager) — richiesta Renato 01/11 con Tranche A 0.16.57; non cancellare i file utente nelle cartelle SAF
 - **BL-BT-01** Nomi file post-script comprensibili (bundle/result) — come CONFIGURA/sup (Renato 08/11)
 - **BL-BT-02** Desktop: overwrite unica versione (bundle/result + 3 file CONFIGURA) (Renato 08/11)
+- **BL-BT-03** Bypass ricerca Desktop/Download: esegui-dove-arriva + script maggiordomo + ascolto MediaStore/LAN (analisi v6, in attesa convalida) (Renato 19/11)
+- **BL-BT-04** Indicatori fase onesti + modello a porte (no Continua/Puoi passare) (analisi v6, in attesa convalida) (Renato 19/11)
 - Font/stile carattere — correzione UI differita (accordo 30/10)
