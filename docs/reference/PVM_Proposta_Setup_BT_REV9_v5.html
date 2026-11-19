@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>MediaManager — Proposta Setup Catalogo BT v5 (REV9)</title>
+<style>
+  :root {
+    --bg:#f6f4ef; --ink:#1a1a1a; --muted:#5c5c5c; --line:#d7d2c8;
+    --accent:#1565c0; --accent2:#0d47a1; --ok:#2e7d32; --warn:#b26a00; --off:#b71c1c;
+    --phone:#fff; --top:#1565c0; --chip:#e8eef7; --greenbox:#e8f5e9;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Calibri,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.35}
+  header.doc,section,footer,.banner{max-width:1120px;margin:0 auto;padding:0 24px}
+  header.doc{padding-top:28px;padding-bottom:8px}
+  header.doc h1{margin:0 0 6px;font-size:1.35rem}
+  header.doc p,.muted{color:var(--muted);font-size:.9rem}
+  .banner{background:#fff8e1;border:1px solid #f0c36d;padding:12px 16px;margin:12px auto}
+  .banner.ok{background:#e8f5e9;border-color:#81c784}
+  .banner.warn{background:#fff3e0;border-color:#ffb74d}
+  .banner.bad{background:#ffebee;border-color:#ef9a9a}
+  section{margin-bottom:28px;page-break-inside:avoid}
+  section h2{border-bottom:2px solid var(--ink);padding-bottom:6px;font-size:1.1rem}
+  section h3{margin-top:14px;font-size:.98rem}
+  .note,.decision,.incongr,.okbox{background:#fff;border-left:4px solid var(--accent);padding:10px 12px;margin:10px 0;font-size:.88rem}
+  .decision{border-left-color:var(--ok)}
+  .incongr{border-left-color:var(--warn)}
+  .okbox{border-left-color:var(--ok)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;margin-top:12px}
+  .phone{background:var(--phone);border:1px solid var(--line);border-radius:18px;overflow:hidden;max-width:330px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+  .bar{background:var(--top);color:#fff;padding:8px 10px;font-size:.72rem;display:flex;justify-content:space-between;align-items:center}
+  .bar .app{font-weight:700;font-size:.85rem}
+  .body{padding:12px;min-height:560px;display:flex;flex-direction:column}
+  .title{font-size:1.02rem;font-weight:700;margin:0 0 2px}
+  .subtitle{font-size:.78rem;font-style:italic;color:var(--muted);margin:0 0 6px}
+  .desc{font-size:.8rem;margin:0 0 8px;line-height:1.4}
+  .print-inline{display:inline-flex;align-items:center;gap:3px;color:var(--accent);font-weight:700;font-size:1.05em;vertical-align:middle}
+  .print-inline .ico{font-size:1.2em;line-height:1}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 0}
+  .foot{margin-top:auto;padding-top:10px}
+  .btn{display:inline-block;border:1px solid var(--accent);color:var(--accent);padding:6px 10px;border-radius:4px;font-size:.74rem;background:#fff}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.wide{flex:1;text-align:center}
+  .btn.ghost{border-color:var(--line);color:var(--muted)}
+  .btn.sm{padding:4px 8px;font-size:.7rem}
+  .btn.dim{opacity:.38}
+  .acc{border:1px solid var(--line);border-radius:6px;margin:5px 0;background:#fafafa;overflow:hidden}
+  .acc .hd{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;font-size:.72rem;font-weight:600;background:#fff}
+  .acc .hd .chev{color:var(--accent)}
+  .acc.open .hd{border-bottom:1px solid var(--line)}
+  .acc .bd{display:none;padding:8px 10px;font-size:.66rem;color:var(--muted);line-height:1.35}
+  .acc.open .bd{display:block}
+  .flowstrip{width:100%;border:1px solid var(--line);border-radius:6px;background:#fff;margin:6px 0 8px;overflow:hidden}
+  .flowstrip img{width:100%;display:block}
+  .stepper{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:6px 0 8px}
+  .step{border:1px solid var(--line);border-radius:6px;padding:5px 3px;text-align:center;font-size:.55rem;background:#f7f7f7;color:var(--muted)}
+  .step.on{border-color:var(--accent);background:#e3f2fd;color:var(--accent2);font-weight:700}
+  .step .ic{display:block;font-size:.8rem;margin-bottom:2px}
+  .outcome{margin-top:6px;padding:6px 8px;border-radius:4px;font-size:.68rem}
+  .outcome.ok{background:#e8f5e9;color:var(--ok)}
+  .outcome.ko{background:#ffebee;color:var(--off)}
+  .outcome.next{background:#f3f8ff;color:var(--accent2)}
+  .verify{background:var(--greenbox);border:1px solid #a5d6a7;border-radius:4px;padding:6px 8px;font-size:.66rem;margin-top:6px;color:#1b5e20}
+  .pill{display:inline-block;font-size:.65rem;padding:2px 7px;border-radius:10px;background:var(--chip);color:var(--accent2);margin-right:4px}
+  .pill.ok{background:#e8f5e9;color:var(--ok)}
+  .pill.warn{background:#fff3e0;color:var(--warn)}
+  .pill.no{background:#ffebee;color:var(--off)}
+  .bottom{display:flex;justify-content:space-around;padding:8px;border-top:1px solid var(--line);font-size:.62rem;color:var(--muted);background:#fafafa}
+  .bottom .on{color:var(--accent);font-weight:700}
+  .cap{font-size:.74rem;color:var(--muted);margin-top:8px}
+  table{width:100%;border-collapse:collapse;font-size:.82rem;background:#fff}
+  th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:#eee}
+  code{font-size:.85em}
+  footer{padding:24px;color:var(--muted);font-size:.84rem}
+  .flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.76rem;margin:10px 0}
+  .flow span{background:#fff;border:1px solid var(--line);padding:5px 8px;border-radius:4px}
+  .flow .arrow{border:none;background:transparent;padding:0;color:var(--muted)}
+  .select{border:1px solid var(--accent);padding:8px;border-radius:4px;font-size:.74rem;background:#f7fbff;margin:6px 0}
+  .field{border:1px solid var(--line);padding:6px 8px;border-radius:4px;font-size:.7rem;margin:4px 0;display:flex;justify-content:space-between;align-items:center;background:#fff}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media print {
+    body{background:#fff}
+    section{page-break-after:always}
+    section:last-of-type{page-break-after:auto}
+    .phone{box-shadow:none}
+    .two-col{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<header class="doc">
+  <h1>MediaManager — Proposta Setup Catalogo BT v5</h1>
+  <p>Fonte primaria: <code>Guida_Setup_Catalogo_MediaManager_REV9.pdf</code> · osservazioni 17–19/11 · proposta v4 · <strong>nessun codice</strong>.</p>
+  <p class="muted">Parte 1 REV9 = PDF Guida integrale (visualizza/stampa). Parte 2 REV9 = testi online (una fase alla volta). Template UI sotto.</p>
+</header>
+
+<div class="banner warn">
+  Stato: <strong>bozza per convalida</strong>. Nessuno sviluppo finché non autorizzi.
+</div>
+
+<div class="banner bad">
+  <strong>Nota operativa bloccante (Renato 19/11) — presa in carico sul backlog BL-BT-02:</strong>
+  i file <strong>non vengono sostituiti</strong>: compaiono <code>CONFIGURA (1).CMD</code>, <code>DATI_CIFS (1).json</code>, ecc.
+  Questo rende ambigua la sessione e <strong>blocca</strong> di fatto il processo. Da risolvere in sviluppo (script Desktop overwrite + ricezione BT/USB + istruzioni guida: «usa solo i file senza (1)/(2)»).
+  In questa fase: solo annotazione + criteri nei template.
+</div>
+
+<section>
+  <h2>0. Come usare REV9 (contratto)</h2>
+  <div class="two-col">
+    <div class="decision">
+      <strong>Parte 1 — Guida integrale (pag. 1–5 REV9)</strong><br/>
+      È il documento completo con flowchart, dettagli Win10/11, rami BT/USB, controlli.
+      <ul style="margin:8px 0 0 18px;padding:0">
+        <li>Asset PDF in-app (o generato) per tap su «qui» 🖨</li>
+        <li>Apre visualizzatore PDF + stampa di sistema</li>
+        <li>Sempre disponibile durante tutta la guida online</li>
+        <li>Non è share di testo</li>
+      </ul>
+    </div>
+    <div class="decision">
+      <strong>Parte 2 — Visualizzazione online (pag. 6 REV9)</strong><br/>
+      Istruzioni sintetiche mostrate <strong>una fase alla volta</strong>.
+      <ul style="margin:8px 0 0 18px;padding:0">
+        <li>Fase 1: solo il ramo scelto (BT non associati / BT già associati / USB)</li>
+        <li>Fase 3: stesso metodo della Fase 1</li>
+        <li>Se testo lungo: personalizzare i 3 rami (nota * REV9)</li>
+        <li>Flowchart: fase corrente evidenziata</li>
+      </ul>
+    </div>
+  </div>
+  <div class="flow">
+    <span>Avvio</span><span class="arrow">→</span>
+    <span>Verifica</span><span class="arrow">→</span>
+    <span>Scelta metodo (BT già / BT pairing / USB)</span><span class="arrow">→</span>
+    <span>Guida online 1→4 (Parte 2)</span><span class="arrow">→</span>
+    <span>Import JSON</span><span class="arrow">→</span>
+    <span>Copia CIFS</span>
+  </div>
+  <div class="note">
+    Motivazione: la Parte 1 è troppo lunga per lo schermo; la Parte 2 è pensata per l’app.
+    La stampa resta l’unica via per il dettaglio completo (flowchart + passi lunghi).
+  </div>
+</section>
+
+<section>
+  <h2>1. Decisioni confermate / aggiornate</h2>
+  <table>
+    <tr><th>Tema</th><th>Decisione</th><th>Motivazione</th></tr>
+    <tr>
+      <td>Stampa</td>
+      <td>Icona accanto a «qui», corpo leggibile; apre <strong>Parte 1 PDF</strong></td>
+      <td>Osservazione 17/11; REV9 Parte 1 è la guida stampabile</td>
+    </tr>
+    <tr>
+      <td>Online</td>
+      <td>Testi da Parte 2; una fase; ramo filtrato</td>
+      <td>Criteri espliciti in REV9 pag. 6</td>
+    </tr>
+    <tr>
+      <td>Metodo</td>
+      <td>Scelta BT/USB una volta; coerente in Fase 1 e 3</td>
+      <td>REV9 «Prima di iniziare» + Parte 2</td>
+    </tr>
+    <tr>
+      <td>Messaggi</td>
+      <td>Niente «Confermo di aver…». Asincrono: «Puoi passare…». Checkpoint reale: OK/KO letterali</td>
+      <td>Proposta v4 accolta; resta valida</td>
+    </tr>
+    <tr>
+      <td>File set</td>
+      <td>CONFIGURA.CMD + QRCoder.dll + sup.ps1; ritorno DATI_CIFS.JSON</td>
+      <td>REV9 Fase 1/2/3</td>
+    </tr>
+    <tr>
+      <td>Overwrite</td>
+      <td>Obbligatorio; vietati <code>(1)</code>/<code>(2)</code></td>
+      <td>BL-BT-02 + nota 19/11 bloccante</td>
+    </tr>
+    <tr>
+      <td>CIFS</td>
+      <td>Import JSON → Copia campo per campo → lista CIFS visibile → Attiva Catalogo</td>
+      <td>REV9 Fase 4 (più chiara di Ottimizzazione su esito atteso)</td>
+    </tr>
+  </table>
+</section>
+
+<section>
+  <h2>2. Flowchart (Parte 1) — da mostrare online</h2>
+  <p class="muted">Anteprima strisce REV9. In app: versione compatta a 4 riquadri, fase corrente evidenziata.</p>
+  <div class="flowstrip"><img src="/opt/cursor/artifacts/pdf_extract/guida_rev9/crops/flow_p01.png" alt="Flow panoramica REV9"/></div>
+  <div class="grid">
+    <div><p class="cap">Fase 1</p><div class="flowstrip"><img src="/opt/cursor/artifacts/pdf_extract/guida_rev9/crops/flow_p02.png" alt="flow1"/></div></div>
+    <div><p class="cap">Fase 2</p><div class="flowstrip"><img src="/opt/cursor/artifacts/pdf_extract/guida_rev9/crops/flow_p03.png" alt="flow2"/></div></div>
+    <div><p class="cap">Fase 3</p><div class="flowstrip"><img src="/opt/cursor/artifacts/pdf_extract/guida_rev9/crops/flow_p04.png" alt="flow3"/></div></div>
+    <div><p class="cap">Fase 4</p><div class="flowstrip"><img src="/opt/cursor/artifacts/pdf_extract/guida_rev9/crops/flow_p05.png" alt="flow4"/></div></div>
+  </div>
+</section>
+
+<section>
+  <h2>3. Template — Scelta metodo + guida online</h2>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span class="meta">Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Modalità di associazione tra Telefono e PC</p>
+          <p class="desc">Attiva il collegamento tra il tuo telefono e il PC dove hai deciso di tenere il Catalogo delle foto e video. Mantieni lo stesso metodo anche per riportare DATI_CIFS.JSON.</p>
+          <p class="desc"><strong>Seleziona l’opzione:</strong></p>
+          <div class="select">Telefono e PC sono già associati (lo vedo in Bluetooth) ▾</div>
+          <p class="muted" style="font-size:.66rem;margin:6px 0">
+            Altre voci:<br/>
+            · Telefono e PC NON sono ancora associati (devo fare il pairing)<br/>
+            · Voglio usare il collegamento tramite cavo USB (non posso usare il BT)
+          </p>
+          <div class="foot">
+            <div class="actions">
+              <span class="btn wide ghost">Indietro</span>
+              <span class="btn wide primary">OK</span>
+            </div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Determina il ramo Fase 1 e Fase 3 (Parte 2).</p>
+    </div>
+
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span class="meta">Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Guida — Fase 1 (Bluetooth già associati)</p>
+          <p class="desc">
+            Segui la fase corrente. L’intera guida può essere stampata qui
+            <span class="print-inline"><span class="ico">🖨</span></span>
+          </p>
+          <div class="stepper">
+            <div class="step on"><span class="ic">📱→🖥</span>1. Invia</div>
+            <div class="step"><span class="ic">🖥</span>2. Esegui</div>
+            <div class="step"><span class="ic">🖥→📱</span>3. Ricevi</div>
+            <div class="step"><span class="ic">📱</span>4. Configura</div>
+          </div>
+          <div class="acc open">
+            <div class="hd"><span>Fase 1 — Trasferisci i tre file dal Telefono al PC</span><span class="chev">▾</span></div>
+            <div class="bd">
+              <em>Solo ramo «già associati»</em> (Parte 2): se il nome del PC è già nell’elenco Bluetooth del Telefono, non ripetere il pairing. Attiva Bluetooth su entrambi. PC: Ricevi file. Telefono: MediaManager → invia i tre file → seleziona PC.<br/><br/>
+              File attesi sul Desktop: <code>CONFIGURA.CMD</code>, <code>QRCoder.dll</code>, <code>sup.ps1</code> — <strong>senza</strong> suffissi <code>(1)</code>/<code>(2)</code>.
+            </div>
+          </div>
+          <div class="verify">Verifica: tutti e tre i file devono essere sul Desktop del PC (unica versione).</div>
+          <div class="actions"><span class="btn sm primary">Continua</span></div>
+          <div class="outcome next">Puoi passare alla fase successiva</div>
+          <div class="foot">
+            <div class="actions">
+              <span class="btn wide ghost">Annulla</span>
+              <span class="btn wide dim">CONFERMA</span>
+            </div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Online = Parte 2 filtrata; stampa = Parte 1 PDF.</p>
+    </div>
+
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span class="meta">Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Guida — Fase 1 (USB)</p>
+          <p class="desc">… stampata qui <span class="print-inline"><span class="ico">🖨</span></span></p>
+          <div class="stepper">
+            <div class="step on"><span class="ic">📱→🖥</span>1. Invia</div>
+            <div class="step"><span class="ic">🖥</span>2. Esegui</div>
+            <div class="step"><span class="ic">🖥→📱</span>3. Ricevi</div>
+            <div class="step"><span class="ic">📱</span>4. Configura</div>
+          </div>
+          <div class="acc open">
+            <div class="hd"><span>Fase 1 — Trasferisci i tre file (USB)</span><span class="chev">▾</span></div>
+            <div class="bd">
+              Collega cavo dati; Telefono: Trasferimento file/MTP. PC: Questo PC → Telefono → Memoria interna → Download → copia sul Desktop i tre file. Sovrascrivi versioni precedenti (niente <code>(1)</code>).
+            </div>
+          </div>
+          <div class="verify">Verifica: CONFIGURA.CMD, QRCoder.dll, sup.ps1 sul Desktop.</div>
+          <div class="actions"><span class="btn sm primary">Continua</span></div>
+          <div class="outcome next">Puoi passare alla fase successiva</div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Ramo USB personalizzato (nota * REV9).</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>4. Template — Fasi 2–4 (online da Parte 2)</h2>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span class="meta">Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Guida — Fase 2</p>
+          <p class="desc">… qui <span class="print-inline"><span class="ico">🖨</span></span></p>
+          <div class="stepper">
+            <div class="step"><span class="ic">1</span>Invia</div>
+            <div class="step on"><span class="ic">2</span>Esegui</div>
+            <div class="step"><span class="ic">3</span>Ricevi</div>
+            <div class="step"><span class="ic">4</span>Configura</div>
+          </div>
+          <div class="acc open">
+            <div class="hd"><span>Fase 2 — Esegui lo script sul PC</span><span class="chev">▾</span></div>
+            <div class="bd">
+              Desktop → avvia CONFIGURA.CMD → segui le istruzioni → non chiudere la finestra → verifica DATI_CIFS.JSON sul Desktop (senza <code>(1)</code>).
+            </div>
+          </div>
+          <div class="verify">Se lo script segnala un errore o il JSON non viene creato, fermati.</div>
+          <div class="actions"><span class="btn sm primary">Continua</span></div>
+          <div class="outcome next">Puoi passare alla fase successiva</div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Asincrona: niente autodichiarazione.</p>
+    </div>
+
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span class="meta">Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Guida — Fase 3 (stesso metodo Fase 1)</p>
+          <p class="desc">… qui <span class="print-inline"><span class="ico">🖨</span></span></p>
+          <div class="stepper">
+            <div class="step"><span class="ic">1</span>Invia</div>
+            <div class="step"><span class="ic">2</span>Esegui</div>
+            <div class="step on"><span class="ic">3</span>Ricevi</div>
+            <div class="step"><span class="ic">4</span>Configura</div>
+          </div>
+          <div class="acc open">
+            <div class="hd"><span>Fase 3 — Trasferisci DATI_CIFS.JSON</span><span class="chev">▾</span></div>
+            <div class="bd">
+              <em>Ramo Bluetooth:</em> PC Desktop → tasto destro → Invia a dispositivo Bluetooth → telefono → accetta.<br/>
+              Poi Importa in MediaManager.
+            </div>
+          </div>
+          <div class="actions"><span class="btn sm primary">Importa DATI_CIFS.json</span></div>
+          <div class="outcome ok">Fase terminata correttamente: puoi passare a quella successiva</div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Checkpoint reale su import OK.</p>
+    </div>
+
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span class="meta">Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Guida — Fase 3 (KO)</p>
+          <div class="stepper">
+            <div class="step"><span class="ic">1</span>Invia</div>
+            <div class="step"><span class="ic">2</span>Esegui</div>
+            <div class="step on"><span class="ic">3</span>Ricevi</div>
+            <div class="step"><span class="ic">4</span>Configura</div>
+          </div>
+          <div class="acc open">
+            <div class="hd"><span>Fase 3 — Trasferisci DATI_CIFS.JSON</span><span class="chev">▾</span></div>
+            <div class="bd">Import fallito: file <code>no_pw.json</code>, incompleto, o <code>DATI_CIFS (1).json</code> ambiguo.</div>
+          </div>
+          <div class="outcome ko">Qualcosa è andata storta. Riprova</div>
+          <div class="actions"><span class="btn sm primary">Riprova import</span></div>
+          <p class="muted" style="font-size:.65rem">Controllo restituito all’inizio della Fase 3.</p>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">KO letterale + riparto fase.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>5. Template — Fase 4 / Import + CIFS (REV9)</h2>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span class="meta">Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Importa i dati da copiare su CIFS</p>
+          <p class="desc">Seleziona DATI_CIFS.json (sessione corrente; non <code>(1)</code>/<code>(2)</code>). Download / Bluetooth / file ricevuti.</p>
+          <p class="desc"><strong>File atteso:</strong> DATI_CIFS.json</p>
+          <p class="desc" style="color:var(--ok)"><strong>Import riuscito</strong></p>
+          <div class="actions"><span class="btn wide primary">Importa dati CIFS</span></div>
+          <p class="desc" style="margin-top:10px">Quando pronto clicca su [OK] per copiare i dati su CIFS</p>
+          <div class="foot">
+            <div class="actions">
+              <span class="btn wide ghost">Indietro</span>
+              <span class="btn wide primary">OK</span>
+            </div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Niente checklist / riepilogo ridondante.</p>
+    </div>
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span class="meta">Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Copia i dati su CIFS e attivazione collegamento</p>
+          <p class="desc">Per ogni dato: Copia in MediaManager → incolla nel campo CIFS. Salva. Verifica che la cartella/dispositivo compaia nella lista CIFS. Solo dopo: Attiva Catalogo.</p>
+          <div class="actions"><span class="btn wide primary">Apri CIFS Documents Provider</span></div>
+          <div class="field"><span>Host</span><span class="btn sm">Copia</span></div>
+          <div class="field"><span>User</span><span class="btn sm">Copia</span></div>
+          <div class="field"><span>Password</span><span class="btn sm">Copia</span></div>
+          <div class="field"><span>Folder / Name</span><span class="btn sm">Copia</span></div>
+          <div class="verify">Esito atteso: dispositivo/cartella condivisa visibile nella lista CIFS.</div>
+          <div class="foot" style="margin-top:8px">
+            <div class="actions"><span class="btn wide primary">Attiva collegamento</span></div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Allineato a REV9 Fase 4 B–C; niente Piano B in pagina.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>6. Testi online (Parte 2) — tabella di binding</h2>
+  <table>
+    <tr><th>Fase UI</th><th>Ramo</th><th>Testo sintetico (fonte REV9 pag. 6)</th></tr>
+    <tr>
+      <td>1</td>
+      <td>BT non associati</td>
+      <td>PC Impostazioni Bluetooth aperto → Telefono cerca PC → codice → PC Ricevi file → MediaManager invia 3 file → Desktop</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>BT già associati</td>
+      <td>Non ripetere pairing → BT attivo → PC Ricevi file → MediaManager invia 3 file → Desktop</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>USB</td>
+      <td>Cavo + MTP → PC Questo PC/Telefono/Download → copia 3 file sul Desktop</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>tutti</td>
+      <td>Avvia CONFIGURA.CMD → attendi → DATI_CIFS.JSON; stop se errore</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>BT</td>
+      <td>Invia a dispositivo Bluetooth DATI_CIFS.JSON → accetta sul Telefono</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>USB</td>
+      <td>Copia DATI_CIFS.JSON Desktop → Download Telefono</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>tutti</td>
+      <td>Import JSON → Copia campi in CIFS → lista CIFS visibile → Attiva Catalogo</td>
+    </tr>
+  </table>
+</section>
+
+<section>
+  <h2>7. Criteri di accettazione (prima del codice)</h2>
+  <ol>
+    <li>Tap stampa su «qui» apre <strong>Parte 1 REV9</strong> (PDF), non share sheet; disponibile in ogni fase.</li>
+    <li>Online mostra <strong>solo Parte 2</strong>, una fase alla volta, con flowchart evidenziato.</li>
+    <li>Fase 1 mostra esclusivamente il ramo scelto; Fase 3 riusa lo stesso metodo.</li>
+    <li>Messaggi: asincrono «Puoi passare…»; checkpoint OK/KO letterali; niente «Confermo di aver…».</li>
+    <li>Import/CIFS come §5; esito atteso = risorsa in lista CIFS.</li>
+    <li>Overwrite: nessuna accettazione di file <code>(1)</code>/<code>(2)</code> come happy path; backlog BL-BT-02 aggiornato.</li>
+    <li>Topbar MediaManager | Setup; terminologia «Telefono».</li>
+  </ol>
+  <div class="banner ok">
+    Proposta v5 (REV9) pronta. <strong>Nessuno sviluppo</strong> finché non convaldi.
+  </div>
+</section>
+
+<footer>
+  MediaManager · Proposta Setup BT v5 · REV9 19/11/2026 · nessun codice applicato.
+</footer>
+</body>
+</html>

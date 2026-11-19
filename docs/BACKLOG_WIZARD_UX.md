@@ -63,8 +63,8 @@
 ### P1 — Setup PC Bluetooth (annotato Renato 08/11/2026; template convalidato 09/11)
 
 16. **Nomi file comprensibili (come fatto per CONFIGURA/sup)** — JSON post «Tutto pronto» → TO-BE `DATI_CIFS.json` (da inviare/importare) e `no_pw.json` (ignorare). Allineare testi app + messaggi script.  
-17. **Una sola versione sul Desktop (overwrite)** — A ogni nuovo tentativo i file sul Desktop devono **sostituire** quelli precedenti (bundle/result + 3 file CONFIGURA).  
-18. **UX Ottimizzazione BT (template v3 — Ultime modifiche 16/11)** — Specifica: `docs/reference/PVM_Template_Statici_Ottimizzazione_Setup_PC_BT_v3.pdf`. Congelato: niente A/B/C; solo «Telefono»; topbar consolidata; 4 fasi accordion; stampa = icona in descrizione; tre rami (già associati / pairing / USB) stesso scheletro; conferma lineare 1×1 + checkpoint sotto OK; messaggi conferma letterali senza BT/USB. Flusso primario consigliato: guida+conferma nella stessa videata ramo (riepilogo dedicato opzionale). *Stato:* **in sviluppo 0.16.73** — LOCK `docs/LOCK_SETUP_BT_V3_ANALOGIA.md` (OK Renato 16/11).
+17. **Una sola versione sul Desktop (overwrite)** — A ogni nuovo tentativo i file sul Desktop devono **sostituire** quelli precedenti (bundle/result + 3 file CONFIGURA). **Nota Renato 19/11:** in pratica i file **non** vengono sostituiti: il sistema crea `nome (1)`, `nome (2)`, … e **blocca** il processo (sessione ambigua). Da risolvere in script/export/BT ricezione + istruzioni guida.  
+18. **UX Ottimizzazione BT** — Evoluzione: proposta v4 (REV5) → **REV9** (`docs/reference/Guida_Setup_Catalogo_MediaManager_REV9.pdf` + template `PVM_Proposta_Setup_BT_REV9_v5.pdf`). Parte 1 = PDF guida integrale (stampa/visualizza); Parte 2 = istruzioni sintetiche online (una fase alla volta; Fase 1 solo ramo scelto; Fase 3 stesso metodo). *Stato:* **proposta docs, nessun codice** fino a convalida.
 
 ### P2 — Fuori Wizard PC immediato
 12. Pagina **Configura** «stile Utility» (slide 2 PPT).  
