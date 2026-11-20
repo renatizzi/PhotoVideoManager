@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
     <cache-path name="windows_setup" path="windows_setup/" />
+    <cache-path name="setup_guide" path="setup_guide/" />
 </paths>

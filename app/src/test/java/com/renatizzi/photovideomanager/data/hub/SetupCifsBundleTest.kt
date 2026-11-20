@@ -60,11 +60,18 @@ class SetupCifsBundleTest {
     }
 
     @Test
-    fun bundleFileNameForToken_isUniqueAndRecognized() {
+    fun bundleFileName_isFixedDatiCifs_andLegacyStillAccepted() {
         val name = SetupCifsBundle.bundleFileNameForToken("abc123def456")
-        assertEquals("MediaManager_cifs_bundle_abc123de.json", name)
+        assertEquals("DATI_CIFS.json", name)
+        assertEquals(SetupCifsBundle.BUNDLE_FILE_NAME, name)
         assertTrue(SetupCifsBundle.isBundleFileName(name))
-        assertTrue(SetupCifsBundle.isBundleFileName(SetupCifsBundle.BUNDLE_FILE_NAME))
+        assertTrue(SetupCifsBundle.isBundleFileName("DATI_CIFS.json"))
+        assertTrue(SetupCifsBundle.isBundleFileName("dati_cifs.json"))
+        // Legacy import-only names
+        assertTrue(SetupCifsBundle.isBundleFileName(SetupCifsBundle.LEGACY_BUNDLE_FILE_NAME))
+        assertTrue(SetupCifsBundle.isBundleFileName("MediaManager_cifs_bundle_abc123de.json"))
+        // Result senza password: non è un bundle
+        assertFalse(SetupCifsBundle.isBundleFileName("no_pw.json"))
         assertFalse(SetupCifsBundle.isBundleFileName("MediaManager_setup_result.json"))
     }
 

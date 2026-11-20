@@ -113,6 +113,17 @@ data class CatalogSeatWizardUiState(
     val recoveringPcData: Boolean = false,
     /** Dopo export: UI deve aprire share Bluetooth prima di passare al passo 3. */
     val pendingShareScripts: Boolean = false,
+    /** Ramo associazione PC (template v3). */
+    val pcLinkMode: PcLinkMode = PcLinkMode.ALREADY_PAIRED,
+    /**
+     * Porte guida PC (v7): true quando la fase ha evidenza / sblocco.
+     * 0=set inviato, 1=istruzioni script aperte / in attesa, 2=DATI_CIFS applicati, 3=passa a CIFS.
+     */
+    val guidePhaseDone: List<Boolean> = List(PcSetupGuideContent.PHASE_COUNT) { false },
+    /** Ascolto MediaStore/LAN per DATI_CIFS.json. */
+    val listeningForBundle: Boolean = false,
+    /** File rilevato (non ancora applicato con «Usa questi dati»). */
+    val bundleDetected: Boolean = false,
 )
 
 /**
@@ -128,13 +139,17 @@ enum class WizardStep {
     PC_SHARE_READY,
     /** Passo 1 — Verifica disponibilità. */
     PC_AVAILABILITY,
-    /** Passo 2 — Bluetooth + preparazione/invio CONFIGURA + sup. */
+    /** Scelta ramo: già associati / pairing / USB (template v3). */
+    PC_LINK_MODE,
+    /** Guida ramo: 4 fasi accordion + conferma lineare. */
+    PC_GUIDE,
+    /** Passo 2 — Bluetooth + preparazione/invio CONFIGURA + sup. (legacy → PC_GUIDE) */
     PC_USB_PREPARE,
-    /** Passo 3 — File sul Desktop del PC (dopo ricezione BT). */
+    /** Passo 3 — File sul Desktop del PC (dopo ricezione BT). (legacy → PC_GUIDE) */
     PC_COPY_FILES,
-    /** Passo 4 — Avvio script (doppio clic + UAC + Tutto pronto). */
+    /** Passo 4 — Avvio script (doppio clic + UAC + Tutto pronto). (legacy → PC_GUIDE) */
     PC_RUN_SCRIPT,
-    /** Passo 4b — Scarica bundle CIFS via Bluetooth (OpenDocument). */
+    /** Import DATI_CIFS.json (ex 4b). */
     PC_BT_DOWNLOAD_BUNDLE,
     /** Passo 5 — Scheda CIFS + collegamento Catalogo (revisione4). */
     W2_CIFS,
@@ -172,6 +187,8 @@ class CatalogSeatWizardViewModel(
     private var lanCancel: AtomicBoolean? = null
     private val cachedLan = AtomicReference<SetupLanAnnounce.Payload?>(null)
     private var lanJob: Job? = null
+    private var bundleWatchJob: Job? = null
+    private var detectedBundle: SetupCifsBundle? = null
 
     init {
         refreshCifsInstalled()
@@ -180,6 +197,7 @@ class CatalogSeatWizardViewModel(
 
     override fun onCleared() {
         stopBackgroundLanListen()
+        stopBundleWatch()
         super.onCleared()
     }
 
@@ -477,38 +495,267 @@ class CatalogSeatWizardViewModel(
         }
     }
 
-    /** Passo 1 → 2. */
+    /** Passo 1 → scelta ramo associazione. */
     fun confirmAvailabilityChecked() {
         _state.update {
-            it.copy(step = WizardStep.PC_USB_PREPARE, errorMessage = null, statusMessage = null)
+            it.copy(
+                step = WizardStep.PC_LINK_MODE,
+                guidePhaseDone = List(PcSetupGuideContent.PHASE_COUNT) { false },
+                errorMessage = null,
+                statusMessage = null,
+            )
         }
         persistDraft()
     }
 
+    fun selectPcLinkMode(mode: PcLinkMode) {
+        _state.update {
+            it.copy(
+                pcLinkMode = mode,
+                guidePhaseDone = List(PcSetupGuideContent.PHASE_COUNT) { false },
+                errorMessage = null,
+            )
+        }
+        persistDraft()
+    }
+
+    /** Scelta ramo → guida accordion. */
+    fun confirmPcLinkMode() {
+        _state.update {
+            it.copy(
+                step = WizardStep.PC_GUIDE,
+                guidePhaseDone = List(PcSetupGuideContent.PHASE_COUNT) { false },
+                errorMessage = null,
+                statusMessage = null,
+            )
+        }
+        persistDraft()
+    }
+
+    /**
+     * CTA fase guida (v7 porte).
+     * 0 = Invia set · 1 = Apri istruzioni script (avvia ascolto) ·
+     * 2 = Usa questi dati · 3 = Vai a configurazione CIFS.
+     */
+    fun confirmGuidePhase(index: Int) {
+        if (index !in 0 until PcSetupGuideContent.PHASE_COUNT) return
+        val current = _state.value
+        when (index) {
+            0 -> {
+                if (!current.scriptPrepared) {
+                    val share = current.pcLinkMode != PcLinkMode.USB
+                    prepareWindowsScript(shareAfterExport = share)
+                } else {
+                    markGuidePhaseDone(0)
+                    if (current.pcLinkMode == PcLinkMode.USB) {
+                        openScriptInstructions()
+                    }
+                }
+            }
+            1 -> openScriptInstructions()
+            2 -> useDetectedBundle()
+            3 -> confirmPcGuide()
+        }
+    }
+
+    /** Dopo invio set: apre Fase 2 e avvia ascolto DATI_CIFS. */
+    fun openScriptInstructions() {
+        markGuidePhaseDone(0)
+        markGuidePhaseDone(1)
+        _state.update {
+            it.copy(
+                statusMessage = "In attesa dei dati dal PC",
+                errorMessage = null,
+                listeningForBundle = true,
+            )
+        }
+        startBundleWatch()
+        persistDraft()
+    }
+
+    private fun markGuidePhaseDone(index: Int) {
+        _state.update { s ->
+            val next = s.guidePhaseDone.toMutableList()
+            if (index in next.indices) next[index] = true
+            s.copy(
+                guidePhaseDone = next,
+                usbCopiedDeclared = next.getOrElse(0) { false },
+                scriptRanDeclared = next.getOrElse(1) { false },
+                errorMessage = null,
+            )
+        }
+        persistDraft()
+    }
+
+    /** Porta a import/CIFS quando i dati sono pronti. */
+    fun confirmPcGuide() {
+        val s = _state.value
+        if (!s.setupResultImported) {
+            _state.update {
+                it.copy(errorMessage = "Servono i dati CIFS ricevuti prima di proseguire.")
+            }
+            return
+        }
+        markGuidePhaseDone(2)
+        markGuidePhaseDone(3)
+        stopBundleWatch()
+        _state.update {
+            it.copy(
+                step = WizardStep.PC_BT_DOWNLOAD_BUNDLE,
+                listeningForBundle = false,
+                errorMessage = null,
+                statusMessage = "Import riuscito — dati della sessione corrente",
+            )
+        }
+        persistDraft()
+    }
+
+    fun retryBundleDetection() {
+        detectedBundle = null
+        _state.update {
+            it.copy(
+                bundleDetected = false,
+                errorMessage = null,
+                statusMessage = "In attesa dei dati dal PC",
+                listeningForBundle = true,
+            )
+        }
+        startBundleWatch()
+    }
+
+    fun useDetectedBundle() {
+        val bundle = detectedBundle
+        if (bundle == null || !bundle.isComplete) {
+            _state.update {
+                it.copy(
+                    errorMessage = "Qualcosa è andata storta. Riprova",
+                    bundleDetected = false,
+                )
+            }
+            retryBundleDetection()
+            return
+        }
+        cachedLan.set(SetupLanAnnounce.mergePayloads(cachedLan.get(), bundle.toLanPayload()))
+        applyLanPayload(bundle.toLanPayload())
+        stopBackgroundLanListen()
+        stopBundleWatch()
+        markGuidePhaseDone(2)
+        _state.update {
+            it.copy(
+                busy = false,
+                recoveringPcData = false,
+                setupResultImported = true,
+                bundleDetected = true,
+                listeningForBundle = false,
+                pcComputerName = bundle.computerName.ifBlank { it.pcComputerName },
+                statusMessage = "Dati CIFS ricevuti",
+                errorMessage = null,
+            )
+        }
+        persistDraft()
+    }
+
+    private fun startBundleWatch() {
+        bundleWatchJob?.cancel()
+        bundleWatchJob = viewModelScope.launch {
+            _state.update { it.copy(listeningForBundle = true) }
+            while (isActive && !_state.value.setupResultImported) {
+                val token = _state.value.setupToken
+                val found = withContext(Dispatchers.IO) {
+                    runCatching { exporter.findCifsBundle(token) }.getOrNull()
+                }
+                if (found != null && found.isComplete) {
+                    detectedBundle = found
+                    _state.update {
+                        it.copy(
+                            bundleDetected = true,
+                            listeningForBundle = true,
+                            statusMessage = "Dati CIFS ricevuti",
+                            errorMessage = null,
+                        )
+                    }
+                    break
+                }
+                // LAN silenziosa in parallelo (stesso Wi‑Fi).
+                if (token.isNotBlank() && lanJob?.isActive != true) {
+                    startBackgroundLanListen()
+                }
+                val lan = cachedLan.get()
+                if (lan != null &&
+                    lan.token == token &&
+                    SetupLanAnnounce.isIpv4(lan.hostForCifs) &&
+                    lan.password.isNotBlank()
+                ) {
+                    val fromLan = SetupCifsBundle.fromPayload(lan)
+                    if (fromLan.isComplete) {
+                        detectedBundle = fromLan
+                        _state.update {
+                            it.copy(
+                                bundleDetected = true,
+                                statusMessage = "Dati CIFS ricevuti",
+                                errorMessage = null,
+                            )
+                        }
+                        break
+                    }
+                }
+                delay(2500)
+            }
+        }
+    }
+
+    private fun stopBundleWatch() {
+        bundleWatchJob?.cancel()
+        bundleWatchJob = null
+    }
+
     /** Passo 2 OK → esporta CONFIGURA/sup e apre share Bluetooth; solo dopo si va al passo 3. */
     fun confirmUsbAndPrepareFiles() {
-        prepareWindowsScript(shareAfterExport = true)
+        prepareWindowsScript(shareAfterExport = _state.value.pcLinkMode != PcLinkMode.USB)
     }
 
     fun confirmBtAndPrepareFiles() = confirmUsbAndPrepareFiles()
 
     /** Chiamato dalla UI dopo aver lanciato (o scartato) il chooser Bluetooth. */
     fun onShareScriptsHandled() {
+        val prepared = _state.value.scriptPrepared
         _state.update {
-            if (!it.scriptPrepared) {
+            if (!prepared) {
                 it.copy(pendingShareScripts = false)
             } else {
-                it.copy(
-                    pendingShareScripts = false,
-                    step = WizardStep.PC_COPY_FILES,
-                    statusMessage =
-                        "Sei di nuovo in MediaManager. Sul PC i file devono essere sul Desktop: " +
-                            "poi spunta e OK.",
-                    errorMessage = null,
-                )
+                val onGuide = it.step == WizardStep.PC_GUIDE ||
+                    it.step == WizardStep.PC_USB_PREPARE
+                if (onGuide) {
+                    val next = it.guidePhaseDone.toMutableList()
+                    if (next.isNotEmpty()) next[0] = true
+                    it.copy(
+                        pendingShareScripts = false,
+                        step = WizardStep.PC_GUIDE,
+                        guidePhaseDone = next,
+                        usbCopiedDeclared = true,
+                        statusMessage =
+                            "Set inviato dal Telefono. Sul PC: cartella di ricezione → copia sul Desktop " +
+                                "(o avvia CONFIGURA da lì). Poi apri le istruzioni script.",
+                        errorMessage = null,
+                    )
+                } else {
+                    it.copy(
+                        pendingShareScripts = false,
+                        step = WizardStep.PC_COPY_FILES,
+                        statusMessage =
+                            "Set inviato. Sul PC copia i file sul Desktop (overwrite).",
+                        errorMessage = null,
+                    )
+                }
             }
         }
         persistDraft()
+        if (prepared &&
+            (_state.value.step == WizardStep.PC_GUIDE ||
+                _state.value.step == WizardStep.PC_USB_PREPARE)
+        ) {
+            // Non avviare ancora l’ascolto: l’utente apre le istruzioni script (porta Fase 2).
+        }
     }
 
     fun consumePendingShareScripts() {
@@ -593,12 +840,15 @@ class CatalogSeatWizardViewModel(
         WizardStep.W2_CHOICE,
         WizardStep.W2_ROUTINE_PARAMS,
         -> WizardStep.PC_AVAILABILITY
-        WizardStep.W2_ROUTINE_READY -> WizardStep.PC_COPY_FILES
+        WizardStep.PC_USB_PREPARE,
+        WizardStep.PC_COPY_FILES,
+        WizardStep.PC_RUN_SCRIPT,
+        WizardStep.W2_ROUTINE_READY,
         WizardStep.W2_SCRIPT_FIND,
         WizardStep.W2_SCRIPT_LAUNCH,
         WizardStep.W2_SCRIPT_RESULT,
         WizardStep.W2_ROUTINE_CONFIRM,
-        -> WizardStep.PC_RUN_SCRIPT
+        -> WizardStep.PC_GUIDE
         WizardStep.W2_CIFS_BRIDGE,
         WizardStep.W2_SUMMARY,
         WizardStep.W2_CIFS_METHOD,
@@ -832,14 +1082,14 @@ class CatalogSeatWizardViewModel(
                     } ?: error("Impossibile leggere il file")
                     if (SetupCifsBundle.looksLikeSetupResultNotBundle(raw)) {
                         error(
-                            "Hai selezionato MediaManager_setup_result.json (senza password). " +
+                            "Hai selezionato no_pw.json (senza password). " +
                                 "Dal Desktop del PC invia $expectedName via Bluetooth e seleziona quello.",
                         )
                     }
                     val bundle = SetupCifsBundle.parse(raw, expectedToken = token.ifBlank { null })
                         ?: error(
                             "File non riconosciuto come bundle MediaManager. " +
-                                "Serve $expectedName (non setup_result).",
+                                "Serve $expectedName (non no_pw.json).",
                         )
                     if (!bundle.isComplete) {
                         val missing = buildList {
@@ -862,16 +1112,23 @@ class CatalogSeatWizardViewModel(
                     )
                     applyLanPayload(bundle.toLanPayload())
                     stopBackgroundLanListen()
+                    stopBundleWatch()
+                    detectedBundle = bundle
+                    markGuidePhaseDone(0)
+                    markGuidePhaseDone(1)
+                    markGuidePhaseDone(2)
                     _state.update {
                         it.copy(
                             busy = false,
                             recoveringPcData = false,
                             setupResultImported = true,
+                            bundleDetected = true,
+                            listeningForBundle = false,
                             pcComputerName = bundle.computerName.ifBlank { it.pcComputerName },
                             // Resta su 4b per mostrare l'esito; OK porta a CIFS.
                             step = WizardStep.PC_BT_DOWNLOAD_BUNDLE,
                             statusMessage =
-                                "Import riuscito: Host, User e Password pronti. Tocca OK per CIFS.",
+                                "Import riuscito — dati della sessione corrente",
                             errorMessage = null,
                         )
                     }
@@ -882,7 +1139,9 @@ class CatalogSeatWizardViewModel(
                         it.copy(
                             busy = false,
                             setupResultImported = false,
-                            errorMessage = e.message ?: "Import bundle non riuscito",
+                            bundleDetected = false,
+                            errorMessage = e.message
+                                ?: "Qualcosa è andata storta. Riprova",
                         )
                     }
                 },
@@ -1101,9 +1360,18 @@ class CatalogSeatWizardViewModel(
             result.fold(
                 onSuccess = { export ->
                     lastExport = export
-                    val bundleName = SetupCifsBundle.bundleFileNameForToken(setupToken)
-                    // Sequenza sincrona: prima share BT (resta al passo 2), poi passo 2b.
+                    val bundleName = SetupCifsBundle.BUNDLE_FILE_NAME
+                    val onGuide = current.step == WizardStep.PC_GUIDE ||
+                        current.step == WizardStep.PC_LINK_MODE
+                    val willShare = shareAfterExport && export.shareUris.isNotEmpty()
                     _state.update {
+                        val phaseDone = if (onGuide && !willShare) {
+                            it.guidePhaseDone.toMutableList().also { list ->
+                                if (list.isNotEmpty()) list[0] = true
+                            }
+                        } else {
+                            it.guidePhaseDone
+                        }
                         it.copy(
                             busy = false,
                             temporaryPassword = password,
@@ -1113,17 +1381,22 @@ class CatalogSeatWizardViewModel(
                             downloadsSaved = export.downloadsSaved,
                             usbCopiedTo = export.usbCopiedTo,
                             setupResultImported = false,
-                            pendingShareScripts = shareAfterExport && export.shareUris.isNotEmpty(),
-                            statusMessage = if (shareAfterExport) {
-                                "TELEFONO: nel menu Condividi scegli Bluetooth e il PC. " +
-                                    "Sul PC deve essere già aperto «Ricevi file»."
-                            } else {
-                                null
+                            pendingShareScripts = willShare,
+                            guidePhaseDone = phaseDone,
+                            usbCopiedDeclared = phaseDone.getOrElse(0) { false },
+                            statusMessage = when {
+                                willShare ->
+                                    "TELEFONO: nel menu Condividi scegli Bluetooth e il PC. " +
+                                        "Poi torna a MediaManager (non restare su Invio/Ricevi)."
+                                onGuide ->
+                                    "Set pronto sul Telefono. Via USB: copia i 3 file sul Desktop " +
+                                        "(overwrite, niente (1)/(2)). Poi apri le istruzioni script."
+                                else -> null
                             },
-                            step = if (shareAfterExport) {
-                                WizardStep.PC_USB_PREPARE
-                            } else {
-                                WizardStep.PC_COPY_FILES
+                            step = when {
+                                onGuide -> WizardStep.PC_GUIDE
+                                shareAfterExport -> WizardStep.PC_USB_PREPARE
+                                else -> WizardStep.PC_COPY_FILES
                             },
                         )
                     }

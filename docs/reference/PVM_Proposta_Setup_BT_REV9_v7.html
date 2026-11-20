@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<title>MediaManager — Template Setup Catalogo BT v7 (REV9 + integrazioni)</title>
+<style>
+  :root{--bg:#f6f4ef;--ink:#1a1a1a;--muted:#5c5c5c;--line:#d7d2c8;--accent:#1565c0;--accent2:#0d47a1;--ok:#2e7d32;--warn:#b26a00;--off:#b71c1c;--greenbox:#e8f5e9;--chip:#e8eef7}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Calibri,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.35}
+  header.doc,section,footer,.banner{max-width:1140px;margin:0 auto;padding:0 22px}
+  header.doc{padding-top:24px}
+  h1{font-size:1.28rem;margin:0 0 6px}
+  h2{font-size:1.05rem;border-bottom:2px solid var(--ink);padding-bottom:5px;margin-top:22px}
+  h3{font-size:.92rem;margin:12px 0 6px}
+  p,li{font-size:.88rem}
+  .muted{color:var(--muted);font-size:.84rem}
+  .banner{background:#fff8e1;border:1px solid #f0c36d;padding:10px 12px;margin:10px auto}
+  .banner.ok{background:#e8f5e9;border-color:#81c784}
+  .banner.info{background:#e3f2fd;border-color:#90caf9}
+  .card{background:#fff;border-left:4px solid var(--accent);padding:10px 12px;margin:8px 0;font-size:.84rem}
+  .card.ok{border-left-color:var(--ok)}
+  .card.warn{border-left-color:var(--warn)}
+  .card.fix{border-left-color:#1565c0}
+  table{width:100%;border-collapse:collapse;background:#fff;font-size:.8rem;margin:8px 0}
+  th,td{border:1px solid var(--line);padding:6px 8px;vertical-align:top;text-align:left}
+  th{background:#eee}
+  code{font-size:.85em}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-top:10px}
+  .phone{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;max-width:340px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .bar{background:#1565c0;color:#fff;padding:8px 10px;font-size:.72rem;display:flex;justify-content:space-between}
+  .bar .app{font-weight:700;font-size:.85rem}
+  .body{padding:12px;min-height:540px;display:flex;flex-direction:column}
+  .title{font-size:1rem;font-weight:700;margin:0 0 2px}
+  .subtitle{font-size:.76rem;font-style:italic;color:var(--muted);margin:0 0 6px}
+  .desc{font-size:.78rem;margin:0 0 8px;line-height:1.4}
+  .print-inline{display:inline-flex;align-items:center;gap:2px;color:var(--accent);font-weight:700;font-size:1.05em}
+  .print-inline .ico{font-size:1.15em}
+  .stepper{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:6px 0 8px}
+  .step{border:1px solid var(--line);border-radius:6px;padding:5px 3px;text-align:center;font-size:.52rem;background:#f7f7f7;color:var(--muted)}
+  .step.on{border-color:var(--accent);background:#e3f2fd;color:var(--accent2);font-weight:700}
+  .step.done{border-color:#81c784;background:#e8f5e9;color:var(--ok)}
+  .lamps{margin:4px 0 8px}
+  .lamp-row{display:flex;align-items:center;gap:8px;font-size:.7rem;margin:3px 0}
+  .lamp{width:11px;height:11px;border-radius:50%;border:1px solid #999;flex-shrink:0}
+  .lamp.off{background:#ddd}.lamp.wait{background:#ffcc80}.lamp.on{background:#66bb6a}.lamp.ko{background:#ef9a9a}
+  .acc{border:1px solid var(--line);border-radius:6px;margin:5px 0;background:#fafafa;overflow:hidden}
+  .acc .hd{display:flex;justify-content:space-between;padding:8px 10px;font-size:.7rem;font-weight:600;background:#fff}
+  .acc.open .hd{border-bottom:1px solid var(--line)}
+  .acc .bd{display:none;padding:8px 10px;font-size:.65rem;color:var(--muted);line-height:1.35}
+  .acc.open .bd{display:block}
+  .verify{background:var(--greenbox);border:1px solid #a5d6a7;border-radius:4px;padding:6px 8px;font-size:.65rem;margin-top:6px;color:#1b5e20}
+  .state{font-size:.68rem;padding:6px 8px;border-radius:4px;background:#f3f8ff;color:var(--accent2);margin-top:6px}
+  .state.ok{background:#e8f5e9;color:var(--ok)}
+  .state.ko{background:#ffebee;color:var(--off)}
+  .state.wait{background:#fff3e0;color:var(--warn)}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .foot{margin-top:auto;padding-top:10px}
+  .btn{display:inline-block;border:1px solid var(--accent);color:var(--accent);padding:7px 10px;border-radius:4px;font-size:.72rem;background:#fff;text-align:center}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.wide{flex:1}
+  .btn.ghost{border-color:var(--line);color:var(--muted)}
+  .btn.sm{padding:4px 8px;font-size:.68rem}
+  .btn.sec{background:#fff}
+  .bottom{display:flex;justify-content:space-around;padding:8px;border-top:1px solid var(--line);font-size:.6rem;color:var(--muted);background:#fafafa}
+  .bottom .on{color:var(--accent);font-weight:700}
+  .cap{font-size:.72rem;color:var(--muted);margin-top:8px}
+  .flowstrip{width:100%;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:6px 0;background:#fff}
+  .flowstrip img{width:100%;display:block}
+  .select{border:1px solid var(--accent);padding:8px;border-radius:4px;font-size:.72rem;background:#f7fbff;margin:6px 0}
+  .field{border:1px solid var(--line);padding:6px 8px;border-radius:4px;font-size:.68rem;margin:4px 0;display:flex;justify-content:space-between;align-items:center;background:#fff}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  footer{padding:20px;color:var(--muted);font-size:.8rem}
+  section{page-break-inside:avoid;margin-bottom:18px}
+  @media print{.two{grid-template-columns:1fr} section{page-break-after:always} section:last-of-type{page-break-after:auto}}
+</style>
+</head>
+<body>
+<header class="doc">
+  <h1>Template Setup Catalogo BT v7</h1>
+  <p class="muted">Fonte guida: REV9 · integrazioni processo: analisi v6 (porte, indicatori, auto-localizzazione) · <strong>nessun codice</strong></p>
+</header>
+
+<div class="banner info">
+  <strong>Rettifica I1:</strong> la guida <em>non</em> confonde destinazione BT e Desktop.
+  Dice che i file arrivano altrove (File ricevuti / cartella BT) e <strong>per questo</strong> vanno cercati e copiati sul Desktop.
+  I template sotto recepiscono quella procedura nella Guida integrale (PDF), e nelle schermate online propongono le integrazioni che <em>riducono/eliminano</em> quella caccia dove tecnicamente possibile.
+</div>
+<div class="banner">Stato: bozza template per convalida. Nessuno sviluppo finché non autorizzi.</div>
+
+<section>
+  <h2>0. Contratto documenti</h2>
+  <div class="two">
+    <div class="card ok">
+      <strong>Parte 1 — Guida integrale (PDF stampa/visualizza)</strong><br/>
+      Contenuto REV9 pag. 1–5 + precisazioni operative (BT: ricezione ≠ Desktop → cerca e copia; overwrite; casing <code>DATI_CIFS.json</code>).
+      Aperta dal tap su «qui» 🖨 in ogni fase online.
+    </div>
+    <div class="card ok">
+      <strong>Parte 2 — Online (una fase alla volta)</strong><br/>
+      Testi sintetici REV9 pag. 6, solo ramo scelto in Fase 1/3.
+      + modello a <strong>porte</strong>, lampade oneste, auto-ascolto file, niente «Continua / Puoi passare…».
+    </div>
+  </div>
+  <h3>Integrazioni di processo recepite nei template</h3>
+  <table>
+    <tr><th>#</th><th>Integrazione</th><th>Come compare in UI</th></tr>
+    <tr><td>A</td><td>Esegui dove arriva (opzione)</td><td>Online Fase 2: «Doppio clic su CONFIGURA nella cartella di ricezione <em>oppure</em> sul Desktop se li hai già copiati»</td></tr>
+    <tr><td>B</td><td>Script maggiordomo</td><td>Guida: all’avvio consolida i 3 file, overwrite, rimuove <code>(1)/(2)</code></td></tr>
+    <tr><td>C</td><td>Ascolto Telefono</td><td>Fase 2→3: app in ascolto di <code>DATI_CIFS.json</code> (Download/BT/LAN); picker solo fallback</td></tr>
+    <tr><td>D</td><td>Porte + CTA d’azione</td><td>Niente Continua; CTA = Invia set / Usa questi dati / Attiva Catalogo</td></tr>
+    <tr><td>E</td><td>Lampade</td><td>Ambra = inviato/in attesa; verde = artefatto verificato; rosso = da ripetere</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>1. Flowchart (da REV9) — presente in ogni fase online</h2>
+  <div class="flowstrip"><img src="assets/rev9_flow/flow_p01.png" alt="Panoramica 4 fasi"/></div>
+  <p class="muted">In app: striscia compatta a 4 riquadri; fase corrente evidenziata, fasi concluse in verde.</p>
+</section>
+
+<section>
+  <h2>2. Scelta metodo (invariata REV9)</h2>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span>Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Modalità di associazione tra Telefono e PC</p>
+          <p class="desc">Attiva il collegamento tra il tuo telefono e il PC dove tieni il Catalogo. Mantieni lo stesso metodo anche per riportare <code>DATI_CIFS.json</code>.</p>
+          <p class="desc"><strong>Seleziona l’opzione:</strong></p>
+          <div class="select">Telefono e PC sono già associati (lo vedo in Bluetooth) ▾</div>
+          <p class="muted" style="font-size:.65rem">Altre voci: NON ancora associati (pairing) · cavo USB</p>
+          <div class="foot"><div class="actions"><span class="btn wide ghost">Indietro</span><span class="btn wide primary">OK</span></div></div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Fissa il ramo per Fase 1 e Fase 3.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>3. Fase 1 — Invio set (BT già associati)</h2>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span>Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Fase 1 di 4 — Invio set di configurazione</p>
+          <p class="desc">Guida completa stampabile qui <span class="print-inline"><span class="ico">🖨</span></span></p>
+          <div class="stepper">
+            <div class="step on">1. Invia</div>
+            <div class="step">2. Esegui</div>
+            <div class="step">3. Ricevi</div>
+            <div class="step">4. Configura</div>
+          </div>
+          <div class="lamps">
+            <div class="lamp-row"><span class="lamp wait"></span> 1 Invio set — da avviare</div>
+            <div class="lamp-row"><span class="lamp off"></span> 2 Script PC — bloccata</div>
+            <div class="lamp-row"><span class="lamp off"></span> 3 Dati CIFS — bloccata</div>
+            <div class="lamp-row"><span class="lamp off"></span> 4 Attivazione — bloccata</div>
+          </div>
+          <div class="acc open">
+            <div class="hd"><span>Cosa fare (Bluetooth già associati)</span><span>▾</span></div>
+            <div class="bd">
+              Non ripetere il pairing. Attiva Bluetooth su entrambi.<br/>
+              <strong>PC:</strong> Trasferimento file Bluetooth → Ricevi file.<br/>
+              <strong>Telefono:</strong> tap sotto → seleziona il PC.<br/><br/>
+              <em>Come in guida:</em> i file <strong>non</strong> arrivano sul Desktop. Sul PC cerca la cartella di ricezione (es. File ricevuti), seleziona i 3 file e copiali sul Desktop (sostituisci versioni precedenti; evita <code>(1)</code>/<code>(2)</code>).
+            </div>
+          </div>
+          <div class="verify">Sul Desktop devono esserci: CONFIGURA.CMD, QRCoder.dll, sup.ps1 (unica versione).</div>
+          <div class="foot">
+            <div class="actions"><span class="btn wide primary">Invia set di configurazione</span></div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">CTA = azione reale. Guida PDF spiega ricerca+copia Desktop.</p>
+    </div>
+
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span>Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Fase 1 — dopo invio dall’app</p>
+          <div class="stepper">
+            <div class="step on">1. Invia</div>
+            <div class="step">2. Esegui</div>
+            <div class="step">3. Ricevi</div>
+            <div class="step">4. Configura</div>
+          </div>
+          <div class="lamps">
+            <div class="lamp-row"><span class="lamp wait"></span> 1 Invio set — inviato dal Telefono</div>
+            <div class="lamp-row"><span class="lamp off"></span> 2 Script PC — bloccata</div>
+            <div class="lamp-row"><span class="lamp off"></span> 3 Dati CIFS — bloccata</div>
+            <div class="lamp-row"><span class="lamp off"></span> 4 Attivazione — bloccata</div>
+          </div>
+          <div class="state wait">Stato: set inviato. Completa sul PC la copia sul Desktop (o tieni i file nella cartella di ricezione).</div>
+          <div class="acc open">
+            <div class="hd"><span>Sul PC adesso</span><span>▾</span></div>
+            <div class="bd">
+              1) Individua i 3 file nella cartella di ricezione BT.<br/>
+              2) Copiali sul Desktop (overwrite).<br/>
+              <em>Integrazione A:</em> in alternativa puoi avviare CONFIGURA.CMD direttamente dalla cartella di ricezione: lo script consoliderà i file (maggiordomo).
+            </div>
+          </div>
+          <div class="foot">
+            <div class="actions"><span class="btn wide primary">Apri istruzioni script</span></div>
+            <p class="muted" style="font-size:.62rem;margin-top:6px">Sblocca la Fase 2 (porta). Nessun «Continua» / «Puoi passare…».</p>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Ambra = inviato dall’app, non ancora prova Desktop.</p>
+    </div>
+
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span>Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Fase 1 — ramo USB</p>
+          <p class="desc">Guida completa qui <span class="print-inline"><span class="ico">🖨</span></span></p>
+          <div class="stepper"><div class="step on">1</div><div class="step">2</div><div class="step">3</div><div class="step">4</div></div>
+          <div class="acc open">
+            <div class="hd"><span>Cosa fare (USB)</span><span>▾</span></div>
+            <div class="bd">
+              Cavo dati · Telefono: Trasferimento file/MTP.<br/>
+              PC: Questo PC → Telefono → Memoria interna → Download → copia sul Desktop i 3 file (overwrite, niente <code>(1)</code>).
+            </div>
+          </div>
+          <div class="verify">Desktop: CONFIGURA.CMD, QRCoder.dll, sup.ps1</div>
+          <div class="foot"><div class="actions"><span class="btn wide primary">Apri istruzioni script</span></div></div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">USB: copia Desktop resta esplicita (come guida).</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>4. Fase 2 — Script PC (in attesa artefatto)</h2>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span>Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Fase 2 di 4 — Esegui lo script sul PC</p>
+          <p class="desc">Guida completa qui <span class="print-inline"><span class="ico">🖨</span></span></p>
+          <div class="stepper">
+            <div class="step done">1</div>
+            <div class="step on">2. Esegui</div>
+            <div class="step">3</div>
+            <div class="step">4</div>
+          </div>
+          <div class="lamps">
+            <div class="lamp-row"><span class="lamp on"></span> 1 Invio set — inviato</div>
+            <div class="lamp-row"><span class="lamp wait"></span> 2 Script PC — in attesa dei dati</div>
+            <div class="lamp-row"><span class="lamp wait"></span> 3 Dati CIFS — in ascolto…</div>
+            <div class="lamp-row"><span class="lamp off"></span> 4 Attivazione — bloccata</div>
+          </div>
+          <div class="acc open">
+            <div class="hd"><span>Sul PC</span><span>▾</span></div>
+            <div class="bd">
+              Doppio clic su <code>CONFIGURA.CMD</code> (Desktop <em>oppure</em> cartella di ricezione).<br/>
+              Segui la finestra; non chiuderla.<br/>
+              Al termine lo script scrive <code>DATI_CIFS.json</code> e ripulisce i duplicati <code>(1)/(2)</code> (maggiordomo).
+            </div>
+          </div>
+          <div class="state wait">Nessun bottone «avanti». Resta qui: l’app ascolta l’arrivo di DATI_CIFS.json (BT/Download/LAN).</div>
+          <div class="foot">
+            <div class="actions"><span class="btn wide sec">Non arriva? Opzioni di recupero</span></div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Porta automatica verso Fase 3 quando arriva il file.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>5. Fase 3 — Ricezione DATI_CIFS (checkpoint reale)</h2>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span>Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Fase 3 di 4 — Dati CIFS ricevuti</p>
+          <p class="desc">Guida completa qui <span class="print-inline"><span class="ico">🖨</span></span></p>
+          <div class="stepper">
+            <div class="step done">1</div>
+            <div class="step done">2</div>
+            <div class="step on">3. Ricevi</div>
+            <div class="step">4</div>
+          </div>
+          <div class="lamps">
+            <div class="lamp-row"><span class="lamp on"></span> 1 Completata</div>
+            <div class="lamp-row"><span class="lamp on"></span> 2 Completata (inferita dal file)</div>
+            <div class="lamp-row"><span class="lamp on"></span> 3 Dati CIFS ricevuti</div>
+            <div class="lamp-row"><span class="lamp off"></span> 4 Da attivare</div>
+          </div>
+          <div class="state ok">Rilevato <code>DATI_CIFS.json</code> (sessione corrente, senza <code>(1)</code>).</div>
+          <div class="acc open">
+            <div class="hd"><span>Se il file non è ancora partito dal PC</span><span>▾</span></div>
+            <div class="bd">
+              <em>BT:</em> Desktop → tasto destro su DATI_CIFS.json → Invia a Bluetooth → Telefono → accetta.<br/>
+              <em>USB:</em> copia dal Desktop a Download del Telefono.<br/>
+              L’app lo intercetta senza farti cercare Download.
+            </div>
+          </div>
+          <div class="foot"><div class="actions"><span class="btn wide primary">Usa questi dati</span></div></div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Verde solo con artefatto verificato.</p>
+    </div>
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span>Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Fase 3 — recupero / KO</p>
+          <div class="lamps">
+            <div class="lamp-row"><span class="lamp on"></span> 1</div>
+            <div class="lamp-row"><span class="lamp wait"></span> 2/3 — file assente o ambiguo</div>
+            <div class="lamp-row"><span class="lamp ko"></span> Import non valido</div>
+          </div>
+          <div class="state ko">Qualcosa è andata storta. Riprova</div>
+          <div class="acc open">
+            <div class="hd"><span>Opzioni di recupero</span><span>▾</span></div>
+            <div class="bd">
+              · Rinvia DATI_CIFS.json dal PC (solo file senza <code>(1)</code>)<br/>
+              · Importa file… (fallback selettore)<br/>
+              · Se stessa Wi‑Fi: riprova ricezione automatica (LAN)
+            </div>
+          </div>
+          <div class="foot"><div class="actions"><span class="btn wide primary">Riprova rilevamento</span></div></div>
+          <p class="muted" style="font-size:.62rem;margin-top:6px">Controllo resta sulla Fase 3.</p>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Messaggio KO letterale; niente autodichiarazioni.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>6. Fase 4 — Import / CIFS / attivazione</h2>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span>Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Fase 4 — Dati pronti da copiare su CIFS</p>
+          <div class="lamps">
+            <div class="lamp-row"><span class="lamp on"></span> 1–3 Completate</div>
+            <div class="lamp-row"><span class="lamp wait"></span> 4 Copia in CIFS</div>
+          </div>
+          <div class="state ok">Import riuscito — dati della sessione corrente</div>
+          <p class="desc" style="margin-top:8px">Apri CIFS. Per ogni campo: Copia qui → incolla lì. Salva. Verifica che la cartella/dispositivo compaia nella lista CIFS (controllo umano, come in guida).</p>
+          <div class="actions"><span class="btn wide primary">Apri CIFS Documents Provider</span></div>
+          <div class="field"><span>Host</span><span class="btn sm">Copia</span></div>
+          <div class="field"><span>User</span><span class="btn sm">Copia</span></div>
+          <div class="field"><span>Password</span><span class="btn sm">Copia</span></div>
+          <div class="field"><span>Folder / Name</span><span class="btn sm">Copia</span></div>
+          <div class="verify">Esito atteso guida: risorsa visibile in lista CIFS.</div>
+          <div class="foot"><div class="actions"><span class="btn wide primary">Attiva Catalogo</span></div></div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">CTA finale = Attiva Catalogo (chiude il processo).</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>7. Binding testi online (Parte 2 + integrazioni)</h2>
+  <table>
+    <tr><th>Fase</th><th>Ramo</th><th>Testo online</th><th>CTA / porta</th></tr>
+    <tr>
+      <td>1</td>
+      <td>BT già / pairing / USB</td>
+      <td>Solo ramo scelto (REV9). BT: ricezione ≠ Desktop → cerca e copia sul Desktop (o avvia dalla cartella di ricezione).</td>
+      <td>Invia set… → Apri istruzioni script</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>tutti</td>
+      <td>CONFIGURA.CMD → attendi → DATI_CIFS.json; maggiordomo overwrite</td>
+      <td>Nessun avanti; ascolto attivo</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>stesso metodo</td>
+      <td>BT/USB come REV9; app rileva file senza caccia Download</td>
+      <td>Usa questi dati / Riprova</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>tutti</td>
+      <td>Copia campi → lista CIFS → Attiva Catalogo</td>
+      <td>Attiva Catalogo</td>
+    </tr>
+  </table>
+</section>
+
+<section>
+  <h2>8. Criteri di accettazione template</h2>
+  <ol>
+    <li>Guida PDF (Parte 1) mantiene: BT riceve altrove → cerca/copia Desktop; USB path Download→Desktop; 4 fasi; flowchart.</li>
+    <li>Online (Parte 2): una fase; ramo filtrato; stampa su «qui» 🖨 apre Parte 1.</li>
+    <li>Assenti «Continua» e «Puoi passare alla fase successiva».</li>
+    <li>Presenti lampade oneste + CTA d’azione + porte.</li>
+    <li>Integrazioni A/B/C visibili nei testi (esegui dove arriva / maggiordomo / ascolto).</li>
+    <li>KO letterale + riparto stessa fase; rifiuto happy-path di file <code>(1)/(2)</code>.</li>
+    <li>Nome file: <code>DATI_CIFS.json</code>.</li>
+  </ol>
+  <div class="banner ok">Template v7 pronti per convalida. Nessuno sviluppo finché non autorizzi.</div>
+</section>
+
+<footer>MediaManager · Template Setup BT v7 · REV9 + integrazioni porte/ascolto · 19/11/2026 · nessun codice</footer>
+</body>
+</html>

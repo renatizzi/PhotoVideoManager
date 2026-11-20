@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<title>MediaManager — Proposta downgrade Setup Catalogo USB-only v1</title>
+<style>
+  :root{--ink:#1a1a1a;--muted:#555;--line:#d0cbc0;--bg:#f7f5f0;--ok:#1b5e20;--warn:#8a5a00;--bad:#8b1a1a;--accent:#0d47a1}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Calibri,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.4}
+  header,section,footer,.banner{max-width:980px;margin:0 auto;padding:0 22px}
+  header{padding-top:24px}
+  h1{font-size:1.25rem;margin:0 0 6px}
+  h2{font-size:1.02rem;border-bottom:2px solid var(--ink);padding-bottom:5px;margin-top:22px}
+  h3{font-size:.92rem;margin:12px 0 6px}
+  p,li{font-size:.88rem}
+  .muted{color:var(--muted);font-size:.84rem}
+  .banner{background:#ffebee;border:1px solid #ef9a9a;padding:10px 12px;margin:10px auto;max-width:980px}
+  .banner.ok{background:#e8f5e9;border-color:#81c784}
+  .banner.warn{background:#fff8e1;border-color:#f0c36d}
+  .card{background:#fff;border-left:4px solid var(--accent);padding:10px 12px;margin:8px 0;font-size:.84rem}
+  .card.ok{border-left-color:var(--ok)}
+  .card.warn{border-left-color:var(--warn)}
+  .card.bad{border-left-color:var(--bad)}
+  table{width:100%;border-collapse:collapse;background:#fff;font-size:.8rem;margin:8px 0}
+  th,td{border:1px solid var(--line);padding:6px 8px;vertical-align:top;text-align:left}
+  th{background:#eee}
+  code{font-size:.85em}
+  .phone{background:#fff;border:1px solid var(--line);border-radius:16px;max-width:320px;overflow:hidden;margin:8px 0}
+  .bar{background:#1565c0;color:#fff;padding:8px 10px;font-size:.75rem;font-weight:700}
+  .body{padding:12px;min-height:380px}
+  .title{font-weight:700;margin:0 0 4px}
+  .cta{display:inline-block;background:#1565c0;color:#fff;padding:8px 12px;border-radius:4px;font-size:.75rem;margin-top:8px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.76rem;margin:10px 0}
+  .flow span{background:#fff;border:1px solid var(--line);padding:5px 8px;border-radius:4px}
+  .flow .arrow{border:none;background:transparent;padding:0;color:var(--muted)}
+  footer{padding:20px;color:var(--muted);font-size:.8rem}
+  section{page-break-inside:avoid}
+  @media print{.grid{grid-template-columns:1fr} section{page-break-after:always} section:last-of-type{page-break-after:auto}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Proposta definitiva — Setup Catalogo solo USB</h1>
+  <p class="muted">Downgrade di stabilità · 20/11/2026 · <strong>nessun codice finché non autorizzi</strong> · fonte: decisione Renato (rinuncia BT)</p>
+</header>
+
+<div class="banner">
+  <strong>Decisione di prodotto ricevuta:</strong> abbandono definitivo del collegamento Bluetooth e di tutto ciò che ne deriva per il setup del Catalogo.
+  Obiettivo: un solo percorso (USB), superficie minima, regressioni sotto controllo.
+</div>
+
+<section>
+  <h2>0. Perché questo downgrade è la scelta giusta ora</h2>
+  <div class="card bad">
+    Il ramo BT ha introdotto troppe variabili fuori dal controllo dell’app (pairing, cartella di ricezione, Share sheet, file <code>(1)/(2)</code>, differenze OEM).
+    Ogni iterazione ha allargato la superficie di test. Con un solo percorso USB possiamo congelare un happy path corto e verificabile.
+  </div>
+  <div class="card ok">
+    <strong>Principio di stabilità:</strong> una sola modalità · testi unici · un set di file fisso · un checkpoint reale (import <code>DATI_CIFS.json</code>) · niente rami morti in UI.
+  </div>
+</section>
+
+<section>
+  <h2>1. Perimetro — cosa resta / cosa esce</h2>
+  <table>
+    <tr><th>Area</th><th>USB-only (resta)</th><th>Esce (BT e derivati)</th></tr>
+    <tr>
+      <td>Scelta metodo</td>
+      <td>Nessuna combo: percorso fisso USB</td>
+      <td>Già associati / pairing / USB</td>
+    </tr>
+    <tr>
+      <td>Invio 3 file</td>
+      <td>Export in Download del Telefono → copia MTP sul Desktop PC</td>
+      <td>Share/Bluetooth, «Ricevi file», pairing</td>
+    </tr>
+    <tr>
+      <td>Script PC</td>
+      <td><code>CONFIGURA.cmd</code> + <code>sup.ps1</code> + <code>QRCoder.dll</code>; maggiordomo overwrite</td>
+      <td>Messaggi «PROSSIMO PASSO Bluetooth»</td>
+    </tr>
+    <tr>
+      <td>Ritorno dati</td>
+      <td>Copia <code>DATI_CIFS.json</code> Desktop → Download Telefono; ascolto Download; picker fallback</td>
+      <td>Invia a dispositivo Bluetooth</td>
+    </tr>
+    <tr>
+      <td>CIFS / attivazione</td>
+      <td>Import → Copia campi → Attiva Catalogo (invariato nella sostanza)</td>
+      <td>Testi recovery «reinvia via BT»</td>
+    </tr>
+    <tr>
+      <td>LAN announce</td>
+      <td><strong>Fuori guida</strong>: recupero silenzioso opzionale (non nel percorso felice)</td>
+      <td>Presentarlo come alternativa primaria</td>
+    </tr>
+    <tr>
+      <td>Documentazione</td>
+      <td>Nuova guida USB-only + LOCK dedicato</td>
+      <td>REV9/BT v7 come percorso prodotto</td>
+    </tr>
+  </table>
+</section>
+
+<section>
+  <h2>2. Happy path congelato (unico)</h2>
+  <div class="flow">
+    <span>1. Prerequisiti USB</span><span class="arrow">→</span>
+    <span>2. Prepara set su Telefono</span><span class="arrow">→</span>
+    <span>3. Copia 3 file su Desktop PC</span><span class="arrow">→</span>
+    <span>4. Esegui CONFIGURA</span><span class="arrow">→</span>
+    <span>5. Copia DATI_CIFS.json su Download</span><span class="arrow">→</span>
+    <span>6. Import + CIFS + Attiva</span>
+  </div>
+  <ol>
+    <li><strong>Telefono:</strong> Setup Catalogo → PC Windows → conferma prerequisiti (cavo dati, MTP).</li>
+    <li><strong>Telefono:</strong> tap <em>Prepara file di configurazione</em> → i 3 file finiscono in Download (nessun menu Condividi).</li>
+    <li><strong>Cavo:</strong> collega, Telefono sbloccato, modalità Trasferimento file / MTP.</li>
+    <li><strong>PC:</strong> Esplora file → Questo PC → Telefono → Memoria interna → Download → copia sul Desktop
+      <code>CONFIGURA.cmd</code>, <code>sup.ps1</code>, <code>QRCoder.dll</code> (sovrascrivi; niente <code>(1)</code>).</li>
+    <li><strong>PC:</strong> doppio clic CONFIGURA → UAC → attendi «Tutto pronto» → compare <code>DATI_CIFS.json</code>.</li>
+    <li><strong>PC→Telefono:</strong> copia solo <code>DATI_CIFS.json</code> sul Download del Telefono.</li>
+    <li><strong>Telefono:</strong> l’app rileva il file (o Importa…) → Copia campi CIFS → <em>Attiva Catalogo</em>.</li>
+  </ol>
+  <div class="card warn">
+    Nessuna fase «asincrona vuota». Le uniche porte sono: file preparati · script eseguito (inferito dall’arrivo di DATI_CIFS) · import OK · Catalogo attivato.
+  </div>
+</section>
+
+<section>
+  <h2>3. Template UI semplificati (mock)</h2>
+  <div class="grid">
+    <div class="phone">
+      <div class="bar">MediaManager · Setup</div>
+      <div class="body">
+        <p class="title">Setup Catalogo personale</p>
+        <p class="muted" style="font-size:.75rem">Collegamento via cavo USB</p>
+        <p style="font-size:.78rem">Serve un cavo che trasferisca i file (non solo ricarica). Tieni il Telefono sbloccato.</p>
+        <ul style="font-size:.72rem;margin:8px 0 0 16px;padding:0">
+          <li>Cavo dati pronto</li>
+          <li>PC Windows accessibile</li>
+          <li>Cartella Download sul Telefono usabile</li>
+        </ul>
+        <span class="cta">Avvia setup USB</span>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="bar">MediaManager · Setup</div>
+      <div class="body">
+        <p class="title">Setup Catalogo personale</p>
+        <p class="muted" style="font-size:.75rem">Passo 1 di 3 — Prepara i file</p>
+        <p style="font-size:.78rem">L’app crea CONFIGURA.cmd, sup.ps1 e QRCoder.dll in Download. Poi li copi sul Desktop del PC via USB.</p>
+        <p style="font-size:.72rem;color:var(--ok)">Guida stampabile: qui 🖨 (PDF USB-only)</p>
+        <span class="cta">Prepara file di configurazione</span>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="bar">MediaManager · Setup</div>
+      <div class="body">
+        <p class="title">Setup Catalogo personale</p>
+        <p class="muted" style="font-size:.75rem">Passo 2 di 3 — Sul PC</p>
+        <p style="font-size:.78rem">1) Copia i 3 file da Download → Desktop<br/>2) Doppio clic CONFIGURA.cmd<br/>3) Attendi «Tutto pronto»<br/>4) Copia DATI_CIFS.json sul Download del Telefono</p>
+        <p style="font-size:.72rem;background:#fff3e0;padding:6px;border-radius:4px">In attesa di DATI_CIFS.json…</p>
+        <span class="cta" style="background:#fff;color:#1565c0;border:1px solid #1565c0">Importa file…</span>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="bar">MediaManager · Setup</div>
+      <div class="body">
+        <p class="title">Setup Catalogo personale</p>
+        <p class="muted" style="font-size:.75rem">Passo 3 di 3 — CIFS e attivazione</p>
+        <p style="font-size:.78rem;color:var(--ok)">DATI_CIFS.json importato</p>
+        <p style="font-size:.72rem">Apri CIFS → Copia Host / User / Password / Folder → salva → verifica lista → Attiva Catalogo</p>
+        <span class="cta">Attiva Catalogo</span>
+      </div>
+    </div>
+  </div>
+  <p class="muted">3 passi UI (non 4 fasi BT). Stampa = PDF guida USB dedicata (non REV9 BT).</p>
+</section>
+
+<section>
+  <h2>4. Piano tecnico di downgrade (cosa si modifica in codice, dopo OK)</h2>
+  <table>
+    <tr><th>Priorità</th><th>Intervento</th><th>Effetto stabilità</th></tr>
+    <tr>
+      <td>P0</td>
+      <td>Rimuovere dalla UI: combo rami, testi pairing/BT, Share Intent, CTA «Invia set via BT»</td>
+      <td>Un solo flusso; niente chooser</td>
+    </tr>
+    <tr>
+      <td>P0</td>
+      <td>Export sempre in Download; CTA «Prepara file…»; poi istruzioni MTP fisse</td>
+      <td>Comportamento deterministico</td>
+    </tr>
+    <tr>
+      <td>P0</td>
+      <td>Ascolto solo Download/MediaStore + picker; rifiuto <code>(1)/(2)</code>; maggiordomo Desktop resta</td>
+      <td>Meno ambiguità file</td>
+    </tr>
+    <tr>
+      <td>P0</td>
+      <td>Riscrivere stringhe S0 / disponibilità / CIFS recovery senza BT</td>
+      <td>Niente false piste</td>
+    </tr>
+    <tr>
+      <td>P1</td>
+      <td>Eliminare codice morto BT (composable legacy, enum rami, messaggi script BT)</td>
+      <td>Meno regressioni future</td>
+    </tr>
+    <tr>
+      <td>P1</td>
+      <td>Nuovo PDF guida USB in assets; LOCK + guida test USB-only</td>
+      <td>Allineamento docs↔app</td>
+    </tr>
+    <tr>
+      <td>P2</td>
+      <td>LAN announce: resta silenzioso, non documentato in guida</td>
+      <td>Ancora di recupero senza complessità UX</td>
+    </tr>
+  </table>
+  <div class="card">
+    <strong>Cosa non si tocca:</strong> generazione script Windows, creazione share MyMedia, form Copia CIFS, attivazione Catalogo via SAF, analogia locale/NAS/cloud (resta scheletro già presente, senza inventare BT).
+  </div>
+</section>
+
+<section>
+  <h2>5. Criteri anti-regressione (obbligatori prima del telefono)</h2>
+  <ol>
+    <li>Unit test: export Download, parse DATI_CIFS, rifiuto <code>(1)</code>, maggiordomo nello script, assenza stringhe BT nel percorso PC.</li>
+    <li><code>assembleDebug</code> + APK artifact con versionCode nuovo (proposta: <strong>0.16.75</strong>).</li>
+    <li>Checklist agente: nessun Intent.ACTION_SEND nel flusso PC; nessun ramo PcLinkMode in UI.</li>
+    <li>Una sola guida test USB (passi numerati); LOCK USB-only con checkbox 1:1.</li>
+    <li>Gate Cloud già in AGENTS.md: niente richiesta prova telefono se i punti sopra non sono verdi.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>6. Criteri di accettazione prodotto</h2>
+  <table>
+    <tr><th>#</th><th>Criterio</th></tr>
+    <tr><td>1</td><td>In Setup PC non compare alcuna menzione operativa di Bluetooth/pairing/Share</td></tr>
+    <tr><td>2</td><td>L’utente completa il setup solo con cavo USB + 3 file + DATI_CIFS.json + CIFS</td></tr>
+    <tr><td>3</td><td>Nessun popup di condivisione nel percorso felice</td></tr>
+    <tr><td>4</td><td>Overwrite: Desktop/Download senza <code>(1)/(2)</code> nel happy path</td></tr>
+    <tr><td>5</td><td>Dopo Attiva Catalogo il Catalogo risulta configurato come oggi (stesso esito funzionale)</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>7. Cosa chiedo in convalida</h2>
+  <div class="banner warn">
+    Confermi questo downgrade USB-only come <strong>percorso unico e definitivo</strong> per il setup PC?
+    In particolare: (a) nessuna UI BT residua; (b) LAN solo silenziosa; (c) versione successiva 0.16.75 dedicata a questo freeze.
+  </div>
+  <div class="banner ok">
+    <strong>Nessuno sviluppo</strong> finché non dai OK esplicito a questa proposta.
+  </div>
+</section>
+
+<footer>MediaManager · Proposta Setup USB-only v1 · 20/11/2026 · bozza per convalida · nessun codice</footer>
+</body>
+</html>

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<title>MediaManager — Template Setup Catalogo USB-only (tutte le pagine)</title>
+<style>
+  :root{--bg:#f6f4ef;--ink:#1a1a1a;--muted:#5c5c5c;--line:#d7d2c8;--accent:#1565c0;--ok:#2e7d32;--warn:#b26a00;--off:#b71c1c;--green:#e8f5e9}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Calibri,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.35}
+  header.doc,section,footer,.banner{max-width:1140px;margin:0 auto;padding:0 22px}
+  header.doc{padding-top:22px}
+  h1{font-size:1.22rem;margin:0 0 6px}
+  h2{font-size:1.02rem;border-bottom:2px solid var(--ink);padding-bottom:5px;margin-top:20px}
+  p,li{font-size:.86rem}
+  .muted{color:var(--muted);font-size:.82rem}
+  .banner{background:#fff8e1;border:1px solid #f0c36d;padding:10px 12px;margin:10px auto}
+  .banner.ok{background:#e8f5e9;border-color:#81c784}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;margin-top:10px}
+  .phone{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;max-width:330px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .bar{background:#1565c0;color:#fff;padding:8px 10px;font-size:.7rem;display:flex;justify-content:space-between}
+  .bar .app{font-weight:700;font-size:.84rem}
+  .body{padding:12px;min-height:520px;display:flex;flex-direction:column}
+  .title{font-size:.98rem;font-weight:700;margin:0 0 2px}
+  .sub{font-size:.74rem;font-style:italic;color:var(--muted);margin:0 0 8px}
+  .desc{font-size:.76rem;margin:0 0 8px;line-height:1.4}
+  .print{color:var(--accent);font-weight:700}
+  .print .ico{font-size:1.15em}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:6px 0 10px}
+  .st{border:1px solid var(--line);border-radius:6px;padding:5px 3px;text-align:center;font-size:.55rem;background:#f7f7f7;color:var(--muted)}
+  .st.on{border-color:var(--accent);background:#e3f2fd;color:#0d47a1;font-weight:700}
+  .st.done{border-color:#81c784;background:var(--green);color:var(--ok)}
+  .box{border:1px solid var(--line);border-radius:6px;padding:8px;font-size:.68rem;margin:6px 0;background:#fafafa}
+  .okbox{background:var(--green);border:1px solid #a5d6a7;color:#1b5e20;border-radius:4px;padding:6px 8px;font-size:.68rem;margin:6px 0}
+  .wait{background:#fff3e0;border:1px solid #ffcc80;color:var(--warn);border-radius:4px;padding:6px 8px;font-size:.68rem;margin:6px 0}
+  .ko{background:#ffebee;border:1px solid #ef9a9a;color:var(--off);border-radius:4px;padding:6px 8px;font-size:.68rem;margin:6px 0}
+  .field{border:1px solid var(--line);padding:6px 8px;border-radius:4px;font-size:.68rem;margin:4px 0;display:flex;justify-content:space-between;align-items:center;background:#fff;gap:6px}
+  .field .val{color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .chk{font-size:.66rem;margin:4px 0;display:flex;gap:6px;align-items:flex-start}
+  .chk i{font-style:normal;border:1px solid #999;width:12px;height:12px;display:inline-block;margin-top:2px;flex-shrink:0;border-radius:2px}
+  .chk.on i{background:#66bb6a;border-color:#2e7d32}
+  .foot{margin-top:auto;padding-top:10px}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{display:inline-block;border:1px solid var(--accent);color:var(--accent);padding:7px 10px;border-radius:4px;font-size:.7rem;background:#fff;text-align:center}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.wide{flex:1}
+  .btn.ghost{border-color:var(--line);color:var(--muted)}
+  .btn.sm{padding:4px 8px;font-size:.65rem}
+  .bottom{display:flex;justify-content:space-around;padding:8px;border-top:1px solid var(--line);font-size:.58rem;color:var(--muted);background:#fafafa}
+  .bottom .on{color:var(--accent);font-weight:700}
+  .cap{font-size:.7rem;color:var(--muted);margin-top:8px}
+  .select{border:1px solid var(--accent);padding:8px;border-radius:4px;font-size:.72rem;background:#f7fbff;margin:6px 0}
+  table{width:100%;border-collapse:collapse;background:#fff;font-size:.78rem;margin:8px 0}
+  th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:#eee}
+  code{font-size:.85em}
+  footer{padding:18px;color:var(--muted);font-size:.78rem}
+  section{page-break-inside:avoid;margin-bottom:16px}
+  @media print{section{page-break-after:always} section:last-of-type{page-break-after:auto}}
+</style>
+</head>
+<body>
+<header class="doc">
+  <h1>Template Setup Catalogo — USB only (tutte le pagine)</h1>
+  <p class="muted">Proposta visuale completa · include copia CIFS · 20/11/2026 · <strong>nessun codice</strong> · allineato a `PVM_Proposta_Setup_USB_ONLY_v1`</p>
+</header>
+<div class="banner">
+  Percorso unico via cavo. Nessun Bluetooth, pairing o Share. Stampa = PDF guida USB. Bottom bar: MediaManager invariata.
+</div>
+
+<section>
+  <h2>Mappa pagine</h2>
+  <table>
+    <tr><th>#</th><th>Pagina</th><th>CTA primario</th></tr>
+    <tr><td>A</td><td>Scelta dispositivo Catalogo</td><td>OK (PC Windows)</td></tr>
+    <tr><td>B</td><td>Dati Catalogo / percorso cartella PC</td><td>Avanti</td></tr>
+    <tr><td>C</td><td>Prerequisiti USB</td><td>Avvia setup USB</td></tr>
+    <tr><td>1</td><td>Prepara file di configurazione</td><td>Prepara file…</td></tr>
+    <tr><td>1b</td><td>File pronti — istruzioni copia Desktop</td><td>Ho copiato i file: vai al PC</td></tr>
+    <tr><td>2</td><td>Sul PC (script + ritorno JSON)</td><td>Importa file… (fallback)</td></tr>
+    <tr><td>2b</td><td>DATI_CIFS ricevuto / KO</td><td>Usa questi dati / Riprova</td></tr>
+    <tr><td>3</td><td>Copia su CIFS</td><td>Apri CIFS + Copia campi</td></tr>
+    <tr><td>3b</td><td>Attiva Catalogo</td><td>Attiva Catalogo → Usa questa cartella</td></tr>
+    <tr><td>D</td><td>Esito</td><td>Fine / Continua</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>A–C · Ingresso e prerequisiti</h2>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span>Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="sub">Dove si trova il Catalogo</p>
+          <p class="desc">Scegli il dispositivo che ospita il Catalogo delle foto e video.</p>
+          <div class="select">PC Windows ▾</div>
+          <p class="desc muted">Altre voci: questo Telefono · Cloud · Disco di rete/NAS</p>
+          <div class="foot"><div class="actions"><span class="btn wide ghost">Indietro</span><span class="btn wide primary">OK</span></div></div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">A — Nessun accenno BT.</p>
+    </div>
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span>Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="sub">Cartella Catalogo sul PC</p>
+          <p class="desc">Percorso Windows della cartella (default consigliato).</p>
+          <div class="field"><span>Cartella</span><span class="val">C:\MyMedia</span></div>
+          <div class="field"><span>Condivisione</span><span class="val">MyMedia</span></div>
+          <div class="field"><span>Utente</span><span class="val">MyMedia</span></div>
+          <div class="foot"><div class="actions"><span class="btn wide ghost">Indietro</span><span class="btn wide primary">Avanti</span></div></div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">B — Parametri invariati (come oggi).</p>
+    </div>
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span>Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="sub">Collegamento via cavo USB</p>
+          <p class="desc">Serve un cavo che trasferisca i file (non solo ricarica). Tieni il Telefono sbloccato durante la copia.</p>
+          <div class="chk on"><i></i><span>Ho un cavo dati USB</span></div>
+          <div class="chk on"><i></i><span>Il PC Windows è acceso e accessibile</span></div>
+          <div class="chk on"><i></i><span>Posso usare la cartella Download del Telefono</span></div>
+          <p class="desc">Guida completa stampabile qui <span class="print"><span class="ico">🖨</span></span></p>
+          <div class="foot"><div class="actions"><span class="btn wide ghost">Indietro</span><span class="btn wide primary">Avvia setup USB</span></div></div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">C — Sostituisce combo BT/pairing/USB.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Passo 1 · Prepara i file (Telefono)</h2>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span>Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="sub">Passo 1 di 3 — Prepara i file</p>
+          <div class="steps">
+            <div class="st on">1. File</div>
+            <div class="st">2. PC</div>
+            <div class="st">3. CIFS</div>
+          </div>
+          <p class="desc">L’app crea in Download questi file:</p>
+          <div class="box">
+            <code>CONFIGURA.cmd</code><br/>
+            <code>sup.ps1</code><br/>
+            <code>QRCoder.dll</code>
+          </div>
+          <p class="desc">Poi, con il cavo in modalità Trasferimento file / MTP, li copi dal Download del Telefono al <strong>Desktop</strong> del PC (sovrascrivi; evita nomi con (1)/(2)).</p>
+          <p class="desc">Guida stampabile qui <span class="print"><span class="ico">🖨</span></span></p>
+          <div class="foot"><div class="actions"><span class="btn wide primary">Prepara file di configurazione</span></div></div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">1 — Nessun menu Condividi.</p>
+    </div>
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span>Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="sub">Passo 1 di 3 — File pronti</p>
+          <div class="steps">
+            <div class="st on">1. File</div>
+            <div class="st">2. PC</div>
+            <div class="st">3. CIFS</div>
+          </div>
+          <div class="okbox">File creati in Download del Telefono.</div>
+          <div class="box">
+            <strong>Sul PC adesso</strong><br/>
+            1. Collega il cavo · Telefono: Trasferimento file / MTP<br/>
+            2. Esplora file → Questo PC → Telefono → Memoria interna → Download<br/>
+            3. Copia i 3 file sul Desktop (overwrite)<br/>
+            4. Non aprire i file di supporto
+          </div>
+          <div class="foot">
+            <div class="actions"><span class="btn wide primary">Ho copiato i file: vai alle istruzioni PC</span></div>
+            <div class="actions" style="margin-top:8px"><span class="btn wide ghost">Indietro</span></div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">1b — Porta verso passo 2.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Passo 2 · Sul PC e ritorno DATI_CIFS.json</h2>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span>Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="sub">Passo 2 di 3 — Sul PC</p>
+          <div class="steps">
+            <div class="st done">1</div>
+            <div class="st on">2. PC</div>
+            <div class="st">3. CIFS</div>
+          </div>
+          <div class="box">
+            <strong>Esegui lo script</strong><br/>
+            Desktop → doppio clic <code>CONFIGURA.cmd</code> → conferma UAC → non chiudere la finestra → attendi «Tutto pronto».
+          </div>
+          <div class="box">
+            <strong>Riporta i dati</strong><br/>
+            Copia solo <code>DATI_CIFS.json</code> dal Desktop alla cartella Download del Telefono (stesso cavo / MTP). Ignora <code>no_pw.json</code>.
+          </div>
+          <div class="wait">In attesa di DATI_CIFS.json…</div>
+          <p class="desc">L’app controlla Download automaticamente. Guida qui <span class="print"><span class="ico">🖨</span></span></p>
+          <div class="foot"><div class="actions"><span class="btn wide">Importa file…</span></div></div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">2 — Ascolto Download; picker = recupero.</p>
+    </div>
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span>Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="sub">Passo 2 di 3 — Dati ricevuti</p>
+          <div class="steps">
+            <div class="st done">1</div>
+            <div class="st on">2. PC</div>
+            <div class="st">3. CIFS</div>
+          </div>
+          <div class="okbox">Rilevato DATI_CIFS.json (sessione corrente, senza (1)/(2)).</div>
+          <div class="box">
+            Host: 192.168.1.40<br/>
+            User: DESKTOP-PC\MyMedia<br/>
+            Password: presente<br/>
+            Folder: MyMedia
+          </div>
+          <div class="foot"><div class="actions"><span class="btn wide primary">Usa questi dati</span></div></div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">2b OK — checkpoint reale.</p>
+    </div>
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span>Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="sub">Passo 2 di 3 — Problema</p>
+          <div class="steps">
+            <div class="st done">1</div>
+            <div class="st on">2. PC</div>
+            <div class="st">3. CIFS</div>
+          </div>
+          <div class="ko">Qualcosa è andata storta. Riprova</div>
+          <div class="box">
+            Possibili cause:<br/>
+            · file <code>DATI_CIFS (1).json</code> (usa solo quello senza numero)<br/>
+            · selezionato <code>no_pw.json</code><br/>
+            · JSON incompleto / sessione diversa
+          </div>
+          <div class="foot">
+            <div class="actions"><span class="btn wide primary">Riprova rilevamento</span></div>
+            <div class="actions" style="margin-top:8px"><span class="btn wide">Importa file…</span></div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">2b KO — resta sul passo 2.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Passo 3 · Copia su CIFS (pagina completa)</h2>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span>Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="sub">Passo 3 di 3 — Copia i dati su CIFS</p>
+          <div class="steps">
+            <div class="st done">1</div>
+            <div class="st done">2</div>
+            <div class="st on">3. CIFS</div>
+          </div>
+          <div class="okbox">Import riuscito — dati della sessione corrente</div>
+          <p class="desc">Apri CIFS Documents Provider. Per ogni campo: Copia qui → passa a CIFS → Incolla nel campo corrispondente. Salva. Verifica che la cartella compaia nella lista CIFS.</p>
+          <div class="actions"><span class="btn wide primary">Apri CIFS Documents Provider</span></div>
+          <p class="desc" style="margin-top:8px;font-weight:600">Dati da copiare</p>
+          <div class="field"><span>Name</span><span class="val">MyMedia</span><span class="btn sm">Copia</span></div>
+          <div class="field"><span>Storage</span><span class="val">SMB2,3 (jCIFS NG)</span><span class="btn sm">Copia</span></div>
+          <div class="field"><span>Host</span><span class="val">192.168.1.40</span><span class="btn sm">Copia</span></div>
+          <div class="field"><span>Port</span><span class="val">445</span><span class="btn sm">Copia</span></div>
+          <div class="field"><span>Username</span><span class="val">DESKTOP-PC\MyMedia</span><span class="btn sm">Copia</span></div>
+          <div class="field"><span>Password</span><span class="val">••••••••</span><span class="btn sm">Copia</span></div>
+          <div class="field"><span>Folder</span><span class="val">MyMedia</span><span class="btn sm">Copia</span></div>
+          <div class="okbox">Esito atteso: dispositivo/cartella visibile nella lista CIFS.</div>
+          <div class="chk"><i></i><span>Ho salvato la configurazione in CIFS e la risorsa compare in elenco</span></div>
+          <div class="foot"><div class="actions"><span class="btn wide primary">Attiva Catalogo</span></div></div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">3 — Scheda CIFS semplificata (niente recovery BT/hotspot in pagina).</p>
+    </div>
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span>Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="sub">Scegli la cartella del Catalogo</p>
+          <p class="desc">Dopo Attiva Catalogo, seleziona la cartella condivisa appena configurata (Disco di rete / CIFS → MyMedia).</p>
+          <div class="actions"><span class="btn wide primary">Usa questa cartella</span></div>
+          <div class="box" style="margin-top:10px">
+            Se non compare: torna a CIFS, verifica Host/User/Password/Folder e il salvataggio, poi riprova.
+          </div>
+          <div class="foot"><div class="actions"><span class="btn wide ghost">Indietro</span></div></div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">3b — SAF / scelta cartella (come oggi).</p>
+    </div>
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span>Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="sub">CIFS — Host modificabile (solo se serve)</p>
+          <p class="desc">Se l’IP importato non è raggiungibile dalla rete attuale, puoi correggere Host qui prima di Attiva Catalogo.</p>
+          <div class="field"><span>Host</span><span class="val">192.168.1.40</span></div>
+          <div class="field"><span>Username</span><span class="val">DESKTOP-PC\MyMedia</span></div>
+          <div class="actions" style="margin-top:8px"><span class="btn wide">Importa di nuovo DATI_CIFS.json…</span></div>
+          <p class="desc muted">Recupero USB/file — nessuna menzione Bluetooth.</p>
+          <div class="foot"><div class="actions"><span class="btn wide primary">Attiva Catalogo</span></div></div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">3 alt — Solo recupero file/USB, non BT.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>D · Esito</h2>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span>Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="sub">Completato</p>
+          <div class="okbox">Catalogo censito correttamente sul PC Windows.</div>
+          <div class="box">
+            Posizione: Disco di rete · MyMedia<br/>
+            Percorso: \\192.168.1.40\MyMedia
+          </div>
+          <div class="foot"><div class="actions"><span class="btn wide primary">Continua</span></div></div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">D — Chiusura wizard.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Testi fissi CIFS (letterali proposti)</h2>
+  <table>
+    <tr><th>Elemento</th><th>Testo</th></tr>
+    <tr><td>Titolo passo 3</td><td>Copia i dati su CIFS</td></tr>
+    <tr><td>Intro</td><td>Apri CIFS Documents Provider. Per ogni campo: Copia qui → passa a CIFS → Incolla. Salva. Verifica che la cartella compaia nella lista CIFS.</td></tr>
+    <tr><td>Campi Copia</td><td>Name, Storage, Host, Port, Username, Password, Folder</td></tr>
+    <tr><td>Esito atteso</td><td>dispositivo/cartella condivisa visibile nella lista CIFS</td></tr>
+    <tr><td>CTA finale</td><td>Attiva Catalogo</td></tr>
+    <tr><td>Fuori pagina</td><td>Niente «reinvia via Bluetooth», niente hotspot come percorso felice</td></tr>
+  </table>
+  <div class="banner ok">Template completi per convalida. Nessuno sviluppo finché non autorizzi il downgrade USB-only.</div>
+</section>
+
+<footer>MediaManager · Template Setup USB-only v1 · tutte le pagine + CIFS · 20/11/2026 · nessun codice</footer>
+</body>
+</html>

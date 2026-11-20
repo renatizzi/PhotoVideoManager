@@ -91,9 +91,10 @@ Non modificare funzioni o interfacce estranee alla richiesta.
 Vietato chiedere a Renato installazione o prova sul telefono se manca anche uno solo di questi punti:
 
 1. `versionCode` **univoco e più alto** di tutti i branch `cursor/*` (così `consegna-telefono.bat` prende questo codice).
-2. Compilazione interna OK: `:app:assembleDebug` (e test automatici pertinenti).
+2. Compilazione interna OK: unit test pertinenti **e** `:app:assembleDebug`.
 3. APK pronto in `/opt/cursor/artifacts/` **oppure** artifact CI «Consegna APK».
-4. Per bug di rete/recupero dati: prova simulata in ambiente agente (socket/unit) **prima** del telefono; non chiedere «riprova e spera».
+4. Controlli/simulazioni possibili in ambiente agente (asset, script, parse/import, overwrite, rete se pertinente) **prima** del telefono; non chiedere «riprova e spera».
+5. Conferma esplicita in chat che i gate 1–4 sono verdi; solo allora proporre la prova telefono.
 
 Se `consegna-telefono.bat` fallisce: chiedere **solo** il file `build-consegna.log` (o le righe `FAILED` / `e:`), non un nuovo ciclo di ipotesi senza log.
 

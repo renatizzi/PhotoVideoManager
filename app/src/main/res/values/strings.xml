@@ -185,12 +185,30 @@
     <string name="hub_choose_folder">Seleziona Cartella</string>
     <string name="hub_seat_folder_fallback">Cartella Catalogo</string>
 
-    <!-- Passo 1 — Disponibilità (PPT slide 5) -->
+    <!-- Passo 1 — Disponibilità (template v3 + note Renato 16/11) -->
     <string name="hub_pc1_intro">Prima di avviare la procedura verifica e conferma di avere a disposizione i seguenti strumenti:</string>
-    <string name="hub_pc1_item_phone">Telefono Android o tablet dove è stata installata l\'app MediaManager</string>
+    <string name="hub_pc1_item_phone">Telefono con l\'app MediaManager installata</string>
     <string name="hub_pc1_item_pc">PC/Notebook Windows v. 10 o superiore</string>
-    <string name="hub_pc1_item_cable">Bluetooth attivo sul telefono e sul PC</string>
+    <string name="hub_pc1_item_cable">Bluetooth attivo sul Telefono e sul PC (oppure cavo USB se non puoi usare il BT)</string>
+    <string name="hub_pc1_note_phone">Con «Telefono» si intende anche un Tablet Android.</string>
+    <string name="hub_pc1_note_bt_free">Il collegamento Bluetooth, sia sul PC sia sul Telefono, non deve essere già impegnato da un altro flusso attivo: altrimenti i due dispositivi non si vedono.</string>
     <string name="hub_pc1_note_path">Percorso previsto: Bluetooth classico (Invia/Ricevi file). Phone Link, mirroring o «Collegamento a Windows» non sono obbligatori.</string>
+    <string name="hub_pc_link_mode_prompt">Seleziona l\'opzione:</string>
+    <string name="hub_pc_guide_confirm">CONFERMA</string>
+    <string name="hub_pc_guide_cancel">Annulla</string>
+    <string name="hub_pc_guide_checkpoint_ok">Fase terminata correttamente</string>
+    <string name="hub_pc_guide_print">Stampa guida</string>
+    <string name="hub_pc_guide_waiting_pc">In attesa dei dati dal PC</string>
+    <string name="hub_pc_guide_bundle_ready">Dati CIFS ricevuti</string>
+    <string name="hub_pc_guide_use_data">Usa questi dati</string>
+    <string name="hub_pc_guide_send_set">Invia set di configurazione</string>
+    <string name="hub_pc_guide_open_script">Apri istruzioni script</string>
+    <string name="hub_pc_guide_recovery">Non arriva? Opzioni di recupero</string>
+    <string name="hub_pc_guide_retry_detect">Riprova rilevamento</string>
+    <string name="hub_pc_guide_ko">Qualcosa è andata storta. Riprova</string>
+    <string name="hub_pc4b_intro_v3">Seleziona ed importa il file «DATI_CIFS.json» ricevuto dal PC (Download / Bluetooth / file ricevuti). Ignora no_pw.json e file con (1)/(2).</string>
+    <string name="hub_pc4b_file_expected_v3">File atteso: DATI_CIFS.json</string>
+    <string name="hub_import_ok">Import riuscito</string>
 
     <!-- Passo 2 — Bluetooth -->
     <string name="hub_pc2_intro">Una sola direzione per l’associazione: dal TELEFONO. Se telefono e PC sono già associati, non ripetere il pairing: passa a «Ricevi file» sul PC e all’OK dell’app.</string>
@@ -225,13 +243,13 @@
     <string name="hub_pc4_intro">PC: lancia la routine che crea la cartella Catalogo. Poi torna al telefono.</string>
     <string name="hub_pc4_item_1">PC: sul Desktop fai doppio clic su CONFIGURA</string>
     <string name="hub_pc4_item_2">PC: se compare Controllo account utente, conferma</string>
-    <string name="hub_pc4_item_3">PC: attendi «Tutto pronto» e il file bundle univoco sul Desktop (nome indicato nella finestra). Non usare bundle di tentativi precedenti. Poi torna all’app</string>
+    <string name="hub_pc4_item_3">PC: attendi «Tutto pronto» e DATI_CIFS.json sul Desktop (unica versione / overwrite). Ignora no_pw.json. Poi torna all’app</string>
 
     <!-- Passo 4 import + 5 CIFS -->
-    <string name="hub_pc4b_intro">PC → TELEFONO: dal Desktop invia via Bluetooth solo il file bundle di questa sessione (nome MediaManager_cifs_bundle_….json indicato da CONFIGURA). Poi tocca «Importa dati CIFS» e seleziona quel file.</string>
+    <string name="hub_pc4b_intro">PC → TELEFONO: dal Desktop invia via Bluetooth solo DATI_CIFS.json. Ignora no_pw.json. Poi tocca «Importa dati CIFS» e seleziona quel file.</string>
     <string name="hub_pc4b_pick">Importa dati CIFS</string>
     <string name="hub_pc4b_waiting">In attesa del bundle. Senza Host, User e Password non si apre CIFS.</string>
-    <string name="hub_pc4b_item_send">PC: ho inviato via Bluetooth il bundle di questa sessione (non un file vecchio omonimo)</string>
+    <string name="hub_pc4b_item_send">PC: ho inviato via Bluetooth DATI_CIFS.json (non no_pw.json né un file vecchio)</string>
     <string name="hub_pc4b_item_pick">TELEFONO: ho toccato «Importa dati CIFS» e scelto il file ricevuto</string>
     <string name="hub_pc4b_item_ready">L’app conferma Host, User e Password</string>
     <string name="hub_pc4b_outcome_title">Dati acquisiti</string>
@@ -247,14 +265,14 @@
     <string name="hub_pc5_share_visibility">In CIFS il campo Folder deve essere MyMedia (nome share, non vuoto e non un path Windows tipo C:\\…). Così la connessione punta già alla cartella del Catalogo.</string>
     <string name="hub_pc5_recovering">Recupero fallback in corso…</string>
     <string name="hub_pc5_result_imported">Bundle CIFS ricevuto: Host, User, Password e Folder pronti per Copia.</string>
-    <string name="hub_pc5_result_missing">Bundle non ancora caricato: torna al passo 4 e importa il file MediaManager_cifs_bundle_….json.</string>
+    <string name="hub_pc5_result_missing">Bundle non ancora caricato: torna al passo 4 e importa il file DATI_CIFS.json.</string>
     <string name="hub_pc5_retry_recover">Piano B: riprova recupero rete (solo se Bluetooth non è disponibile)</string>
     <string name="hub_pc5_hotspot_intro">Percorso felice: Bluetooth (passo 4). Hotspot/chiavetta solo se il trasferimento BT del bundle non è possibile.</string>
     <string name="hub_pc5_import_usb_bundle">Piano B: leggi bundle da chiavetta/Download</string>
     <string name="hub_pc5_confirm">Conferma</string>
     <string name="hub_pc5_item_saved">Confermo di aver configurato e salvato CIFS Documents Provider secondo le istruzioni sopra indicate</string>
     <string name="hub_pc5_ultima_azione">Ultima azione: clicca su «Attiva collegamento», seleziona la connessione CIFS appena salvata (Name = MyMedia) e premi «Usa questa cartella». Non restare sull\'elenco share del PC.</string>
-    <string name="hub_pc5_activate_link">Attiva collegamento</string>
+    <string name="hub_pc5_activate_link">Attiva Catalogo</string>
     <string name="hub_pc5_access_question">La prova di accesso al Catalogo è andata a buon fine?</string>
     <string name="hub_pc5_access_yes">Sì</string>
     <string name="hub_pc5_access_no">No</string>

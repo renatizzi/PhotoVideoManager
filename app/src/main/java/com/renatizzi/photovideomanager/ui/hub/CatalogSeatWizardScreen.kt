@@ -3,14 +3,16 @@ package com.renatizzi.photovideomanager.ui.hub
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.net.Uri
 import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,14 +21,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.focus.onFocusEvent
-import kotlinx.coroutines.launch
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -45,15 +46,23 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusEvent
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import com.renatizzi.photovideomanager.R
 import com.renatizzi.photovideomanager.data.hub.SetupCifsBundle
 import com.renatizzi.photovideomanager.data.hub.SetupLanAnnounce
@@ -62,6 +71,8 @@ import com.renatizzi.photovideomanager.data.storage.NetworkDriveAssistant
 import com.renatizzi.photovideomanager.data.storage.OpenDocumentTreeAdvanced
 import com.renatizzi.photovideomanager.data.storage.SafPathLabels
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind
+import java.io.File
+import kotlinx.coroutines.launch
 
 @Composable
 fun CatalogSeatWizardScreen(
@@ -84,6 +95,11 @@ fun CatalogSeatWizardScreen(
     onConfirmAvailability: () -> Unit,
     onPcShareAlreadyReady: () -> Unit,
     onPcShareNeedsPrepare: () -> Unit,
+    onSelectPcLinkMode: (PcLinkMode) -> Unit = {},
+    onConfirmPcLinkMode: () -> Unit = {},
+    onConfirmGuidePhase: (Int) -> Unit = {},
+    onConfirmPcGuide: () -> Unit = {},
+    onRetryBundleDetection: () -> Unit = {},
     onConfirmUsbAndPrepare: () -> Unit,
     onConfirmCopy: () -> Unit,
     onConfirmScriptRan: () -> Unit,
@@ -154,7 +170,11 @@ fun CatalogSeatWizardScreen(
             fontWeight = FontWeight.SemiBold,
         )
         Text(
-            text = WizardStepChrome.subtitle(state.step, state.selectedKind).text,
+            text = WizardStepChrome.subtitle(
+                state.step,
+                state.selectedKind,
+                state.pcLinkMode,
+            ).text,
             style = MaterialTheme.typography.titleMedium,
             fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
@@ -183,22 +203,20 @@ fun CatalogSeatWizardScreen(
                 onCancel = onBackS0,
                 busy = state.busy,
             )
-            WizardStep.W1_CONFIRM -> FolderChoiceStep(
-                body = stringResource(
-                    R.string.hub_w1_body,
+            WizardStep.W1_CONFIRM -> AnalogGuideStep(
+                phases = AnalogSetupGuideContent.localPhases(
                     state.deviceModel.ifBlank {
                         com.renatizzi.photovideomanager.domain.hub.CatalogSeat.DEFAULT_DEVICE_MODEL
                     },
                 ),
                 pendingLabel = state.pendingLabel,
-                catalogName = state.catalogName,
-                deviceModel = state.deviceModel,
-                memoryLabel = state.memoryLabel,
                 busy = state.busy,
+                showCifsButton = false,
+                cifsInstalled = state.cifsInstalled,
+                onOpenCifs = {},
                 onChooseFolder = { if (!state.busy) openTree.launch(null) },
                 onSalva = onConfirmLocal,
                 onBack = onBackS0,
-                onEsc = onCancel,
             )
             WizardStep.PC_SHARE_READY -> PcShareReadyStep(
                 kind = state.selectedKind,
@@ -221,30 +239,39 @@ fun CatalogSeatWizardScreen(
                 onBack = onBackS0,
                 busy = state.busy,
             )
-            WizardStep.PC_USB_PREPARE -> BtPrepareChecklistStep(
-                onOk = onConfirmUsbAndPrepare,
+            WizardStep.PC_LINK_MODE -> PcLinkModeStep(
+                selected = state.pcLinkMode,
+                onSelect = onSelectPcLinkMode,
+                onOk = onConfirmPcLinkMode,
                 onBack = { onGoStep(WizardStep.PC_AVAILABILITY) },
                 busy = state.busy,
-                statusMessage = state.statusMessage,
             )
+            WizardStep.PC_GUIDE,
+            WizardStep.PC_USB_PREPARE,
             WizardStep.PC_COPY_FILES,
-            WizardStep.W2_ROUTINE_READY,
-            -> CopyFilesChecklistStep(
-                onOk = onConfirmCopy,
-                onBack = { onGoStep(WizardStep.PC_USB_PREPARE) },
-                busy = state.busy,
-                scriptPrepared = state.scriptPrepared,
-                statusMessage = state.statusMessage,
-            )
             WizardStep.PC_RUN_SCRIPT,
+            WizardStep.W2_ROUTINE_READY,
             WizardStep.W2_SCRIPT_FIND,
             WizardStep.W2_SCRIPT_LAUNCH,
             WizardStep.W2_SCRIPT_RESULT,
             WizardStep.W2_ROUTINE_CONFIRM,
-            -> ScriptChecklistStep(
-                onOk = onConfirmScriptRan,
-                onBack = { onGoStep(WizardStep.PC_COPY_FILES) },
+            -> PcGuideStep(
+                state = state,
                 busy = state.busy,
+                onConfirmPhase = onConfirmGuidePhase,
+                onConfirmAll = onConfirmPcGuide,
+                onRetryDetect = onRetryBundleDetection,
+                onPickBundle = {
+                    openBundle.launch(
+                        arrayOf(
+                            "application/json",
+                            "text/plain",
+                            "application/octet-stream",
+                            "*/*",
+                        ),
+                    )
+                },
+                onCancel = { onGoStep(WizardStep.PC_LINK_MODE) },
             )
             WizardStep.PC_BT_DOWNLOAD_BUNDLE -> DownloadBundleStep(
                 state = state,
@@ -258,7 +285,7 @@ fun CatalogSeatWizardScreen(
                         ),
                     )
                 },
-                onBack = { onGoStep(WizardStep.PC_RUN_SCRIPT) },
+                onBack = { onGoStep(WizardStep.PC_GUIDE) },
                 onContinue = { onGoStep(WizardStep.W2_CIFS) },
             )
             WizardStep.W2_CIFS,
@@ -298,44 +325,31 @@ fun CatalogSeatWizardScreen(
                 onSalva = onConfirmLocal,
                 onBack = { onGoStep(WizardStep.PC_BT_DOWNLOAD_BUNDLE) },
             )
-            WizardStep.W3_GUIDE -> FolderChoiceStep(
-                body = stringResource(R.string.hub_folder_choice_desc_cloud),
+            WizardStep.W3_GUIDE -> AnalogGuideStep(
+                phases = AnalogSetupGuideContent.cloudPhases(),
                 pendingLabel = state.pendingLabel,
-                catalogName = state.catalogName,
-                deviceModel = state.deviceModel.ifBlank { "Google Drive" },
-                memoryLabel = "",
                 busy = state.busy,
+                showCifsButton = false,
+                cifsInstalled = state.cifsInstalled,
+                onOpenCifs = {},
                 onChooseFolder = { if (!state.busy) openTree.launch(null) },
                 onSalva = onConfirmLocal,
                 onBack = onBackS0,
-                onEsc = onCancel,
             )
-            WizardStep.W4_GUIDE -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(stringResource(R.string.hub_w4_body))
-                Text(stringResource(R.string.hub_w4_cifs_note))
-                Button(
-                    onClick = {
-                        NetworkDriveAssistant.openHelperOrStore(context)
-                        onRefreshCifs()
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(
-                        if (state.cifsInstalled) {
-                            stringResource(R.string.hub_cifs_open)
-                        } else {
-                            stringResource(R.string.hub_cifs_install)
-                        },
-                    )
-                }
-                SimpleGuide(
-                    body = stringResource(R.string.hub_w4_pick_hint),
-                    primary = stringResource(R.string.hub_choose_folder),
-                    onPrimary = { if (!state.busy) openTree.launch(null) },
-                    onBack = onBackS0,
-                    busy = state.busy,
-                )
-            }
+            WizardStep.W4_GUIDE -> AnalogGuideStep(
+                phases = AnalogSetupGuideContent.nasPhases(),
+                pendingLabel = state.pendingLabel,
+                busy = state.busy,
+                showCifsButton = true,
+                cifsInstalled = state.cifsInstalled,
+                onOpenCifs = {
+                    NetworkDriveAssistant.openHelperOrStore(context)
+                    onRefreshCifs()
+                },
+                onChooseFolder = { if (!state.busy) openTree.launch(null) },
+                onSalva = onConfirmLocal,
+                onBack = onBackS0,
+            )
             WizardStep.DONE -> W2DoneStep(
                 state = state,
                 onDone = onDone,
@@ -666,6 +680,16 @@ private fun AvailabilityChecklistStep(
 ) {
     Text(stringResource(R.string.hub_pc1_intro))
     Text(
+        stringResource(R.string.hub_pc1_note_phone),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+    )
+    Text(
+        stringResource(R.string.hub_pc1_note_bt_free),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+    )
+    Text(
         stringResource(R.string.hub_pc1_note_path),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
@@ -676,6 +700,427 @@ private fun AvailabilityChecklistStep(
         WizardChecklistItem(stringResource(R.string.hub_pc1_item_cable)),
     )
     ChecklistOkBlock(items = items, onOk = onOk, onBack = onBack, busy = busy)
+}
+
+@Composable
+private fun AnalogGuideStep(
+    phases: List<AnalogSetupGuideContent.Phase>,
+    pendingLabel: String,
+    busy: Boolean,
+    showCifsButton: Boolean,
+    cifsInstalled: Boolean,
+    onOpenCifs: () -> Unit,
+    onChooseFolder: () -> Unit,
+    onSalva: () -> Unit,
+    onBack: () -> Unit,
+) {
+    var expandedIndex by remember { mutableStateOf(0) }
+    var phaseDone by remember(phases.size) {
+        mutableStateOf(BooleanArray(phases.size) { false })
+    }
+    phases.forEachIndexed { index, phase ->
+        val open = expandedIndex == index
+        val unlocked = index == 0 || (0 until index).all { phaseDone[it] }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(6.dp))
+                .padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = unlocked) {
+                        expandedIndex = if (open) -1 else index
+                    },
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    phase.title,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Text(if (open) "▾" else "▸", color = MaterialTheme.colorScheme.primary)
+            }
+            if (open) {
+                Text(
+                    phase.body,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                )
+                if (showCifsButton && index == 0) {
+                    Button(onClick = onOpenCifs, modifier = Modifier.fillMaxWidth(), enabled = !busy) {
+                        Text(
+                            if (cifsInstalled) {
+                                stringResource(R.string.hub_cifs_open)
+                            } else {
+                                stringResource(R.string.hub_cifs_install)
+                            },
+                        )
+                    }
+                }
+                if (!phaseDone[index] && unlocked) {
+                    Text(phase.confirmMessage, style = MaterialTheme.typography.bodySmall)
+                    Button(
+                        onClick = {
+                            phaseDone = phaseDone.copyOf().also { it[index] = true }
+                            if (index < phases.lastIndex) expandedIndex = index + 1
+                        },
+                        enabled = !busy,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.hub_avanti))
+                    }
+                } else if (phaseDone[index]) {
+                    Text(
+                        stringResource(R.string.hub_pc_guide_checkpoint_ok),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+        }
+    }
+    if (pendingLabel.isNotBlank()) {
+        Text(
+            text = com.renatizzi.photovideomanager.domain.hub.CatalogSeatRowFormatter
+                .displayPath(pendingLabel),
+            style = MaterialTheme.typography.bodySmall,
+            fontFamily = FontFamily.Monospace,
+        )
+    }
+    val allDone = phaseDone.all { it }
+    Button(
+        onClick = onChooseFolder,
+        enabled = !busy && allDone,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.hub_choose_folder))
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(onClick = onBack, enabled = !busy, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.hub_indietro))
+        }
+        Button(
+            onClick = onSalva,
+            enabled = !busy && allDone && pendingLabel.isNotBlank(),
+            modifier = Modifier.weight(1f),
+        ) {
+            Text(stringResource(R.string.hub_pc_guide_confirm))
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PcLinkModeStep(
+    selected: PcLinkMode,
+    onSelect: (PcLinkMode) -> Unit,
+    onOk: () -> Unit,
+    onBack: () -> Unit,
+    busy: Boolean,
+) {
+    Text(PcSetupGuideContent.associationDescription())
+    Text(
+        stringResource(R.string.hub_pc_link_mode_prompt),
+        fontWeight = FontWeight.SemiBold,
+    )
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { if (!busy) expanded = !expanded },
+    ) {
+        OutlinedTextField(
+            value = PcSetupGuideContent.modeLabel(selected),
+            onValueChange = {},
+            readOnly = true,
+            modifier = Modifier
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                .fillMaxWidth(),
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            PcLinkMode.entries.forEach { mode ->
+                DropdownMenuItem(
+                    text = { Text(PcSetupGuideContent.modeLabel(mode)) },
+                    onClick = {
+                        onSelect(mode)
+                        expanded = false
+                    },
+                )
+            }
+        }
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(onClick = onBack, enabled = !busy, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.hub_indietro))
+        }
+        Button(onClick = onOk, enabled = !busy, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.hub_avanti))
+        }
+    }
+}
+
+@Composable
+private fun PcGuideStep(
+    state: CatalogSeatWizardUiState,
+    busy: Boolean,
+    onConfirmPhase: (Int) -> Unit,
+    onConfirmAll: () -> Unit,
+    onRetryDetect: () -> Unit,
+    onPickBundle: () -> Unit,
+    onCancel: () -> Unit,
+) {
+    val context = LocalContext.current
+    val mode = state.pcLinkMode
+    val phases = remember(mode) { PcSetupGuideContent.phases(mode) }
+    val phaseDone = state.guidePhaseDone
+    val currentIndex = when {
+        !phaseDone.getOrElse(0) { false } -> 0
+        !phaseDone.getOrElse(1) { false } -> 1
+        state.setupResultImported -> 3
+        state.bundleDetected -> 2
+        state.listeningForBundle -> 1
+        else -> 2
+    }.coerceIn(0, phases.lastIndex)
+    val phase = phases[currentIndex]
+
+    Text(
+        text = buildAnnotatedString {
+            append(PcSetupGuideContent.guideDescription())
+            append(' ')
+            withStyle(
+                SpanStyle(
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                ),
+            ) {
+                append("🖨")
+            }
+        },
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = Modifier.clickable { openSetupGuidePdf(context) },
+    )
+    Text(
+        PcSetupGuideContent.guideSubtitle(mode) + " · Fase ${currentIndex + 1} di 4",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+    )
+
+    // Flowchart strip (4 riquadri).
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        phases.forEachIndexed { index, p ->
+            val done = phaseDone.getOrElse(index) { false }
+            val on = index == currentIndex
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .border(
+                        1.dp,
+                        when {
+                            on -> MaterialTheme.colorScheme.primary
+                            done -> Color(0xFF81C784)
+                            else -> MaterialTheme.colorScheme.outlineVariant
+                        },
+                        RoundedCornerShape(6.dp),
+                    )
+                    .background(
+                        when {
+                            on -> MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                            done -> Color(0xFFE8F5E9)
+                            else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                        },
+                        RoundedCornerShape(6.dp),
+                    )
+                    .padding(6.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    "${index + 1}",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = if (on) FontWeight.Bold else FontWeight.Normal,
+                    color = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    p.title.substringAfter("— ").take(18).ifBlank { p.title.take(18) },
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+
+    // Lampade oneste.
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        repeat(PcSetupGuideContent.PHASE_COUNT) { index ->
+            val done = phaseDone.getOrElse(index) { false }
+            val lampColor = when {
+                index == 2 && state.errorMessage != null && !state.setupResultImported -> Color(0xFFEF9A9A)
+                done || (index == 2 && state.setupResultImported) -> Color(0xFF66BB6A)
+                index == currentIndex || (index == 1 && state.listeningForBundle) ||
+                    (index == 2 && state.bundleDetected) -> Color(0xFFFFCC80)
+                else -> Color(0xFFDDDDDD)
+            }
+            val detail = when {
+                index == 0 && done -> "inviato"
+                index == 1 && state.listeningForBundle && !state.setupResultImported -> "in attesa"
+                index == 2 && state.bundleDetected && !state.setupResultImported -> "ricevuti — da usare"
+                index == 2 && state.setupResultImported -> "ricevuti"
+                done -> "completata"
+                index == currentIndex -> "corrente"
+                else -> "bloccata"
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(12.dp)
+                        .background(lampColor, CircleShape)
+                        .border(1.dp, Color(0xFF999999), CircleShape),
+                )
+                Text(
+                    "${PcSetupGuideContent.lampLabel(index)} — $detail",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        }
+    }
+
+    Text(phase.title, fontWeight = FontWeight.SemiBold)
+    Text(
+        phase.body,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+    )
+
+    state.statusMessage?.let {
+        Text(
+            it,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f), RoundedCornerShape(4.dp))
+                .padding(8.dp),
+        )
+    }
+    state.errorMessage?.let {
+        Text(
+            it,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.error.copy(alpha = 0.08f), RoundedCornerShape(4.dp))
+                .padding(8.dp),
+        )
+    }
+
+    when {
+        currentIndex == 0 -> {
+            Button(
+                onClick = { onConfirmPhase(0) },
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.hub_pc_guide_send_set))
+            }
+        }
+        currentIndex == 1 && !phaseDone.getOrElse(1) { false } -> {
+            Button(
+                onClick = { onConfirmPhase(1) },
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.hub_pc_guide_open_script))
+            }
+        }
+        currentIndex == 1 && !state.bundleDetected && !state.setupResultImported -> {
+            if (state.listeningForBundle) {
+                Text(
+                    stringResource(R.string.hub_pc_guide_waiting_pc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+            OutlinedButton(
+                onClick = {
+                    onRetryDetect()
+                    onPickBundle()
+                },
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.hub_pc_guide_recovery))
+            }
+        }
+        currentIndex == 2 && state.bundleDetected && !state.setupResultImported -> {
+            Button(
+                onClick = { onConfirmPhase(2) },
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.hub_pc_guide_use_data))
+            }
+            OutlinedButton(
+                onClick = onPickBundle,
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.hub_pc4b_pick))
+            }
+        }
+        state.setupResultImported -> {
+            Button(
+                onClick = onConfirmAll,
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(phases[3].actionLabel)
+            }
+        }
+    }
+
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(onClick = onCancel, enabled = !busy, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.hub_pc_guide_cancel))
+        }
+    }
+}
+
+private fun openSetupGuidePdf(context: Context) {
+    runCatching {
+        val dir = File(context.cacheDir, "setup_guide").apply { mkdirs() }
+        val out = File(dir, "Guida_Setup_Catalogo_MediaManager_REV9.pdf")
+        if (!out.isFile || out.length() == 0L) {
+            context.assets.open(PcSetupGuideContent.GUIDE_PDF_ASSET).use { input ->
+                out.outputStream().use { output -> input.copyTo(output) }
+            }
+        }
+        val uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            out,
+        )
+        val view = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, "application/pdf")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(view)
+    }
 }
 
 @Composable
@@ -722,17 +1167,12 @@ private fun DownloadBundleStep(
     onBack: () -> Unit,
     onContinue: () -> Unit,
 ) {
-    Text(stringResource(R.string.hub_pc4b_intro))
-    val expected = state.expectedBundleFileName.ifBlank {
-        SetupCifsBundle.bundleFileNameForToken(state.setupToken)
-    }
-    if (expected.isNotBlank()) {
-        Text(
-            stringResource(R.string.hub_pc4b_expected_file, expected),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.primary,
-        )
-    }
+    Text(stringResource(R.string.hub_pc4b_intro_v3))
+    Text(
+        stringResource(R.string.hub_pc4b_file_expected_v3),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.primary,
+    )
     if (!state.setupResultImported) {
         Text(
             stringResource(R.string.hub_pc4b_waiting),
@@ -741,32 +1181,10 @@ private fun DownloadBundleStep(
         )
     } else {
         Text(
-            stringResource(R.string.hub_pc4b_outcome_title),
+            stringResource(R.string.hub_import_ok),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
         )
-        val pc = state.pcComputerName.ifBlank { "—" }
-        val ip = state.pcHostIp.trim().ifBlank { "—" }
-        val share = state.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
-        val user = state.cifsUserQualified.ifBlank { "—" }
-        Text(stringResource(R.string.hub_pc4b_outcome_pc, pc))
-        Text(stringResource(R.string.hub_pc4b_outcome_ip, ip))
-        Text(stringResource(R.string.hub_pc4b_outcome_share, share))
-        Text(stringResource(R.string.hub_pc4b_outcome_user, user))
-        Text(
-            if (state.temporaryPassword.isNotBlank()) {
-                stringResource(R.string.hub_pc4b_outcome_password_ok)
-            } else {
-                stringResource(R.string.hub_pc4b_outcome_password_missing)
-            },
-        )
-        if (!SetupLanAnnounce.isIpv4(state.pcHostIp)) {
-            Text(
-                stringResource(R.string.hub_pc4b_outcome_ip_missing),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error,
-            )
-        }
         state.statusMessage?.let {
             Text(
                 it,
@@ -782,21 +1200,26 @@ private fun DownloadBundleStep(
     ) {
         Text(stringResource(R.string.hub_pc4b_pick))
     }
-    val items = listOf(
-        WizardChecklistItem(stringResource(R.string.hub_pc4b_item_send)),
-        WizardChecklistItem(stringResource(R.string.hub_pc4b_item_pick)),
-        WizardChecklistItem(stringResource(R.string.hub_pc4b_item_ready)),
+    Text(
+        text = "Quando pronto clicca su [OK] per copiare i dati su CIFS",
+        style = MaterialTheme.typography.bodyMedium,
     )
-    ChecklistOkBlock(
-        items = items,
-        onOk = onContinue,
-        onBack = onBack,
-        busy = state.busy,
-        okEnabledExtra = state.setupResultImported &&
-            SetupLanAnnounce.isIpv4(state.pcHostIp) &&
-            state.cifsUserQualified.contains('\\') &&
-            state.temporaryPassword.isNotBlank(),
-    )
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(onClick = onBack, enabled = !state.busy, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.hub_indietro))
+        }
+        Button(
+            onClick = onContinue,
+            enabled = !state.busy &&
+                state.setupResultImported &&
+                SetupLanAnnounce.isIpv4(state.pcHostIp) &&
+                state.cifsUserQualified.contains('\\') &&
+                state.temporaryPassword.isNotBlank(),
+            modifier = Modifier.weight(1f),
+        ) {
+            Text(stringResource(R.string.hub_avanti))
+        }
+    }
 }
 
 @Composable

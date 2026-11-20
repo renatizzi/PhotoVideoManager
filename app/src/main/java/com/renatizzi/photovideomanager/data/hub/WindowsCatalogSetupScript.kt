@@ -30,14 +30,20 @@ object WindowsCatalogSetupScript {
     val DOWNLOAD_SCRUB_PREFIXES: List<String> = listOf(
         "CONFIGURA",
         "sup",
+        "DATI_CIFS",
+        "no_pw",
         "AVVIA_Configurazione_Catalogo",
         "_non_aprire_supporto_setup",
         "MediaManager_Setup_Catalogo",
         "QRCoder",
         "MediaManager_setup_handoff",
         "MediaManager_cifs_bundle",
+        "MediaManager_setup_result",
     )
-    const val RESULT_FILE_NAME = "MediaManager_setup_result.json"
+    /** Result senza password (BL-BT-01): non importare come bundle. */
+    const val RESULT_FILE_NAME = "no_pw.json"
+    /** Nome legacy del result (pre-no_pw); ancora cercato in lettura. */
+    const val LEGACY_RESULT_FILE_NAME = "MediaManager_setup_result.json"
     /** URI pvmsetup:2;… + istruzioni (Desktop). */
     const val HANDOFF_FILE_NAME = "MediaManager_setup_handoff.txt"
     /** QR PNG generato a «Tutto pronto» (Desktop). */
@@ -69,7 +75,7 @@ object WindowsCatalogSetupScript {
         val cmdFileName: String = CMD_FILE_NAME,
         val ps1Content: String,
         val cmdContent: String,
-        /** Nome univoco del bundle JSON prodotto a «Tutto pronto». */
+        /** Nome fisso del bundle JSON prodotto a «Tutto pronto» ([SetupCifsBundle.BUNDLE_FILE_NAME]). */
         val bundleFileName: String = SetupCifsBundle.BUNDLE_FILE_NAME,
     )
 
@@ -134,7 +140,7 @@ object WindowsCatalogSetupScript {
             "Token setup non valido"
         }
 
-        val bundleFileName = SetupCifsBundle.bundleFileNameForToken(params.setupToken)
+        val bundleFileName = SetupCifsBundle.BUNDLE_FILE_NAME
         val pkg = Package(
             params = params,
             ps1Content = buildPs1(params, bundleFileName),
@@ -294,8 +300,9 @@ object WindowsCatalogSetupScript {
         ) else (
           echo  Tutto pronto. PROSSIMO PASSO: Bluetooth
           echo  1^) Sul Desktop trovi $bundleFileName
-          echo  2^) Invia QUEL file al telefono via Bluetooth ^(Invia file^)
-          echo  3^) Nell'app: Scarica dati CIFS e seleziona il file ricevuto
+          echo  2^) Invia SOLO quel file al telefono via Bluetooth ^(Invia file^)
+          echo  3^) Ignora no_pw.json ^(senza password^)
+          echo  4^) Nell'app: Importa dati CIFS e seleziona $bundleFileName
         )
         echo.
         pause
@@ -382,6 +389,41 @@ function Record(${d}name, ${d}ok, ${d}detail) {
   ${d}steps.Add([pscustomobject]@{ name = ${d}name; ok = [bool]${d}ok; detail = [string]${d}detail }) | Out-Null
 }
 
+function Invoke-PvmMaggiordomo([string]${d}destDir) {
+  # Consolida i 3 file e rimuove duplicati (1)/(2) da Desktop / Download / File ricevuti / cartella script.
+  ${d}desk = [Environment]::GetFolderPath('Desktop')
+  ${d}dl = Join-Path ${d}env:USERPROFILE 'Downloads'
+  ${d}recv1 = Join-Path ${d}env:USERPROFILE 'Documents\Bluetooth Exchange Folder'
+  ${d}recv2 = Join-Path ${d}env:USERPROFILE 'Documents\File ricevuti'
+  ${d}dirs = New-Object System.Collections.Generic.List[string]
+  foreach (${d}cand in @(${d}PSScriptRoot, ${d}desk, ${d}dl, ${d}recv1, ${d}recv2, ${d}destDir)) {
+    if (${d}cand -and (Test-Path -LiteralPath ${d}cand) -and -not (${d}dirs -contains ${d}cand)) {
+      ${d}dirs.Add(${d}cand) | Out-Null
+    }
+  }
+  foreach (${d}need in @('CONFIGURA.cmd','sup.ps1','QRCoder.dll')) {
+    ${d}best = ${d}null
+    ${d}like = ${d}need + ' (*)'
+    foreach (${d}dir in ${d}dirs) {
+      ${d}hit = Get-ChildItem -LiteralPath ${d}dir -File -ErrorAction SilentlyContinue |
+        Where-Object { ${d}_.Name -ieq ${d}need -or ${d}_.Name -like ${d}like } |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 1
+      if (${d}hit -and (-not ${d}best -or ${d}hit.LastWriteTime -gt ${d}best.LastWriteTime)) {
+        ${d}best = ${d}hit
+      }
+    }
+    if (${d}best -and ${d}destDir -and (Test-Path -LiteralPath ${d}destDir)) {
+      Copy-Item -LiteralPath ${d}best.FullName -Destination (Join-Path ${d}destDir ${d}need) -Force -ErrorAction SilentlyContinue
+    }
+  }
+  foreach (${d}dir in ${d}dirs) {
+    Get-ChildItem -LiteralPath ${d}dir -File -ErrorAction SilentlyContinue |
+      Where-Object { ${d}_.Name -match '^(CONFIGURA|sup|QRCoder|DATI_CIFS|no_pw).*\([0-9]+\)' } |
+      ForEach-Object { Remove-Item -LiteralPath ${d}_.FullName -Force -ErrorAction SilentlyContinue }
+  }
+}
+
 try {
   Write-Host ""
   Write-Host "=== MediaManager: configurazione Catalogo ===" -ForegroundColor Cyan
@@ -390,6 +432,14 @@ try {
   Write-Host ""
   Write-Host "Passo 1 di 6 - Controlli preliminari" -ForegroundColor Cyan
   Write-Host ""
+  try {
+    Invoke-PvmMaggiordomo -destDir ${d}PSScriptRoot
+    ${d}desk0 = [Environment]::GetFolderPath('Desktop')
+    if (${d}desk0) { Invoke-PvmMaggiordomo -destDir ${d}desk0 }
+    Write-Step 'Maggiordomo: file consolidati, duplicati (1)/(2) rimossi.'
+  } catch {
+    Write-Step 'Maggiordomo: salto (continua comunque).'
+  }
 
   ${d}identity = [Security.Principal.WindowsIdentity]::GetCurrent()
   ${d}principal = New-Object Security.Principal.WindowsPrincipal(${d}identity)
@@ -579,8 +629,19 @@ try {
   }
   ${d}result | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath ${d}ResultPath -Encoding UTF8
   ${d}desktop = [Environment]::GetFolderPath('Desktop')
+  # BL-BT-02: overwrite unica versione sul Desktop (no_pw + DATI_CIFS + ripulisci legacy).
   if (${d}desktop) {
     Copy-Item -LiteralPath ${d}ResultPath -Destination (Join-Path ${d}desktop ${d}ResultFileName) -Force -ErrorAction SilentlyContinue
+    Get-ChildItem -LiteralPath ${d}desktop -Filter 'MediaManager_setup_result*.json' -ErrorAction SilentlyContinue |
+      Remove-Item -Force -ErrorAction SilentlyContinue
+    Get-ChildItem -LiteralPath ${d}desktop -Filter 'MediaManager_cifs_bundle*.json' -ErrorAction SilentlyContinue |
+      Remove-Item -Force -ErrorAction SilentlyContinue
+    foreach (${d}cfgName in @('CONFIGURA.cmd','CONFIGURA.CMD','sup.ps1','sup.PS1')) {
+      ${d}srcCfg = Join-Path ${d}PSScriptRoot ${d}cfgName
+      if (Test-Path -LiteralPath ${d}srcCfg) {
+        Copy-Item -LiteralPath ${d}srcCfg -Destination (Join-Path ${d}desktop ${d}cfgName) -Force -ErrorAction SilentlyContinue
+      }
+    }
   }
 
   Write-Host ""
@@ -598,9 +659,10 @@ try {
   Write-Host ""
   Write-Host "PROSSIMO PASSO (Bluetooth):" -ForegroundColor Cyan
   Write-Host ("1) Sul Desktop trovi " + ${d}BundleFileName)
-  Write-Host "2) Invia QUEL file al telefono via Bluetooth (Invia file)"
-  Write-Host "3) Nell'app: Scarica dati CIFS e seleziona il file ricevuto"
-  Write-Host "Non usare file MediaManager_cifs_bundle di tentativi precedenti."
+  Write-Host "2) Invia SOLO quel file al telefono via Bluetooth (Invia file)"
+  Write-Host ("3) Ignora " + ${d}ResultFileName + " (senza password)")
+  Write-Host ("4) Nell'app: Importa dati CIFS e seleziona " + ${d}BundleFileName)
+  Write-Host "Il Desktop tiene solo l'ultima versione (overwrite)."
   Write-Host ""
 
   # Bundle CIFS completo (con password) su volume script / Desktop = piano B USB.
@@ -628,9 +690,14 @@ try {
     if (${d}desktop) { ${d}bundleTargets += (Join-Path ${d}desktop ${d}bundleName) }
     foreach (${d}bt in ${d}bundleTargets) {
       try {
-        Set-Content -LiteralPath ${d}bt -Value ${d}bundleJson -Encoding UTF8
+        Set-Content -LiteralPath ${d}bt -Value ${d}bundleJson -Encoding UTF8 -Force
       } catch {}
     }
+    try {
+      ${d}deskClean = [Environment]::GetFolderPath('Desktop')
+      if (${d}deskClean) { Invoke-PvmMaggiordomo -destDir ${d}deskClean }
+      Invoke-PvmMaggiordomo -destDir ${d}PSScriptRoot
+    } catch {}
     Write-Step ('Bundle CIFS scritto (' + ${d}bundleName + ')')
     Write-Host ("Bundle salvato anche sulla chiavetta/cartella di CONFIGURA: " + ${d}bundleName)
   } catch {
@@ -691,7 +758,7 @@ catch {
       error = ${d}msg
       completedAt = (Get-Date).ToString('o')
     }
-    ${d}fail | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath ${d}ResultPath -Encoding UTF8 -ErrorAction SilentlyContinue
+    ${d}fail | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath ${d}ResultPath -Encoding UTF8 -Force -ErrorAction SilentlyContinue
     ${d}desk = [Environment]::GetFolderPath('Desktop')
     if (${d}desk) {
       Copy-Item -LiteralPath ${d}ResultPath -Destination (Join-Path ${d}desk ${d}ResultFileName) -Force -ErrorAction SilentlyContinue

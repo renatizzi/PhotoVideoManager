@@ -1,7 +1,8 @@
 package com.renatizzi.photovideomanager.data.hub
 
 /**
- * Esito script Windows (`MediaManager_setup_result.json`), senza password.
+ * Esito script Windows (`no_pw.json`, legacy `MediaManager_setup_result.json`), senza password.
+ * Non importabile come bundle CIFS ([SetupCifsBundle.looksLikeSetupResultNotBundle]).
  * Usato al Passo 5 per User (`NOMEPC\utente`) e Host (IP).
  */
 data class WindowsSetupResult(
