@@ -74,6 +74,10 @@
 
 ---
 
+
+### Decisione 20/11/2026 — USB-only (in attesa convalida proposta)
+Renato rinuncia al BT per il setup Catalogo. Proposta: `docs/reference/PVM_Proposta_Setup_USB_ONLY_v1.pdf`. **Nessun codice** finché non convalida.
+
 ## Decisioni già congelate (invariate)
 
 - Quick Share solo in help/Non riesco (non percorso principale)  
