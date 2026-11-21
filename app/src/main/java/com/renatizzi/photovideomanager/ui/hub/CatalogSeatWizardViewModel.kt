@@ -343,6 +343,13 @@ class CatalogSeatWizardViewModel(
                 pcHostIp = draft.pcHostIp,
                 cifsUserQualified = draft.cifsUserQualified,
                 setupResultImported = draft.pcHostIp.isNotBlank() || draft.cifsUserQualified.isNotBlank(),
+                guidePhaseDone = rebuildGuidePhaseDone(
+                    scriptPrepared = draft.scriptPrepared,
+                    usbCopiedDeclared = draft.usbCopiedDeclared,
+                    scriptRanDeclared = draft.scriptRanDeclared,
+                    setupResultImported = draft.pcHostIp.isNotBlank() ||
+                        draft.cifsUserQualified.isNotBlank(),
+                ),
                 canResumeDraft = false,
                 errorMessage = null,
                 statusMessage = null,
@@ -552,7 +559,7 @@ class CatalogSeatWizardViewModel(
         val current = _state.value
         when (index) {
             0 -> {
-                if (!current.scriptPrepared) {
+                if (!current.scriptPrepared || !current.downloadsSaved) {
                     prepareWindowsScript(shareAfterExport = false)
                 } else {
                     markGuidePhaseDone(0)
@@ -615,6 +622,22 @@ class CatalogSeatWizardViewModel(
         persistDraft()
     }
 
+    /** Ricostruisce le porte fase 1–5 da bozza (guidePhaseDone non era persistito). */
+    private fun rebuildGuidePhaseDone(
+        scriptPrepared: Boolean,
+        usbCopiedDeclared: Boolean,
+        scriptRanDeclared: Boolean,
+        setupResultImported: Boolean,
+    ): List<Boolean> {
+        // Se import OK, le fasi 1–4 si considerano già fatte (bozza ripresa a metà).
+        val p0 = scriptPrepared || setupResultImported
+        val p1 = usbCopiedDeclared || setupResultImported
+        val p2 = scriptRanDeclared || setupResultImported
+        val p3 = setupResultImported
+        val p4 = false // Fase 5 Fatto porta a 6/1; in bozza resta da riconfermare se già su CIFS
+        return listOf(p0, p1, p2, p3, p4)
+    }
+
     /** Dopo import OK: Fase 6/1 (Installa/Apri CIFS). */
     fun confirmPcGuide() {
         val s = _state.value
@@ -628,7 +651,9 @@ class CatalogSeatWizardViewModel(
             }
             return
         }
-        markGuidePhaseDone(3)
+        if (!s.guidePhaseDone.getOrElse(3) { false }) {
+            markGuidePhaseDone(3)
+        }
         markGuidePhaseDone(4)
         stopBundleWatch()
         _state.update {
@@ -636,7 +661,7 @@ class CatalogSeatWizardViewModel(
                 step = WizardStep.W2_CIFS_INSTALL,
                 listeningForBundle = false,
                 errorMessage = null,
-                statusMessage = "Import riuscito — passa a Installa/Apri CIFS",
+                statusMessage = null,
             )
         }
         persistDraft()
@@ -914,7 +939,7 @@ class CatalogSeatWizardViewModel(
         WizardStep.W2_ROUTINE_CONFIRM,
         -> WizardStep.PC_GUIDE
         WizardStep.PC_BT_DOWNLOAD_BUNDLE,
-        -> WizardStep.W2_CIFS_INSTALL
+        -> WizardStep.PC_GUIDE
         WizardStep.W2_CIFS_BRIDGE,
         WizardStep.W2_SUMMARY,
         WizardStep.W2_CIFS_METHOD,
@@ -1431,7 +1456,9 @@ class CatalogSeatWizardViewModel(
                         current.step == WizardStep.PC_LINK_MODE
                     val willShare = shareAfterExport && export.shareUris.isNotEmpty()
                     _state.update {
-                        val phaseDone = if (onGuide && !willShare) {
+                        val savedOk = export.downloadsSaved
+                        val prevUsbCopied = it.usbCopiedDeclared
+                        val phaseDone = if (onGuide && !willShare && savedOk) {
                             it.guidePhaseDone.toMutableList().also { list ->
                                 if (list.isNotEmpty()) list[0] = true
                             }
@@ -1443,18 +1470,25 @@ class CatalogSeatWizardViewModel(
                             temporaryPassword = password,
                             setupToken = setupToken,
                             expectedBundleFileName = bundleName,
-                            scriptPrepared = true,
+                            scriptPrepared = savedOk || it.scriptPrepared,
                             downloadsSaved = export.downloadsSaved,
                             usbCopiedTo = export.usbCopiedTo,
                             setupResultImported = false,
                             pendingShareScripts = willShare,
                             guidePhaseDone = phaseDone,
-                            usbCopiedDeclared = phaseDone.getOrElse(0) { false },
+                            // usbCopied = solo dopo Fase 2 (indice 1), non dopo creazione script.
+                            usbCopiedDeclared = phaseDone.getOrElse(1) { false } || prevUsbCopied,
+                            errorMessage = when {
+                                onGuide && !willShare && !savedOk ->
+                                    "Creazione script non riuscita in Download. " +
+                                        "Verifica lo spazio e i permessi, poi tocca di nuovo Pronto."
+                                else -> null
+                            },
                             statusMessage = when {
                                 willShare ->
                                     "TELEFONO: nel menu Condividi scegli Bluetooth e il PC. " +
                                         "Poi torna a MediaManager (non restare su Invio/Ricevi)."
-                                onGuide ->
+                                onGuide && savedOk ->
                                     "Set pronto sul Telefono. Via USB: copia i 3 file sul Desktop " +
                                         "(overwrite, niente (1)/(2)). Poi tocca Fatto sulla Fase 2."
                                 else -> null

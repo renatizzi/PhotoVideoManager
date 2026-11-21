@@ -33,8 +33,8 @@ object WizardStepChrome {
             WizardStep.PC_USB_PREPARE,
             WizardStep.PC_COPY_FILES,
             WizardStep.PC_RUN_SCRIPT,
-            -> Subtitle(PcSetupGuideContent.guideSubtitle(PcLinkMode.USB))
-            WizardStep.PC_BT_DOWNLOAD_BUNDLE -> Subtitle(pc[4])
+            -> Subtitle(pc[3])
+            WizardStep.PC_BT_DOWNLOAD_BUNDLE -> Subtitle(pc[3])
             WizardStep.W2_CIFS_INSTALL -> Subtitle(PcSetupGuideContent.cifs61Title())
             WizardStep.W2_CIFS,
             WizardStep.W2_PICK,

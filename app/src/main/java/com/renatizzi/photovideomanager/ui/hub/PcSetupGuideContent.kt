@@ -16,24 +16,28 @@ enum class PcLinkMode {
 
 data class PcGuidePhase(
     val title: String,
-    val body: String,
-    /** Etichetta CTA: Pronto / Fatto / Importa… */
+    val bullets: List<String>,
+    /** Etichetta CTA: Pronto / Fatto. */
     val actionLabel: String,
-)
+) {
+    /** Testo unico per test / compat. */
+    val body: String get() = bullets.joinToString("\n")
+}
 
 object PcSetupGuideContent {
     /** Fasi 1–5 della procedura USB (la Fase 6 è W2_CIFS_INSTALL + W2_CIFS). */
     const val PHASE_COUNT = 5
+    const val TOTAL_PHASES = 6
     const val GUIDE_PDF_ASSET = "setup_guide/Guida_Setup_Catalogo_USB_ONLY.pdf"
 
-    /** @deprecated Usato solo da test legacy; UI USB-only non mostra autodichiarazioni. */
-    @Deprecated("USB-only: niente autodichiarazioni")
+    /** @deprecated Compat test legacy. */
+    @Deprecated("USB-only")
     val CONFIRM_SEND_TO_PC = ""
-    @Deprecated("USB-only: niente autodichiarazioni")
+    @Deprecated("USB-only")
     val CONFIRM_SCRIPT = ""
-    @Deprecated("USB-only: niente autodichiarazioni")
+    @Deprecated("USB-only")
     val CONFIRM_SEND_TO_PHONE = ""
-    @Deprecated("USB-only: niente autodichiarazioni")
+    @Deprecated("USB-only")
     val CONFIRM_CIFS = ""
 
     @Suppress("DEPRECATION")
@@ -46,8 +50,8 @@ object PcSetupGuideContent {
             "Collegamento tramite cavo USB (percorso unico)"
     }
 
-    fun guideSubtitle(mode: PcLinkMode): String =
-        "Guida — Fase corrente (USB)"
+    fun guideSubtitle(@Suppress("UNUSED_PARAMETER") mode: PcLinkMode = PcLinkMode.USB): String =
+        "Guida collegamento Telefono e PC (USB)"
 
     fun guideDescription(): String =
         "Segui la fase corrente. L’intera guida può essere stampata qui"
@@ -55,14 +59,21 @@ object PcSetupGuideContent {
     fun associationSubtitle(): String = "Collegamento fisico USB"
 
     fun associationDescription(): String =
-        "Predisponi il collegamento con un cavo USB tra il Telefono e il PC. " +
-            "Usa Trasferimento file / MTP (non Solo ricarica)."
+        "Predisponi il collegamento con un cavo USB tra il Telefono e il PC."
 
     fun usbConnectBullets(): List<String> = listOf(
-        "Collega il Telefono al PC con un cavo USB che supporti il trasferimento dati " +
-            "e mantieni il telefono sbloccato.",
-        "Apri sulla Home del Telefono la videata del tipo di collegamento USB, " +
-            "passa da «Solo ricarica» a «Trasferimento file» e autorizza l’accesso ai dati.",
+        "Collega il Telefono al PC con un cavo USB che supporti il trasferimento dati e mantieni il telefono sbloccato.",
+        "Apri sulla Home del Telefono la videata del tipo di collegamento USB, passa da «Solo ricarica» a «Trasferimento file» e autorizza l’accesso ai dati.",
+    )
+
+    /** Elenco/overview 6 fasi (pag. 5 e 11 template). */
+    fun sixPhaseOverview(): List<String> = listOf(
+        "1. Creazione script sul TEL.",
+        "2. Invio script al PC",
+        "3. Esecuzione script sul PC",
+        "4. Invio dati CIFS al TEL.",
+        "5. Import dati CIFS sul TEL.",
+        "6. Configurazione CIFS sul TEL.",
     )
 
     fun phases(@Suppress("UNUSED_PARAMETER") mode: PcLinkMode = PcLinkMode.USB): List<PcGuidePhase> =
@@ -71,50 +82,48 @@ object PcSetupGuideContent {
     fun usbPhases(): List<PcGuidePhase> = listOf(
         PcGuidePhase(
             title = "Fase 1 – Creazione script sul Telefono",
-            body =
-                "Fase gestita dall’app dopo la tua conferma.\n" +
-                    "Vengono creati i file necessari per configurare la cartella del Catalogo personale: " +
-                    "CONFIGURA.CMD, QRCoder.dll e sup.ps1.\n" +
-                    "I file restano in Download del Telefono per la copia USB nella fase successiva.\n\n" +
-                    "Quando pronto clicca sul relativo bottone.",
+            bullets = listOf(
+                "Fase gestita dall’app dopo la tua conferma.",
+                "Vengono creati alcuni file (script) necessari per configurare la cartella del Catalogo personale.",
+                "I file creati dovranno essere inviati al PC tramite cavo USB nella fase successiva.",
+            ),
             actionLabel = "Pronto",
         ),
         PcGuidePhase(
             title = "Fase 2 – Invio script al PC",
-            body =
-                "Fase gestita manualmente mediante copia con cavo USB.\n" +
-                    "I file da inviare sono tre: CONFIGURA.CMD, QRCoder.dll e sup.ps1.\n" +
-                    "PC: Esplora file → Questo PC → nome del Telefono → Memoria interna → Download → " +
-                    "seleziona e copia i tre file → Incolla sul Desktop del PC " +
-                    "(sostituisci versioni precedenti; evita nomi con (1)/(2)).",
+            bullets = listOf(
+                "Fase gestita manualmente dall’utente mediante copia ed incolla con cavo USB.",
+                "I file creati (script) e da inviare sul PC sono tre: CONFIGURA.CMD, QRCoder.dll e sup.ps1.",
+                "Apri sul PC Esplora file → Questo PC → nome del Telefono → Memoria interna → Download → seleziona e copia i tre file → Incolla sul Desktop del PC.",
+            ),
             actionLabel = "Fatto",
         ),
         PcGuidePhase(
             title = "Fase 3 – Esecuzione script sul PC",
-            body =
-                "Fase gestita manualmente.\n" +
-                    "PC: Desktop → doppio clic su CONFIGURA.CMD → avvio esecuzione.\n" +
-                    "Attendi il messaggio «Tutto pronto».\n" +
-                    "Lo script crea no_pw.json e DATI_CIFS.json " +
-                    "(solo DATI_CIFS.json va inviato al Telefono).",
+            bullets = listOf(
+                "Fase gestita manualmente dall’utente.",
+                "Apri sul PC Esplora file → Questo PC → Desktop → seleziona ed esegui con doppio clic CONFIGURA.CMD.",
+                "Attendi il messaggio «Tutto pronto» che indica la conclusione dello script.",
+                "Lo script crea in automatico no_pw.json e DATI_CIFS.json (solo quest’ultimo sarà inviato al Telefono).",
+            ),
             actionLabel = "Fatto",
         ),
         PcGuidePhase(
             title = "Fase 4 – Invio dati CIFS al TELEFONO",
-            body =
-                "Fase gestita manualmente mediante cavo USB.\n" +
-                    "Dal Desktop del PC: seleziona e copia DATI_CIFS.json → " +
-                    "Telefono → Memoria interna → Download → Incolla il file.\n" +
-                    "Non usare no_pw.json né file con nome DATI_CIFS (1).json.",
+            bullets = listOf(
+                "Fase gestita manualmente dall’utente mediante cavo USB.",
+                "Lo script eseguito crea in automatico no_pw.json e DATI_CIFS.json.",
+                "Solo DATI_CIFS.json: Desktop PC → copia → Telefono → Memoria interna → Download → Incolla.",
+            ),
             actionLabel = "Fatto",
         ),
         PcGuidePhase(
             title = "Fase 5 – Import dati CIFS",
-            body =
-                "Fase gestita dall’app dopo la tua conferma.\n" +
-                    "Il file in Download del Telefono — se trovato — viene letto e importato in MediaManager.\n" +
-                    "I dati (Host, User, Password, Folder, …) non sono modificabili a mano: " +
-                    "se l’import fallisce, riprova (niente digitazione).",
+            bullets = listOf(
+                "Fase gestita dall’app dopo la tua conferma.",
+                "Il file in Download del Telefono — se trovato — viene letto e importato in MediaManager.",
+                "I dati non sono modificabili a mano: se l’import fallisce, messaggio con istruzioni e riprova.",
+            ),
             actionLabel = "Fatto",
         ),
     )
@@ -123,11 +132,12 @@ object PcSetupGuideContent {
         "✓ FASE ${index + 1} COMPLETATA"
 
     fun lampLabel(index: Int): String = when (index) {
-        0 -> "1 Creazione script"
-        1 -> "2 Invio script"
-        2 -> "3 Esecuzione"
-        3 -> "4 Invio DATI_CIFS"
+        0 -> "1 Creazione"
+        1 -> "2 Invio"
+        2 -> "3 Script"
+        3 -> "4 DATI_CIFS"
         4 -> "5 Import"
+        5 -> "6 CIFS"
         else -> "${index + 1}"
     }
 
@@ -139,14 +149,18 @@ object PcSetupGuideContent {
     }
 
     fun cifs61Title(): String = "Fase 6/1 – Configurazione CIFS"
-    fun cifs61Body(): String =
-        "Fase semiautomatica: CIFS Documents Provider è necessaria per vedere dal Telefono " +
-            "la cartella condivisa del Catalogo.\n" +
-            "Installa o apri l’app, poi tocca Fatto. Il copia dei campi è nello step successivo."
+    fun cifs61Bullets(): List<String> = listOf(
+        "CIFS Documents Provider è necessaria per visualizzare dal Telefono la cartella condivisa del Catalogo.",
+        "Installa o apri l’app da questa pagina (Play Store / MediaManager).",
+        "Il copia dei campi avviene nello step successivo.",
+    )
+    fun cifs61Body(): String = cifs61Bullets().joinToString("\n")
 
     fun cifs62Title(): String = "Fase 6/2 – Copia dati CIFS"
-    fun cifs62Body(): String =
-        "Apri CIFS → [+] → Input. Torna qui: per ogni campo tocca Copia e incolla in CIFS.\n" +
-            "Alla fine salva in CIFS, verifica che la cartella sia in elenco, " +
-            "conferma e tocca Attiva Catalogo."
+    fun cifs62Bullets(): List<String> = listOf(
+        "Apri CIFS → [+] → Input. Torna qui: per ogni campo tocca Copia e incolla in CIFS.",
+        "Alla fine Salva in CIFS e verifica che la cartella sia presente nell’elenco.",
+        "Torna qui, conferma di aver salvato i dati e tocca Attiva Catalogo.",
+    )
+    fun cifs62Body(): String = cifs62Bullets().joinToString("\n")
 }

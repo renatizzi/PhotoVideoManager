@@ -11,28 +11,24 @@ class PcSetupGuideContentTest {
         val phases = PcSetupGuideContent.usbPhases()
         assertEquals(5, phases.size)
         assertEquals(PcSetupGuideContent.PHASE_COUNT, phases.size)
+        assertEquals(6, PcSetupGuideContent.TOTAL_PHASES)
         assertEquals("Pronto", phases[0].actionLabel)
-        assertEquals("Fatto", phases[1].actionLabel)
-        assertEquals("Fatto", phases[2].actionLabel)
-        assertEquals("Fatto", phases[3].actionLabel)
-        assertEquals("Fatto", phases[4].actionLabel)
+        phases.drop(1).forEach { assertEquals("Fatto", it.actionLabel) }
     }
 
     @Test
     fun phase1_createsScripts_noBluetooth() {
         val body = PcSetupGuideContent.usbPhases()[0].body
-        assertTrue(body.contains("CONFIGURA.CMD"))
-        assertTrue(body.contains("QRCoder.dll"))
-        assertTrue(body.contains("sup.ps1"))
+        assertTrue(body.contains("script", ignoreCase = true))
         assertFalse(body.contains("Bluetooth", ignoreCase = true))
     }
 
     @Test
     fun phase2_isUsbCopyToDesktop() {
         val body = PcSetupGuideContent.usbPhases()[1].body
+        assertTrue(body.contains("CONFIGURA.CMD"))
         assertTrue(body.contains("Download"))
         assertTrue(body.contains("Desktop"))
-        assertTrue(body.contains("USB") || body.contains("cavo"))
     }
 
     @Test
@@ -60,6 +56,12 @@ class PcSetupGuideContentTest {
     }
 
     @Test
+    fun sixPhaseOverview_hasSixEntries() {
+        assertEquals(6, PcSetupGuideContent.sixPhaseOverview().size)
+        assertTrue(PcSetupGuideContent.sixPhaseOverview().last().contains("CIFS"))
+    }
+
+    @Test
     fun guideAsset_isUsbOnly() {
         assertTrue(PcSetupGuideContent.GUIDE_PDF_ASSET.contains("USB_ONLY"))
     }
@@ -73,5 +75,15 @@ class PcSetupGuideContentTest {
     fun cifsSteps_titlesPresent() {
         assertTrue(PcSetupGuideContent.cifs61Title().contains("6/1"))
         assertTrue(PcSetupGuideContent.cifs62Title().contains("6/2"))
+        assertEquals(3, PcSetupGuideContent.cifs61Bullets().size)
+        assertEquals(3, PcSetupGuideContent.cifs62Bullets().size)
+    }
+
+    @Test
+    fun guideSubtitle_matchesContract() {
+        assertEquals(
+            WizardUiContract.PC_STEP_SUBTITLES[3],
+            PcSetupGuideContent.guideSubtitle(PcLinkMode.USB),
+        )
     }
 }

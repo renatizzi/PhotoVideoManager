@@ -54,7 +54,7 @@ class WizardStepChromeTest {
         assertEquals(expected[1], WizardStepChrome.subtitle(WizardStep.PC_AVAILABILITY, kind).text)
         assertEquals(expected[2], WizardStepChrome.subtitle(WizardStep.PC_LINK_MODE, kind).text)
         assertEquals(
-            PcSetupGuideContent.guideSubtitle(PcLinkMode.USB),
+            expected[3],
             WizardStepChrome.subtitle(WizardStep.PC_GUIDE, kind, PcLinkMode.USB).text,
         )
         assertEquals(
