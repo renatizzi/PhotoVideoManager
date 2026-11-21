@@ -7,61 +7,71 @@ import org.junit.Test
 
 class PcSetupGuideContentTest {
     @Test
-    fun modeLabels_haveNoLetterPrefixes() {
-        PcLinkMode.entries.forEach { mode ->
-            val label = PcSetupGuideContent.modeLabel(mode)
-            assertFalse(label.startsWith("A)"))
-            assertFalse(label.startsWith("B)"))
-            assertFalse(label.startsWith("C)"))
-        }
-        assertTrue(PcSetupGuideContent.modeLabel(PcLinkMode.ALREADY_PAIRED).contains("Telefono"))
-        assertTrue(PcSetupGuideContent.modeLabel(PcLinkMode.NEED_PAIRING).contains("Telefono"))
-        assertTrue(PcSetupGuideContent.modeLabel(PcLinkMode.USB).contains("USB"))
+    fun usbPhases_areFive_withProntoAndFatto() {
+        val phases = PcSetupGuideContent.usbPhases()
+        assertEquals(5, phases.size)
+        assertEquals(PcSetupGuideContent.PHASE_COUNT, phases.size)
+        assertEquals("Pronto", phases[0].actionLabel)
+        assertEquals("Fatto", phases[1].actionLabel)
+        assertEquals("Fatto", phases[2].actionLabel)
+        assertEquals("Fatto", phases[3].actionLabel)
+        assertEquals("Fatto", phases[4].actionLabel)
     }
 
     @Test
-    fun alreadyPaired_doesNotForcePairing_andMentionsDesktopCopy() {
-        val body = PcSetupGuideContent.phases(PcLinkMode.ALREADY_PAIRED)[0].body
-        assertTrue(body.contains("non ripetere"))
+    fun phase1_createsScripts_noBluetooth() {
+        val body = PcSetupGuideContent.usbPhases()[0].body
+        assertTrue(body.contains("CONFIGURA.CMD"))
+        assertTrue(body.contains("QRCoder.dll"))
+        assertTrue(body.contains("sup.ps1"))
+        assertFalse(body.contains("Bluetooth", ignoreCase = true))
+    }
+
+    @Test
+    fun phase2_isUsbCopyToDesktop() {
+        val body = PcSetupGuideContent.usbPhases()[1].body
+        assertTrue(body.contains("Download"))
         assertTrue(body.contains("Desktop"))
-        assertTrue(body.contains("ricezione") || body.contains("File ricevuti"))
-        assertFalse(body.contains("Confermo di aver"))
+        assertTrue(body.contains("USB") || body.contains("cavo"))
     }
 
     @Test
-    fun needPairing_startsFromPhoneSettings() {
-        val body = PcSetupGuideContent.phases(PcLinkMode.NEED_PAIRING)[0].body
-        assertTrue(body.contains("Bluetooth"))
-        assertTrue(body.contains("codice"))
-    }
-
-    @Test
-    fun scriptPhase_mentionsDatiCifsAndListening() {
-        val body = PcSetupGuideContent.phases(PcLinkMode.ALREADY_PAIRED)[1].body
+    fun phase4_sendsDatiCifsToPhone() {
+        val body = PcSetupGuideContent.usbPhases()[3].body
         assertTrue(body.contains("DATI_CIFS.json"))
-        assertTrue(body.contains("CONFIGURA"))
-        assertTrue(body.contains("ascolta") || body.contains("ascolto"))
+        assertTrue(body.contains("Download"))
+        assertFalse(body.contains("CONFIGURA.CMD"))
     }
 
     @Test
-    fun actionLabels_areIdenticalAcrossModes_andNotConfirmations() {
-        val a = PcSetupGuideContent.phases(PcLinkMode.ALREADY_PAIRED).map { it.actionLabel }
-        val b = PcSetupGuideContent.phases(PcLinkMode.NEED_PAIRING).map { it.actionLabel }
-        val c = PcSetupGuideContent.phases(PcLinkMode.USB).map { it.actionLabel }
-        assertEquals(a, b)
-        assertEquals(a, c)
-        assertEquals(4, a.size)
-        a.forEach { label ->
-            assertFalse(label.contains("Confermo"))
-            assertFalse(label.equals("Continua", ignoreCase = true))
-            assertFalse(label.contains("Puoi passare"))
-        }
-        assertTrue(a[0].contains("Invia"))
-        assertTrue(a[2].contains("Usa questi dati"))
+    fun phase5_import_notEditable() {
+        val body = PcSetupGuideContent.usbPhases()[4].body
+        assertTrue(body.contains("import", ignoreCase = true) || body.contains("Import"))
+        assertTrue(body.contains("non sono modificabili") || body.contains("niente digitazione"))
+    }
+
+    @Test
+    fun pageGroups_matchTemplate() {
+        assertEquals(0..0, PcSetupGuideContent.pageGroupFor(0))
+        assertEquals(1..2, PcSetupGuideContent.pageGroupFor(1))
+        assertEquals(1..2, PcSetupGuideContent.pageGroupFor(2))
+        assertEquals(3..4, PcSetupGuideContent.pageGroupFor(3))
+        assertEquals(3..4, PcSetupGuideContent.pageGroupFor(4))
+    }
+
+    @Test
+    fun guideAsset_isUsbOnly() {
+        assertTrue(PcSetupGuideContent.GUIDE_PDF_ASSET.contains("USB_ONLY"))
     }
 
     @Test
     fun guideDescription_hasInlinePrintAnchor() {
         assertTrue(PcSetupGuideContent.guideDescription().endsWith("qui"))
+    }
+
+    @Test
+    fun cifsSteps_titlesPresent() {
+        assertTrue(PcSetupGuideContent.cifs61Title().contains("6/1"))
+        assertTrue(PcSetupGuideContent.cifs62Title().contains("6/2"))
     }
 }

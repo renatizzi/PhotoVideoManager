@@ -99,6 +99,8 @@ fun CatalogSeatWizardScreen(
     onConfirmPcLinkMode: () -> Unit = {},
     onConfirmGuidePhase: (Int) -> Unit = {},
     onConfirmPcGuide: () -> Unit = {},
+    onConfirmCifsInstall: () -> Unit = {},
+    onUseDetectedBundle: () -> Unit = {},
     onRetryBundleDetection: () -> Unit = {},
     onConfirmUsbAndPrepare: () -> Unit,
     onConfirmCopy: () -> Unit,
@@ -239,9 +241,7 @@ fun CatalogSeatWizardScreen(
                 onBack = onBackS0,
                 busy = state.busy,
             )
-            WizardStep.PC_LINK_MODE -> PcLinkModeStep(
-                selected = state.pcLinkMode,
-                onSelect = onSelectPcLinkMode,
+            WizardStep.PC_LINK_MODE -> UsbConnectStep(
                 onOk = onConfirmPcLinkMode,
                 onBack = { onGoStep(WizardStep.PC_AVAILABILITY) },
                 busy = state.busy,
@@ -260,6 +260,20 @@ fun CatalogSeatWizardScreen(
                 busy = state.busy,
                 onConfirmPhase = onConfirmGuidePhase,
                 onConfirmAll = onConfirmPcGuide,
+                onImportCifs = {
+                    if (state.bundleDetected && !state.setupResultImported) {
+                        onUseDetectedBundle()
+                    } else {
+                        openBundle.launch(
+                            arrayOf(
+                                "application/json",
+                                "text/plain",
+                                "application/octet-stream",
+                                "*/*",
+                            ),
+                        )
+                    }
+                },
                 onRetryDetect = onRetryBundleDetection,
                 onPickBundle = {
                     openBundle.launch(
@@ -286,7 +300,17 @@ fun CatalogSeatWizardScreen(
                     )
                 },
                 onBack = { onGoStep(WizardStep.PC_GUIDE) },
-                onContinue = { onGoStep(WizardStep.W2_CIFS) },
+                onContinue = { onGoStep(WizardStep.W2_CIFS_INSTALL) },
+            )
+            WizardStep.W2_CIFS_INSTALL -> CifsInstallStep(
+                state = state,
+                onOpenCifs = {
+                    onRefreshCifs()
+                    NetworkDriveAssistant.openHelperOrStore(context)
+                    onRefreshCifs()
+                },
+                onFatto = onConfirmCifsInstall,
+                onAnnulla = { onGoStep(WizardStep.PC_GUIDE) },
             )
             WizardStep.W2_CIFS,
             WizardStep.W2_PICK,
@@ -308,8 +332,6 @@ fun CatalogSeatWizardScreen(
                 },
                 onRetryRecoverPcData = onRetryRecoverPcData,
                 onImportCifsBundle = onImportCifsBundle,
-                onPcHostIpChange = onPcHostIpChange,
-                onCifsUserChange = onCifsUserChange,
                 onOpenCifs = {
                     onRefreshCifs()
                     NetworkDriveAssistant.openHelperOrStore(context)
@@ -323,7 +345,7 @@ fun CatalogSeatWizardScreen(
                 },
                 onAccessNo = onAccessNo,
                 onSalva = onConfirmLocal,
-                onBack = { onGoStep(WizardStep.PC_BT_DOWNLOAD_BUNDLE) },
+                onBack = { onGoStep(WizardStep.W2_CIFS_INSTALL) },
             )
             WizardStep.W3_GUIDE -> AnalogGuideStep(
                 phases = AnalogSetupGuideContent.cloudPhases(),
@@ -685,21 +707,31 @@ private fun AvailabilityChecklistStep(
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
     )
     Text(
-        stringResource(R.string.hub_pc1_note_bt_free),
+        "Percorso unico: cavo USB (Trasferimento file / MTP). Niente Bluetooth per il setup.",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
     )
+    // USB2.3: bullet semplici + conferma totale con OK (niente riquadri obbligatori).
+    val bullets = listOf(
+        stringResource(R.string.hub_pc1_item_phone),
+        stringResource(R.string.hub_pc1_item_pc),
+        stringResource(R.string.hub_pc1_item_cable),
+    )
+    bullets.forEach { line ->
+        Text("• $line", style = MaterialTheme.typography.bodyMedium)
+    }
     Text(
-        stringResource(R.string.hub_pc1_note_path),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+        stringResource(R.string.hub_s0_when_ready),
+        style = MaterialTheme.typography.bodyMedium,
     )
-    val items = listOf(
-        WizardChecklistItem(stringResource(R.string.hub_pc1_item_phone)),
-        WizardChecklistItem(stringResource(R.string.hub_pc1_item_pc)),
-        WizardChecklistItem(stringResource(R.string.hub_pc1_item_cable)),
-    )
-    ChecklistOkBlock(items = items, onOk = onOk, onBack = onBack, busy = busy)
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(onClick = onBack, enabled = !busy, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.hub_indietro))
+        }
+        Button(onClick = onOk, enabled = !busy, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.hub_checklist_ok))
+        }
+    }
 }
 
 @Composable
@@ -815,53 +847,26 @@ private fun AnalogGuideStep(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PcLinkModeStep(
-    selected: PcLinkMode,
-    onSelect: (PcLinkMode) -> Unit,
+private fun UsbConnectStep(
     onOk: () -> Unit,
     onBack: () -> Unit,
     busy: Boolean,
 ) {
+    Text(PcSetupGuideContent.associationSubtitle(), fontWeight = FontWeight.SemiBold)
     Text(PcSetupGuideContent.associationDescription())
-    Text(
-        stringResource(R.string.hub_pc_link_mode_prompt),
-        fontWeight = FontWeight.SemiBold,
-    )
-    var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { if (!busy) expanded = !expanded },
-    ) {
-        OutlinedTextField(
-            value = PcSetupGuideContent.modeLabel(selected),
-            onValueChange = {},
-            readOnly = true,
-            modifier = Modifier
-                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                .fillMaxWidth(),
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-        )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-        ) {
-            PcLinkMode.entries.forEach { mode ->
-                DropdownMenuItem(
-                    text = { Text(PcSetupGuideContent.modeLabel(mode)) },
-                    onClick = {
-                        onSelect(mode)
-                        expanded = false
-                    },
-                )
-            }
-        }
+    PcSetupGuideContent.usbConnectBullets().forEach { line ->
+        Text("✓ $line", style = MaterialTheme.typography.bodyMedium)
     }
+    Text(
+        stringResource(R.string.hub_s0_when_ready),
+        style = MaterialTheme.typography.bodyMedium,
+    )
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedButton(onClick = onBack, enabled = !busy, modifier = Modifier.weight(1f)) {
-            Text(stringResource(R.string.hub_indietro))
+            Text(stringResource(R.string.hub_pc_guide_cancel))
         }
         Button(onClick = onOk, enabled = !busy, modifier = Modifier.weight(1f)) {
-            Text(stringResource(R.string.hub_avanti))
+            Text("Fatto")
         }
     }
 }
@@ -872,23 +877,18 @@ private fun PcGuideStep(
     busy: Boolean,
     onConfirmPhase: (Int) -> Unit,
     onConfirmAll: () -> Unit,
+    onImportCifs: () -> Unit,
     onRetryDetect: () -> Unit,
     onPickBundle: () -> Unit,
     onCancel: () -> Unit,
 ) {
     val context = LocalContext.current
-    val mode = state.pcLinkMode
-    val phases = remember(mode) { PcSetupGuideContent.phases(mode) }
+    val phases = remember { PcSetupGuideContent.usbPhases() }
     val phaseDone = state.guidePhaseDone
-    val currentIndex = when {
-        !phaseDone.getOrElse(0) { false } -> 0
-        !phaseDone.getOrElse(1) { false } -> 1
-        state.setupResultImported -> 3
-        state.bundleDetected -> 2
-        state.listeningForBundle -> 1
-        else -> 2
-    }.coerceIn(0, phases.lastIndex)
-    val phase = phases[currentIndex]
+    val currentIndex = (0 until PcSetupGuideContent.PHASE_COUNT)
+        .firstOrNull { !phaseDone.getOrElse(it) { false } }
+        ?: (PcSetupGuideContent.PHASE_COUNT - 1)
+    val pageGroup = PcSetupGuideContent.pageGroupFor(currentIndex)
 
     Text(
         text = buildAnnotatedString {
@@ -908,12 +908,12 @@ private fun PcGuideStep(
         modifier = Modifier.clickable { openSetupGuidePdf(context) },
     )
     Text(
-        PcSetupGuideContent.guideSubtitle(mode) + " · Fase ${currentIndex + 1} di 4",
+        "Procedura USB · Fase ${currentIndex + 1} di 6 (qui 1–5; poi CIFS)",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
     )
 
-    // Flowchart strip (4 riquadri).
+    // Strip 1–5 (+ hint 6).
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -941,7 +941,7 @@ private fun PcGuideStep(
                         },
                         RoundedCornerShape(6.dp),
                     )
-                    .padding(6.dp),
+                    .padding(4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
@@ -951,7 +951,7 @@ private fun PcGuideStep(
                     color = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    p.title.substringAfter("— ").take(18).ifBlank { p.title.take(18) },
+                    p.title.substringAfter("– ").take(14).ifBlank { p.title.take(14) },
                     style = MaterialTheme.typography.labelSmall,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -959,51 +959,6 @@ private fun PcGuideStep(
             }
         }
     }
-
-    // Lampade oneste.
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        repeat(PcSetupGuideContent.PHASE_COUNT) { index ->
-            val done = phaseDone.getOrElse(index) { false }
-            val lampColor = when {
-                index == 2 && state.errorMessage != null && !state.setupResultImported -> Color(0xFFEF9A9A)
-                done || (index == 2 && state.setupResultImported) -> Color(0xFF66BB6A)
-                index == currentIndex || (index == 1 && state.listeningForBundle) ||
-                    (index == 2 && state.bundleDetected) -> Color(0xFFFFCC80)
-                else -> Color(0xFFDDDDDD)
-            }
-            val detail = when {
-                index == 0 && done -> "inviato"
-                index == 1 && state.listeningForBundle && !state.setupResultImported -> "in attesa"
-                index == 2 && state.bundleDetected && !state.setupResultImported -> "ricevuti — da usare"
-                index == 2 && state.setupResultImported -> "ricevuti"
-                done -> "completata"
-                index == currentIndex -> "corrente"
-                else -> "bloccata"
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(12.dp)
-                        .background(lampColor, CircleShape)
-                        .border(1.dp, Color(0xFF999999), CircleShape),
-                )
-                Text(
-                    "${PcSetupGuideContent.lampLabel(index)} — $detail",
-                    style = MaterialTheme.typography.bodySmall,
-                )
-            }
-        }
-    }
-
-    Text(phase.title, fontWeight = FontWeight.SemiBold)
-    Text(
-        phase.body,
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
-    )
 
     state.statusMessage?.let {
         Text(
@@ -1028,74 +983,160 @@ private fun PcGuideStep(
         )
     }
 
-    when {
-        currentIndex == 0 -> {
-            Button(
-                onClick = { onConfirmPhase(0) },
-                enabled = !busy,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(R.string.hub_pc_guide_send_set))
-            }
-        }
-        currentIndex == 1 && !phaseDone.getOrElse(1) { false } -> {
-            Button(
-                onClick = { onConfirmPhase(1) },
-                enabled = !busy,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(R.string.hub_pc_guide_open_script))
-            }
-        }
-        currentIndex == 1 && !state.bundleDetected && !state.setupResultImported -> {
-            if (state.listeningForBundle) {
+    pageGroup.forEach { index ->
+        val phase = phases[index]
+        val done = phaseDone.getOrElse(index) { false }
+        val active = index == currentIndex
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Text(phase.title, fontWeight = FontWeight.SemiBold)
+            if (done) {
                 Text(
-                    stringResource(R.string.hub_pc_guide_waiting_pc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary,
+                    PcSetupGuideContent.phaseCompletedLabel(index),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF2E7D32),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFE8F5E9), RoundedCornerShape(4.dp))
+                        .padding(8.dp),
                 )
-            }
-            OutlinedButton(
-                onClick = {
-                    onRetryDetect()
-                    onPickBundle()
-                },
-                enabled = !busy,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(R.string.hub_pc_guide_recovery))
-            }
-        }
-        currentIndex == 2 && state.bundleDetected && !state.setupResultImported -> {
-            Button(
-                onClick = { onConfirmPhase(2) },
-                enabled = !busy,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(R.string.hub_pc_guide_use_data))
-            }
-            OutlinedButton(
-                onClick = onPickBundle,
-                enabled = !busy,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(R.string.hub_pc4b_pick))
-            }
-        }
-        state.setupResultImported -> {
-            Button(
-                onClick = onConfirmAll,
-                enabled = !busy,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(phases[3].actionLabel)
+            } else if (active) {
+                Text(
+                    phase.body,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+                )
+                when (index) {
+                    0 -> {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(
+                                onClick = onCancel,
+                                enabled = !busy,
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                Text(stringResource(R.string.hub_pc_guide_cancel))
+                            }
+                            Button(
+                                onClick = { onConfirmPhase(0) },
+                                enabled = !busy,
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                Text(phase.actionLabel)
+                            }
+                        }
+                    }
+                    1, 2, 3 -> {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(
+                                onClick = onCancel,
+                                enabled = !busy,
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                Text(stringResource(R.string.hub_pc_guide_cancel))
+                            }
+                            Button(
+                                onClick = { onConfirmPhase(index) },
+                                enabled = !busy,
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                Text(phase.actionLabel)
+                            }
+                        }
+                    }
+                    4 -> {
+                        Button(
+                            onClick = onImportCifs,
+                            enabled = !busy,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text("Importa Dati CIFS")
+                        }
+                        if (!state.setupResultImported) {
+                            OutlinedButton(
+                                onClick = {
+                                    onRetryDetect()
+                                    onPickBundle()
+                                },
+                                enabled = !busy,
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Text(stringResource(R.string.hub_pc4b_pick))
+                            }
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(
+                                onClick = onCancel,
+                                enabled = !busy,
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                Text(stringResource(R.string.hub_pc_guide_cancel))
+                            }
+                            Button(
+                                onClick = onConfirmAll,
+                                enabled = !busy && state.setupResultImported,
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                Text(phase.actionLabel)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
+}
 
+@Composable
+private fun CifsInstallStep(
+    state: CatalogSeatWizardUiState,
+    onOpenCifs: () -> Unit,
+    onFatto: () -> Unit,
+    onAnnulla: () -> Unit,
+) {
+    Text(PcSetupGuideContent.cifs61Title(), fontWeight = FontWeight.SemiBold)
+    Text(
+        PcSetupGuideContent.cifs61Body(),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+    )
+    Text(
+        "Installa o Apri l’app CIFS Documents Provider cliccando sull’omologo bottone",
+        style = MaterialTheme.typography.bodyMedium,
+    )
+    Button(
+        onClick = onOpenCifs,
+        enabled = !state.busy,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(
+            if (state.cifsInstalled) {
+                stringResource(R.string.hub_cifs_open)
+            } else {
+                "Installa / Apri CIFS Documents Provider"
+            },
+        )
+    }
+    state.errorMessage?.let {
+        Text(
+            it,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.error.copy(alpha = 0.08f), RoundedCornerShape(4.dp))
+                .padding(8.dp),
+        )
+    }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedButton(onClick = onCancel, enabled = !busy, modifier = Modifier.weight(1f)) {
+        OutlinedButton(onClick = onAnnulla, enabled = !state.busy, modifier = Modifier.weight(1f)) {
             Text(stringResource(R.string.hub_pc_guide_cancel))
+        }
+        Button(onClick = onFatto, enabled = !state.busy, modifier = Modifier.weight(1f)) {
+            Text("Fatto")
         }
     }
 }
@@ -1103,7 +1144,7 @@ private fun PcGuideStep(
 private fun openSetupGuidePdf(context: Context) {
     runCatching {
         val dir = File(context.cacheDir, "setup_guide").apply { mkdirs() }
-        val out = File(dir, "Guida_Setup_Catalogo_MediaManager_REV9.pdf")
+        val out = File(dir, "Guida_Setup_Catalogo_USB_ONLY.pdf")
         if (!out.isFile || out.length() == 0L) {
             context.assets.open(PcSetupGuideContent.GUIDE_PDF_ASSET).use { input ->
                 out.outputStream().use { output -> input.copyTo(output) }
@@ -1500,8 +1541,6 @@ private fun CifsCardStep(
     onCopyPassword: () -> Unit,
     onRetryRecoverPcData: () -> Unit,
     onImportCifsBundle: () -> Unit,
-    onPcHostIpChange: (String) -> Unit = {},
-    onCifsUserChange: (String) -> Unit = {},
     onOpenCifs: () -> Unit,
     onChooseFolder: () -> Unit,
     onRetry: () -> Unit,
@@ -1516,6 +1555,8 @@ private fun CifsCardStep(
     var cifsSavedConfirmed by remember { mutableStateOf(false) }
     @Suppress("UNUSED_VARIABLE", "UNUSED_PARAMETER")
     val unusedAccess = onAccessYes to onAccessNo
+    @Suppress("UNUSED_PARAMETER")
+    val unusedRecover = onRetryRecoverPcData
     val share = state.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
     val user = state.cifsUserQualified.trim().ifBlank {
         WindowsCatalogSetupScript.cifsUserCopyText(state.userName)
@@ -1526,13 +1567,25 @@ private fun CifsCardStep(
     val password = state.temporaryPassword
     val hasPassword = password.isNotBlank()
     val hostReady = state.pcHostIp.trim().isNotBlank()
-    val userQualified = '\\' in user
-    // LOCK: recupero LAN può fallire — Host digitato in MediaManager sblocca Attiva
-    // (non basta aver messo l'IP solo in CIFS). User qualificato consigliato ma non obbligatorio.
-    val readyForPick = state.cifsInstalled && hasPassword && hostReady && cifsSavedConfirmed
+    // USB-only: Host/User solo da DATI_CIFS.json — niente edit manuale.
+    val readyForPick =
+        state.cifsInstalled &&
+            state.setupResultImported &&
+            hasPassword &&
+            hostReady &&
+            cifsSavedConfirmed
 
-    // BoxManager pattern: scarica/apri CIFS subito, prima della scheda dati.
-    Button(onClick = onOpenCifs, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) {
+    Text(PcSetupGuideContent.cifs62Title(), fontWeight = FontWeight.SemiBold)
+    Text(
+        PcSetupGuideContent.cifs62Body(),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+    )
+    OutlinedButton(
+        onClick = onOpenCifs,
+        modifier = Modifier.fillMaxWidth(),
+        enabled = !state.busy,
+    ) {
         Text(
             if (state.cifsInstalled) {
                 stringResource(R.string.hub_cifs_open)
@@ -1541,74 +1594,20 @@ private fun CifsCardStep(
             },
         )
     }
-    Text(stringResource(R.string.hub_cifs_tobe_desc))
-    Text(
-        stringResource(R.string.hub_pc5_share_visibility),
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
-    )
-    Text(
-        text = when {
-            state.recoveringPcData -> stringResource(R.string.hub_pc5_recovering)
-            state.setupResultImported -> stringResource(R.string.hub_pc5_result_imported)
-            else -> stringResource(R.string.hub_pc5_result_missing)
-        },
-        style = MaterialTheme.typography.bodySmall,
-        color = when {
-            state.recoveringPcData || state.setupResultImported ->
-                MaterialTheme.colorScheme.primary
-            else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
-        },
-    )
-    Text(
-        stringResource(R.string.hub_pc5_hotspot_intro),
-        style = MaterialTheme.typography.bodyMedium,
-    )
-    OutlinedButton(
-        onClick = onRetryRecoverPcData,
-        enabled = !state.busy,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Text(stringResource(R.string.hub_pc5_retry_recover))
-    }
-    OutlinedButton(
-        onClick = onImportCifsBundle,
-        enabled = !state.busy,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Text(stringResource(R.string.hub_pc5_import_usb_bundle))
-    }
-    OutlinedTextField(
-        value = state.pcHostIp,
-        onValueChange = onPcHostIpChange,
-        modifier = Modifier.fillMaxWidth(),
-        singleLine = true,
-        enabled = !state.busy,
-        label = { Text(stringResource(R.string.hub_b5b_host_edit_label)) },
-        supportingText = { Text(stringResource(R.string.hub_b5b_host_edit_hint)) },
-    )
-    if (!hostReady) {
+    if (!state.setupResultImported || !hostReady || !hasPassword) {
         Text(
-            stringResource(R.string.hub_pc5_host_required_for_link),
+            "Dati CIFS mancanti o incompleti. Torna indietro e reimporta DATI_CIFS.json " +
+                "(niente digitazione Host/User).",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.error,
         )
-    }
-    OutlinedTextField(
-        value = state.cifsUserQualified.ifBlank { user },
-        onValueChange = onCifsUserChange,
-        modifier = Modifier.fillMaxWidth(),
-        singleLine = true,
-        enabled = !state.busy,
-        label = { Text(stringResource(R.string.hub_b5b_user_edit_label)) },
-        supportingText = { Text(stringResource(R.string.hub_b5b_user_edit_hint)) },
-    )
-    if (!userQualified) {
-        Text(
-            stringResource(R.string.hub_b5b_user_waiting_pc),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.error,
-        )
+        OutlinedButton(
+            onClick = onImportCifsBundle,
+            enabled = !state.busy,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.hub_pc5_import_usb_bundle))
+        }
     }
     Text(
         stringResource(R.string.hub_b5b_card_title),
@@ -1813,8 +1812,9 @@ private fun CifsCardStep(
             text = buildString {
                 append(stringResource(R.string.hub_pc5_activate_blocked))
                 if (!state.cifsInstalled) append("\n• ").append(stringResource(R.string.hub_cifs_install))
+                if (!state.setupResultImported) append("\n• Reimporta DATI_CIFS.json")
                 if (!hasPassword) append("\n• ").append(stringResource(R.string.hub_password_missing_hint))
-                if (!hostReady) append("\n• ").append(stringResource(R.string.hub_pc5_host_required_for_link))
+                if (!hostReady) append("\n• Host assente nel JSON — reimporta DATI_CIFS.json")
                 if (!cifsSavedConfirmed) append("\n• ").append(stringResource(R.string.hub_pc5_item_saved))
             },
             style = MaterialTheme.typography.bodySmall,

@@ -3,7 +3,7 @@ package com.renatizzi.photovideomanager.ui.hub
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind
 
 /**
- * Chrome UIX — Setup Catalogo TO-BE (Avvio procedura + template BT v3).
+ * Chrome UIX — Setup Catalogo USB-only (ripristino USB2.3).
  */
 object WizardStepChrome {
     data class Subtitle(val text: String)
@@ -33,10 +33,9 @@ object WizardStepChrome {
             WizardStep.PC_USB_PREPARE,
             WizardStep.PC_COPY_FILES,
             WizardStep.PC_RUN_SCRIPT,
-            -> Subtitle(
-                linkMode?.let { PcSetupGuideContent.guideSubtitle(it) } ?: pc[3],
-            )
+            -> Subtitle(PcSetupGuideContent.guideSubtitle(PcLinkMode.USB))
             WizardStep.PC_BT_DOWNLOAD_BUNDLE -> Subtitle(pc[4])
+            WizardStep.W2_CIFS_INSTALL -> Subtitle(PcSetupGuideContent.cifs61Title())
             WizardStep.W2_CIFS,
             WizardStep.W2_PICK,
             WizardStep.W2_SUMMARY,
@@ -45,7 +44,7 @@ object WizardStepChrome {
             WizardStep.W2_PREPARE,
             WizardStep.W2_HELP,
             WizardStep.W2_PASSWORD_HELP,
-            -> Subtitle(pc[5])
+            -> Subtitle(PcSetupGuideContent.cifs62Title())
             WizardStep.W2_CHOICE,
             WizardStep.W2_ROUTINE_PARAMS,
             -> Subtitle(pc[1])

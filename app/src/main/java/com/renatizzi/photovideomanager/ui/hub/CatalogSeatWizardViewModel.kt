@@ -113,11 +113,12 @@ data class CatalogSeatWizardUiState(
     val recoveringPcData: Boolean = false,
     /** Dopo export: UI deve aprire share Bluetooth prima di passare al passo 3. */
     val pendingShareScripts: Boolean = false,
-    /** Ramo associazione PC (template v3). */
-    val pcLinkMode: PcLinkMode = PcLinkMode.ALREADY_PAIRED,
+    /** Percorso fisso USB (USB-only). Valori BT restano solo per bozze legacy. */
+    val pcLinkMode: PcLinkMode = PcLinkMode.USB,
     /**
-     * Porte guida PC (v7): true quando la fase ha evidenza / sblocco.
-     * 0=set inviato, 1=istruzioni script aperte / in attesa, 2=DATI_CIFS applicati, 3=passa a CIFS.
+     * Porte guida USB (fasi 1–5): true quando la fase è completata.
+     * 0=script creati, 1=inviati al PC, 2=script eseguito, 3=DATI_CIFS sul TEL,
+     * 4=import OK → poi W2_CIFS_INSTALL (6/1) e W2_CIFS (6/2).
      */
     val guidePhaseDone: List<Boolean> = List(PcSetupGuideContent.PHASE_COUNT) { false },
     /** Ascolto MediaStore/LAN per DATI_CIFS.json. */
@@ -139,9 +140,9 @@ enum class WizardStep {
     PC_SHARE_READY,
     /** Passo 1 — Verifica disponibilità. */
     PC_AVAILABILITY,
-    /** Scelta ramo: già associati / pairing / USB (template v3). */
+    /** Collegamento fisico USB (ex scelta ramo BT; ora solo USB). */
     PC_LINK_MODE,
-    /** Guida ramo: 4 fasi accordion + conferma lineare. */
+    /** Guida USB: fasi 1–5 (Pronto/Fatto) + checkpoint import. */
     PC_GUIDE,
     /** Passo 2 — Bluetooth + preparazione/invio CONFIGURA + sup. (legacy → PC_GUIDE) */
     PC_USB_PREPARE,
@@ -151,7 +152,9 @@ enum class WizardStep {
     PC_RUN_SCRIPT,
     /** Import DATI_CIFS.json (ex 4b). */
     PC_BT_DOWNLOAD_BUNDLE,
-    /** Passo 5 — Scheda CIFS + collegamento Catalogo (revisione4). */
+    /** Fase 6/1 — Installa/Apri CIFS Documents Provider. */
+    W2_CIFS_INSTALL,
+    /** Fase 6/2 — Copia campi CIFS (sola lettura) + Attiva Catalogo. */
     W2_CIFS,
     W2_PICK,
     W3_GUIDE,
@@ -318,6 +321,7 @@ class CatalogSeatWizardViewModel(
             SetupMode.CREATE
         }
         if (step == WizardStep.W2_CIFS ||
+            step == WizardStep.W2_CIFS_INSTALL ||
             step == WizardStep.W2_PICK ||
             step == WizardStep.W4_GUIDE
         ) {
@@ -328,6 +332,7 @@ class CatalogSeatWizardViewModel(
                 step = step,
                 setupMode = mode,
                 selectedKind = kind,
+                pcLinkMode = PcLinkMode.USB,
                 folderPath = draft.folderPath,
                 shareName = draft.shareName,
                 userName = draft.userName,
@@ -348,7 +353,9 @@ class CatalogSeatWizardViewModel(
             draft.pcHostIp.isBlank() &&
             (
                 step == WizardStep.PC_RUN_SCRIPT ||
+                    step == WizardStep.PC_GUIDE ||
                     step == WizardStep.W2_CIFS ||
+                    step == WizardStep.W2_CIFS_INSTALL ||
                     step == WizardStep.W2_PICK
                 )
         if (needLan) startBackgroundLanListen()
@@ -495,11 +502,12 @@ class CatalogSeatWizardViewModel(
         }
     }
 
-    /** Passo 1 → scelta ramo associazione. */
+    /** Passo 1 → collegamento fisico USB. */
     fun confirmAvailabilityChecked() {
         _state.update {
             it.copy(
                 step = WizardStep.PC_LINK_MODE,
+                pcLinkMode = PcLinkMode.USB,
                 guidePhaseDone = List(PcSetupGuideContent.PHASE_COUNT) { false },
                 errorMessage = null,
                 statusMessage = null,
@@ -508,10 +516,11 @@ class CatalogSeatWizardViewModel(
         persistDraft()
     }
 
-    fun selectPcLinkMode(mode: PcLinkMode) {
+    fun selectPcLinkMode(@Suppress("UNUSED_PARAMETER") mode: PcLinkMode) {
+        // USB-only: ignora rami BT; forza USB.
         _state.update {
             it.copy(
-                pcLinkMode = mode,
+                pcLinkMode = PcLinkMode.USB,
                 guidePhaseDone = List(PcSetupGuideContent.PHASE_COUNT) { false },
                 errorMessage = null,
             )
@@ -519,11 +528,12 @@ class CatalogSeatWizardViewModel(
         persistDraft()
     }
 
-    /** Scelta ramo → guida accordion. */
+    /** USB collegato → guida fasi 1–5. */
     fun confirmPcLinkMode() {
         _state.update {
             it.copy(
                 step = WizardStep.PC_GUIDE,
+                pcLinkMode = PcLinkMode.USB,
                 guidePhaseDone = List(PcSetupGuideContent.PHASE_COUNT) { false },
                 errorMessage = null,
                 statusMessage = null,
@@ -533,9 +543,9 @@ class CatalogSeatWizardViewModel(
     }
 
     /**
-     * CTA fase guida (v7 porte).
-     * 0 = Invia set · 1 = Apri istruzioni script (avvia ascolto) ·
-     * 2 = Usa questi dati · 3 = Vai a configurazione CIFS.
+     * CTA fasi guida USB.
+     * 0 = Pronto (crea script) · 1 = Fatto invio · 2 = Fatto script ·
+     * 3 = Fatto invio DATI_CIFS · 4 = Fatto dopo import.
      */
     fun confirmGuidePhase(index: Int) {
         if (index !in 0 until PcSetupGuideContent.PHASE_COUNT) return
@@ -543,28 +553,46 @@ class CatalogSeatWizardViewModel(
         when (index) {
             0 -> {
                 if (!current.scriptPrepared) {
-                    val share = current.pcLinkMode != PcLinkMode.USB
-                    prepareWindowsScript(shareAfterExport = share)
+                    prepareWindowsScript(shareAfterExport = false)
                 } else {
                     markGuidePhaseDone(0)
-                    if (current.pcLinkMode == PcLinkMode.USB) {
-                        openScriptInstructions()
-                    }
                 }
             }
-            1 -> openScriptInstructions()
-            2 -> useDetectedBundle()
-            3 -> confirmPcGuide()
+            1 -> markGuidePhaseDone(1)
+            2 -> {
+                markGuidePhaseDone(2)
+                _state.update {
+                    it.copy(
+                        statusMessage = "In attesa di DATI_CIFS.json in Download",
+                        errorMessage = null,
+                        listeningForBundle = true,
+                    )
+                }
+                startBundleWatch()
+            }
+            3 -> {
+                markGuidePhaseDone(3)
+                _state.update {
+                    it.copy(
+                        listeningForBundle = true,
+                        statusMessage = "Cerca DATI_CIFS.json in Download…",
+                        errorMessage = null,
+                    )
+                }
+                startBundleWatch()
+            }
+            4 -> confirmPcGuide()
         }
     }
 
-    /** Dopo invio set: apre Fase 2 e avvia ascolto DATI_CIFS. */
+    /** Compat: avvia ascolto (legacy call sites). */
     fun openScriptInstructions() {
         markGuidePhaseDone(0)
         markGuidePhaseDone(1)
+        markGuidePhaseDone(2)
         _state.update {
             it.copy(
-                statusMessage = "In attesa dei dati dal PC",
+                statusMessage = "In attesa di DATI_CIFS.json in Download",
                 errorMessage = null,
                 listeningForBundle = true,
             )
@@ -579,32 +607,60 @@ class CatalogSeatWizardViewModel(
             if (index in next.indices) next[index] = true
             s.copy(
                 guidePhaseDone = next,
-                usbCopiedDeclared = next.getOrElse(0) { false },
-                scriptRanDeclared = next.getOrElse(1) { false },
+                usbCopiedDeclared = next.getOrElse(1) { false },
+                scriptRanDeclared = next.getOrElse(2) { false },
                 errorMessage = null,
             )
         }
         persistDraft()
     }
 
-    /** Porta a import/CIFS quando i dati sono pronti. */
+    /** Dopo import OK: Fase 6/1 (Installa/Apri CIFS). */
     fun confirmPcGuide() {
         val s = _state.value
         if (!s.setupResultImported) {
             _state.update {
-                it.copy(errorMessage = "Servono i dati CIFS ricevuti prima di proseguire.")
+                it.copy(
+                    errorMessage =
+                        "Import non riuscito. Verifica che DATI_CIFS.json sia in Download " +
+                            "e tocca Importa Dati CIFS, poi Fatto.",
+                )
             }
             return
         }
-        markGuidePhaseDone(2)
         markGuidePhaseDone(3)
+        markGuidePhaseDone(4)
         stopBundleWatch()
         _state.update {
             it.copy(
-                step = WizardStep.PC_BT_DOWNLOAD_BUNDLE,
+                step = WizardStep.W2_CIFS_INSTALL,
                 listeningForBundle = false,
                 errorMessage = null,
-                statusMessage = "Import riuscito — dati della sessione corrente",
+                statusMessage = "Import riuscito — passa a Installa/Apri CIFS",
+            )
+        }
+        persistDraft()
+    }
+
+    /** Fase 6/1 → 6/2 dopo checkpoint app CIFS presente. */
+    fun confirmCifsInstallStep() {
+        refreshCifsInstalled()
+        val installed = _state.value.cifsInstalled
+        if (!installed) {
+            _state.update {
+                it.copy(
+                    errorMessage =
+                        "CIFS Documents Provider non risulta installata. " +
+                            "Tocca Installa / Apri CIFS, completa l’installazione, poi Fatto.",
+                )
+            }
+            return
+        }
+        _state.update {
+            it.copy(
+                step = WizardStep.W2_CIFS,
+                errorMessage = null,
+                statusMessage = null,
             )
         }
         persistDraft()
@@ -639,7 +695,7 @@ class CatalogSeatWizardViewModel(
         applyLanPayload(bundle.toLanPayload())
         stopBackgroundLanListen()
         stopBundleWatch()
-        markGuidePhaseDone(2)
+        // Fase 5 resta attiva: Fatto (checkpoint) porta a 6/1.
         _state.update {
             it.copy(
                 busy = false,
@@ -648,7 +704,7 @@ class CatalogSeatWizardViewModel(
                 bundleDetected = true,
                 listeningForBundle = false,
                 pcComputerName = bundle.computerName.ifBlank { it.pcComputerName },
-                statusMessage = "Dati CIFS ricevuti",
+                statusMessage = "Import riuscito — tocca Fatto per continuare",
                 errorMessage = null,
             )
         }
@@ -670,7 +726,7 @@ class CatalogSeatWizardViewModel(
                         it.copy(
                             bundleDetected = true,
                             listeningForBundle = true,
-                            statusMessage = "Dati CIFS ricevuti",
+                            statusMessage = "DATI_CIFS.json trovato — tocca Importa Dati CIFS",
                             errorMessage = null,
                         )
                     }
@@ -709,9 +765,9 @@ class CatalogSeatWizardViewModel(
         bundleWatchJob = null
     }
 
-    /** Passo 2 OK → esporta CONFIGURA/sup e apre share Bluetooth; solo dopo si va al passo 3. */
+    /** USB-only: esporta CONFIGURA/sup in Download (niente share BT). */
     fun confirmUsbAndPrepareFiles() {
-        prepareWindowsScript(shareAfterExport = _state.value.pcLinkMode != PcLinkMode.USB)
+        prepareWindowsScript(shareAfterExport = false)
     }
 
     fun confirmBtAndPrepareFiles() = confirmUsbAndPrepareFiles()
@@ -826,12 +882,20 @@ class CatalogSeatWizardViewModel(
     fun goStep(step: WizardStep) {
         val target = normalizeLegacyStep(step)
         if (target == WizardStep.W2_CIFS ||
+            target == WizardStep.W2_CIFS_INSTALL ||
             target == WizardStep.W2_PICK ||
             target == WizardStep.W4_GUIDE
         ) {
             refreshCifsInstalled()
         }
-        _state.update { it.copy(step = target, errorMessage = null, statusMessage = null) }
+        _state.update {
+            it.copy(
+                step = target,
+                pcLinkMode = PcLinkMode.USB,
+                errorMessage = null,
+                statusMessage = null,
+            )
+        }
         persistDraft()
     }
 
@@ -849,6 +913,8 @@ class CatalogSeatWizardViewModel(
         WizardStep.W2_SCRIPT_RESULT,
         WizardStep.W2_ROUTINE_CONFIRM,
         -> WizardStep.PC_GUIDE
+        WizardStep.PC_BT_DOWNLOAD_BUNDLE,
+        -> WizardStep.W2_CIFS_INSTALL
         WizardStep.W2_CIFS_BRIDGE,
         WizardStep.W2_SUMMARY,
         WizardStep.W2_CIFS_METHOD,
@@ -1054,16 +1120,19 @@ class CatalogSeatWizardViewModel(
         viewModelScope.launch {
             runCatching { withContext(Dispatchers.IO) { exporter.scrubDownloadsScripts() } }
             refreshCifsInstalled()
+            markGuidePhaseDone(2)
             _state.update {
                 it.copy(
                     busy = false,
                     recoveringPcData = false,
                     scriptRanDeclared = true,
-                    step = WizardStep.PC_BT_DOWNLOAD_BUNDLE,
-                    statusMessage = null,
+                    step = WizardStep.PC_GUIDE,
+                    listeningForBundle = true,
+                    statusMessage = "In attesa di DATI_CIFS.json in Download",
                     errorMessage = null,
                 )
             }
+            startBundleWatch()
             persistDraft()
         }
     }
@@ -1083,7 +1152,7 @@ class CatalogSeatWizardViewModel(
                     if (SetupCifsBundle.looksLikeSetupResultNotBundle(raw)) {
                         error(
                             "Hai selezionato no_pw.json (senza password). " +
-                                "Dal Desktop del PC invia $expectedName via Bluetooth e seleziona quello.",
+                                "Dal Desktop del PC copia $expectedName in Download del Telefono e seleziona quello.",
                         )
                     }
                     val bundle = SetupCifsBundle.parse(raw, expectedToken = token.ifBlank { null })
@@ -1099,7 +1168,7 @@ class CatalogSeatWizardViewModel(
                         }.joinToString(", ")
                         error(
                             "Bundle incompleto (manca: $missing). " +
-                                "Dal Desktop del PC invia di nuovo $expectedName via Bluetooth.",
+                                "Dal Desktop del PC copia di nuovo $expectedName in Download del Telefono.",
                         )
                     }
                     bundle
@@ -1114,9 +1183,6 @@ class CatalogSeatWizardViewModel(
                     stopBackgroundLanListen()
                     stopBundleWatch()
                     detectedBundle = bundle
-                    markGuidePhaseDone(0)
-                    markGuidePhaseDone(1)
-                    markGuidePhaseDone(2)
                     _state.update {
                         it.copy(
                             busy = false,
@@ -1125,10 +1191,10 @@ class CatalogSeatWizardViewModel(
                             bundleDetected = true,
                             listeningForBundle = false,
                             pcComputerName = bundle.computerName.ifBlank { it.pcComputerName },
-                            // Resta su 4b per mostrare l'esito; OK porta a CIFS.
-                            step = WizardStep.PC_BT_DOWNLOAD_BUNDLE,
+                            // Resta in guida Fase 5; Fatto → 6/1.
+                            step = WizardStep.PC_GUIDE,
                             statusMessage =
-                                "Import riuscito — dati della sessione corrente",
+                                "Import riuscito — tocca Fatto per continuare",
                             errorMessage = null,
                         )
                     }
@@ -1390,7 +1456,7 @@ class CatalogSeatWizardViewModel(
                                         "Poi torna a MediaManager (non restare su Invio/Ricevi)."
                                 onGuide ->
                                     "Set pronto sul Telefono. Via USB: copia i 3 file sul Desktop " +
-                                        "(overwrite, niente (1)/(2)). Poi apri le istruzioni script."
+                                        "(overwrite, niente (1)/(2)). Poi tocca Fatto sulla Fase 2."
                                 else -> null
                             },
                             step = when {

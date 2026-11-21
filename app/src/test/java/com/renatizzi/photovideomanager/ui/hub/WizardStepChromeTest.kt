@@ -47,42 +47,42 @@ class WizardStepChromeTest {
     }
 
     @Test
-    fun pcPipeline_subtitlesMatchTemplateV3() {
+    fun pcPipeline_subtitlesMatchUsbOnly() {
         val kind = CatalogSeatKind.PC_NOTEBOOK
         val expected = WizardUiContract.PC_STEP_SUBTITLES
         assertEquals(expected[0], WizardStepChrome.subtitle(WizardStep.INTRO, kind).text)
         assertEquals(expected[1], WizardStepChrome.subtitle(WizardStep.PC_AVAILABILITY, kind).text)
         assertEquals(expected[2], WizardStepChrome.subtitle(WizardStep.PC_LINK_MODE, kind).text)
         assertEquals(
-            PcSetupGuideContent.guideSubtitle(PcLinkMode.ALREADY_PAIRED),
-            WizardStepChrome.subtitle(
-                WizardStep.PC_GUIDE,
-                kind,
-                PcLinkMode.ALREADY_PAIRED,
-            ).text,
+            PcSetupGuideContent.guideSubtitle(PcLinkMode.USB),
+            WizardStepChrome.subtitle(WizardStep.PC_GUIDE, kind, PcLinkMode.USB).text,
         )
-        assertEquals(expected[4], WizardStepChrome.subtitle(WizardStep.PC_BT_DOWNLOAD_BUNDLE, kind).text)
-        assertEquals(expected[5], WizardStepChrome.subtitle(WizardStep.W2_CIFS, kind).text)
+        assertEquals(
+            PcSetupGuideContent.cifs61Title(),
+            WizardStepChrome.subtitle(WizardStep.W2_CIFS_INSTALL, kind).text,
+        )
+        assertEquals(
+            PcSetupGuideContent.cifs62Title(),
+            WizardStepChrome.subtitle(WizardStep.W2_CIFS, kind).text,
+        )
         assertEquals(6, expected.size)
 
         val all = WizardStep.entries.map { WizardStepChrome.subtitle(it, kind).text }
         assertFalse(all.any { it.contains("Passo ") && it.contains(" di 10") })
-        assertFalse(all.any { it.contains("di 7") })
-        assertFalse(all.any { it.contains("A)") || it.contains("B)") || it.contains("C)") })
+        // Evita falsi positivi su "(USB)" che contiene la sottostringa "B)".
+        assertFalse(all.any { it.startsWith("A)") || it.startsWith("B)") || it.startsWith("C)") })
     }
 
     @Test
-    fun pcGuide_actionLabelsAreChannelAgnostic() {
-        val phases = PcSetupGuideContent.phases(PcLinkMode.NEED_PAIRING)
-        assertEquals(4, phases.size)
-        phases.forEach { p ->
-            assertFalse(p.actionLabel.contains("Confermo", ignoreCase = true))
-            assertFalse(p.actionLabel.contains("BT", ignoreCase = true))
-            assertFalse(p.actionLabel.contains("USB", ignoreCase = true))
+    fun pcGuide_usbPhases_useProntoFatto() {
+        val phases = PcSetupGuideContent.phases(PcLinkMode.USB)
+        assertEquals(5, phases.size)
+        assertEquals("Pronto", phases[0].actionLabel)
+        phases.drop(1).forEach { p ->
+            assertEquals("Fatto", p.actionLabel)
         }
-        assertTrue(phases[0].body.contains("codice") || phases[0].body.contains("Bluetooth"))
-        assertTrue(PcSetupGuideContent.phases(PcLinkMode.USB)[0].body.contains("USB") ||
-            PcSetupGuideContent.phases(PcLinkMode.USB)[0].body.contains("MTP"))
+        assertFalse(phases[0].body.contains("Bluetooth", ignoreCase = true))
+        assertTrue(phases[1].body.contains("Desktop"))
     }
 
     @Test

@@ -1,7 +1,7 @@
 package com.renatizzi.photovideomanager.ui.hub
 
 /**
- * Contratto UIX Setup Catalogo — template BT v3 + Avvio procedura.
+ * Contratto UIX Setup Catalogo — USB-only (ripristino USB2.3).
  */
 object WizardUiContract {
     /**
@@ -16,14 +16,15 @@ object WizardUiContract {
     const val STEP0_SUBTITLE_HAS_NO_NUMBER = true
 
     /**
-     * Sottotitoli filiera PC (template v3).
-     * Indice: 0 intro, 1 prerequisiti, 2 modalità, 3 guida (dinamica), 4 import, 5 CIFS.
+     * Sottotitoli filiera PC (USB-only).
+     * Indice: 0 intro, 1 prerequisiti, 2 USB fisico, 3 guida fasi, 4 (legacy import),
+     * 5 CIFS 6/2 (copia).
      */
     val PC_STEP_SUBTITLES: List<String> = listOf(
         "Dove tenere il Catalogo",
         "Verifica della disponibilità di quanto necessario",
-        "Modalità di associazione tra Telefono e PC",
-        "Guida collegamento Telefono e PC",
+        "Collegamento fisico USB",
+        "Guida collegamento Telefono e PC (USB)",
         "Importa i dati da copiare su CIFS",
         "Copia i dati su CIFS e attivazione collegamento",
     )
