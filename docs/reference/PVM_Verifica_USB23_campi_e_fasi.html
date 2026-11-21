@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<title>MediaManager — Verifica ripristino USB2.3</title>
+<style>
+  body{font-family:"Segoe UI",Calibri,sans-serif;margin:0;background:#f6f4ef;color:#1a1a1a;line-height:1.4}
+  header,section,footer{max-width:860px;margin:0 auto;padding:0 22px}
+  header{padding-top:28px}
+  h1{font-size:1.25rem;color:#1565c0;margin:0 0 8px}
+  h2{font-size:1.02rem;border-bottom:2px solid #1565c0;padding-bottom:4px;margin-top:20px}
+  p,li,td{font-size:.88rem}
+  .ok{background:#e8f5e9;border:1px solid #a5d6a7;padding:10px 12px;border-radius:6px}
+  .muted{color:#555;font-size:.84rem}
+  table{width:100%;border-collapse:collapse;background:#fff;margin:10px 0}
+  th,td{border:1px solid #d7d2c8;padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:#eee}
+  footer{padding:24px;color:#555;font-size:.8rem}
+</style>
+</head>
+<body>
+<header>
+  <h1>Verifica ripristino USB2.3 — campi e fasi</h1>
+  <p class="muted">21/11/2026 (Europe/Rome) · fonte: <code>ripristino_USB2.3.pdf</code> (11 pagine)</p>
+</header>
+
+<section>
+  <h2>Esito</h2>
+  <div class="ok">
+    <strong>OK concettuale.</strong> La Fase 4/5 (pag. 7) è corretta: Invio <code>DATI_CIFS.json</code> al Telefono + Import in MediaManager.
+    Nessun blocco rimanente rispetto a USB 2.1. Si passa allo sviluppo USB-only.
+  </div>
+</section>
+
+<section>
+  <h2>Checklist</h2>
+  <table>
+    <tr><th>Punto</th><th>Esito</th></tr>
+    <tr><td>Titoli laterali aggiornati (Fase 1 / Fasi 2–3 / 4–5 / 6/1 / 6/2)</td><td>OK</td></tr>
+    <tr><td>Fase 4 = Desktop → Download TEL (<code>DATI_CIFS.json</code>)</td><td>OK</td></tr>
+    <tr><td>Fase 5 = Import + checkpoint locale + Fatto → Fase 6</td><td>OK</td></tr>
+    <tr><td>Fase 6/1 = Installa/Apri CIFS · 6/2 = sola Copia + Attiva Catalogo</td><td>OK</td></tr>
+    <tr><td>Omettere campi Host/User modificabili (da JSON importato)</td><td>OK (requisito confermato)</td></tr>
+    <tr><td>Pronto (fase app) vs Fatto (fase manuale)</td><td>OK intenzionale</td></tr>
+    <tr><td>Nota laterale «dopo PRONTO» su pagine con bottone Fatto</td><td>Minore: etichetta generica; logica = nascondi bottoni + «FASE N COMPLETATA»</td></tr>
+    <tr><td>Bullet Fase 6/1 menziona anche il copia/incolla</td><td>Minore: azione UI = Installa/Apri; copia è 6/2</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Allineamento codice (target)</h2>
+  <ul>
+    <li>Percorso fisso USB · niente combo BT.</li>
+    <li>6 fasi + split 6.1/6.2.</li>
+    <li><code>CifsCardStep</code>: rimuovere <code>OutlinedTextField</code> Host/User.</li>
+    <li>Bottoni Pronto / Fatto / Importa / Installa-Apri / Attiva Catalogo come da template.</li>
+  </ul>
+</section>
+
+<footer>MediaManager — verifica USB2.3 · sblocca sviluppo</footer>
+</body>
+</html>
