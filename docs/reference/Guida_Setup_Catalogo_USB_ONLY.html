@@ -98,36 +98,42 @@
 
 <section>
   <h2>Fase 4 — Invio dati CIFS al Telefono</h2>
-  <p><em>Obiettivo:</em> copiare sul Telefono solo il file generato dallo script.</p>
+  <p><em>Obiettivo:</em> copiare sul Telefono solo il file generato dallo script. Bottone app: <strong>Fatto</strong>.</p>
   <ul>
     <li>Con il cavo ancora in Trasferimento file / MTP:</li>
     <li>Dal Desktop del PC copia <code>DATI_CIFS.json</code> nella cartella Download del Telefono.</li>
     <li>Non usare <code>no_pw.json</code> né file con nome <code>DATI_CIFS (1).json</code>.</li>
   </ul>
-  <div class="box">Esito: <code>DATI_CIFS.json</code> in Download del Telefono. In app tocca <strong>Fatto</strong>.</div>
+  <div class="box">Esito: <code>DATI_CIFS.json</code> in Download del Telefono.</div>
 </section>
 
 <section>
   <h2>Fase 5 — Import dati CIFS sul Telefono</h2>
-  <p><em>Obiettivo:</em> far leggere a MediaManager il JSON della sessione corrente.</p>
+  <p><em>Obiettivo:</em> far leggere a MediaManager il JSON della sessione corrente. Bottone app: <strong>Fatto</strong> (dopo import OK).</p>
   <ul>
-    <li>L’app rileva il file in Download oppure chiedi Importa file… e seleziona <code>DATI_CIFS.json</code>.</li>
-    <li>Controlla che Host, User e Password siano quelli appena creati sul PC.</li>
+    <li>L’app rileva il file in Download oppure usa Importa file… e seleziona <code>DATI_CIFS.json</code>.</li>
+    <li>I dati (Host, User, Password, Folder, …) sono quelli del JSON: <strong>non sono modificabili</strong> a mano.</li>
+    <li>Se l’import fallisce: messaggio con istruzioni e riprova (niente digitazione Host/User).</li>
   </ul>
-  <div class="box">Esito: import riuscito. In app tocca <strong>Fatto</strong> / prosegui.</div>
+  <div class="box">Esito: import riuscito; dati pronti solo per Copia.</div>
 </section>
 
 <section>
-  <h2>Fase 6 — Configurazione CIFS sul Telefono</h2>
-  <p><em>Obiettivo:</em> trasferire i dati in CIFS Documents Provider e attivare il Catalogo.</p>
+  <h2>Fase 6 — Configurazione CIFS sul Telefono (due step)</h2>
+  <h3 style="font-size:.95rem;color:var(--accent)">Step 6/1 — Spiegazioni e apri/installa CIFS</h3>
+  <ul>
+    <li>Fase semiautomatica: i dati importati si copiano in CIFS Documents Provider (Play Store / da MediaManager).</li>
+    <li>Checkpoint locale: se CIFS non è installata, messaggio con istruzioni; altrimenti Installa/Apri.</li>
+    <li>Tocca <strong>Fatto</strong> per passare allo step di copia.</li>
+  </ul>
+  <h3 style="font-size:.95rem;color:var(--accent)">Step 6/2 — Copia campi e Attiva Catalogo</h3>
   <ol class="steps">
-    <li>Installa o apri CIFS Documents Provider (checkpoint: se assente, segui le istruzioni a video).</li>
     <li>In CIFS: [+] → Input. Torna a MediaManager.</li>
-    <li>Per ogni campo mostrato (Name, Storage, Host, Port, Username, Password, Folder): Copia → passa a CIFS → Incolla.</li>
+    <li>Per ogni campo (Name, Storage, Host, Port, Username, Password, Folder): solo <strong>Copia</strong> → Incolla in CIFS. Nessun campo editabile in MediaManager.</li>
     <li>Salva in CIFS e verifica che la cartella/dispositivo compaia nell’elenco.</li>
-    <li>In MediaManager conferma e tocca <strong>Attiva Catalogo</strong>, poi seleziona la cartella CIFS appena salvata (Name = MyMedia) con «Usa questa cartella».</li>
+    <li>Conferma in MediaManager e tocca <strong>Attiva Catalogo</strong>; seleziona la connessione CIFS (Name = MyMedia) con «Usa questa cartella».</li>
   </ol>
-  <div class="box">Esito atteso: cartella condivisa visibile in CIFS; Catalogo censito correttamente in MediaManager.</div>
+  <div class="box">Esito atteso: cartella visibile in CIFS; Catalogo censito correttamente.</div>
 </section>
 
 <section>
