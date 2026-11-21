@@ -76,6 +76,8 @@
 
 
 ### Decisione 20/11/2026 — USB-only (in attesa convalida proposta)
+- **21/11 ripristino USB:** template esaminato — incongruenze numerazione fasi (pag.6≠7≠11); **nessuno sviluppo** finché Renato chiude i 4 punti in `PVM_Osservazioni_Ripristino_USB_v1.pdf`. Guida integrale USB: `Guida_Setup_Catalogo_USB_ONLY.pdf`.
+
 Renato rinuncia al BT per il setup Catalogo. Proposta: `docs/reference/PVM_Proposta_Setup_USB_ONLY_v1.pdf`. **Nessun codice** finché non convalida.
 
 ## Decisioni già congelate (invariate)
