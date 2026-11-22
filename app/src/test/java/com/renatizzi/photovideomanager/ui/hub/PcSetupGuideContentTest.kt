@@ -80,6 +80,14 @@ class PcSetupGuideContentTest {
     }
 
     @Test
+    fun strip_isSingleDigitPerCell() {
+        repeat(PcSetupGuideContent.TOTAL_PHASES) { i ->
+            assertEquals("${i + 1}", PcSetupGuideContent.lampLabel(i))
+            assertTrue(PcSetupGuideContent.lampCaption(i).isNotBlank())
+        }
+    }
+
+    @Test
     fun guideSubtitle_matchesContract() {
         assertEquals(
             WizardUiContract.PC_STEP_SUBTITLES[3],

@@ -182,6 +182,28 @@ fun CatalogSeatWizardScreen(
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
         )
 
+        // Chrome USB fisso: guida stampabile + strip 6 fasi (sempre stesso punto).
+        if (UsbSetupCheckpointMessages.showsUsbChrome(state.step)) {
+            val highlight = UsbSetupCheckpointMessages.highlightIndex(
+                state.step,
+                state.guidePhaseDone,
+            )
+            val stripDone = List(PcSetupGuideContent.TOTAL_PHASES) { index ->
+                when {
+                    // Su 6/1–6/2 le fasi 1–5 risultano completate.
+                    highlight == 5 && index < 5 -> true
+                    index < PcSetupGuideContent.PHASE_COUNT ->
+                        state.guidePhaseDone.getOrElse(index) { false }
+                    else -> state.step == WizardStep.DONE
+                }
+            }
+            UsbSetupFixedChrome(
+                highlightIndex = highlight,
+                phaseDone = stripDone,
+                onOpenGuide = { openSetupGuidePdf(context) },
+            )
+        }
+
         when (state.step) {
             WizardStep.S0_START -> AvvioProceduraStep(
                 state = state,
@@ -860,22 +882,12 @@ private fun UsbConnectStep(
 }
 
 @Composable
-private fun PcGuideStep(
-    state: CatalogSeatWizardUiState,
-    busy: Boolean,
-    onConfirmPhase: (Int) -> Unit,
-    onConfirmAll: () -> Unit,
-    onImportCifs: () -> Unit,
-    onCancel: () -> Unit,
+private fun UsbSetupFixedChrome(
+    highlightIndex: Int,
+    phaseDone: List<Boolean>,
+    onOpenGuide: () -> Unit,
 ) {
-    val context = LocalContext.current
-    val phases = remember { PcSetupGuideContent.usbPhases() }
-    val phaseDone = state.guidePhaseDone
-    val currentIndex = (0 until PcSetupGuideContent.PHASE_COUNT)
-        .firstOrNull { !phaseDone.getOrElse(it) { false } }
-        ?: (PcSetupGuideContent.PHASE_COUNT - 1)
-    val pageGroup = PcSetupGuideContent.pageGroupFor(currentIndex)
-
+    // Stesso punto in ogni videata USB: riga stampa guida.
     Text(
         text = buildAnnotatedString {
             append(PcSetupGuideContent.guideDescription())
@@ -891,73 +903,83 @@ private fun PcGuideStep(
             }
         },
         style = MaterialTheme.typography.bodyMedium,
-        modifier = Modifier.clickable { openSetupGuidePdf(context) },
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onOpenGuide),
     )
-    Text(
-        stringResource(
-            R.string.hub_pc_phase_of,
-            currentIndex + 1,
-            PcSetupGuideContent.TOTAL_PHASES,
-        ),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-    )
-
-    // Strip 6 fasi (1–5 + 6 CIFS).
+    // Sei fasi su un’unica riga (solo numeri 1–6).
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(3.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         repeat(PcSetupGuideContent.TOTAL_PHASES) { index ->
-            val done = if (index < PcSetupGuideContent.PHASE_COUNT) {
-                phaseDone.getOrElse(index) { false }
-            } else {
-                false
-            }
-            val on = index == currentIndex
-            Column(
+            val done = phaseDone.getOrElse(index) { false }
+            val on = index == highlightIndex
+            Box(
                 modifier = Modifier
                     .weight(1f)
+                    .height(36.dp)
                     .border(
-                        1.dp,
-                        when {
+                        width = if (on) 2.dp else 1.dp,
+                        color = when {
                             on -> MaterialTheme.colorScheme.primary
                             done -> Color(0xFF81C784)
                             else -> MaterialTheme.colorScheme.outlineVariant
                         },
-                        RoundedCornerShape(6.dp),
+                        shape = RoundedCornerShape(6.dp),
                     )
                     .background(
                         when {
-                            on -> MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                            on -> MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
                             done -> Color(0xFFE8F5E9)
                             else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
                         },
                         RoundedCornerShape(6.dp),
-                    )
-                    .padding(4.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
+                    ),
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    PcSetupGuideContent.lampLabel(index),
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = if (on) FontWeight.Bold else FontWeight.Normal,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
+                    text = PcSetupGuideContent.lampLabel(index),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = if (on) FontWeight.Bold else FontWeight.SemiBold,
+                    color = if (on) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
                 )
             }
         }
     }
-
-    if (currentIndex == 0) {
+    if (highlightIndex in 0 until PcSetupGuideContent.TOTAL_PHASES) {
         Text(
-            "La procedura è composta dalle seguenti fasi:",
+            stringResource(
+                R.string.hub_pc_phase_of,
+                highlightIndex + 1,
+                PcSetupGuideContent.TOTAL_PHASES,
+            ),
             style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
         )
-        PcSetupGuideContent.sixPhaseOverview().forEach { line ->
-            Text("• $line", style = MaterialTheme.typography.bodySmall)
-        }
     }
+}
+
+@Composable
+private fun PcGuideStep(
+    state: CatalogSeatWizardUiState,
+    busy: Boolean,
+    onConfirmPhase: (Int) -> Unit,
+    onConfirmAll: () -> Unit,
+    onImportCifs: () -> Unit,
+    onCancel: () -> Unit,
+) {
+    val phases = remember { PcSetupGuideContent.usbPhases() }
+    val phaseDone = state.guidePhaseDone
+    val currentIndex = (0 until PcSetupGuideContent.PHASE_COUNT)
+        .firstOrNull { !phaseDone.getOrElse(it) { false } }
+        ?: (PcSetupGuideContent.PHASE_COUNT - 1)
+    val pageGroup = PcSetupGuideContent.pageGroupFor(currentIndex)
 
     // Card accordion (stile Analog): entrambe le fasi del gruppo visibili.
     pageGroup.forEach { index ->

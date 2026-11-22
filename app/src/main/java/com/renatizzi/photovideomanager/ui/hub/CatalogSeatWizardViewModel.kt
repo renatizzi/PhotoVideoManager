@@ -643,11 +643,7 @@ class CatalogSeatWizardViewModel(
         val s = _state.value
         if (!s.setupResultImported) {
             _state.update {
-                it.copy(
-                    errorMessage =
-                        "Import non riuscito. Verifica che DATI_CIFS.json sia in Download " +
-                            "e tocca Importa Dati CIFS, poi Fatto.",
-                )
+                it.copy(errorMessage = UsbSetupCheckpointMessages.IMPORT_KO)
             }
             return
         }
@@ -673,11 +669,7 @@ class CatalogSeatWizardViewModel(
         val installed = _state.value.cifsInstalled
         if (!installed) {
             _state.update {
-                it.copy(
-                    errorMessage =
-                        "CIFS Documents Provider non risulta installata. " +
-                            "Tocca Installa / Apri CIFS, completa l’installazione, poi Fatto.",
-                )
+                it.copy(errorMessage = UsbSetupCheckpointMessages.CIFS_APP_KO)
             }
             return
         }
@@ -1480,8 +1472,7 @@ class CatalogSeatWizardViewModel(
                             usbCopiedDeclared = phaseDone.getOrElse(1) { false } || prevUsbCopied,
                             errorMessage = when {
                                 onGuide && !willShare && !savedOk ->
-                                    "Creazione script non riuscita in Download. " +
-                                        "Verifica lo spazio e i permessi, poi tocca di nuovo Pronto."
+                                    UsbSetupCheckpointMessages.SCRIPT_DOWNLOAD_KO
                                 else -> null
                             },
                             statusMessage = when {

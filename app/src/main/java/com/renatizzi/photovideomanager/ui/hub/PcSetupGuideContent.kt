@@ -131,13 +131,17 @@ object PcSetupGuideContent {
     fun phaseCompletedLabel(index: Int): String =
         "✓ FASE ${index + 1} COMPLETATA"
 
-    fun lampLabel(index: Int): String = when (index) {
-        0 -> "1 Creazione"
-        1 -> "2 Invio"
-        2 -> "3 Script"
-        3 -> "4 DATI_CIFS"
-        4 -> "5 Import"
-        5 -> "6 CIFS"
+    /** Cella strip a una riga: solo numero (compatto su telefono/tablet). */
+    fun lampLabel(index: Int): String = "${index + 1}"
+
+    /** Etichetta corta accessibile (contentDescription / PDF). */
+    fun lampCaption(index: Int): String = when (index) {
+        0 -> "Creazione"
+        1 -> "Invio"
+        2 -> "Script"
+        3 -> "DATI_CIFS"
+        4 -> "Import"
+        5 -> "CIFS"
         else -> "${index + 1}"
     }
 
