@@ -63,8 +63,8 @@
 ### P1 — Setup PC Bluetooth (annotato Renato 08/11/2026; template convalidato 09/11)
 
 16. **Nomi file comprensibili (come fatto per CONFIGURA/sup)** — JSON post «Tutto pronto» → TO-BE `DATI_CIFS.json` (da inviare/importare) e `no_pw.json` (ignorare). Allineare testi app + messaggi script.  
-17. **Una sola versione sul Desktop (overwrite)** — A ogni nuovo tentativo i file sul Desktop devono **sostituire** quelli precedenti (bundle/result + 3 file CONFIGURA).  
-18. **UX Ottimizzazione BT (template v3 — Ultime modifiche 16/11)** — Specifica: `docs/reference/PVM_Template_Statici_Ottimizzazione_Setup_PC_BT_v3.pdf`. Congelato: niente A/B/C; solo «Telefono»; topbar consolidata; 4 fasi accordion; stampa = icona in descrizione; tre rami (già associati / pairing / USB) stesso scheletro; conferma lineare 1×1 + checkpoint sotto OK; messaggi conferma letterali senza BT/USB. Flusso primario consigliato: guida+conferma nella stessa videata ramo (riepilogo dedicato opzionale). *Stato:* template aggiornato — **nessuno sviluppo finché non autorizzato**.
+17. **Una sola versione sul Desktop (overwrite)** — A ogni nuovo tentativo i file sul Desktop devono **sostituire** quelli precedenti (bundle/result + 3 file CONFIGURA). **Nota Renato 19/11:** in pratica i file **non** vengono sostituiti: il sistema crea `nome (1)`, `nome (2)`, … e **blocca** il processo (sessione ambigua). Da risolvere in script/export/BT ricezione + istruzioni guida.  
+18. **UX Ottimizzazione BT** — Template **v7** (`PVM_Proposta_Setup_BT_REV9_v7.pdf`): Parte 1 PDF REV9; Parte 2 online una fase; porte/CTA; lampade; ascolto DATI_CIFS; maggiordomo overwrite. *Stato:* **in sviluppo 0.16.74** (OK Renato 19/11).
 
 ### P2 — Fuori Wizard PC immediato
 12. Pagina **Configura** «stile Utility» (slide 2 PPT).  
@@ -73,6 +73,12 @@
 15. **Disco esterno su secondo PC** — verificare cosa succede se lo stesso volume (stessa lettera + percorso) configurato su un PC viene usato su un altro PC (share SMB / CIFS / MediaManager). Annotato Renato 22/10.
 
 ---
+
+
+### Decisione 20/11/2026 — USB-only (in attesa convalida proposta)
+- **21/11 ripristino USB:** template esaminato — incongruenze numerazione fasi (pag.6≠7≠11); **nessuno sviluppo** finché Renato chiude i 4 punti in `PVM_Osservazioni_Ripristino_USB_v1.pdf`. Guida integrale USB: `Guida_Setup_Catalogo_USB_ONLY.pdf`.
+
+Renato rinuncia al BT per il setup Catalogo. Proposta: `docs/reference/PVM_Proposta_Setup_USB_ONLY_v1.pdf`. **Nessun codice** finché non convalida.
 
 ## Decisioni già congelate (invariate)
 
@@ -114,4 +120,6 @@ Aperti:
 - **BL-UI-12** Funzione di **pulizia dati app** (prefs Catalogo, bozze wizard, indici/censimenti, cache MediaManager) — richiesta Renato 01/11 con Tranche A 0.16.57; non cancellare i file utente nelle cartelle SAF
 - **BL-BT-01** Nomi file post-script comprensibili (bundle/result) — come CONFIGURA/sup (Renato 08/11)
 - **BL-BT-02** Desktop: overwrite unica versione (bundle/result + 3 file CONFIGURA) (Renato 08/11)
+- **BL-BT-03** Bypass ricerca Desktop/Download: esegui-dove-arriva + script maggiordomo + ascolto MediaStore/LAN — in 0.16.74 (Renato 19/11)
+- **BL-BT-04** Indicatori fase onesti + modello a porte (no Continua/Puoi passare) — in 0.16.74 (Renato 19/11)
 - Font/stile carattere — correzione UI differita (accordo 30/10)

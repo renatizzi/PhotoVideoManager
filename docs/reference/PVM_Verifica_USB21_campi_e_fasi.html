@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<title>Verifica ripristino USB 2.1 — campi e fasi</title>
+<style>
+ body{font-family:"Segoe UI",Calibri,sans-serif;max-width:900px;margin:24px auto;padding:0 18px;line-height:1.4;background:#f7f5f0;color:#1a1a1a}
+ h1{font-size:1.15rem} h2{font-size:1rem;border-bottom:2px solid #111;padding-bottom:4px}
+ .ok{background:#e8f5e9;border-left:4px solid #2e7d32;padding:10px;margin:10px 0;font-size:.88rem}
+ .bad{background:#ffebee;border-left:4px solid #c62828;padding:10px;margin:10px 0;font-size:.88rem}
+ .warn{background:#fff8e1;border-left:4px solid #f9a825;padding:10px;margin:10px 0;font-size:.88rem}
+ table{width:100%;border-collapse:collapse;background:#fff;font-size:.82rem}
+ th,td{border:1px solid #ccc;padding:6px 8px;vertical-align:top;text-align:left}
+ th{background:#eee}
+ code{font-size:.86em}
+</style>
+</head>
+<body>
+<h1>Verifica ripristino USB 2.1</h1>
+<p style="color:#555;font-size:.84rem">21/11/2026 · chiarimenti Renato + PDF 2.1 · nessun codice</p>
+
+<h2>1. Chiarimenti recepiti</h2>
+<div class="ok">
+  · Titoli laterali 2.1 aggiornati (Fase 1 / Fasi 4–5 / Fase 6/1 / 6/2).<br/>
+  · Fase 6 = due step: (1) spiegazioni + Installa/Apri CIFS · (2) Copia campi + Attiva Catalogo.<br/>
+  · <strong>Pronto</strong> (Fase 1, azione app) vs <strong>Fatto</strong> (fasi manuali) = intenzionale.<br/>
+  · Screenshot esemplificativi: conta la coerenza concettuale.
+</div>
+
+<h2>2. Verifica campi non più editabili</h2>
+<div class="ok">
+  <strong>Decisione condivisa e corretta.</strong> Nella build attuale (0.16.74) restano ancora due
+  <code>OutlinedTextField</code> editabili in <code>CifsCardStep</code>:
+  «Host (IP del PC) — modificabile» e «User CIFS (modificabile)», introdotti come fallback quando il recupero LAN falliva.
+  Esiste già una stringa più antica (<code>hub_pc5_intro</code>) che dice il contrario: dati definitivi, <em>solo Copia</em>.
+  Il template 6/2 mostra solo righe Copia (Name/Storage/Host/Port/Username/Password/Folder) — coerente con la semplificazione.
+</div>
+<div class="ok">
+  <strong>In sviluppo (quando autorizzi):</strong> rimuovere i campi editabili Host/User.
+  I valori arrivano solo da <code>DATI_CIFS.json</code> importato.
+  Se Host/User/Password incompleti → messaggio KO + «Importa di nuovo», niente digitazione manuale.
+  Così si evitano IP/user sbagliati e si allinea a «omettere quelli modificabili».
+</div>
+
+<h2>3. Incongruenza ancora aperta (pag. 7)</h2>
+<div class="bad">
+  In USB 2.1 il riquadro laterale dice correttamente «Fasi 4 e 5», ma <strong>il corpo della pagina
+  ripete ancora Fase 2 e Fase 3</strong> (copia dei 3 file script + doppio clic CONFIGURA).
+  Secondo pag. 11 e la guida, dovrebbero essere:
+  <br/>· <strong>Fase 4</strong> — Invio <code>DATI_CIFS.json</code> dal Desktop al Download del Telefono
+  <br/>· <strong>Fase 5</strong> — Import di <code>DATI_CIFS.json</code> in MediaManager
+  <br/>Senza questo testo corretto non posso sviluppare 4/5 senza inventare.
+</div>
+
+<h2>4. Minori (non bloccanti)</h2>
+<div class="warn">
+  Nota laterale pag. 6–7 parla ancora di «dopo clic su PRONTO» mentre i bottoni delle fasi 2–5 sono «Fatto»
+  (coerente con la tua regola Pronto/Fatto; è solo testo della nota).
+</div>
+
+<h2>5. Cosa serve per lo sviluppo</h2>
+<table>
+  <tr><th>Punto</th><th>Stato</th></tr>
+  <tr><td>USB only · 6 fasi · Pronto/Fatto · Fase 6 in due step</td><td>OK</td></tr>
+  <tr><td>Niente Host/User editabili — solo Copia da import</td><td>OK (verificato; da implementare)</td></tr>
+  <tr><td>Testo corretto Fase 4 e 5 (pag. 7)</td><td><strong>Da te</strong> (o OK a usare i testi della guida integrale USB)</td></tr>
+</table>
+
+<p>Se mi dai OK a usare per Fase 4/5 i testi già in <code>Guida_Setup_Catalogo_USB_ONLY.pdf</code>, passo allo sviluppo scrupoloso sui template 2.1.</p>
+</body>
+</html>

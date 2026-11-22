@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>MediaManager — Proposta Setup Catalogo BT v4 (da REV5 + osservazioni 17/11)</title>
+<style>
+  :root {
+    --bg:#f6f4ef; --ink:#1a1a1a; --muted:#5c5c5c; --line:#d7d2c8;
+    --accent:#1565c0; --accent2:#0d47a1; --ok:#2e7d32; --warn:#b26a00; --off:#b71c1c;
+    --phone:#fff; --top:#1565c0; --chip:#e8eef7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Calibri,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.35}
+  header.doc,section,footer,.banner{max-width:1120px;margin:0 auto;padding:0 24px}
+  header.doc{padding-top:28px;padding-bottom:8px}
+  header.doc h1{margin:0 0 6px;font-size:1.35rem}
+  header.doc p,.muted{color:var(--muted);font-size:.9rem}
+  .banner{background:#fff8e1;border:1px solid #f0c36d;padding:12px 16px;margin:12px auto}
+  .banner.ok{background:#e8f5e9;border-color:#81c784}
+  .banner.warn{background:#fff3e0;border-color:#ffb74d}
+  section{margin-bottom:28px;page-break-inside:avoid}
+  section h2{border-bottom:2px solid var(--ink);padding-bottom:6px;font-size:1.1rem}
+  section h3{margin-top:14px;font-size:.98rem}
+  .note,.decision,.incongr,.okbox,.reject{background:#fff;border-left:4px solid var(--accent);padding:10px 12px;margin:10px 0;font-size:.88rem}
+  .decision{border-left-color:var(--ok)}
+  .incongr{border-left-color:var(--warn)}
+  .reject{border-left-color:var(--off)}
+  .okbox{border-left-color:var(--ok)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;margin-top:12px}
+  .phone{background:var(--phone);border:1px solid var(--line);border-radius:18px;overflow:hidden;max-width:330px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+  .bar{background:var(--top);color:#fff;padding:8px 10px;font-size:.72rem;display:flex;justify-content:space-between;align-items:center}
+  .bar .app{font-weight:700;font-size:.85rem}
+  .body{padding:12px;min-height:560px;display:flex;flex-direction:column}
+  .title{font-size:1.02rem;font-weight:700;margin:0 0 2px}
+  .subtitle{font-size:.78rem;font-style:italic;color:var(--muted);margin:0 0 6px}
+  .desc{font-size:.8rem;margin:0 0 8px;line-height:1.4}
+  .print-inline{display:inline-flex;align-items:center;gap:3px;color:var(--accent);font-weight:700;font-size:1em;vertical-align:middle}
+  .print-inline .ico{font-size:1.15em;line-height:1}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 0}
+  .foot{margin-top:auto;padding-top:10px}
+  .btn{display:inline-block;border:1px solid var(--accent);color:var(--accent);padding:6px 10px;border-radius:4px;font-size:.74rem;background:#fff}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.wide{flex:1;text-align:center}
+  .btn.ghost{border-color:var(--line);color:var(--muted)}
+  .btn.sm{padding:4px 8px;font-size:.7rem}
+  .btn.dim{opacity:.38}
+  .acc{border:1px solid var(--line);border-radius:6px;margin:5px 0;background:#fafafa;overflow:hidden}
+  .acc .hd{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;font-size:.74rem;font-weight:600;background:#fff}
+  .acc .hd .chev{color:var(--accent)}
+  .acc.open .hd{border-bottom:1px solid var(--line)}
+  .acc .bd{display:none;padding:8px 10px;font-size:.68rem;color:var(--muted)}
+  .acc.open .bd{display:block}
+  .flowstrip{width:100%;border:1px solid var(--line);border-radius:6px;background:#fff;margin:6px 0 8px;overflow:hidden}
+  .flowstrip img{width:100%;display:block}
+  .stepper{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:6px 0 8px}
+  .step{border:1px solid var(--line);border-radius:6px;padding:5px 4px;text-align:center;font-size:.58rem;background:#f7f7f7;color:var(--muted)}
+  .step.on{border-color:var(--accent);background:#e3f2fd;color:var(--accent2);font-weight:700}
+  .step .ic{display:block;font-size:.85rem;margin-bottom:2px}
+  .outcome{margin-top:6px;padding:6px 8px;border-radius:4px;font-size:.68rem}
+  .outcome.ok{background:#e8f5e9;color:var(--ok)}
+  .outcome.ko{background:#ffebee;color:var(--off)}
+  .outcome.next{background:#f3f8ff;color:var(--accent2)}
+  .pill{display:inline-block;font-size:.65rem;padding:2px 7px;border-radius:10px;background:var(--chip);color:var(--accent2);margin-right:4px}
+  .pill.ok{background:#e8f5e9;color:var(--ok)}
+  .pill.warn{background:#fff3e0;color:var(--warn)}
+  .pill.no{background:#ffebee;color:var(--off)}
+  .bottom{display:flex;justify-content:space-around;padding:8px;border-top:1px solid var(--line);font-size:.62rem;color:var(--muted);background:#fafafa}
+  .bottom .on{color:var(--accent);font-weight:700}
+  .cap{font-size:.74rem;color:var(--muted);margin-top:8px}
+  table{width:100%;border-collapse:collapse;font-size:.82rem;background:#fff}
+  th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:#eee}
+  code{font-size:.85em}
+  footer{padding:24px;color:var(--muted);font-size:.84rem}
+  .flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.76rem;margin:10px 0}
+  .flow span{background:#fff;border:1px solid var(--line);padding:5px 8px;border-radius:4px}
+  .flow .arrow{border:none;background:transparent;padding:0;color:var(--muted)}
+  .select{border:1px solid var(--accent);padding:8px;border-radius:4px;font-size:.74rem;background:#f7fbff;margin:6px 0}
+  .field{border:1px solid var(--line);padding:6px 8px;border-radius:4px;font-size:.7rem;margin:4px 0;display:flex;justify-content:space-between;align-items:center;background:#fff}
+  @media print {
+    body{background:#fff}
+    section{page-break-after:always}
+    section:last-of-type{page-break-after:auto}
+    .phone{box-shadow:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="doc">
+  <h1>MediaManager — Proposta Setup Catalogo BT v4</h1>
+  <p>Fonti: <code>Guida_Setup_Catalogo_MediaManager_4_fasi_REV5.pdf</code> · osservazioni Renato 17/11 · template v3 · Ottimizzazione (Import/CIFS) · <strong>nessun codice in questa fase</strong>.</p>
+  <p class="muted">Documento di proposta + template da adottare. Ogni modifica è motivata. Sviluppo solo dopo convalida.</p>
+</header>
+
+<div class="banner warn">
+  Stato: <strong>bozza per convalida</strong>. Non aggiorna ancora l’APK. Gap riconosciuto: in 0.16.73 la stampa apre un share sheet di testo; le conferme «Confermo di aver…» sono autodichiarazioni; Import/CIFS non allineati a Ottimizzazione.
+</div>
+
+<section>
+  <h2>0. Analisi critica delle osservazioni</h2>
+  <table>
+    <tr><th>#</th><th>Osservazione</th><th>Giudizio</th><th>Motivazione oggettiva</th></tr>
+    <tr>
+      <td>1</td>
+      <td>Icona/testo stampa troppo piccoli</td>
+      <td><span class="pill ok">ACCOLTA</span></td>
+      <td>Su schermo telefono un target &lt; ~44&nbsp;dp è poco usabile; oggi l’icona è un carattere emoji in TextButton secondario, non un controllo di lettura primaria.</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Icona accanto a «qui»</td>
+      <td><span class="pill ok">ACCOLTA</span></td>
+      <td>Allinea al testo già validato in Ultime modifiche / v3 («…stampata qui» + icona). Separare stampa in bottone a parte spezza la frase e riduce discoverability.</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>Link deve aprire PDF stampabile, non share sheet</td>
+      <td><span class="pill ok">ACCOLTA</span></td>
+      <td>Share di testo non è «stampa guida»: non conserva flowchart, layout a fasi né pagina stampabile. Serve <code>ACTION_VIEW</code> / visualizzatore PDF (asset in-app o file generato) + stampa di sistema. Sempre disponibile dalla guida, non solo a fine procedura.</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>Ristrutturare guida su REV5 + flowchart su ogni fase</td>
+      <td><span class="pill ok">ACCOLTA</span></td>
+      <td>REV5 è l’unica guida operativa completa (passi 1–30, Win10/11, ricerca file, date/ora). Il flowchart a 4 riquadri riduce disorientamento («dove sono»). Coerente con «ogni fase autonoma».</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>Eliminare messaggi «Confermo di aver…» se non c’è checkpoint reale</td>
+      <td><span class="pill ok">ACCOLTA</span></td>
+      <td>Le autodichiarazioni non aumentano affidabilità e contraddicono Ottimizzazione («checkpoint con feedback positivo»). Se l’app non può verificare, chiedere una dichiarazione falsa è peggio del silenzio operativo.</td>
+    </tr>
+    <tr>
+      <td>5b</td>
+      <td>Se c’è controllo: OK / KO letterali + ripartenza fase</td>
+      <td><span class="pill ok">ACCOLTA</span></td>
+      <td>Messaggi fissi e prevedibili. KO deve riposizionare l’utente all’inizio della stessa fase (stato + accordion), non avanzare né chiudere il wizard.</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>Fasi asincrone: OK per andare avanti</td>
+      <td><span class="pill ok">ACCOLTA</span></td>
+      <td>BT/USB/script avvengono fuori dall’app. Il modello corretto è: istruzioni → azione umana → Continua/OK, senza checklist finta. REV5: «attendere completamento prima di proseguire».</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>Videate CIFS non aggiornate / proposte non recepite</td>
+      <td><span class="pill ok">ACCOLTA</span></td>
+      <td>Gap reale vs Ottimizzazione: checklist ridondante, riepilogo dati in Import, Piano B in pagina CIFS, testi lunghi. Template v3 §7 li aveva già previsti ma 0.16.73 non li ha chiusi.</td>
+    </tr>
+  </table>
+
+  <h3>Punti di attenzione (senso critico)</h3>
+  <div class="incongr">
+    <strong>REV5 vs 3 rami Ultime modifiche.</strong>
+    REV5 incorpora il pairing <em>dentro</em> la Fase 1 (sezione A opzionale) e non usa le 3 modalità come pagine separate.
+    <br/><strong>Decisione proposta:</strong> mantenere la combo modalità (già associati / pairing / USB) — già convalidata — ma allineare i <em>testi di fase</em> a REV5; nel ramo «già associati» omettere la sezione A; nel ramo USB sostituire BT con USB mantenendo lo stesso flowchart (etichette corte invariate).
+  </div>
+  <div class="incongr">
+    <strong>Checkpoint reali possibili oggi.</strong>
+    L’app può verificare in modo robusto soprattutto: (a) export/share avviato; (b) import <code>DATI_CIFS.json</code> completo; (c) esito Attiva collegamento / verifica sede.
+    Non può sapere se CONFIGURA sul PC è andato a buon fine finché non arriva un file valido.
+    Quindi Fase 2 resta prevalentemente asincrona (Continua → «Puoi passare…»), mentre Fase 3/4 usano OK/KO reali.
+  </div>
+  <div class="reject">
+    <strong>Non adottare:</strong> tornare alle autodichiarazioni lunghe «Confermo di aver inviato…» (v3) — contraddicono l’osservazione 5 e non migliorano il controllo.
+  </div>
+</section>
+
+<section>
+  <h2>1. Decisioni TO-BE (sintesi)</h2>
+  <div class="flow">
+    <span>Avvio</span><span class="arrow">→</span>
+    <span>Verifica</span><span class="arrow">→</span>
+    <span>Modalità</span><span class="arrow">→</span>
+    <span>Guida 4 fasi (flowchart + REV5 + PDF)</span><span class="arrow">→</span>
+    <span>Import DATI_CIFS</span><span class="arrow">→</span>
+    <span>Copia CIFS</span>
+  </div>
+  <div class="decision">
+    <ol style="margin:0 0 0 18px;padding:0">
+      <li>Stampa = icona accanto a «qui», dimensione ≥ testo descrizione; tap apre <strong>PDF guida</strong> (visualizza + stampa sistema), non share di testo.</li>
+      <li>PDF sempre disponibile mentre si è nella guida (tutte le fasi).</li>
+      <li>Flowchart REV5 in testa a ogni fase aperta (fase corrente evidenziata).</li>
+      <li>Niente messaggi «Confermo di aver…». Default dopo Continua: <em>«Puoi passare alla fase successiva»</em>.</li>
+      <li>Se checkpoint reale: OK = «Fase terminata correttamente: puoi passare a quella successiva»; KO = «Qualcosa è andata storta. Riprova» + riparti dall’inizio fase.</li>
+      <li>Import + CIFS = Ottimizzazione (niente checklist Import, niente Piano B in pagina).</li>
+    </ol>
+  </div>
+
+  <h3>Mappa checkpoint per fase</h3>
+  <table>
+    <tr><th>Fase</th><th>Tipo</th><th>Trigger Continua / controllo</th><th>Messaggio</th></tr>
+    <tr>
+      <td>1 Invia Script</td>
+      <td>Misto</td>
+      <td>Dopo export (+ share BT o copia USB). Se export fallisce → KO</td>
+      <td>OK reale se export OK; altrimenti solo «Puoi passare…» dopo Continua utente (azione PC non verificabile)</td>
+    </tr>
+    <tr>
+      <td>2 Esegui Script</td>
+      <td>Asincrona</td>
+      <td>Utente tocca Continua dopo «Tutto pronto» sul PC</td>
+      <td>«Puoi passare alla fase successiva» (nessuna autodichiarazione)</td>
+    </tr>
+    <tr>
+      <td>3 Ricevi Dati CIFS</td>
+      <td>Checkpoint reale</td>
+      <td>Import <code>DATI_CIFS.json</code> <code>isComplete</code></td>
+      <td>OK / KO letterali; KO → resta a inizio Fase 3</td>
+    </tr>
+    <tr>
+      <td>4 Configura CIFS</td>
+      <td>Checkpoint reale</td>
+      <td>Attiva collegamento + verifica sede</td>
+      <td>OK / KO letterali; KO → inizio Fase 4</td>
+    </tr>
+  </table>
+</section>
+
+<section>
+  <h2>2. Flowchart REV5 (da recuperare in UI)</h2>
+  <p class="muted">Strisce grafiche estratte da REV5 — da mostrare in ogni fase (qui anteprima). In app: versione compatta a 4 riquadri con fase corrente evidenziata.</p>
+  <div class="flowstrip"><img src="/opt/cursor/artifacts/pdf_extract/guida_rev5_crops/flow_p01.png" alt="Flowchart panoramica REV5"/></div>
+  <div class="grid">
+    <div>
+      <p class="cap">Fase 1 evidenziata</p>
+      <div class="flowstrip"><img src="/opt/cursor/artifacts/pdf_extract/guida_rev5_crops/flow_p02.png" alt="Flow fase 1"/></div>
+    </div>
+    <div>
+      <p class="cap">Fase 2 evidenziata</p>
+      <div class="flowstrip"><img src="/opt/cursor/artifacts/pdf_extract/guida_rev5_crops/flow_p03.png" alt="Flow fase 2"/></div>
+    </div>
+    <div>
+      <p class="cap">Fase 3 evidenziata</p>
+      <div class="flowstrip"><img src="/opt/cursor/artifacts/pdf_extract/guida_rev5_crops/flow_p04.png" alt="Flow fase 3"/></div>
+    </div>
+    <div>
+      <p class="cap">Fase 4 evidenziata</p>
+      <div class="flowstrip"><img src="/opt/cursor/artifacts/pdf_extract/guida_rev5_crops/flow_p05.png" alt="Flow fase 4"/></div>
+    </div>
+  </div>
+  <div class="note">
+    Etichette corte flowchart (invarianti su BT/USB): <strong>1. Invia Script</strong> · <strong>2. Esegui Script</strong> · <strong>3. Ricevi Dati CIFS</strong> · <strong>4. Configura CIFS</strong>.
+    I titoli lunghi restano nell’accordion (come oggi / REV5).
+  </div>
+</section>
+
+<section>
+  <h2>3. Template — Guida ramo (stampa + flowchart + esito)</h2>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span class="meta">Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Collegamento BT tra Telefono e PC non ancora associati</p>
+          <p class="desc">
+            Attiva la procedura semiautomatica per l’interscambio dei file di configurazione tra il tuo telefono e il PC.
+            Segui la guida cliccando sulla freccia accanto al titolo della fase per espandere il contenuto.
+            L’intera guida può essere stampata qui
+            <span class="print-inline" title="Apre PDF guida"><span class="ico">🖨</span></span>
+          </p>
+
+          <div class="stepper">
+            <div class="step on"><span class="ic">📱→🖥</span>1. Invia Script</div>
+            <div class="step"><span class="ic">🖥</span>2. Esegui Script</div>
+            <div class="step"><span class="ic">🖥→📱</span>3. Ricevi Dati</div>
+            <div class="step"><span class="ic">📱</span>4. Configura</div>
+          </div>
+
+          <div class="acc open">
+            <div class="hd"><span>Invio BT (dal Telefono al PC) dei file di configurazione</span><span class="chev">▾</span></div>
+            <div class="bd">
+              <strong>Obiettivo:</strong> trasferire sul PC il set di file predisposto da MediaManager.<br/><br/>
+              <strong>A. Associa (solo se non già associati)</strong> — pairing dal Telefono; codice uguale su entrambi.<br/>
+              <strong>B. Invia</strong> — PC: Ricevi file; app: invia i 3 file; conferma nome PC.<br/>
+              <strong>C. Verifica</strong> — i 3 file sul Desktop (overwrite). Cerca CONFIGURA.CMD se non li trovi.
+            </div>
+          </div>
+          <div class="actions"><span class="btn sm primary">Continua</span></div>
+          <div class="outcome next">Puoi passare alla fase successiva</div>
+
+          <div class="acc"><div class="hd"><span>Lancio (dal desktop del PC) dello script ricevuto</span><span class="chev">▸</span></div></div>
+          <div class="acc"><div class="hd"><span>Invio BT (dal PC al Telefono) dei file generati dallo script</span><span class="chev">▸</span></div></div>
+          <div class="acc"><div class="hd"><span>Configurazione CIFS e attivazione del Catalogo</span><span class="chev">▸</span></div></div>
+
+          <div class="foot">
+            <div class="actions">
+              <span class="btn wide ghost">Annulla</span>
+              <span class="btn wide dim">CONFERMA</span>
+            </div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Stampa inline su «qui» · flowchart · Continua asincrono · niente «Confermo di aver…»</p>
+    </div>
+
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span class="meta">Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Collegamento BT tra Telefono e PC già associati</p>
+          <p class="desc">… stampata qui <span class="print-inline"><span class="ico">🖨</span></span></p>
+          <div class="stepper">
+            <div class="step"><span class="ic">📱→🖥</span>1. Invia</div>
+            <div class="step"><span class="ic">🖥</span>2. Esegui</div>
+            <div class="step on"><span class="ic">🖥→📱</span>3. Ricevi</div>
+            <div class="step"><span class="ic">📱</span>4. Configura</div>
+          </div>
+          <div class="acc open">
+            <div class="hd"><span>Invio BT (dal PC al Telefono) dei file generati dallo script</span><span class="chev">▾</span></div>
+            <div class="bd">
+              Solo <code>DATI_CIFS.json</code> (data/ora recenti). Invia da PC → Telefono. Torna all’app e importa.
+              Ignora <code>no_pw.json</code>.
+            </div>
+          </div>
+          <div class="actions"><span class="btn sm primary">Importa DATI_CIFS.json</span></div>
+          <div class="outcome ok">Fase terminata correttamente: puoi passare a quella successiva</div>
+          <div class="foot">
+            <div class="actions">
+              <span class="btn wide ghost">Annulla</span>
+              <span class="btn wide primary">CONFERMA</span>
+            </div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Esempio checkpoint reale OK (import riuscito).</p>
+    </div>
+
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span class="meta">Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Collegamento BT tra Telefono e PC già associati</p>
+          <p class="desc">… stampata qui <span class="print-inline"><span class="ico">🖨</span></span></p>
+          <div class="stepper">
+            <div class="step"><span class="ic">📱→🖥</span>1. Invia</div>
+            <div class="step"><span class="ic">🖥</span>2. Esegui</div>
+            <div class="step on"><span class="ic">🖥→📱</span>3. Ricevi</div>
+            <div class="step"><span class="ic">📱</span>4. Configura</div>
+          </div>
+          <div class="acc open">
+            <div class="hd"><span>Invio BT (dal PC al Telefono) dei file generati dallo script</span><span class="chev">▾</span></div>
+            <div class="bd">Import fallito: file errato / <code>no_pw.json</code> / bundle incompleto.</div>
+          </div>
+          <div class="outcome ko">Qualcosa è andata storta. Riprova</div>
+          <div class="actions"><span class="btn sm primary">Riprova import</span></div>
+          <p class="muted" style="font-size:.65rem;margin:6px 0 0">Controllo restituito all’inizio della Fase 3 (accordion aperta, nessun avanzamento).</p>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Esempio checkpoint KO.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>4. Contenuti fase (da REV5 — sintesi operativa)</h2>
+  <table>
+    <tr><th>Fase</th><th>Titolo accordion</th><th>Contenuto (fonte REV5)</th></tr>
+    <tr>
+      <td>1</td>
+      <td>Invio BT/USB (Telefono → PC)</td>
+      <td>A pairing se serve (Win10/11 + Android) · B PC in Ricevi file + invio da app · C Desktop con 3 file / CONFIGURA.CMD · non avviare se set incompleto o sessione dubbia</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Lancio script</td>
+      <td>Doppio clic CONFIGURA.CMD · set completo · attendere fine · DATI_CIFS.json sul Desktop · stop se errore / file vecchio</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>Invio BT/USB (PC → Telefono)</td>
+      <td>Solo DATI_CIFS.json recente · Invia a Bluetooth / USB Download · accettare sul Telefono · cercare in File/Download se serve</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>Configurazione CIFS</td>
+      <td>Import in app · verifica dati · Copia in CIFS · Attiva collegamento · controllo finale REV5</td>
+    </tr>
+  </table>
+  <div class="note">
+    Terminologia UI resta «Telefono» (Ultime modifiche). In prerequisiti: Telefono = anche Tablet; BT non già impegnato.
+    PDF stampabile = REV5 (o derivato) con flowchart; asset unico per ramo BT, variante USB se i passi differiscono in modo sostanziale.
+  </div>
+</section>
+
+<section>
+  <h2>5. Template — Import + CIFS (gap Ottimizzazione da chiudere)</h2>
+  <div class="grid">
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span class="meta">Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Importa i dati da copiare su CIFS</p>
+          <p class="desc">Seleziona ed importa il file «DATI_CIFS.json» ricevuto dal PC (Download / Bluetooth / file ricevuti). Usa il selettore file.</p>
+          <p class="desc"><strong>File atteso:</strong> DATI_CIFS.json</p>
+          <p class="desc" style="color:var(--ok)"><strong>Import riuscito</strong></p>
+          <div class="actions"><span class="btn wide primary">Importa dati CIFS</span></div>
+          <p class="desc" style="margin-top:12px">Quando pronto clicca su [OK] per copiare i dati su CIFS</p>
+          <div class="foot">
+            <div class="actions">
+              <span class="btn wide ghost">Indietro</span>
+              <span class="btn wide primary">OK</span>
+            </div>
+          </div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Niente checklist · niente riepilogo campi · niente Piano B.</p>
+    </div>
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="app">MediaManager</span><span class="meta">Setup</span></div>
+        <div class="body">
+          <p class="title">Setup Catalogo personale</p>
+          <p class="subtitle">Copia i dati su CIFS e attivazione collegamento</p>
+          <p class="desc">Trascrivi uno alla volta con Copia. Usa il multitasking del Telefono per passare a CIFS Documents Provider. Se manca, installalo da qui.</p>
+          <div class="actions"><span class="btn wide primary">Apri CIFS Documents Provider</span></div>
+          <div class="field"><span>Host</span><span class="btn sm">Copia</span></div>
+          <div class="field"><span>User</span><span class="btn sm">Copia</span></div>
+          <div class="field"><span>Password</span><span class="btn sm">Copia</span></div>
+          <div class="field"><span>Folder / Name = MyMedia</span><span class="btn sm">Copia</span></div>
+          <div class="foot">
+            <div class="actions"><span class="btn wide primary">Attiva collegamento</span></div>
+          </div>
+          <div class="outcome ok" style="margin-top:8px">Fase terminata correttamente: puoi passare a quella successiva</div>
+        </div>
+        <div class="bottom"><span>Home</span><span class="on">Organizza</span><span>Componi</span><span>Utility</span><span>⚙</span></div>
+      </div>
+      <p class="cap">Solo campi dati + Copia · niente Piano B / hotspot in pagina.</p>
+    </div>
+  </div>
+  <div class="decision">
+    Motivazione: Ottimizzazione p.4–5 + REV5 FASE 4. Ridurre rumore = meno errori di trascrizione e meno percorsi paralleli confusi (Difficoltà_BT: file omonimi / Piano B).
+  </div>
+</section>
+
+<section>
+  <h2>6. Criteri di accettazione (prima del codice)</h2>
+  <ol>
+    <li>Icona stampa inline dopo «qui», leggibile (≥ corpo descrizione); tap apre PDF guida (viewer), non share testo.</li>
+    <li>PDF/visualizzazione stampa disponibile in tutta la guida (qualsiasi fase).</li>
+    <li>Flowchart a 4 riquadri (stile REV5) visibile su ciascuna fase aperta, con fase corrente evidenziata.</li>
+    <li>Testi operativi allineati a REV5 (pairing opzionale in Fase 1; Desktop; DATI_CIFS.json; ricerca file).</li>
+    <li>Assenti i messaggi «Confermo di aver…». Presente «Puoi passare alla fase successiva» dopo Continua asincrono.</li>
+    <li>Dove c’è checkpoint: solo i due messaggi OK/KO letterali; su KO si resta all’inizio della stessa fase.</li>
+    <li>Import + CIFS come §5 (Ottimizzazione), senza Piano B in pagina.</li>
+    <li>Topbar MediaManager | Setup; terminologia «Telefono»; 3 modalità senza A/B/C.</li>
+  </ol>
+  <div class="banner ok">
+    Proposta v4 pronta per convalida. <strong>Nessuno sviluppo</strong> finché non autorizzi esplicitamente l’implementazione.
+  </div>
+</section>
+
+<footer>
+  MediaManager · Proposta Setup BT v4 · REV5 + osservazioni 17/11/2026 · nessun codice applicato.
+</footer>
+</body>
+</html>

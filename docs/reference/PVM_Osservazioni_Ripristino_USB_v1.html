@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<title>Osservazioni su ripristino USB — incongruenze template</title>
+<style>
+  body{font-family:"Segoe UI",Calibri,sans-serif;max-width:920px;margin:24px auto;padding:0 18px;line-height:1.4;color:#1a1a1a;background:#f7f5f0}
+  h1{font-size:1.2rem} h2{font-size:1rem;border-bottom:2px solid #111;padding-bottom:4px}
+  .bad{background:#ffebee;border-left:4px solid #c62828;padding:10px 12px;margin:10px 0;font-size:.88rem}
+  .warn{background:#fff8e1;border-left:4px solid #f9a825;padding:10px 12px;margin:10px 0;font-size:.88rem}
+  .ok{background:#e8f5e9;border-left:4px solid #2e7d32;padding:10px 12px;margin:10px 0;font-size:.88rem}
+  table{width:100%;border-collapse:collapse;background:#fff;font-size:.82rem}
+  th,td{border:1px solid #ccc;padding:6px 8px;vertical-align:top;text-align:left}
+  th{background:#eee}
+  .banner{background:#ffebee;border:1px solid #ef9a9a;padding:10px;margin:12px 0}
+</style>
+</head>
+<body>
+<h1>Osservazioni critiche — ripristino USB.pdf</h1>
+<p style="color:#555;font-size:.86rem">21/11/2026 · esame pre-sviluppo · <strong>nessun codice</strong> finché non chiudiamo i punti sotto</p>
+
+<div class="banner"><strong>Esito:</strong> ci sono incongruenze bloccanti. Non passo allo sviluppo. Guida integrale aggiornata sui 6 passi di pag. 11 (versione corretta proposta).</div>
+
+<h2>1. Numerazione fasi — critica</h2>
+<div class="bad">
+  <strong>Pag. 11 (canonica):</strong> 1 Creazione script · 2 Invio script al PC · 3 Esecuzione script · 4 Invio dati CIFS al TEL · 5 Import dati CIFS · 6 Configurazione CIFS.<br/><br/>
+  <strong>Pag. 6:</strong> mostra correttamente Fase 2 (invio 3 file) + Fase 3 (esecuzione CONFIGURA).<br/>
+  <strong>Pag. 7:</strong> ripete <em>lo stesso contenuto</em> di pag. 6 ma lo numera Fase 4 / Fase 5 — è un copia-incolla errato.
+  La vera Fase 4 dovrebbe essere il ritorno di <code>DATI_CIFS.json</code> al Telefono; la vera Fase 5 l’import in app.
+</div>
+<div class="bad">
+  Annotazioni laterali «Fasi 2 e 3 – MODIFICA» compaiono anche su pag. 7–9 (Fase 6), fuori posto.
+</div>
+<div class="bad">
+  Pag. 8 e 9 sono entrambe intitolate «Fase 6» (apri CIFS vs copia campi). Sono due schermate della stessa fase o Fase 6 + 7? Da chiarire.
+</div>
+
+<h2>2. Pagine mancanti</h2>
+<div class="warn">
+  Non risultano mock dedicati per:<br/>
+  · <strong>Fase 4</strong> — copia <code>DATI_CIFS.json</code> Desktop → Download Telefono<br/>
+  · <strong>Fase 5</strong> — import / rilevamento JSON in MediaManager<br/>
+  Senza questi template lo sviluppo indovinerebbe testi e CTA.
+</div>
+
+<h2>3. Contenuti / testi</h2>
+<table>
+  <tr><th>Punto</th><th>Problema</th></tr>
+  <tr><td>Pronto vs Fatto</td><td>Fase 1 = «Pronto»; fasi successive = «Fatto»; note laterali dicono ancora «dopo Pronto» anche dove il bottone è Fatto. Allineare la regola: Fase 1 Pronto, altre Fatto.</td></tr>
+  <tr><td>«Omettere modificabili»</td><td>Pag. 8 chiede di semplificare omettendo i campi modificabili, ma mostra User/Host come «modificabile». Contradittorio.</td></tr>
+  <tr><td>CIFS pag. 1 (screenshot)</td><td>«Non attivo» spuntato con testo «Lascia deselezionato»; istruzione parla di «Attiva collegamento» mentre il bottone è «Attiva Catalogo»; «Salva» sotto Attiva Catalogo confonde l’ordine.</td></tr>
+  <tr><td>Strip fasi pag. 5</td><td>Nel mock la fase 6 risulta etichettata in modo ambiguo (TEL vs PC). Pag. 11 chiarisce: Configurazione CIFS <em>sul TEL</em>.</td></tr>
+  <tr><td>Due fasi per pagina</td><td>Proposta accettabile (pag. 5 note), ma va applicata solo a fasi consecutive coerenti (es. 2+3), non a 4+5 se 4/5 sono ancora il duplicato sbagliato.</td></tr>
+</table>
+
+<h2>4. Cosa è chiaro e condivisibile</h2>
+<div class="ok">
+  · USB only · niente BT<br/>
+  · Disponibilità: bullet semplici + OK (niente checkbox per voce)<br/>
+  · Collegamento fisico USB dedicato<br/>
+  · Una fase alla volta (o coppia 2+3); dopo conferma: nascondi bottoni → «Fase N completata»<br/>
+  · Annulla + Pronto/Fatto per fase<br/>
+  · Guida stampabile sempre disponibile (icona qui)<br/>
+  · Checkpoint locale: creazione script OK; CIFS app installata; dopo Attiva Catalogo controllo locale<br/>
+  · File: CONFIGURA.CMD, QRCoder.dll, sup.ps1 → DATI_CIFS.json (ignorare no_pw.json)
+</div>
+
+<h2>5. Cosa serve da te per sbloccare lo sviluppo</h2>
+<ol>
+  <li>Confermi che la numerazione valida è quella di <strong>pag. 11</strong> (6 fasi)?</li>
+  <li>Pag. 7 va <strong>scartata</strong> e vanno forniti (o autorizzati) i mock di Fase 4 e 5 corretti?</li>
+  <li>Fase 6 = due schermate (Apri CIFS → Copia campi) sotto lo stesso numero?</li>
+  <li>Host/User restano modificabili in UI oppure solo Copia (come «omettere modificabili»)?</li>
+</ol>
+
+<p style="font-size:.84rem;color:#555">Guida integrale aggiornata (proposta corretta): vedi artifact / docs <code>Guida_Setup_Catalogo_USB_ONLY.pdf</code>.</p>
+</body>
+</html>

@@ -1,8 +1,7 @@
 package com.renatizzi.photovideomanager.ui.hub
 
 /**
- * Contratto UIX Setup Catalogo — allineato al TO-BE pin integrazione 30/10
- * (`PVM_Proposta_Editing_UI_Template_TOBE.html` @ c1ef993).
+ * Contratto UIX Setup Catalogo — USB-only (ripristino USB2.3).
  */
 object WizardUiContract {
     /**
@@ -17,16 +16,16 @@ object WizardUiContract {
     const val STEP0_SUBTITLE_HAS_NO_NUMBER = true
 
     /**
-     * Sottotitoli filiera PC (GUIDATA 1–4 + import BT + CIFS).
-     * Indice 0 = legacy INTRO; 1–4 GUIDATA; 5 = importa bundle; 6 = Collegamento CIFS.
+     * Sottotitoli filiera PC (USB-only).
+     * Indice: 0 intro, 1 prerequisiti, 2 USB fisico, 3 guida fasi, 4 (legacy import),
+     * 5 CIFS 6/2 (copia).
      */
     val PC_STEP_SUBTITLES: List<String> = listOf(
         "Dove tenere il Catalogo",
-        "1 – Verifica della disponibilità di quanto necessario",
-        "2 – Bluetooth: associazione e invio al PC",
-        "2b – Conferma file sul Desktop",
-        "3 – Esegui CONFIGURA sul PC",
-        "4 – Importa i dati CIFS sul telefono",
-        "Collegamento CIFS",
+        "Verifica della disponibilità di quanto necessario",
+        "Collegamento fisico USB",
+        "Guida collegamento Telefono e PC (USB)",
+        "Importa i dati da copiare su CIFS",
+        "Copia i dati su CIFS e attivazione collegamento",
     )
 }
