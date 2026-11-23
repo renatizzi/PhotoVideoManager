@@ -366,6 +366,7 @@ fun PvmApp(
                             }
                         },
                         onCancel = { navController.popBackStack() },
+                        onAnnullaProcedura = wizardVm::annullaProceduraToAvvio,
                     )
                 }
                 composable(PvmDestination.CatalogUpdate.route) {

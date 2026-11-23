@@ -204,6 +204,9 @@
     <string name="hub_pc_link_mode_prompt">Seleziona l\'opzione:</string>
     <string name="hub_pc_guide_confirm">CONFERMA</string>
     <string name="hub_pc_guide_cancel">Annulla</string>
+    <string name="hub_pc_annulla_confirm_title">Annullare il setup?</string>
+    <string name="hub_pc_annulla_confirm_body">I progressi e i checkpoint di questa procedura saranno azzerati. Tornerai all’Avvio. I file già copiati su Download o Desktop restano sul dispositivo.</string>
+    <string name="hub_pc_annulla_keep_going">Continua setup</string>
     <string name="hub_pc_guide_checkpoint_ok">Fase terminata correttamente</string>
     <string name="hub_pc_guide_print">Stampa guida</string>
     <string name="hub_pc_guide_waiting_pc">In attesa dei dati dal PC</string>

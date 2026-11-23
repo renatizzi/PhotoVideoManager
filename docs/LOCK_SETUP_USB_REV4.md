@@ -14,9 +14,11 @@
 | 3 | Una fase per pagina | `pageGroupFor` = indice..indice; bottoni Annulla/CTA sempre visibili (CTA disabilitata se checkpoint OK) | Nascondere bottoni dopo Fatto sulla stessa card |
 | 4 | Titolo fase = sottotitolo | Bold/corsivo/blu; niente duplicazione titolo in body | Nuovo chrome TopBar |
 | 5 | Testi REV4 | Contenuti da specifica (USB fisico notifiche; titoli Fase 1/6/7; sequenza Fase 7) | Riscrittura guida PDF esterna in questo lock |
+| 6 | Annulla = B ovunque | Nessun Indietro; Annulla (con conferma) azzera checkpoint/bozza e torna ad Avvio. Tracciamento solo per monitoraggio/checkpoint in avanti | Indietro fase-per-fase; ripristino file su Download/Desktop |
 
 ## Note operative
 
 - Specifica: upload `Template_Setup_Catalogo_ONLY_USB_specifica_Cursor_REV4.pdf`
 - Branch: `cursor/setup-usb-rev4-7fasi-b602`
 - Una unità di lavoro per commit; build + unit test prima di prova telefono.
+- API: `CatalogSeatWizardViewModel.annullaProceduraToAvvio()`

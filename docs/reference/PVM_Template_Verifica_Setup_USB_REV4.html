@@ -61,9 +61,10 @@
     <tr><td>G10</td><td>TopBar/BottomBar</td><td>Invariati rispetto all’app</td><td>☐</td></tr>
   </table>
 
-  <div class="warn">
-    <strong>Punto aperto — Annulla / Indietro (da decidere, non implementato in questo documento).</strong><br/>
-    Oggi le etichette e i comportamenti non sono uniformi (vedi §12). Scegliere una delle opzioni A/B/C prima di chiedere una modifica codice.
+  <div class="ok">
+    <strong>Decisione Annulla (Renato 23/11): opzione B ovunque.</strong>
+    Niente Indietro. Annulla (con conferma) azzera checkpoint/bozza e torna ad Avvio.
+    Tracciamento solo per monitoraggio e checkpoint in avanti. Vedi §12.
   </div>
 </section>
 
@@ -89,9 +90,9 @@
     <p class="bullet">✓ PC/Notebook Windows 10 o superiore</p>
     <p class="bullet">✓ Cavo USB che supporti il trasferimento dati</p>
     <p class="bullet">Quando pronto clicca su OK</p>
-    <div class="row"><div class="btn ghost">Indietro</div><div class="btn primary">OK</div></div>
+    <div class="row"><div class="btn ghost">Annulla</div><div class="btn primary">OK</div></div>
   </div>
-  <p class="check">☐ Tre requisiti · ☐ Messaggio OK stile descrizione · ☐ Nessuna strip · ☐ Indietro → Avvio</p>
+  <p class="check">☐ Tre requisiti · ☐ Messaggio OK stile descrizione · ☐ Nessuna strip · ☐ Annulla → conferma → Avvio (B)</p>
 </section>
 
 <section>
@@ -106,9 +107,9 @@
     <p class="bullet">✓ Sul Telefono, scorri dall’alto verso il basso per aprire il pannello delle notifiche. Apri la notifica relativa alle impostazioni USB.</p>
     <p class="bullet">✓ Seleziona «Trasferimento di file» (o «Trasferimento file/MTP») al posto di «Solo ricarica» e autorizza l’accesso ai dati, se richiesto.</p>
     <p class="bullet">Quando pronto clicca su OK</p>
-    <div class="row"><div class="btn ghost">Annulla*</div><div class="btn primary">OK</div></div>
+    <div class="row"><div class="btn ghost">Annulla</div><div class="btn primary">OK</div></div>
   </div>
-  <p class="check">☐ Testo notifiche (non «Home») · ☐ Cosa fare bold · ☐ Nessuna strip · ☐ *etichetta attuale Annulla ma azione = torna a disponibilità (vedi §12)</p>
+  <p class="check">☐ Testo notifiche (non «Home») · ☐ Cosa fare bold · ☐ Nessuna strip · ☐ Annulla → conferma → Avvio (B)</p>
 </section>
 
 <section>
@@ -119,9 +120,9 @@
     <p class="guide">L’intera guida può essere stampata qui <span class="ico">🖨</span></p>
     <p class="bullet">✓ Fase gestita dall’app dopo la tua conferma.</p>
     <p class="bullet">✓ Saranno creati nella cartella Download del Telefono i file (script) necessari per configurare la cartella del Catalogo personale.</p>
-    <div class="row"><div class="btn ghost">Annulla*</div><div class="btn primary">Pronto</div></div>
+    <div class="row"><div class="btn ghost">Annulla</div><div class="btn primary">Pronto</div></div>
   </div>
-  <p class="check">☐ Titolo fase blu al posto del sottotitolo · ☐ Solo questa fase in pagina · ☐ Pronto crea in Download · ☐ Se KO → messaggio + resta qui · ☐ *oggi Annulla → Collegamento USB</p>
+  <p class="check">☐ Titolo fase blu al posto del sottotitolo · ☐ Solo questa fase in pagina · ☐ Pronto crea in Download · ☐ Se KO → messaggio + resta qui · ☐ Annulla → conferma → Avvio (B)</p>
 </section>
 
 <section>
@@ -134,7 +135,7 @@
     <p class="bullet">✓ I file creati da inviare al PC sono tre: CONFIGURA.CMD, QRCoder.dll e sup.ps1.</p>
     <p class="bullet">✓ Sul Telefono apri File/Archivio → Memoria interna → Download. Seleziona e copia i tre file.</p>
     <p class="bullet">✓ Sul PC apri Esplora file → Questo PC → Nome del Telefono → Memoria interna → Download. Seleziona i tre file e copiali sul Desktop del PC.</p>
-    <div class="row"><div class="btn ghost">Annulla*</div><div class="btn primary">Fatto</div></div>
+    <div class="row"><div class="btn ghost">Annulla</div><div class="btn primary">Fatto</div></div>
   </div>
   <p class="check">☐ Pagina dedicata (non con Fase 3) · ☐ Solo trasferimento, niente esecuzione script · ☐ Fatto → Fase 3</p>
 </section>
@@ -149,7 +150,7 @@
     <p class="bullet">✓ Sul PC apri Esplora file → Questo PC → Desktop. Seleziona CONFIGURA.CMD e avvialo con doppio clic.</p>
     <p class="bullet">✓ Segui le istruzioni visualizzate e attendi il messaggio «Tutto pronto», che indica la conclusione dello script.</p>
     <p class="bullet">✓ Lo script crea automaticamente i file no_pw.json e DATI_CIFS.json. Solo DATI_CIFS.json sarà trasferito al Telefono per la configurazione CIFS.</p>
-    <div class="row"><div class="btn ghost">Annulla*</div><div class="btn primary">Fatto</div></div>
+    <div class="row"><div class="btn ghost">Annulla</div><div class="btn primary">Fatto</div></div>
   </div>
   <p class="check">☐ Pagina dedicata · ☐ Nessuna istruzione di copia Fase 2 · ☐ Fatto → Fase 4</p>
 </section>
@@ -164,7 +165,7 @@
     <p class="bullet">✓ Lo script ha creato automaticamente il file DATI_CIFS.json.</p>
     <p class="bullet">✓ Sul PC apri Esplora file → Desktop e individua DATI_CIFS.json.</p>
     <p class="bullet">✓ Collega il Telefono al PC con il cavo USB. Apri la memoria interna del Telefono → Download e copia qui DATI_CIFS.json.</p>
-    <div class="row"><div class="btn ghost">Annulla*</div><div class="btn primary">Fatto</div></div>
+    <div class="row"><div class="btn ghost">Annulla</div><div class="btn primary">Fatto</div></div>
   </div>
   <p class="check">☐ Solo DATI_CIFS.json · ☐ no_pw.json non trasferito · ☐ Pagina dedicata (non con Fase 5)</p>
 </section>
@@ -180,7 +181,7 @@
     <p class="bullet">✓ Premi «Importa dati CIFS» e seleziona DATI_CIFS.json tramite il selettore file.</p>
     <p class="bullet">✓ MediaManager legge e interpreta il file e prepara i dati necessari per la configurazione CIFS.</p>
     <div class="row"><div class="btn primary" style="flex:1">Importa dati CIFS</div></div>
-    <div class="row"><div class="btn ghost">Annulla*</div><div class="btn primary">Fatto</div></div>
+    <div class="row"><div class="btn ghost">Annulla</div><div class="btn primary">Fatto</div></div>
     <p class="bullet" style="color:#2e7d32;margin-top:8px">Dopo import OK: Importa disabilitato/grigio; area esito sotto; Fatto abilitato</p>
   </div>
   <p class="check">☐ Un solo Importa · ☐ Fatto gated da import OK · ☐ Messaggio KO verificabile · ☐ Pagina dedicata</p>
@@ -196,7 +197,7 @@
     <p class="bullet">✓ Installa o apri CIFS Documents Provider, necessario per accedere dal Telefono alla cartella condivisa del Catalogo creata sul PC.</p>
     <p class="bullet">✓ Al termine torna a MediaManager e conferma il completamento.</p>
     <div class="row"><div class="btn primary" style="flex:1">Installa / Apri CIFS…</div></div>
-    <div class="row"><div class="btn ghost">Annulla*</div><div class="btn primary">Fatto</div></div>
+    <div class="row"><div class="btn ghost">Annulla</div><div class="btn primary">Fatto</div></div>
   </div>
   <p class="check">☐ Titolo «Fase 6» (non 6/1) · ☐ Nessun campo Copia qui · ☐ Fatto con checkpoint app presente</p>
 </section>
@@ -215,9 +216,9 @@
     <p class="bullet">✓ Torna a MediaManager e conferma di aver salvato i dati.</p>
     <p class="bullet">✓ Premi «Attiva Catalogo».</p>
     <p class="bullet">Campi sola Copia: Name · Storage · Host · Port · Username · Password · Folder (nessun edit Host/User)</p>
-    <div class="row"><div class="btn ghost">Indietro</div><div class="btn primary">Attiva Catalogo</div></div>
+    <div class="row"><div class="btn ghost">Annulla</div><div class="btn primary">Attiva Catalogo</div></div>
   </div>
-  <p class="check">☐ Titolo «Fase 7» · ☐ Sequenza unica (niente duplicazioni) · ☐ Solo Copia · ☐ Indietro → Fase 6</p>
+  <p class="check">☐ Titolo «Fase 7» · ☐ Sequenza unica (niente duplicazioni) · ☐ Solo Copia · ☐ Annulla → conferma → Avvio (B)</p>
 </section>
 
 <section>
@@ -234,46 +235,15 @@
 </section>
 
 <section>
-  <h2>12. Annulla / Indietro — comportamento attuale e opzioni</h2>
-  <p class="muted">Stato codice 0.16.78 (prima della tua decisione). Nessuna modifica finché non scegli.</p>
+  <h2>12. Annulla — opzione B (approvata)</h2>
   <table>
-    <tr><th>Pagina</th><th>Etichetta oggi</th><th>Azione oggi</th></tr>
-    <tr><td>Avvio</td><td>Annulla</td><td>Esce dal wizard (popBackStack)</td></tr>
-    <tr><td>Verifica disponibilità</td><td>Indietro</td><td>Torna ad Avvio</td></tr>
-    <tr><td>Collegamento USB</td><td>Annulla</td><td>Torna a Verifica disponibilità (di fatto un Indietro)</td></tr>
-    <tr><td>Fasi 1–5</td><td>Annulla</td><td>Salta a Collegamento USB (non fase precedente; non riparte da zero)</td></tr>
-    <tr><td>Fase 6</td><td>Annulla</td><td>Torna a PC_GUIDE (Fase 5 se import già OK)</td></tr>
-    <tr><td>Fase 7</td><td>Indietro</td><td>Torna a Fase 6</td></tr>
+    <tr><th>Pagina</th><th>Etichetta</th><th>Azione</th></tr>
+    <tr><td>Avvio</td><td>Annulla</td><td>Esce dal wizard (chiude lo schermo setup)</td></tr>
+    <tr><td>Disponibilità → Fase 7</td><td>Annulla</td><td>Conferma → azzera checkpoint/bozza → torna ad Avvio (nome/dispositivo conservati)</td></tr>
   </table>
-
-  <h3>Opzioni proposte (scegline una)</h3>
-  <table>
-    <tr><th>Opzione</th><th>Comportamento</th><th>Pro</th><th>Contro</th></tr>
-    <tr>
-      <td><strong>A — Indietro a step precedente</strong></td>
-      <td>Su ogni pagina (tranne Avvio): etichetta «Indietro»; torna alla pagina immediatamente precedente. Su Avvio resta «Annulla» = esci.</td>
-      <td>Lineare, coerente con 7 pagine separate; recupera errori senza rifare tutto</td>
-      <td>Serve definire se i checkpoint già OK restano o si azzerano tornando indietro</td>
-    </tr>
-    <tr>
-      <td><strong>B — Annulla = riparti da capo</strong></td>
-      <td>Su fasi 1–7: «Annulla» resetta bozza/progresso e torna ad Avvio (o disponibilità). Opzionale conferma «Perdi i progressi?»</td>
-      <td>Semantica chiara di Annulla; evita stati ibridi</td>
-      <td>Più costoso per l’utente; perde lavoro già fatto (script/import)</td>
-    </tr>
-    <tr>
-      <td><strong>C — Due azioni</strong></td>
-      <td>«Indietro» (step −1) + «Annulla procedura» (esci/reset) solo dove serve (es. menu o Avvio)</td>
-      <td>Massima chiarezza</td>
-      <td>Più controlli in UI; va contro «non aggiungere controlli non richiesti» se non lo autorizzi</td>
-    </tr>
-  </table>
-
+  <p class="check">☐ Nessun Indietro nel percorso USB · ☐ Conferma dialog · ☐ Checkpoint azzerati · ☐ File Download/Desktop non cancellati dall’app</p>
   <div class="ok">
-    <strong>Raccomandazione tecnica (non vincolante):</strong> con 7 pagine separate, l’opzione <strong>A</strong> è la più naturale
-    (Indietro = pagina precedente; Annulla solo in Avvio per uscire). I checkpoint già completati possono restare
-    validi finché non si invalida il dato (es. tornare prima dell’import non cancella DATI_CIFS.json dal telefono).
-    Attendo la tua scelta esplicita A / B / C (o variante).
+    Tracciamento (<code>guidePhaseDone</code>, Pronto/Import/CIFS) resta solo per monitoraggio e checkpoint in avanti.
   </div>
 </section>
 
@@ -291,8 +261,8 @@
 </section>
 
 <footer>
-  MediaManager — PVM_Template_Verifica_Setup_USB_REV4 · per verifica tablet · non modifica codice ·
-  allineato a specifica REV4 e codice 0.16.78-preview
+  MediaManager — PVM_Template_Verifica_Setup_USB_REV4 · verifica tablet ·
+  specifica REV4 + Annulla B · codice 0.16.79-preview
 </footer>
 </body>
 </html>

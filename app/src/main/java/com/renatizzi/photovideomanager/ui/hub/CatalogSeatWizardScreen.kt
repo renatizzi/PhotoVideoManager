@@ -28,6 +28,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -124,12 +125,16 @@ fun CatalogSeatWizardScreen(
     onDone: () -> Unit,
     onGoToAcquire: () -> Unit,
     onCancel: () -> Unit,
+    /** Opzione B: azzera checkpoint e torna ad Avvio (non Indietro). */
+    onAnnullaProcedura: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     check(WizardUiContract.DEVICE_SELECTION_USES_DROPDOWN) {
         "Passo 0 deve usare un menu a tendina (WizardUiContract)"
     }
     val context = LocalContext.current
+    var showAnnullaConfirm by remember { mutableStateOf(false) }
+    val requestAnnullaProcedura: () -> Unit = { showAnnullaConfirm = true }
     val openTree = rememberLauncherForActivityResult(
         contract = OpenDocumentTreeAdvanced(),
     ) { uri: Uri? ->
@@ -156,6 +161,29 @@ fun CatalogSeatWizardScreen(
             }
             onShareScriptsHandled()
         }
+    }
+
+    if (showAnnullaConfirm) {
+        AlertDialog(
+            onDismissRequest = { showAnnullaConfirm = false },
+            title = { Text(stringResource(R.string.hub_pc_annulla_confirm_title)) },
+            text = { Text(stringResource(R.string.hub_pc_annulla_confirm_body)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showAnnullaConfirm = false
+                        onAnnullaProcedura()
+                    },
+                ) {
+                    Text(stringResource(R.string.hub_pc_guide_cancel))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAnnullaConfirm = false }) {
+                    Text(stringResource(R.string.hub_pc_annulla_keep_going))
+                }
+            },
+        )
     }
 
     Column(
@@ -256,12 +284,12 @@ fun CatalogSeatWizardScreen(
             WizardStep.W2_ROUTINE_PARAMS,
             -> AvailabilityChecklistStep(
                 onOk = onConfirmAvailability,
-                onBack = onBackS0,
+                onAnnulla = requestAnnullaProcedura,
                 busy = state.busy,
             )
             WizardStep.PC_LINK_MODE -> UsbConnectStep(
                 onOk = onConfirmPcLinkMode,
-                onBack = { onGoStep(WizardStep.PC_AVAILABILITY) },
+                onAnnulla = requestAnnullaProcedura,
                 busy = state.busy,
             )
             WizardStep.PC_GUIDE,
@@ -292,7 +320,7 @@ fun CatalogSeatWizardScreen(
                         )
                     }
                 },
-                onCancel = { onGoStep(WizardStep.PC_LINK_MODE) },
+                onCancel = requestAnnullaProcedura,
             )
             // Legacy BT download: reindirizza alla guida USB (Fase 5) / 6.1.
             WizardStep.PC_BT_DOWNLOAD_BUNDLE -> {
@@ -314,7 +342,7 @@ fun CatalogSeatWizardScreen(
                     onRefreshCifs()
                 },
                 onFatto = onConfirmCifsInstall,
-                onAnnulla = { onGoStep(WizardStep.PC_GUIDE) },
+                onAnnulla = requestAnnullaProcedura,
             )
             WizardStep.W2_CIFS,
             WizardStep.W2_PICK,
@@ -349,7 +377,7 @@ fun CatalogSeatWizardScreen(
                 },
                 onAccessNo = onAccessNo,
                 onSalva = onConfirmLocal,
-                onBack = { onGoStep(WizardStep.W2_CIFS_INSTALL) },
+                onBack = requestAnnullaProcedura,
             )
             WizardStep.W3_GUIDE -> AnalogGuideStep(
                 phases = AnalogSetupGuideContent.cloudPhases(),
@@ -701,7 +729,7 @@ private fun LocalVolumeDropdown(
 @Composable
 private fun AvailabilityChecklistStep(
     onOk: () -> Unit,
-    onBack: () -> Unit,
+    onAnnulla: () -> Unit,
     busy: Boolean,
 ) {
     Text(stringResource(R.string.hub_pc1_intro))
@@ -728,8 +756,8 @@ private fun AvailabilityChecklistStep(
         style = MaterialTheme.typography.bodyMedium,
     )
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedButton(onClick = onBack, enabled = !busy, modifier = Modifier.weight(1f)) {
-            Text(stringResource(R.string.hub_indietro))
+        OutlinedButton(onClick = onAnnulla, enabled = !busy, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.hub_pc_guide_cancel))
         }
         Button(onClick = onOk, enabled = !busy, modifier = Modifier.weight(1f)) {
             Text(stringResource(R.string.hub_checklist_ok))
@@ -852,7 +880,7 @@ private fun AnalogGuideStep(
 @Composable
 private fun UsbConnectStep(
     onOk: () -> Unit,
-    onBack: () -> Unit,
+    onAnnulla: () -> Unit,
     busy: Boolean,
 ) {
     // Titolo fase già nel sottotitolo chrome (REV4).
@@ -873,7 +901,7 @@ private fun UsbConnectStep(
         style = MaterialTheme.typography.bodyMedium,
     )
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedButton(onClick = onBack, enabled = !busy, modifier = Modifier.weight(1f)) {
+        OutlinedButton(onClick = onAnnulla, enabled = !busy, modifier = Modifier.weight(1f)) {
             Text(stringResource(R.string.hub_pc_guide_cancel))
         }
         Button(onClick = onOk, enabled = !busy, modifier = Modifier.weight(1f)) {
@@ -1493,7 +1521,7 @@ private fun CifsCardStep(
             enabled = !state.busy,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text(stringResource(R.string.hub_indietro))
+            Text(stringResource(R.string.hub_pc_guide_cancel))
         }
     }
     Column(
@@ -1728,7 +1756,7 @@ private fun CifsCardStep(
     }
 
     OutlinedButton(onClick = onBack, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) {
-        Text(stringResource(R.string.hub_indietro))
+        Text(stringResource(R.string.hub_pc_guide_cancel))
     }
 }
 

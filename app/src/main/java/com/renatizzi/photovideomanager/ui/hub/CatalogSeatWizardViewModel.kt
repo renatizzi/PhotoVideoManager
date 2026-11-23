@@ -372,6 +372,66 @@ class CatalogSeatWizardViewModel(
         draftStore.clear()
         loadEntryState()
         _state.update { it.copy(canResumeDraft = false, errorMessage = null) }
+        resetProcedureTracking(keepIdentity = true)
+    }
+
+    /**
+     * Annulla procedura (opzione B): azzera checkpoint/tracciamento e torna ad Avvio.
+     * Non naviga a ritroso tra le fasi. I file già su Download/Desktop restano sul filesystem.
+     */
+    fun annullaProceduraToAvvio() {
+        stopBackgroundLanListen()
+        stopBundleWatch()
+        draftStore.clear()
+        resetProcedureTracking(keepIdentity = true)
+        _state.update {
+            it.copy(
+                step = WizardStep.S0_START,
+                canResumeDraft = false,
+                resumeStepLabel = "",
+                errorMessage = null,
+                statusMessage = null,
+                completedSeat = null,
+                busy = false,
+            )
+        }
+    }
+
+    /** Checkpoint e stato USB: solo monitoraggio/avanzamento, non Indietro. */
+    private fun resetProcedureTracking(keepIdentity: Boolean) {
+        val identity = _state.value
+        _state.update {
+            it.copy(
+                guidePhaseDone = List(PcSetupGuideContent.PHASE_COUNT) { false },
+                scriptPrepared = false,
+                usbCopiedDeclared = false,
+                scriptRanDeclared = false,
+                downloadsSaved = false,
+                usbCopiedTo = null,
+                setupResultImported = false,
+                temporaryPassword = "",
+                pcHostIp = "",
+                cifsUserQualified = "",
+                pcComputerName = "",
+                setupToken = "",
+                expectedBundleFileName = "",
+                recoveringPcData = false,
+                pendingShareScripts = false,
+                listeningForBundle = false,
+                bundleDetected = false,
+                verification = SeatVerificationUi.NONE,
+                awaitAccessOutcome = false,
+                pendingTreeUri = null,
+                pendingLabel = "",
+                folderPath = WindowsCatalogSetupScript.DEFAULT_FOLDER,
+                shareName = WindowsCatalogSetupScript.DEFAULT_SHARE,
+                userName = WindowsCatalogSetupScript.DEFAULT_USER,
+                pcLinkMode = PcLinkMode.USB,
+                catalogName = if (keepIdentity) identity.catalogName else CatalogSeat.DEFAULT_CATALOG_NAME,
+                selectedKind = if (keepIdentity) identity.selectedKind else CatalogSeatKind.LOCAL_DEVICE,
+                deviceModel = if (keepIdentity) identity.deviceModel else suggestedDeviceModel(),
+            )
+        }
     }
 
     fun selectKind(kind: CatalogSeatKind) {
