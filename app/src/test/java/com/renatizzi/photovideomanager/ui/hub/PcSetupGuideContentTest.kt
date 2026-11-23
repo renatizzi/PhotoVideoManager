@@ -11,16 +11,17 @@ class PcSetupGuideContentTest {
         val phases = PcSetupGuideContent.usbPhases()
         assertEquals(5, phases.size)
         assertEquals(PcSetupGuideContent.PHASE_COUNT, phases.size)
-        assertEquals(6, PcSetupGuideContent.TOTAL_PHASES)
+        assertEquals(7, PcSetupGuideContent.TOTAL_PHASES)
         assertEquals("Pronto", phases[0].actionLabel)
         phases.drop(1).forEach { assertEquals("Fatto", it.actionLabel) }
     }
 
     @Test
-    fun phase1_createsScripts_noBluetooth() {
-        val body = PcSetupGuideContent.usbPhases()[0].body
-        assertTrue(body.contains("script", ignoreCase = true))
-        assertFalse(body.contains("Bluetooth", ignoreCase = true))
+    fun phase1_createsFilesInDownload_noBluetooth() {
+        val phase = PcSetupGuideContent.usbPhases()[0]
+        assertTrue(phase.title.contains("Creazione file"))
+        assertTrue(phase.body.contains("Download"))
+        assertFalse(phase.body.contains("Bluetooth", ignoreCase = true))
     }
 
     @Test
@@ -40,25 +41,24 @@ class PcSetupGuideContentTest {
     }
 
     @Test
-    fun phase5_import_notEditable() {
+    fun phase5_importViaSelector() {
         val body = PcSetupGuideContent.usbPhases()[4].body
-        assertTrue(body.contains("import", ignoreCase = true) || body.contains("Import"))
-        assertTrue(body.contains("non sono modificabili") || body.contains("niente digitazione"))
+        assertTrue(body.contains("Importa", ignoreCase = true) || body.contains("import"))
+        assertTrue(body.contains("DATI_CIFS.json"))
+        assertTrue(body.contains("selettore") || body.contains("Download"))
     }
 
     @Test
-    fun pageGroups_matchTemplate() {
-        assertEquals(0..0, PcSetupGuideContent.pageGroupFor(0))
-        assertEquals(1..2, PcSetupGuideContent.pageGroupFor(1))
-        assertEquals(1..2, PcSetupGuideContent.pageGroupFor(2))
-        assertEquals(3..4, PcSetupGuideContent.pageGroupFor(3))
-        assertEquals(3..4, PcSetupGuideContent.pageGroupFor(4))
+    fun pageGroups_areSinglePhaseEach() {
+        repeat(PcSetupGuideContent.PHASE_COUNT) { i ->
+            assertEquals(i..i, PcSetupGuideContent.pageGroupFor(i))
+        }
     }
 
     @Test
-    fun sixPhaseOverview_hasSixEntries() {
-        assertEquals(6, PcSetupGuideContent.sixPhaseOverview().size)
-        assertTrue(PcSetupGuideContent.sixPhaseOverview().last().contains("CIFS"))
+    fun sevenPhaseOverview_hasSevenEntries() {
+        assertEquals(7, PcSetupGuideContent.sevenPhaseOverview().size)
+        assertTrue(PcSetupGuideContent.sevenPhaseOverview().last().contains("Catalogo"))
     }
 
     @Test
@@ -72,26 +72,29 @@ class PcSetupGuideContentTest {
     }
 
     @Test
-    fun cifsSteps_titlesPresent() {
-        assertTrue(PcSetupGuideContent.cifs61Title().contains("6/1"))
-        assertTrue(PcSetupGuideContent.cifs62Title().contains("6/2"))
+    fun cifsSteps_arePhase6And7() {
+        assertTrue(PcSetupGuideContent.cifs61Title().startsWith("Fase 6"))
+        assertTrue(PcSetupGuideContent.cifs62Title().startsWith("Fase 7"))
+        assertFalse(PcSetupGuideContent.cifs61Title().contains("6/1"))
+        assertFalse(PcSetupGuideContent.cifs62Title().contains("6/2"))
         assertEquals(3, PcSetupGuideContent.cifs61Bullets().size)
-        assertEquals(3, PcSetupGuideContent.cifs62Bullets().size)
+        assertEquals(7, PcSetupGuideContent.cifs62Bullets().size)
     }
 
     @Test
-    fun strip_isSingleDigitPerCell() {
-        repeat(PcSetupGuideContent.TOTAL_PHASES) { i ->
-            assertEquals("${i + 1}", PcSetupGuideContent.lampLabel(i))
-            assertTrue(PcSetupGuideContent.lampCaption(i).isNotBlank())
-        }
+    fun usbConnect_usesNotificationPanelNotHome() {
+        val joined = PcSetupGuideContent.usbConnectBullets().joinToString(" ")
+        assertTrue(joined.contains("notifiche"))
+        assertFalse(joined.contains("Home"))
     }
 
     @Test
-    fun guideSubtitle_matchesContract() {
+    fun currentGuidePhaseIndex_advancesWithDoneFlags() {
+        assertEquals(0, PcSetupGuideContent.currentGuidePhaseIndex(List(5) { false }))
         assertEquals(
-            WizardUiContract.PC_STEP_SUBTITLES[3],
-            PcSetupGuideContent.guideSubtitle(PcLinkMode.USB),
+            2,
+            PcSetupGuideContent.currentGuidePhaseIndex(listOf(true, true, false, false, false)),
         )
+        assertEquals(4, PcSetupGuideContent.currentGuidePhaseIndex(List(5) { true }))
     }
 }

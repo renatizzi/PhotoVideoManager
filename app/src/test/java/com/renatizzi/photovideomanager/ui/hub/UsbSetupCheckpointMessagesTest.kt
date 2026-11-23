@@ -2,6 +2,7 @@ package com.renatizzi.photovideomanager.ui.hub
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -35,7 +36,7 @@ class UsbSetupCheckpointMessagesTest {
     }
 
     @Test
-    fun highlight_mapsSteps() {
+    fun highlight_mapsSevenPhases() {
         val none = List(5) { false }
         assertEquals(-1, UsbSetupCheckpointMessages.highlightIndex(WizardStep.PC_AVAILABILITY, none))
         assertEquals(-1, UsbSetupCheckpointMessages.highlightIndex(WizardStep.PC_LINK_MODE, none))
@@ -48,22 +49,40 @@ class UsbSetupCheckpointMessagesTest {
             ),
         )
         assertEquals(5, UsbSetupCheckpointMessages.highlightIndex(WizardStep.W2_CIFS_INSTALL, none))
-        assertEquals(5, UsbSetupCheckpointMessages.highlightIndex(WizardStep.W2_CIFS, none))
+        assertEquals(6, UsbSetupCheckpointMessages.highlightIndex(WizardStep.W2_CIFS, none))
     }
 
     @Test
-    fun usbChrome_onUsbPipelineOnly() {
+    fun usbChrome_includesAvvioAndRiepilogo() {
+        assertTrue(UsbSetupCheckpointMessages.showsUsbChrome(WizardStep.S0_START))
         assertTrue(UsbSetupCheckpointMessages.showsUsbChrome(WizardStep.PC_GUIDE))
         assertTrue(UsbSetupCheckpointMessages.showsUsbChrome(WizardStep.W2_CIFS_INSTALL))
-        assertFalse(UsbSetupCheckpointMessages.showsUsbChrome(WizardStep.S0_START))
+        assertTrue(UsbSetupCheckpointMessages.showsUsbChrome(WizardStep.DONE))
         assertFalse(UsbSetupCheckpointMessages.showsUsbChrome(WizardStep.W3_GUIDE))
     }
 
     @Test
-    fun stripLabels_areSingleDigits() {
-        repeat(6) { i ->
-            assertEquals("${i + 1}", PcSetupGuideContent.lampLabel(i))
-        }
-        assertEquals(6, PcSetupGuideContent.TOTAL_PHASES)
+    fun phaseTitle_replacesSubtitleOnPhasePages() {
+        val none = List(5) { false }
+        assertEquals(
+            "Fase 1 – Creazione file di configurazione",
+            UsbSetupCheckpointMessages.phaseTitleForSubtitle(WizardStep.PC_GUIDE, none),
+        )
+        assertEquals(
+            PcSetupGuideContent.cifs61Title(),
+            UsbSetupCheckpointMessages.phaseTitleForSubtitle(WizardStep.W2_CIFS_INSTALL, none),
+        )
+        assertEquals(
+            PcSetupGuideContent.cifs62Title(),
+            UsbSetupCheckpointMessages.phaseTitleForSubtitle(WizardStep.W2_CIFS, none),
+        )
+        assertNull(
+            UsbSetupCheckpointMessages.phaseTitleForSubtitle(WizardStep.PC_AVAILABILITY, none),
+        )
+    }
+
+    @Test
+    fun totalPhases_areSeven() {
+        assertEquals(7, PcSetupGuideContent.TOTAL_PHASES)
     }
 }

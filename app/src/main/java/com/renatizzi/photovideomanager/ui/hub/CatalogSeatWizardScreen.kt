@@ -171,37 +171,33 @@ fun CatalogSeatWizardScreen(
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold,
         )
-        Text(
-            text = WizardStepChrome.subtitle(
+        run {
+            val sub = WizardStepChrome.subtitle(
                 state.step,
                 state.selectedKind,
                 state.pcLinkMode,
-            ).text,
-            style = MaterialTheme.typography.titleMedium,
-            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
-        )
-
-        // Chrome USB fisso: guida stampabile + strip 6 fasi (sempre stesso punto).
-        if (UsbSetupCheckpointMessages.showsUsbChrome(state.step)) {
-            val highlight = UsbSetupCheckpointMessages.highlightIndex(
-                state.step,
                 state.guidePhaseDone,
             )
-            val stripDone = List(PcSetupGuideContent.TOTAL_PHASES) { index ->
-                when {
-                    // Su 6/1–6/2 le fasi 1–5 risultano completate.
-                    highlight == 5 && index < 5 -> true
-                    index < PcSetupGuideContent.PHASE_COUNT ->
-                        state.guidePhaseDone.getOrElse(index) { false }
-                    else -> state.step == WizardStep.DONE
-                }
-            }
-            UsbSetupFixedChrome(
-                highlightIndex = highlight,
-                phaseDone = stripDone,
-                onOpenGuide = { openSetupGuidePdf(context) },
+            Text(
+                text = sub.text,
+                style = if (sub.isPhaseTitle) {
+                    MaterialTheme.typography.titleLarge
+                } else {
+                    MaterialTheme.typography.titleMedium
+                },
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                fontWeight = if (sub.isPhaseTitle) FontWeight.Bold else FontWeight.Normal,
+                color = if (sub.isPhaseTitle) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
+                },
             )
+        }
+
+        // Chrome USB fisso: sola riga guida stampabile (strip numerica rimossa — REV4).
+        if (UsbSetupCheckpointMessages.showsUsbChrome(state.step)) {
+            UsbSetupPrintGuideRow(onOpenGuide = { openSetupGuidePdf(context) })
         }
 
         when (state.step) {
@@ -859,10 +855,15 @@ private fun UsbConnectStep(
     onBack: () -> Unit,
     busy: Boolean,
 ) {
-    Text(PcSetupGuideContent.associationSubtitle(), fontWeight = FontWeight.SemiBold)
+    // Titolo fase già nel sottotitolo chrome (REV4).
     Text(
         PcSetupGuideContent.associationDescription(),
         style = MaterialTheme.typography.bodyMedium,
+    )
+    Text(
+        PcSetupGuideContent.cosaFareLabel(),
+        style = MaterialTheme.typography.titleSmall,
+        fontWeight = FontWeight.Bold,
     )
     PcSetupGuideContent.usbConnectBullets().forEach { line ->
         Text("✓ $line", style = MaterialTheme.typography.bodyMedium)
@@ -876,21 +877,27 @@ private fun UsbConnectStep(
             Text(stringResource(R.string.hub_pc_guide_cancel))
         }
         Button(onClick = onOk, enabled = !busy, modifier = Modifier.weight(1f)) {
-            Text(stringResource(R.string.hub_pc_fatto))
+            Text(stringResource(R.string.hub_checklist_ok))
         }
     }
 }
 
 @Composable
-private fun UsbSetupFixedChrome(
-    highlightIndex: Int,
-    phaseDone: List<Boolean>,
+private fun UsbSetupPrintGuideRow(
     onOpenGuide: () -> Unit,
 ) {
-    // Stesso punto in ogni videata USB: riga stampa guida.
+    // Stesso punto in ogni videata della procedura: riga stampa guida (niente strip).
     Text(
         text = buildAnnotatedString {
-            append(PcSetupGuideContent.guideDescription())
+            withStyle(
+                SpanStyle(
+                    fontWeight = FontWeight.Bold,
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                    fontSize = 16.sp,
+                ),
+            ) {
+                append(PcSetupGuideContent.guideDescription())
+            }
             append(' ')
             withStyle(
                 SpanStyle(
@@ -907,62 +914,6 @@ private fun UsbSetupFixedChrome(
             .fillMaxWidth()
             .clickable(onClick = onOpenGuide),
     )
-    // Sei fasi su un’unica riga (solo numeri 1–6).
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        repeat(PcSetupGuideContent.TOTAL_PHASES) { index ->
-            val done = phaseDone.getOrElse(index) { false }
-            val on = index == highlightIndex
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(36.dp)
-                    .border(
-                        width = if (on) 2.dp else 1.dp,
-                        color = when {
-                            on -> MaterialTheme.colorScheme.primary
-                            done -> Color(0xFF81C784)
-                            else -> MaterialTheme.colorScheme.outlineVariant
-                        },
-                        shape = RoundedCornerShape(6.dp),
-                    )
-                    .background(
-                        when {
-                            on -> MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
-                            done -> Color(0xFFE8F5E9)
-                            else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
-                        },
-                        RoundedCornerShape(6.dp),
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = PcSetupGuideContent.lampLabel(index),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = if (on) FontWeight.Bold else FontWeight.SemiBold,
-                    color = if (on) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
-                )
-            }
-        }
-    }
-    if (highlightIndex in 0 until PcSetupGuideContent.TOTAL_PHASES) {
-        Text(
-            stringResource(
-                R.string.hub_pc_phase_of,
-                highlightIndex + 1,
-                PcSetupGuideContent.TOTAL_PHASES,
-            ),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-        )
-    }
 }
 
 @Composable
@@ -976,86 +927,73 @@ private fun PcGuideStep(
 ) {
     val phases = remember { PcSetupGuideContent.usbPhases() }
     val phaseDone = state.guidePhaseDone
-    val currentIndex = (0 until PcSetupGuideContent.PHASE_COUNT)
-        .firstOrNull { !phaseDone.getOrElse(it) { false } }
-        ?: (PcSetupGuideContent.PHASE_COUNT - 1)
-    val pageGroup = PcSetupGuideContent.pageGroupFor(currentIndex)
+    val index = PcSetupGuideContent.currentGuidePhaseIndex(phaseDone)
+    val phase = phases[index]
+    val done = phaseDone.getOrElse(index) { false }
+    val unlocked = index == 0 || phaseDone.take(index).all { it }
+    val ctaEnabled = !busy && unlocked && (index != 4 || state.setupResultImported)
 
-    // Card accordion (stile Analog): entrambe le fasi del gruppo visibili.
-    pageGroup.forEach { index ->
-        val phase = phases[index]
-        val done = phaseDone.getOrElse(index) { false }
-        val active = index == currentIndex
-        val unlocked = index == 0 || phaseDone.take(index).all { it }
-        Column(
+    // Una sola fase per pagina (REV4): titolo già nel sottotitolo chrome.
+    phase.bullets.forEach { b ->
+        Text(
+            "✓ $b",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(
+                alpha = if (unlocked) 0.9f else 0.45f,
+            ),
+        )
+    }
+    if (index == 4 && !done) {
+        Button(
+            onClick = onImportCifs,
+            enabled = !busy && !state.setupResultImported,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.hub_pc_import_cifs))
+        }
+        if (state.setupResultImported) {
+            Text(
+                "Import completato. Tocca Fatto per continuare.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFF2E7D32),
+            )
+        }
+    }
+    // Bottoni sempre visibili (non nascosti dopo completamento — REV4 / decisione Renato).
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(
+            onClick = onCancel,
+            enabled = !busy,
+            modifier = Modifier.weight(1f),
+        ) {
+            Text(stringResource(R.string.hub_pc_guide_cancel))
+        }
+        Button(
+            onClick = {
+                if (index == 4) onConfirmAll() else onConfirmPhase(index)
+            },
+            enabled = ctaEnabled && !done,
+            modifier = Modifier.weight(1f),
+        ) {
+            Text(
+                if (index == 0) {
+                    stringResource(R.string.hub_pc_pronto)
+                } else {
+                    stringResource(R.string.hub_pc_fatto)
+                },
+            )
+        }
+    }
+    if (done) {
+        Text(
+            PcSetupGuideContent.phaseCompletedLabel(index),
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color(0xFF2E7D32),
             modifier = Modifier
                 .fillMaxWidth()
-                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(6.dp))
-                .padding(10.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            Text(phase.title, fontWeight = FontWeight.SemiBold)
-            if (done) {
-                Text(
-                    PcSetupGuideContent.phaseCompletedLabel(index),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF2E7D32),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFFE8F5E9), RoundedCornerShape(4.dp))
-                        .padding(8.dp),
-                )
-            } else {
-                phase.bullets.forEach { b ->
-                    Text(
-                        "✓ $b",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(
-                            alpha = if (unlocked) 0.9f else 0.45f,
-                        ),
-                    )
-                }
-                if (active && unlocked) {
-                    if (index == 4) {
-                        Text(
-                            "Importa i dati CIFS Documents Provider cliccando sull’omologo bottone",
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                        Button(
-                            onClick = onImportCifs,
-                            enabled = !busy,
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text(stringResource(R.string.hub_pc_import_cifs))
-                        }
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(
-                            onClick = onCancel,
-                            enabled = !busy,
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Text(stringResource(R.string.hub_pc_guide_cancel))
-                        }
-                        Button(
-                            onClick = {
-                                if (index == 4) onConfirmAll() else onConfirmPhase(index)
-                            },
-                            enabled = !busy && (index != 4 || state.setupResultImported),
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Text(
-                                if (index == 0) {
-                                    stringResource(R.string.hub_pc_pronto)
-                                } else {
-                                    stringResource(R.string.hub_pc_fatto)
-                                },
-                            )
-                        }
-                    }
-                }
-            }
-        }
+                .background(Color(0xFFE8F5E9), RoundedCornerShape(4.dp))
+                .padding(8.dp),
+        )
     }
 }
 
@@ -1066,9 +1004,9 @@ private fun CifsInstallStep(
     onFatto: () -> Unit,
     onAnnulla: () -> Unit,
 ) {
-    Text(PcSetupGuideContent.cifs61Title(), fontWeight = FontWeight.SemiBold)
+    // Titolo fase già nel sottotitolo chrome.
     PcSetupGuideContent.cifs61Bullets().forEach { b ->
-        Text("✓ $b", style = MaterialTheme.typography.bodySmall)
+        Text("✓ $b", style = MaterialTheme.typography.bodyMedium)
     }
     Text(
         stringResource(R.string.hub_pc_cifs_install_hint),
@@ -1091,9 +1029,20 @@ private fun CifsInstallStep(
         OutlinedButton(onClick = onAnnulla, enabled = !state.busy, modifier = Modifier.weight(1f)) {
             Text(stringResource(R.string.hub_pc_guide_cancel))
         }
-        Button(onClick = onFatto, enabled = !state.busy, modifier = Modifier.weight(1f)) {
+        Button(
+            onClick = onFatto,
+            enabled = !state.busy,
+            modifier = Modifier.weight(1f),
+        ) {
             Text(stringResource(R.string.hub_pc_fatto))
         }
+    }
+    if (state.cifsInstalled) {
+        Text(
+            "✓ CIFS Documents Provider presente.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color(0xFF2E7D32),
+        )
     }
 }
 
@@ -1529,9 +1478,9 @@ private fun CifsCardStep(
             hostReady &&
             cifsSavedConfirmed
 
-    Text(PcSetupGuideContent.cifs62Title(), fontWeight = FontWeight.SemiBold)
+    // Titolo fase già nel sottotitolo chrome (REV4 Fase 7).
     PcSetupGuideContent.cifs62Bullets().forEach { b ->
-        Text("✓ $b", style = MaterialTheme.typography.bodySmall)
+        Text("✓ $b", style = MaterialTheme.typography.bodyMedium)
     }
     if (!state.setupResultImported || !hostReady || !hasPassword) {
         Text(
@@ -1704,7 +1653,7 @@ private fun CifsCardStep(
             text = buildString {
                 append(stringResource(R.string.hub_pc5_activate_blocked))
                 if (!state.cifsInstalled) {
-                    append("\n• CIFS non installata — torna allo step 6/1")
+                    append("\n• CIFS non installata — torna alla Fase 6")
                 }
                 if (!state.setupResultImported) append("\n• ").append(stringResource(R.string.hub_pc_cifs_missing_reimport))
                 if (!hasPassword) append("\n• ").append(stringResource(R.string.hub_password_missing_hint))
