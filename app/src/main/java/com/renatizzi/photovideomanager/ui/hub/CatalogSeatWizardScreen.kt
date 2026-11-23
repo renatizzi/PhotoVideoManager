@@ -738,18 +738,13 @@ private fun AvailabilityChecklistStep(
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
     )
-    Text(
-        stringResource(R.string.hub_pc1_note_bt_free),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
-    )
-    // USB2.3: bullet semplici + conferma totale con OK (niente riquadri obbligatori).
+    // REV4: tre requisiti con spunta; conferma totale con OK (niente menzioni BT).
     listOf(
         stringResource(R.string.hub_pc1_item_phone),
         stringResource(R.string.hub_pc1_item_pc),
         stringResource(R.string.hub_pc1_item_cable),
     ).forEach { line ->
-        Text("• $line", style = MaterialTheme.typography.bodyMedium)
+        Text("✓ $line", style = MaterialTheme.typography.bodyMedium)
     }
     Text(
         stringResource(R.string.hub_s0_when_ready),

@@ -298,9 +298,9 @@ object WindowsCatalogSetupScript {
           echo  Configurazione NON completata. Codice: %ERR%
           echo  10=cartella 20=utente 30=condivisione 40=NTFS 50=rete/firewall 60=verifica
         ) else (
-          echo  Tutto pronto. PROSSIMO PASSO: Bluetooth
+          echo  Tutto pronto. PROSSIMO PASSO: USB
           echo  1^) Sul Desktop trovi $bundleFileName
-          echo  2^) Invia SOLO quel file al telefono via Bluetooth ^(Invia file^)
+          echo  2^) Copia SOLO quel file nella cartella Download del Telefono via cavo USB
           echo  3^) Ignora no_pw.json ^(senza password^)
           echo  4^) Nell'app: Importa dati CIFS e seleziona $bundleFileName
         )
@@ -657,9 +657,9 @@ try {
   Write-Host "Password PROVVISORIA: cambiala in Windows e aggiorna Archivio sul tablet."
   Write-Host "AVVISO: se il PC va in sospensione, la cartella sparisce dalla rete."
   Write-Host ""
-  Write-Host "PROSSIMO PASSO (Bluetooth):" -ForegroundColor Cyan
+  Write-Host "PROSSIMO PASSO (USB):" -ForegroundColor Cyan
   Write-Host ("1) Sul Desktop trovi " + ${d}BundleFileName)
-  Write-Host "2) Invia SOLO quel file al telefono via Bluetooth (Invia file)"
+  Write-Host "2) Copia SOLO quel file nella cartella Download del Telefono via cavo USB"
   Write-Host ("3) Ignora " + ${d}ResultFileName + " (senza password)")
   Write-Host ("4) Nell'app: Importa dati CIFS e seleziona " + ${d}BundleFileName)
   Write-Host "Il Desktop tiene solo l'ultima versione (overwrite)."
@@ -729,10 +729,10 @@ try {
     if (${d}annProc) {
       Write-Step ('Servizio bundle rete (fallback) avviato. IP=' + ${d}ipText)
     } else {
-      Write-Step ('Servizio bundle rete non avviato: usa Bluetooth o chiavetta (' + ${d}BundleFileName + ').')
+      Write-Step ('Servizio bundle rete non avviato: copia ' + ${d}BundleFileName + ' via USB sul Telefono (Download).')
     }
   } catch {
-    Write-Step ('Servizio bundle rete non avviato: usa Bluetooth o chiavetta (' + ${d}BundleFileName + ').')
+    Write-Step ('Servizio bundle rete non avviato: copia ' + ${d}BundleFileName + ' via USB sul Telefono (Download).')
   }
 
   ${d}ExitCode = 0

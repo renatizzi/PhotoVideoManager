@@ -164,7 +164,7 @@
     <string name="hub_kind_local">Questo dispositivo</string>
     <string name="hub_kind_local_hint">Nessuna rete necessaria</string>
     <string name="hub_kind_pc">PC Windows</string>
-    <string name="hub_kind_pc_hint">Deve essere acceso; il trasferimento file avviene via Bluetooth</string>
+    <string name="hub_kind_pc_hint">Deve essere acceso; il trasferimento file del setup avviene via cavo USB</string>
     <string name="hub_kind_drive">Cloud</string>
     <string name="hub_kind_drive_hint">Percorso base</string>
     <string name="hub_kind_nas">Disco di Rete</string>
@@ -187,17 +187,18 @@
 
     <!-- Passo 1 — Disponibilità (template v3 + note Renato 16/11) -->
     <string name="hub_pc1_intro">Prima di avviare la procedura verifica e conferma di avere a disposizione i seguenti strumenti:</string>
-    <string name="hub_pc1_item_phone">Telefono con l\'app MediaManager installata</string>
-    <string name="hub_pc1_item_pc">PC/Notebook Windows v. 10 o superiore</string>
-    <string name="hub_pc1_item_cable">Cavo USB dati (Trasferimento file / MTP), non solo ricarica</string>
-    <string name="hub_pc1_note_phone">Con «Telefono» si intende anche un Tablet Android.</string>
-    <string name="hub_pc1_note_bt_free">Percorso unico: cavo USB. Il setup del Catalogo non usa Bluetooth.</string>
+    <string name="hub_pc1_item_phone">Dispositivo mobile con l\'app MediaManager installata</string>
+    <string name="hub_pc1_item_pc">PC/Notebook Windows 10 o superiore</string>
+    <string name="hub_pc1_item_cable">Cavo USB che supporti il trasferimento dati</string>
+    <string name="hub_pc1_note_phone">Con «Telefono» / dispositivo mobile si intende anche un Tablet Android.</string>
+    <!-- Legacy: non mostrare in UI USB (REV4 ONLY USB, niente menzioni BT). -->
+    <string name="hub_pc1_note_bt_free">Percorso unico: cavo USB.</string>
     <string name="hub_pc1_note_path">Mantieni il Telefono sbloccato e in modalità Trasferimento file / MTP per le copie da/verso il PC.</string>
     <string name="hub_pc_pronto">Pronto</string>
     <string name="hub_pc_fatto">Fatto</string>
-    <string name="hub_pc_import_cifs">Importa Dati CIFS</string>
+    <string name="hub_pc_import_cifs">Importa dati CIFS</string>
     <string name="hub_pc_cifs_install_open">Installa / Apri CIFS Documents Provider</string>
-    <string name="hub_pc_cifs_install_hint">Installa o Apri l’app CIFS Documents Provider cliccando sull’omologo bottone</string>
+    <string name="hub_pc_cifs_install_hint">Al termine torna a MediaManager e conferma il completamento.</string>
     <string name="hub_pc_phase_of">Procedura USB · Fase %1$d di %2$d</string>
     <string name="hub_pc_cifs_missing_reimport">Dati CIFS mancanti o incompleti. Torna alla Fase 5 e reimporta DATI_CIFS.json (niente digitazione Host/User).</string>
     <string name="hub_pc_outcome_cifs_ok">Esito accesso: dispositivo/cartella visibile nella lista CIFS.</string>
@@ -358,7 +359,7 @@
     <string name="hub_done_title">Riepilogo e conferma</string>
     <string name="hub_done_body">Catalogo: %1$s</string>
     <string name="hub_done_riepilogo_dati">Riepilogo dati</string>
-    <string name="hub_done_censito_ok">Catalogo censito correttamente</string>
+    <string name="hub_done_censito_ok">Catalogo creato correttamente</string>
     <string name="hub_done_censito_ko">Configurazione incompleta: ripeti la scelta della cartella e verifica i permessi, poi Salva di nuovo.</string>
     <string name="hub_done_resume_catalog">Torna all’accesso</string>
     <string name="acquisisci_needs_catalog_body">Prima di utilizzare questa funzione devi creare il Catalogo personale</string>
