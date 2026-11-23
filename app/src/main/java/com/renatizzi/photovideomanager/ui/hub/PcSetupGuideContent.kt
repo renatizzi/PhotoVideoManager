@@ -28,6 +28,13 @@ object PcSetupGuideContent {
     const val TOTAL_PHASES = 7
     const val GUIDE_PDF_ASSET = "setup_guide/Guida_Setup_Catalogo_USB_ONLY.pdf"
 
+    /** REV4 struttura pagina: simbolo di spunta del template (✔), non pallino. */
+    const val BULLET_MARK = "✔"
+
+    /** Etichette uniformi di gestione fase (solo queste due formulazioni). */
+    const val PHASE_MANAGED_BY_APP = "Fase gestita dall’app"
+    const val PHASE_MANAGED_MANUALLY = "Fase gestita manualmente"
+
     @Deprecated("USB-only")
     val CONFIRM_SEND_TO_PC = ""
     @Deprecated("USB-only")
@@ -94,7 +101,7 @@ object PcSetupGuideContent {
         PcGuidePhase(
             title = "Fase 1 – Creazione file di configurazione",
             bullets = listOf(
-                "Fase gestita dall’app dopo la tua conferma.",
+                PHASE_MANAGED_BY_APP,
                 "Saranno creati nella cartella Download del Telefono i file (script) necessari per configurare la cartella del Catalogo personale.",
             ),
             actionLabel = "OK",
@@ -102,7 +109,7 @@ object PcSetupGuideContent {
         PcGuidePhase(
             title = "Fase 2 – Invio script al PC",
             bullets = listOf(
-                "Fase gestita manualmente dall’utente.",
+                PHASE_MANAGED_MANUALLY,
                 "I file creati da inviare al PC sono tre: CONFIGURA.CMD, QRCoder.dll e sup.ps1.",
                 "Sul Telefono apri File/Archivio > Memoria interna > Download. Seleziona e copia i tre file.",
                 "Sul PC apri Esplora file > Questo PC > Nome del Telefono > Memoria interna > Download. Seleziona i tre file e copiali sul Desktop del PC.",
@@ -112,7 +119,7 @@ object PcSetupGuideContent {
         PcGuidePhase(
             title = "Fase 3 – Esecuzione script sul PC",
             bullets = listOf(
-                "Fase gestita manualmente dall’utente.",
+                PHASE_MANAGED_MANUALLY,
                 "Sul PC apri Esplora file > Questo PC > Desktop. Seleziona CONFIGURA.CMD e avvialo con doppio clic.",
                 "Segui le istruzioni visualizzate e attendi il messaggio “Tutto pronto”, che indica la conclusione dello script.",
                 "Lo script crea automaticamente i file no_pw.json e DATI_CIFS.json. Solo DATI_CIFS.json sarà trasferito al Telefono per la configurazione CIFS.",
@@ -122,7 +129,7 @@ object PcSetupGuideContent {
         PcGuidePhase(
             title = "Fase 4 – Invio dati CIFS al Telefono",
             bullets = listOf(
-                "Fase gestita manualmente dall’utente.",
+                PHASE_MANAGED_MANUALLY,
                 "Lo script ha creato automaticamente il file DATI_CIFS.json.",
                 "Sul PC apri Esplora file > Desktop e individua DATI_CIFS.json.",
                 "Collega il Telefono al PC con il cavo USB. Apri la memoria interna del Telefono > Download e copia qui DATI_CIFS.json.",
@@ -132,7 +139,7 @@ object PcSetupGuideContent {
         PcGuidePhase(
             title = "Fase 5 – Import dati CIFS",
             bullets = listOf(
-                "Fase gestita dall’app dopo la conferma dell’utente.",
+                PHASE_MANAGED_BY_APP,
                 "Il file DATI_CIFS.json si trova nella cartella Download del Telefono.",
                 "Premi “Importa dati CIFS” e seleziona DATI_CIFS.json tramite il selettore file.",
                 "MediaManager legge e interpreta il file e prepara i dati necessari per la configurazione CIFS.",
@@ -142,7 +149,7 @@ object PcSetupGuideContent {
     )
 
     fun phaseCompletedLabel(index: Int): String =
-        "✓ FASE ${index + 1} COMPLETATA"
+        "${BULLET_MARK} FASE ${index + 1} COMPLETATA"
 
     fun currentGuidePhaseIndex(guidePhaseDone: List<Boolean>): Int =
         (0 until PHASE_COUNT)
@@ -154,7 +161,7 @@ object PcSetupGuideContent {
     /** REV4 PAGINA 10. */
     fun cifs61Title(): String = "Fase 6 – Installa / Apri CIFS"
     fun cifs61Bullets(): List<String> = listOf(
-        "Fase gestita dall’utente.",
+        PHASE_MANAGED_MANUALLY,
         "Installa o apri CIFS Documents Provider, necessario per accedere dal Telefono alla cartella condivisa del Catalogo creata sul PC.",
         "Al termine torna a MediaManager e conferma il completamento.",
     )
@@ -163,6 +170,7 @@ object PcSetupGuideContent {
     /** REV4 PAGINA 11 — sequenza unica. */
     fun cifs62Title(): String = "Fase 7 – Configura CIFS e attiva Catalogo"
     fun cifs62Bullets(): List<String> = listOf(
+        PHASE_MANAGED_MANUALLY,
         "Apri CIFS > premi [+] > seleziona “Input”.",
         "Torna a questa schermata di MediaManager.",
         "Per ogni campo: premi il relativo pulsante “Copia” in MediaManager, passa a CIFS e incolla il valore nel campo corrispondente.",

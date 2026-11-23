@@ -733,14 +733,14 @@ private fun AvailabilityChecklistStep(
     busy: Boolean,
 ) {
     Text(stringResource(R.string.hub_pc1_intro))
-    // REV4: tre requisiti del template (colonna sinistra / requisiti da mantenere).
-    listOf(
-        stringResource(R.string.hub_pc1_item_phone),
-        stringResource(R.string.hub_pc1_item_pc),
-        stringResource(R.string.hub_pc1_item_cable),
-    ).forEach { line ->
-        Text("✓ $line", style = MaterialTheme.typography.bodyMedium)
-    }
+    // REV4: tre requisiti del template — bullet ✔ uniformi.
+    UsbSetupBulletList(
+        lines = listOf(
+            stringResource(R.string.hub_pc1_item_phone),
+            stringResource(R.string.hub_pc1_item_pc),
+            stringResource(R.string.hub_pc1_item_cable),
+        ),
+    )
     Text(
         stringResource(R.string.hub_s0_when_ready),
         style = MaterialTheme.typography.bodyMedium,
@@ -883,9 +883,7 @@ private fun UsbConnectStep(
         style = MaterialTheme.typography.titleSmall,
         fontWeight = FontWeight.Bold,
     )
-    PcSetupGuideContent.usbConnectBullets().forEach { line ->
-        Text("✓ $line", style = MaterialTheme.typography.bodyMedium)
-    }
+    UsbSetupBulletList(lines = PcSetupGuideContent.usbConnectBullets())
     Text(
         stringResource(R.string.hub_s0_when_ready),
         style = MaterialTheme.typography.bodyMedium,
@@ -896,6 +894,45 @@ private fun UsbConnectStep(
         }
         Button(onClick = onOk, enabled = !busy, modifier = Modifier.weight(1f)) {
             Text(stringResource(R.string.hub_checklist_ok))
+        }
+    }
+}
+
+/**
+ * Bullet REV4: simbolo di spunta del template (✔), rientro e spaziatura uniformi.
+ * Marker e testo su colonne separate così il wrap del testo resta allineato.
+ */
+@Composable
+private fun UsbSetupBulletList(
+    lines: List<String>,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier,
+) {
+    val alpha = if (enabled) 0.9f else 0.45f
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        lines.forEach { line ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.Top,
+            ) {
+                Text(
+                    text = PcSetupGuideContent.BULLET_MARK,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
+                )
+                Text(
+                    text = line,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
+                    modifier = Modifier.weight(1f),
+                )
+            }
         }
     }
 }
@@ -952,15 +989,7 @@ private fun PcGuideStep(
     val ctaEnabled = !busy && unlocked && (index != 4 || state.setupResultImported)
 
     // Una sola fase per pagina (REV4): titolo già nel sottotitolo chrome.
-    phase.bullets.forEach { b ->
-        Text(
-            "✓ $b",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(
-                alpha = if (unlocked) 0.9f else 0.45f,
-            ),
-        )
-    }
+    UsbSetupBulletList(lines = phase.bullets, enabled = unlocked)
     if (index == 4 && !done) {
         Button(
             onClick = onImportCifs,
@@ -970,10 +999,13 @@ private fun PcGuideStep(
             Text(stringResource(R.string.hub_pc_import_cifs))
         }
     }
-    Text(
-        stringResource(R.string.hub_s0_when_ready),
-        style = MaterialTheme.typography.bodyMedium,
-    )
+    // «Quando pronto clicca su OK» solo con CTA OK (Fase 1); le fasi Fatto non lo ripetono.
+    if (phase.actionLabel == "OK") {
+        Text(
+            stringResource(R.string.hub_s0_when_ready),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+    }
     // Bottoni sempre visibili; etichetta CTA = specifica (OK / Fatto).
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedButton(
@@ -1014,9 +1046,7 @@ private fun CifsInstallStep(
     onAnnulla: () -> Unit,
 ) {
     // Titolo fase già nel sottotitolo chrome — solo testi REV4.
-    PcSetupGuideContent.cifs61Bullets().forEach { b ->
-        Text("✓ $b", style = MaterialTheme.typography.bodyMedium)
-    }
+    UsbSetupBulletList(lines = PcSetupGuideContent.cifs61Bullets())
     Button(
         onClick = onOpenCifs,
         enabled = !state.busy && !state.cifsInstalled,
@@ -1042,7 +1072,7 @@ private fun CifsInstallStep(
     }
     if (state.cifsInstalled) {
         Text(
-            "✓ CIFS Documents Provider presente.",
+            "${PcSetupGuideContent.BULLET_MARK} CIFS Documents Provider presente.",
             style = MaterialTheme.typography.bodyMedium,
             color = Color(0xFF2E7D32),
         )
@@ -1482,9 +1512,7 @@ private fun CifsCardStep(
             cifsSavedConfirmed
 
     // Titolo fase già nel sottotitolo chrome (REV4 Fase 7).
-    PcSetupGuideContent.cifs62Bullets().forEach { b ->
-        Text("✓ $b", style = MaterialTheme.typography.bodyMedium)
-    }
+    UsbSetupBulletList(lines = PcSetupGuideContent.cifs62Bullets())
     if (!state.setupResultImported || !hostReady || !hasPassword) {
         Text(
             stringResource(R.string.hub_pc_cifs_missing_reimport),

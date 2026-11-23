@@ -16,8 +16,9 @@
   .guide{font-weight:700;font-style:italic;margin:0 0 8px}
   .desc{margin:0 0 8px}
   .cosa{font-weight:700;margin:8px 0 4px}
-  ul{margin:4px 0 8px;padding-left:1.2em}
-  li{margin:3px 0}
+  ul{list-style:none;margin:4px 0 8px;padding:0 0 0 4px}
+  li{margin:4px 0;padding-left:1.4em;position:relative}
+  li::before{content:"✔";position:absolute;left:0}
   .btnrow{margin-top:10px;font-size:.9rem}
   .btnrow span{display:inline-block;border:1px solid #333;padding:4px 10px;margin-right:8px}
   .btnrow .p{background:#1565c0;color:#fff;border-color:#1565c0}
@@ -25,7 +26,7 @@
 </head>
 <body>
 <h1>Soli template — titoli, sottotitoli, descrizioni (REV4)</h1>
-<p class="meta">Fonte vincolante: specifica Cursor REV4 (testi a destra; dove dice «mantenere il template», testo del mockup a sinistra). Nessuna parafrasi.</p>
+<p class="meta">Fonte vincolante: specifica Cursor REV4. Bullet = ✔ (simbolo di spunta del template). Etichette fase solo: «Fase gestita dall’app» / «Fase gestita manualmente».</p>
 
 <section>
   <p class="page">PAGINA 02</p>
@@ -46,9 +47,9 @@
   <p class="guide">L’intera guida può essere stampata qui</p>
   <p class="desc">Prima di avviare la procedura verifica e conferma di avere a disposizione i seguenti strumenti:</p>
   <ul>
-    <li>✓ Dispositivo mobile (per il seguito «Telefono») con l’app già installata</li>
-    <li>✓ PC/Notebook Windows v. 10 o superiore</li>
-    <li>✓ Un cavo USB che supporti il trasferimento dati</li>
+    <li>Dispositivo mobile (per il seguito «Telefono») con l’app già installata</li>
+    <li>PC/Notebook Windows v. 10 o superiore</li>
+    <li>Un cavo USB che supporti il trasferimento dati</li>
   </ul>
   <p class="desc">Quando pronto clicca su OK</p>
   <p class="btnrow"><span>Annulla</span><span class="p">OK</span></p>
@@ -62,9 +63,9 @@
   <p class="desc">Predisponi il collegamento con un cavo USB tra il Telefono e il PC</p>
   <p class="cosa">Cosa fare:</p>
   <ul>
-    <li>✓ Collega il Telefono al PC con un cavo USB che supporti il trasferimento dati. Mantieni entrambi i dispositivi accesi e sbloccati.</li>
-    <li>✓ Sul Telefono, scorri dall’alto verso il basso per aprire il pannello delle notifiche. Apri la notifica relativa alle impostazioni USB.</li>
-    <li>✓ Seleziona “Trasferimento di file” (o “Trasferimento file/MTP”) al posto di “Solo ricarica” e autorizza l’accesso ai dati, se richiesto.</li>
+    <li>Collega il Telefono al PC con un cavo USB che supporti il trasferimento dati. Mantieni entrambi i dispositivi accesi e sbloccati.</li>
+    <li>Sul Telefono, scorri dall’alto verso il basso per aprire il pannello delle notifiche. Apri la notifica relativa alle impostazioni USB.</li>
+    <li>Seleziona “Trasferimento di file” (o “Trasferimento file/MTP”) al posto di “Solo ricarica” e autorizza l’accesso ai dati, se richiesto.</li>
   </ul>
   <p class="desc">Quando pronto clicca su OK</p>
   <p class="btnrow"><span>Annulla</span><span class="p">OK</span></p>
@@ -76,8 +77,8 @@
   <p class="sub phase">Fase 1 – Creazione file di configurazione</p>
   <p class="guide">L’intera guida può essere stampata qui</p>
   <ul>
-    <li>✓ Fase gestita dall’app dopo la tua conferma.</li>
-    <li>✓ Saranno creati nella cartella Download del Telefono i file (script) necessari per configurare la cartella del Catalogo personale.</li>
+    <li>Fase gestita dall’app</li>
+    <li>Saranno creati nella cartella Download del Telefono i file (script) necessari per configurare la cartella del Catalogo personale.</li>
   </ul>
   <p class="desc">Quando pronto clicca su OK</p>
   <p class="btnrow"><span>Annulla</span><span class="p">OK</span></p>
@@ -89,10 +90,10 @@
   <p class="sub phase">Fase 2 – Invio script al PC</p>
   <p class="guide">L’intera guida può essere stampata qui</p>
   <ul>
-    <li>✓ Fase gestita manualmente dall’utente.</li>
-    <li>✓ I file creati da inviare al PC sono tre: CONFIGURA.CMD, QRCoder.dll e sup.ps1.</li>
-    <li>✓ Sul Telefono apri File/Archivio > Memoria interna > Download. Seleziona e copia i tre file.</li>
-    <li>✓ Sul PC apri Esplora file > Questo PC > Nome del Telefono > Memoria interna > Download. Seleziona i tre file e copiali sul Desktop del PC.</li>
+    <li>Fase gestita manualmente</li>
+    <li>I file creati da inviare al PC sono tre: CONFIGURA.CMD, QRCoder.dll e sup.ps1.</li>
+    <li>Sul Telefono apri File/Archivio > Memoria interna > Download. Seleziona e copia i tre file.</li>
+    <li>Sul PC apri Esplora file > Questo PC > Nome del Telefono > Memoria interna > Download. Seleziona i tre file e copiali sul Desktop del PC.</li>
   </ul>
   <p class="btnrow"><span>Annulla</span><span class="p">Fatto</span></p>
 </section>
@@ -103,10 +104,10 @@
   <p class="sub phase">Fase 3 – Esecuzione script sul PC</p>
   <p class="guide">L’intera guida può essere stampata qui</p>
   <ul>
-    <li>✓ Fase gestita manualmente dall’utente.</li>
-    <li>✓ Sul PC apri Esplora file > Questo PC > Desktop. Seleziona CONFIGURA.CMD e avvialo con doppio clic.</li>
-    <li>✓ Segui le istruzioni visualizzate e attendi il messaggio “Tutto pronto”, che indica la conclusione dello script.</li>
-    <li>✓ Lo script crea automaticamente i file no_pw.json e DATI_CIFS.json. Solo DATI_CIFS.json sarà trasferito al Telefono per la configurazione CIFS.</li>
+    <li>Fase gestita manualmente</li>
+    <li>Sul PC apri Esplora file > Questo PC > Desktop. Seleziona CONFIGURA.CMD e avvialo con doppio clic.</li>
+    <li>Segui le istruzioni visualizzate e attendi il messaggio “Tutto pronto”, che indica la conclusione dello script.</li>
+    <li>Lo script crea automaticamente i file no_pw.json e DATI_CIFS.json. Solo DATI_CIFS.json sarà trasferito al Telefono per la configurazione CIFS.</li>
   </ul>
   <p class="btnrow"><span>Annulla</span><span class="p">Fatto</span></p>
 </section>
@@ -117,10 +118,10 @@
   <p class="sub phase">Fase 4 – Invio dati CIFS al Telefono</p>
   <p class="guide">L’intera guida può essere stampata qui</p>
   <ul>
-    <li>✓ Fase gestita manualmente dall’utente.</li>
-    <li>✓ Lo script ha creato automaticamente il file DATI_CIFS.json.</li>
-    <li>✓ Sul PC apri Esplora file > Desktop e individua DATI_CIFS.json.</li>
-    <li>✓ Collega il Telefono al PC con il cavo USB. Apri la memoria interna del Telefono > Download e copia qui DATI_CIFS.json.</li>
+    <li>Fase gestita manualmente</li>
+    <li>Lo script ha creato automaticamente il file DATI_CIFS.json.</li>
+    <li>Sul PC apri Esplora file > Desktop e individua DATI_CIFS.json.</li>
+    <li>Collega il Telefono al PC con il cavo USB. Apri la memoria interna del Telefono > Download e copia qui DATI_CIFS.json.</li>
   </ul>
   <p class="btnrow"><span>Annulla</span><span class="p">Fatto</span></p>
 </section>
@@ -131,10 +132,10 @@
   <p class="sub phase">Fase 5 – Import dati CIFS</p>
   <p class="guide">L’intera guida può essere stampata qui</p>
   <ul>
-    <li>✓ Fase gestita dall’app dopo la conferma dell’utente.</li>
-    <li>✓ Il file DATI_CIFS.json si trova nella cartella Download del Telefono.</li>
-    <li>✓ Premi “Importa dati CIFS” e seleziona DATI_CIFS.json tramite il selettore file.</li>
-    <li>✓ MediaManager legge e interpreta il file e prepara i dati necessari per la configurazione CIFS.</li>
+    <li>Fase gestita dall’app</li>
+    <li>Il file DATI_CIFS.json si trova nella cartella Download del Telefono.</li>
+    <li>Premi “Importa dati CIFS” e seleziona DATI_CIFS.json tramite il selettore file.</li>
+    <li>MediaManager legge e interpreta il file e prepara i dati necessari per la configurazione CIFS.</li>
   </ul>
   <p class="btnrow"><span class="p">Importa dati CIFS</span></p>
   <p class="btnrow"><span>Annulla</span><span class="p">Fatto</span></p>
@@ -146,9 +147,9 @@
   <p class="sub phase">Fase 6 – Installa / Apri CIFS</p>
   <p class="guide">L’intera guida può essere stampata qui</p>
   <ul>
-    <li>✓ Fase gestita dall’utente.</li>
-    <li>✓ Installa o apri CIFS Documents Provider, necessario per accedere dal Telefono alla cartella condivisa del Catalogo creata sul PC.</li>
-    <li>✓ Al termine torna a MediaManager e conferma il completamento.</li>
+    <li>Fase gestita manualmente</li>
+    <li>Installa o apri CIFS Documents Provider, necessario per accedere dal Telefono alla cartella condivisa del Catalogo creata sul PC.</li>
+    <li>Al termine torna a MediaManager e conferma il completamento.</li>
   </ul>
   <p class="btnrow"><span class="p">Installa / Apri CIFS Documents Provider</span></p>
   <p class="desc">Quando pronto clicca su OK</p>
@@ -161,13 +162,14 @@
   <p class="sub phase">Fase 7 – Configura CIFS e attiva Catalogo</p>
   <p class="guide">L’intera guida può essere stampata qui</p>
   <ul>
-    <li>✓ Apri CIFS > premi [+] > seleziona “Input”.</li>
-    <li>✓ Torna a questa schermata di MediaManager.</li>
-    <li>✓ Per ogni campo: premi il relativo pulsante “Copia” in MediaManager, passa a CIFS e incolla il valore nel campo corrispondente.</li>
-    <li>✓ Ripeti l’operazione fino a completare tutti i campi richiesti.</li>
-    <li>✓ Salva la configurazione in CIFS e verifica che la cartella condivisa sia presente nell’elenco di CIFS.</li>
-    <li>✓ Torna a MediaManager e conferma di aver salvato i dati.</li>
-    <li>✓ Premi “Attiva Catalogo”.</li>
+    <li>Fase gestita manualmente</li>
+    <li>Apri CIFS > premi [+] > seleziona “Input”.</li>
+    <li>Torna a questa schermata di MediaManager.</li>
+    <li>Per ogni campo: premi il relativo pulsante “Copia” in MediaManager, passa a CIFS e incolla il valore nel campo corrispondente.</li>
+    <li>Ripeti l’operazione fino a completare tutti i campi richiesti.</li>
+    <li>Salva la configurazione in CIFS e verifica che la cartella condivisa sia presente nell’elenco di CIFS.</li>
+    <li>Torna a MediaManager e conferma di aver salvato i dati.</li>
+    <li>Premi “Attiva Catalogo”.</li>
   </ul>
   <p class="btnrow"><span class="p">Attiva Catalogo</span></p>
 </section>

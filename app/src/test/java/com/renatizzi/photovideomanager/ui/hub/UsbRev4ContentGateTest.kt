@@ -60,4 +60,22 @@ class UsbRev4ContentGateTest {
     fun printGuideAsset_isUsbOnly() {
         assertTrue(PcSetupGuideContent.GUIDE_PDF_ASSET.contains("USB_ONLY"))
     }
+
+    @Test
+    fun phaseManagedLabels_matchApprovedUniformTexts() {
+        assertEquals("Fase gestita dall’app", PcSetupGuideContent.PHASE_MANAGED_BY_APP)
+        assertEquals("Fase gestita manualmente", PcSetupGuideContent.PHASE_MANAGED_MANUALLY)
+        assertEquals("✔", PcSetupGuideContent.BULLET_MARK)
+        val firsts = PcSetupGuideContent.usbPhases().map { it.bullets.first() } +
+            listOf(
+                PcSetupGuideContent.cifs61Bullets().first(),
+                PcSetupGuideContent.cifs62Bullets().first(),
+            )
+        firsts.forEach { label ->
+            assertTrue(
+                label == PcSetupGuideContent.PHASE_MANAGED_BY_APP ||
+                    label == PcSetupGuideContent.PHASE_MANAGED_MANUALLY,
+            )
+        }
+    }
 }

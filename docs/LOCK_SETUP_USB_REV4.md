@@ -4,8 +4,9 @@
 **Data:** 2026-11-23  
 **Richiesta / test di riferimento:** `Template_Setup_Catalogo_ONLY_USB_specifica_Cursor_REV4.pdf` + chiarimenti Renato (7 fasi, no strip, pagina unica, titolo fase → sottotitolo, testi nuovi)  
 **Approvazione Renato:** 23/11/2026 («Se è tutto chiaro puoi procedere»)  
-**Versione target:** `0.16.78-preview` / `versionCode` 119  
-**Baseline precedente:** LOCK USB2.3 / USB75 (6 fasi + strip) — **superata** da questa decisione sui punti in conflitto.
+**Versione target:** `0.16.82-preview` / `versionCode` 123  
+**Baseline precedente:** LOCK USB2.3 / USB75 (6 fasi + strip) — **superata** da questa decisione sui punti in conflitto.  
+**Approvazione testi template:** 23/11/2026 («documento approvato») + correzioni: bullet ✔ uniformi; etichette fase solo «Fase gestita manualmente» / «Fase gestita dall’app».
 
 | # | Decisione | Risultato atteso (misurabile) | Fuori scope |
 |---|-----------|-------------------------------|-------------|
@@ -15,6 +16,8 @@
 | 4 | Titolo fase = sottotitolo | Bold/corsivo/blu; niente duplicazione titolo in body | Nuovo chrome TopBar |
 | 5 | Testi REV4 | Contenuti da specifica (USB fisico notifiche; titoli Fase 1/6/7; sequenza Fase 7) | Riscrittura guida PDF esterna in questo lock |
 | 6 | Annulla = B ovunque | Nessun Indietro; Annulla (con conferma) azzera checkpoint/bozza e torna ad Avvio. Tracciamento solo per monitoraggio/checkpoint in avanti | Indietro fase-per-fase; ripristino file su Download/Desktop |
+| 7 | Bullet ✔ | Simbolo di spunta del template (✔) con rientro/spaziatura uniformi su tutte le liste setup USB | Pallini • o ✓ misti |
+| 8 | Etichette gestione fase | Solo «Fase gestita dall’app» (1, 5) e «Fase gestita manualmente» (2–4, 6–7) | Varianti «dopo conferma» / «dall’utente» |
 
 ## Note operative
 

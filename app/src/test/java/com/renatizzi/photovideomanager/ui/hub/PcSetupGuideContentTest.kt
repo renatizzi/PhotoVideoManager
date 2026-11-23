@@ -78,7 +78,37 @@ class PcSetupGuideContentTest {
         assertFalse(PcSetupGuideContent.cifs61Title().contains("6/1"))
         assertFalse(PcSetupGuideContent.cifs62Title().contains("6/2"))
         assertEquals(3, PcSetupGuideContent.cifs61Bullets().size)
-        assertEquals(7, PcSetupGuideContent.cifs62Bullets().size)
+        assertEquals(8, PcSetupGuideContent.cifs62Bullets().size)
+    }
+
+    @Test
+    fun phaseManagedLabels_areOnlyTwoUniformTexts() {
+        val phases = PcSetupGuideContent.usbPhases()
+        assertEquals(PcSetupGuideContent.PHASE_MANAGED_BY_APP, phases[0].bullets.first())
+        assertEquals(PcSetupGuideContent.PHASE_MANAGED_MANUALLY, phases[1].bullets.first())
+        assertEquals(PcSetupGuideContent.PHASE_MANAGED_MANUALLY, phases[2].bullets.first())
+        assertEquals(PcSetupGuideContent.PHASE_MANAGED_MANUALLY, phases[3].bullets.first())
+        assertEquals(PcSetupGuideContent.PHASE_MANAGED_BY_APP, phases[4].bullets.first())
+        assertEquals(
+            PcSetupGuideContent.PHASE_MANAGED_MANUALLY,
+            PcSetupGuideContent.cifs61Bullets().first(),
+        )
+        assertEquals(
+            PcSetupGuideContent.PHASE_MANAGED_MANUALLY,
+            PcSetupGuideContent.cifs62Bullets().first(),
+        )
+        val corpus = buildString {
+            append(phases.joinToString("\n") { it.body })
+            append('\n')
+            append(PcSetupGuideContent.cifs61Body())
+            append('\n')
+            append(PcSetupGuideContent.cifs62Body())
+        }
+        assertFalse(corpus.contains("dopo la tua conferma"))
+        assertFalse(corpus.contains("dopo la conferma dell’utente"))
+        assertFalse(corpus.contains("gestita dall’utente"))
+        assertFalse(corpus.contains("manualmente dall’utente"))
+        assertEquals("✔", PcSetupGuideContent.BULLET_MARK)
     }
 
     @Test
