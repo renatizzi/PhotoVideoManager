@@ -7,12 +7,12 @@ import org.junit.Test
 
 class PcSetupGuideContentTest {
     @Test
-    fun usbPhases_areFive_withProntoAndFatto() {
+    fun usbPhases_areFive_withOkAndFatto() {
         val phases = PcSetupGuideContent.usbPhases()
         assertEquals(5, phases.size)
         assertEquals(PcSetupGuideContent.PHASE_COUNT, phases.size)
         assertEquals(7, PcSetupGuideContent.TOTAL_PHASES)
-        assertEquals("Pronto", phases[0].actionLabel)
+        assertEquals("OK", phases[0].actionLabel)
         phases.drop(1).forEach { assertEquals("Fatto", it.actionLabel) }
     }
 

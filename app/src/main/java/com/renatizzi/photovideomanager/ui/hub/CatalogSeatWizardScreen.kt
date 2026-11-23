@@ -733,12 +733,7 @@ private fun AvailabilityChecklistStep(
     busy: Boolean,
 ) {
     Text(stringResource(R.string.hub_pc1_intro))
-    Text(
-        stringResource(R.string.hub_pc1_note_phone),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
-    )
-    // REV4: tre requisiti con spunta; conferma totale con OK (niente menzioni BT).
+    // REV4: tre requisiti del template (colonna sinistra / requisiti da mantenere).
     listOf(
         stringResource(R.string.hub_pc1_item_phone),
         stringResource(R.string.hub_pc1_item_pc),
@@ -974,15 +969,12 @@ private fun PcGuideStep(
         ) {
             Text(stringResource(R.string.hub_pc_import_cifs))
         }
-        if (state.setupResultImported) {
-            Text(
-                "Import completato. Tocca Fatto per continuare.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF2E7D32),
-            )
-        }
     }
-    // Bottoni sempre visibili (non nascosti dopo completamento — REV4 / decisione Renato).
+    Text(
+        stringResource(R.string.hub_s0_when_ready),
+        style = MaterialTheme.typography.bodyMedium,
+    )
+    // Bottoni sempre visibili; etichetta CTA = specifica (OK / Fatto).
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedButton(
             onClick = onCancel,
@@ -998,13 +990,7 @@ private fun PcGuideStep(
             enabled = ctaEnabled && !done,
             modifier = Modifier.weight(1f),
         ) {
-            Text(
-                if (index == 0) {
-                    stringResource(R.string.hub_pc_pronto)
-                } else {
-                    stringResource(R.string.hub_pc_fatto)
-                },
-            )
+            Text(phase.actionLabel)
         }
     }
     if (done) {
@@ -1027,27 +1013,21 @@ private fun CifsInstallStep(
     onFatto: () -> Unit,
     onAnnulla: () -> Unit,
 ) {
-    // Titolo fase già nel sottotitolo chrome.
+    // Titolo fase già nel sottotitolo chrome — solo testi REV4.
     PcSetupGuideContent.cifs61Bullets().forEach { b ->
         Text("✓ $b", style = MaterialTheme.typography.bodyMedium)
     }
-    Text(
-        stringResource(R.string.hub_pc_cifs_install_hint),
-        style = MaterialTheme.typography.bodyMedium,
-    )
     Button(
         onClick = onOpenCifs,
-        enabled = !state.busy,
+        enabled = !state.busy && !state.cifsInstalled,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Text(
-            if (state.cifsInstalled) {
-                stringResource(R.string.hub_cifs_open)
-            } else {
-                stringResource(R.string.hub_pc_cifs_install_open)
-            },
-        )
+        Text(stringResource(R.string.hub_pc_cifs_install_open))
     }
+    Text(
+        stringResource(R.string.hub_s0_when_ready),
+        style = MaterialTheme.typography.bodyMedium,
+    )
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedButton(onClick = onAnnulla, enabled = !state.busy, modifier = Modifier.weight(1f)) {
             Text(stringResource(R.string.hub_pc_guide_cancel))
@@ -1057,7 +1037,7 @@ private fun CifsInstallStep(
             enabled = !state.busy,
             modifier = Modifier.weight(1f),
         ) {
-            Text(stringResource(R.string.hub_pc_fatto))
+            Text(stringResource(R.string.hub_checklist_ok))
         }
     }
     if (state.cifsInstalled) {

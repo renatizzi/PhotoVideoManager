@@ -82,10 +82,10 @@ class WizardStepChromeTest {
     }
 
     @Test
-    fun pcGuide_usbPhases_useProntoFatto() {
+    fun pcGuide_usbPhases_useOkFatto() {
         val phases = PcSetupGuideContent.phases(PcLinkMode.USB)
         assertEquals(5, phases.size)
-        assertEquals("Pronto", phases[0].actionLabel)
+        assertEquals("OK", phases[0].actionLabel)
         phases.drop(1).forEach { p ->
             assertEquals("Fatto", p.actionLabel)
         }

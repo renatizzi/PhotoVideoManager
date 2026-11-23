@@ -15,7 +15,7 @@ class UsbSetupCheckpointMessagesTest {
             UsbSetupCheckpointMessages.SCRIPT_DOWNLOAD_KO.contains("Download"),
         )
         assertTrue(
-            UsbSetupCheckpointMessages.SCRIPT_DOWNLOAD_KO.contains("Pronto"),
+            UsbSetupCheckpointMessages.SCRIPT_DOWNLOAD_KO.contains("OK"),
         )
     }
 

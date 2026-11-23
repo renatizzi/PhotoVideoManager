@@ -187,10 +187,10 @@
 
     <!-- Passo 1 — Disponibilità (template v3 + note Renato 16/11) -->
     <string name="hub_pc1_intro">Prima di avviare la procedura verifica e conferma di avere a disposizione i seguenti strumenti:</string>
-    <string name="hub_pc1_item_phone">Dispositivo mobile con l\'app MediaManager installata</string>
-    <string name="hub_pc1_item_pc">PC/Notebook Windows 10 o superiore</string>
-    <string name="hub_pc1_item_cable">Cavo USB che supporti il trasferimento dati</string>
-    <string name="hub_pc1_note_phone">Con «Telefono» / dispositivo mobile si intende anche un Tablet Android.</string>
+    <string name="hub_pc1_item_phone">Dispositivo mobile (per il seguito «Telefono») con l\'app già installata</string>
+    <string name="hub_pc1_item_pc">PC/Notebook Windows v. 10 o superiore</string>
+    <string name="hub_pc1_item_cable">Un cavo USB che supporti il trasferimento dati</string>
+    <string name="hub_pc1_note_phone">Con «Telefono» si intende anche un Tablet Android.</string>
     <!-- Legacy: non mostrare in UI USB (REV4 ONLY USB, niente menzioni BT). -->
     <string name="hub_pc1_note_bt_free">Percorso unico: cavo USB.</string>
     <string name="hub_pc1_note_path">Mantieni il Telefono sbloccato e in modalità Trasferimento file / MTP per le copie da/verso il PC.</string>

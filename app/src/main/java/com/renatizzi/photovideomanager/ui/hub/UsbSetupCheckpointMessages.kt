@@ -7,7 +7,7 @@ package com.renatizzi.photovideomanager.ui.hub
 object UsbSetupCheckpointMessages {
     const val SCRIPT_DOWNLOAD_KO =
         "Creazione script non riuscita in Download. " +
-            "Verifica lo spazio e i permessi, poi tocca di nuovo Pronto."
+            "Verifica lo spazio e i permessi, poi tocca di nuovo OK."
 
     const val IMPORT_KO =
         "Import non riuscito. Verifica che DATI_CIFS.json sia in Download " +
