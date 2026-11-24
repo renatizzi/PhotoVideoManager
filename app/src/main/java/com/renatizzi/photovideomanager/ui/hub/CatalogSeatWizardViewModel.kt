@@ -1198,12 +1198,20 @@ class CatalogSeatWizardViewModel(
             val complete = SetupLanAnnounce.isIpv4(host) &&
                 userOut.isNotBlank() &&
                 passwordOut.isNotBlank()
+            val shareOut = payload.shareName.ifBlank { it.shareName }
+            if (shareOut.isNotBlank()) {
+                com.renatizzi.photovideomanager.data.storage.SafPathLabels
+                    .rememberPcCatalogShare(shareOut)
+            }
             it.copy(
                 cifsUserQualified = userOut,
                 pcHostIp = host,
                 pcComputerName = payload.computerName.ifBlank { it.pcComputerName },
                 temporaryPassword = passwordOut,
-                shareName = payload.shareName.ifBlank { it.shareName },
+                shareName = shareOut,
+                // LOCK #5: un solo nome anche dopo import DATI_CIFS (User/Folder/share).
+                userName = shareOut.ifBlank { it.userName },
+                catalogName = shareOut.ifBlank { it.catalogName },
                 setupResultImported = complete,
                 recoveringPcData = !complete,
                 errorMessage = null,
@@ -1709,6 +1717,8 @@ class CatalogSeatWizardViewModel(
             if (kind == CatalogSeatKind.PC_NOTEBOOK) {
                 com.renatizzi.photovideomanager.data.storage.SafPathLabels
                     .rememberPcCatalogShare(ui.shareName.ifBlank { catalogName })
+                com.renatizzi.photovideomanager.data.storage.SafPathLabels
+                    .rememberPcCatalogShareFromTreeUri(treeUri)
             }
             val seat = CatalogSeat(
                 kind = kind,

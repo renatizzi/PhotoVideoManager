@@ -39,6 +39,9 @@ class SourceRegistry(
     private val catalogSeatLabel: () -> String = { "" },
     /** Modello dispositivo da Setup Catalogo (prevale sul nome sistema). */
     private val catalogSeatDeviceModel: () -> String = { "" },
+    /** URI sede Catalogo PC (se configurata): forza etichetta PC Windows sulla stessa tree. */
+    private val catalogSeatTreeUri: () -> String? = { null },
+    private val catalogSeatIsPc: () -> Boolean = { false },
 ) {
     suspend fun bootstrapPersonalArchiveIfNeeded() {
         require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
@@ -416,33 +419,52 @@ class SourceRegistry(
         }.getOrDefault(emptyList())
     }
 
-    private fun deviceLabelFor(location: StorageLocation): String = when (location.adapterKind) {
-        StorageAdapterKind.LOCAL_FS -> "Catalogo"
-        StorageAdapterKind.SAF_TREE -> {
-            if (location.opaqueLocator.isBlank()) {
-                localDeviceLabelForGrouping()
-            } else {
-                runCatching {
-                    val uri = Uri.parse(location.opaqueLocator)
-                    when (SafPathLabels.providerOf(uri)) {
-                        SafPathLabels.SafProvider.NETWORK_NAS ->
-                            SafPathLabels.networkDeviceLabel(uri, location.displayName)
-                        else ->
-                            SafPathLabels.deviceLabelForTree(
-                                appContext,
-                                uri,
-                                localDeviceLabelForGrouping(),
-                            )
-                    }
-                }.getOrDefault(localDeviceLabelForGrouping())
-            }
+    /**
+     * Stessa sede Catalogo PC: URI uguale, oppure stesso share SMB
+     * (encoding/porta possono differire tra Attiva e listing Acquisisci).
+     */
+    private fun matchesCatalogSeatTree(locator: String?): Boolean {
+        if (locator.isNullOrBlank()) return false
+        val seatUri = catalogSeatTreeUri() ?: return false
+        if (locator == seatUri) return true
+        val seatShare = SafPathLabels.extractSmbShareSegment(seatUri) ?: return false
+        val locShare = SafPathLabels.extractSmbShareSegment(locator) ?: return false
+        return seatShare.equals(locShare, ignoreCase = true)
+    }
+
+    private fun deviceLabelFor(location: StorageLocation): String {
+        val locator = location.opaqueLocator
+        if (catalogSeatIsPc() && matchesCatalogSeatTree(locator)) {
+            return SafPathLabels.DEVICE_PC_NOTEBOOK
         }
-        StorageAdapterKind.MEDIA_STORE -> localDeviceLabelForGrouping()
-        StorageAdapterKind.SMB -> SafPathLabels.networkDeviceLabelFromHints(
-            displayHint = location.displayName,
-            path = "",
-            uriString = location.opaqueLocator,
-        )
+        return when (location.adapterKind) {
+            StorageAdapterKind.LOCAL_FS -> "Catalogo"
+            StorageAdapterKind.SAF_TREE -> {
+                if (locator.isBlank()) {
+                    localDeviceLabelForGrouping()
+                } else {
+                    runCatching {
+                        val uri = Uri.parse(locator)
+                        when (SafPathLabels.providerOf(uri)) {
+                            SafPathLabels.SafProvider.NETWORK_NAS ->
+                                SafPathLabels.networkDeviceLabel(uri, location.displayName)
+                            else ->
+                                SafPathLabels.deviceLabelForTree(
+                                    appContext,
+                                    uri,
+                                    localDeviceLabelForGrouping(),
+                                )
+                        }
+                    }.getOrDefault(localDeviceLabelForGrouping())
+                }
+            }
+            StorageAdapterKind.MEDIA_STORE -> localDeviceLabelForGrouping()
+            StorageAdapterKind.SMB -> SafPathLabels.networkDeviceLabelFromHints(
+                displayHint = location.displayName,
+                path = "",
+                uriString = locator,
+            )
+        }
     }
 
     private fun pathLabelFor(location: StorageLocation): String {

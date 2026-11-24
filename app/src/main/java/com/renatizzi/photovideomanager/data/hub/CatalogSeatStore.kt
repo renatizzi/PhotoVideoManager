@@ -51,6 +51,14 @@ class CatalogSeatStore(context: Context) {
             .putString(KEY_MEMORY, seat.memoryLabel)
             .putLong(KEY_CONFIGURED_AT, seat.configuredAtEpochMs)
             .apply()
+        // LOCK #6/#8: subito dopo Attiva, Acquisisci deve etichettare «PC Windows»
+        // anche con nome custom (MyCatalog) e dopo cold-start.
+        if (seat.kind == CatalogSeatKind.PC_NOTEBOOK) {
+            com.renatizzi.photovideomanager.data.storage.SafPathLabels
+                .rememberPcCatalogShare(seat.effectiveCatalogName)
+            com.renatizzi.photovideomanager.data.storage.SafPathLabels
+                .rememberPcCatalogShareFromTreeUri(seat.treeUri)
+        }
     }
 
     fun clearSeat() {

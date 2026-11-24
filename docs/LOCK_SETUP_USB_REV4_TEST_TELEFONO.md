@@ -33,6 +33,8 @@
 | 3 | | |
 | 4 | | |
 | 5 | | |
-| 6 | | |
+| 6 | KO (0.16.85) | «mancata visibilità del PC»; CIFS OK (User/Folder/URI MyCatalog) — fix etichetta/persistenza in 0.16.86 |
 | 7 | | |
-| 8 | | |
+| 8 | KO (0.16.85) | collegato a #6; ritest su 0.16.86-preview vc127 |
+
+**Nota diagnosi (agente, 24/11):** screenshot CIFS corretti (`DELLRS\MyCatalog`, Folder `MyCatalog`, `smb://…:445/MyCatalog/`). Bug lato MediaManager: share custom non persistito → etichetta NAS.

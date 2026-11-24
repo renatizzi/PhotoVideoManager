@@ -101,4 +101,22 @@ class SetupCifsBundleTest {
         assertNotNull(noPwd)
         assertFalse(noPwd!!.isComplete)
     }
+
+    @Test
+    fun parse_folderAndNameFollowShareWhenOmitted_myCatalog() {
+        // LOCK #5/#6: senza folder/name nel JSON non ricadere su MyMedia fisso.
+        val raw =
+            "{\"v\":3,\"m\":\"PVMSETUP1\",\"t\":\"tokMy\"," +
+                "\"ip\":\"192.168.68.72\",\"user\":\"DELLRS\\\\MyCatalog\"," +
+                "\"password\":\"Abcd1234!xyz\",\"share\":\"MyCatalog\",\"pc\":\"DELLRS\"," +
+                "\"port\":\"445\"}"
+        val bundle = SetupCifsBundle.parse(raw, "tokMy")
+        assertNotNull(bundle)
+        assertEquals("MyCatalog", bundle!!.shareName)
+        assertEquals("MyCatalog", bundle.folder)
+        assertEquals("MyCatalog", bundle.connectionName)
+        assertEquals("DELLRS\\MyCatalog", bundle.userQualified)
+        assertEquals("192.168.68.72", bundle.hostIp)
+        assertTrue(bundle.isComplete)
+    }
 }

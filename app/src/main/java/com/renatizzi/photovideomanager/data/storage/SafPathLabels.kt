@@ -29,19 +29,52 @@ object SafPathLabels {
     /**
      * Share Catalogo su PC (nome digitato in Avvio + legacy MyMedia/MediaManagerCatalog).
      * Usato per etichettare «PC Windows» invece di «Disco di rete / NAS».
+     * Persistito: altrimenti dopo cold-start MyCatalog torna NAS (LOCK #6/#8).
      */
     private val pcCatalogShareNames: MutableSet<String> =
         mutableSetOf("mymedia", "mediamanagercatalog")
+    private var sharePrefs: android.content.SharedPreferences? = null
+
+    /** Collega persistenza + ripristina share noti (chiamare all’avvio app). */
+    fun bindPcCatalogShareStore(context: Context) {
+        val prefs = context.applicationContext
+            .getSharedPreferences(PC_SHARE_PREFS, Context.MODE_PRIVATE)
+        sharePrefs = prefs
+        val raw = prefs.getString(KEY_PC_SHARES, null).orEmpty()
+        if (raw.isBlank()) return
+        synchronized(pcCatalogShareNames) {
+            raw.split('\u001f').map { it.trim().lowercase() }.filter { it.isNotEmpty() }
+                .forEach { pcCatalogShareNames.add(it) }
+        }
+    }
 
     /** Registra lo share della sede Catalogo PC (LOCK test telefono #5/#6/#8). */
     fun rememberPcCatalogShare(shareName: String) {
         val n = shareName.trim().lowercase()
         if (n.isEmpty()) return
-        synchronized(pcCatalogShareNames) { pcCatalogShareNames.add(n) }
+        val changed = synchronized(pcCatalogShareNames) { pcCatalogShareNames.add(n) }
+        if (changed) persistPcCatalogShares()
+    }
+
+    /** Dalla tree SAF CIFS: memorizza lo share SMB (es. MyCatalog da smb://host:445/MyCatalog/). */
+    fun rememberPcCatalogShareFromTreeUri(treeUri: String?) {
+        if (treeUri.isNullOrBlank()) return
+        extractSmbShareSegment(treeUri)?.let { rememberPcCatalogShare(it) }
     }
 
     fun knownPcCatalogShares(): Set<String> =
         synchronized(pcCatalogShareNames) { pcCatalogShareNames.toSet() }
+
+    private fun persistPcCatalogShares() {
+        val prefs = sharePrefs ?: return
+        val joined = synchronized(pcCatalogShareNames) {
+            pcCatalogShareNames.joinToString("\u001f")
+        }
+        prefs.edit().putString(KEY_PC_SHARES, joined).apply()
+    }
+
+    private const val PC_SHARE_PREFS = "pvm_pc_catalog_shares"
+    private const val KEY_PC_SHARES = "shares"
 
     fun deviceLabel(context: Context): String {
         val fromSettings = runCatching {
@@ -137,7 +170,8 @@ object SafPathLabels {
             ?.trim()
             ?.trim('/')
         if (!smbHost.isNullOrBlank() && !looksIllegible(smbHost)) {
-            return smbHost
+            // smb://192.168.68.72:445 → host senza porta (CIFS Documents Provider).
+            return smbHost.substringBefore(':').ifBlank { smbHost }
         }
         // Fallback: primo segmento path tipo HOST/share
         val candidate = path.ifBlank { displayHint.orEmpty() }
