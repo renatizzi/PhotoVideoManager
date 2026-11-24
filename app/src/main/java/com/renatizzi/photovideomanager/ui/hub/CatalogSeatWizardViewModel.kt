@@ -494,14 +494,13 @@ class CatalogSeatWizardViewModel(
         val folderPath: String
         if (kind == CatalogSeatKind.PC_NOTEBOOK) {
             // Un solo nome: Catalogo = share = account Windows = Name/Folder CIFS.
-            val shareErr = WindowsCatalogSetupScript.validateShareName(name)
-            val userErr = WindowsCatalogSetupScript.validateUserName(name)
-            if (shareErr != null || userErr != null) {
+            val nameErr = WindowsCatalogSetupScript.validateCatalogNameForPc(name)
+            if (nameErr != null) {
                 _state.update {
                     it.copy(
-                        errorMessage = "Nome Catalogo non valido per PC Windows: " +
-                            "3–20 caratteri, inizia con una lettera, senza spazi " +
-                            "(es. MyMedia, FotoCasa).",
+                        errorMessage = "Nome Catalogo non valido per PC/CIFS: " +
+                            "3–20 caratteri, inizia con una lettera, solo lettere/numeri/_/- " +
+                            "(niente spazi, @, *, punti, accenti; es. MyMedia, FotoCasa).",
                     )
                 }
                 return

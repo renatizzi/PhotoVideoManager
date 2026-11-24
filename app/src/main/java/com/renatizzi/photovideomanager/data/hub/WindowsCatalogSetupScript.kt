@@ -121,6 +121,19 @@ object WindowsCatalogSetupScript {
     }
 
     /**
+     * Nome Catalogo usato anche come share + account Windows + Name/Folder CIFS.
+     * Più restrittivo dello share SMB: deve soddisfare anche [validateUserName]
+     * (niente spazi, @, *, punti, accenti, ecc.).
+     */
+    fun validateCatalogNameForPc(name: String): String? {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) return "Indica un nome per il Catalogo"
+        validateShareName(trimmed)?.let { return it }
+        validateUserName(trimmed)?.let { return it }
+        return null
+    }
+
+    /**
      * User CIFS: prova OK = `COMPUTERNAME\account` (es. `MINI_IT13\MyMedia`).
      * Non anteporre il placeholder letterale `NOMEPC` (non funziona in CIFS).
      */

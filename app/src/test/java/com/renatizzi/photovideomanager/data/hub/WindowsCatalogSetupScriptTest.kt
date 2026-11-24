@@ -291,4 +291,42 @@ class WindowsCatalogSetupScriptTest {
         assertTrue(java.io.File(out, pkg.ps1FileName).exists())
         assertTrue(java.io.File(out, pkg.cmdFileName).exists())
     }
+
+    @Test
+    fun catalogNameForPc_rejectsSpecialCharsThatBreakCifs() {
+        val rejected = listOf(
+            "Foto Casa", // spazio
+            "Foto@Casa",
+            "Foto*Casa",
+            "Foto/Casa",
+            "Foto\\Casa",
+            "Foto:Casa",
+            "Foto?Casa",
+            "Foto|Casa",
+            "Foto<Casa",
+            "Foto\"Casa",
+            "Foto.Casa", // punto: ok come share SMB, ma non come account Windows
+            "1Foto", // non inizia con lettera
+            "ab", // troppo corto
+            "x".repeat(21), // troppo lungo
+            "café",
+            "FotoCasa!",
+        )
+        rejected.forEach { name ->
+            assertNotNull(
+                "atteso rifiuto per «$name»",
+                WindowsCatalogSetupScript.validateCatalogNameForPc(name),
+            )
+        }
+    }
+
+    @Test
+    fun catalogNameForPc_acceptsSafeNames() {
+        listOf("MyMedia", "FotoCasa", "Foto_Casa", "Foto-Casa", "Abc", "Catalogo1").forEach { name ->
+            assertNull(
+                "atteso OK per «$name»",
+                WindowsCatalogSetupScript.validateCatalogNameForPc(name),
+            )
+        }
+    }
 }
