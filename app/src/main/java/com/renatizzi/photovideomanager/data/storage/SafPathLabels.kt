@@ -120,12 +120,19 @@ object SafPathLabels {
         path: String,
         uriString: String,
     ): String {
+        val hint = displayHint?.trim().orEmpty()
+        val pathTrim = path.trim()
         val blob = listOfNotNull(displayHint, path, uriString)
             .joinToString(" ")
             .lowercase()
         val shares = knownPcCatalogShares()
         val smbShare = extractSmbShareSegment(uriString)?.lowercase()
-        val isPcCatalogShare = shares.any { share ->
+        // CIFS Documents Provider espone spesso tree UUID opachi (niente smb:// nello Shared URI):
+        // il riconoscimento PC vs NAS è solo lato MediaManager (share noto / nome cartella).
+        val hintIsKnownShare = shares.any { share ->
+            hint.equals(share, ignoreCase = true) || pathTrim.equals(share, ignoreCase = true)
+        }
+        val isPcCatalogShare = hintIsKnownShare || shares.any { share ->
             smbShare == share ||
                 Regex("""\b${Regex.escape(share)}\b""").containsMatchIn(blob) ||
                 blob.contains("%2f$share") ||
@@ -143,6 +150,14 @@ object SafPathLabels {
             blob.contains(AUTH_CIFS_PROVIDER) -> DEVICE_NETWORK_NAS
             else -> DEVICE_NETWORK_NAS
         }
+    }
+
+    fun isCifsDocumentsProviderUri(uriString: String?): Boolean {
+        if (uriString.isNullOrBlank()) return false
+        return runCatching {
+            providerOf(Uri.parse(uriString)) == SafProvider.NETWORK_NAS &&
+                uriString.contains(AUTH_CIFS_PROVIDER, ignoreCase = true)
+        }.getOrDefault(false)
     }
 
     /** Ultimo segmento path di `smb://host/share` (decodificato). */

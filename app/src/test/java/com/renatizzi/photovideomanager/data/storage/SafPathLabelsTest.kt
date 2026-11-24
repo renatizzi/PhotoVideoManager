@@ -173,6 +173,31 @@ class SafPathLabelsTest {
     }
 
     @Test
+    fun networkDeviceLabel_opaqueCifsTreeUuid_withKnownShareNameIsPcWindows() {
+        // Screenshot Renato: Shared URI = tree/UUID opaco (niente smb:// nel content URI).
+        SafPathLabels.rememberPcCatalogShare("MyCatalog")
+        val opaque =
+            "content://com.wa2c.android.cifsdocumentsprovider.documents/tree/" +
+                "c8353c54-96f1-4896-a525-296d49ad9b15%3A"
+        assertEquals(
+            SafPathLabels.DEVICE_PC_NOTEBOOK,
+            SafPathLabels.networkDeviceKindFromHints(
+                displayHint = "MyCatalog",
+                path = "",
+                uriString = opaque,
+            ),
+        )
+        assertEquals(
+            SafPathLabels.DEVICE_NETWORK_NAS,
+            SafPathLabels.networkDeviceKindFromHints(
+                displayHint = "SSD_SHARED",
+                path = "",
+                uriString = opaque.replace("c8353c54", "aaaaaaaa"),
+            ),
+        )
+    }
+
+    @Test
     fun networkDeviceLabel_myCatalogWithPortIsPcAfterRememberFromTreeUri() {
         // CIFS Documents Provider: smb://192.168.68.72:445/MyCatalog/ (screenshot Renato).
         val tree =

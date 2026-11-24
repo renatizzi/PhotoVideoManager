@@ -42,6 +42,8 @@ class SourceRegistry(
     /** URI sede Catalogo PC (se configurata): forza etichetta PC Windows sulla stessa tree. */
     private val catalogSeatTreeUri: () -> String? = { null },
     private val catalogSeatIsPc: () -> Boolean = { false },
+    /** Nome Catalogo sede PC (es. MyCatalog): match su displayName se Shared URI è UUID opaco. */
+    private val catalogSeatCatalogName: () -> String = { "" },
 ) {
     suspend fun bootstrapPersonalArchiveIfNeeded() {
         require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
@@ -420,21 +422,33 @@ class SourceRegistry(
     }
 
     /**
-     * Stessa sede Catalogo PC: URI uguale, oppure stesso share SMB
-     * (encoding/porta possono differire tra Attiva e listing Acquisisci).
+     * Stessa sede Catalogo PC: URI uguale, stesso share SMB, oppure (URI CIFS opaco)
+     * displayName = nome Catalogo — CIFS non distingue PC/NAS; lo fa MediaManager.
      */
-    private fun matchesCatalogSeatTree(locator: String?): Boolean {
+    private fun matchesCatalogSeatTree(
+        locator: String?,
+        displayName: String? = null,
+    ): Boolean {
         if (locator.isNullOrBlank()) return false
-        val seatUri = catalogSeatTreeUri() ?: return false
-        if (locator == seatUri) return true
-        val seatShare = SafPathLabels.extractSmbShareSegment(seatUri) ?: return false
-        val locShare = SafPathLabels.extractSmbShareSegment(locator) ?: return false
-        return seatShare.equals(locShare, ignoreCase = true)
+        val seatUri = catalogSeatTreeUri()
+        if (!seatUri.isNullOrBlank() && locator == seatUri) return true
+        val seatShare = seatUri?.let { SafPathLabels.extractSmbShareSegment(it) }
+        val locShare = SafPathLabels.extractSmbShareSegment(locator)
+        if (seatShare != null && locShare != null &&
+            seatShare.equals(locShare, ignoreCase = true)
+        ) {
+            return true
+        }
+        if (!SafPathLabels.isCifsDocumentsProviderUri(locator)) return false
+        val catalog = catalogSeatCatalogName().trim()
+        if (catalog.isEmpty()) return false
+        val name = displayName?.trim().orEmpty()
+        return name.equals(catalog, ignoreCase = true)
     }
 
     private fun deviceLabelFor(location: StorageLocation): String {
         val locator = location.opaqueLocator
-        if (catalogSeatIsPc() && matchesCatalogSeatTree(locator)) {
+        if (catalogSeatIsPc() && matchesCatalogSeatTree(locator, location.displayName)) {
             return SafPathLabels.DEVICE_PC_NOTEBOOK
         }
         return when (location.adapterKind) {

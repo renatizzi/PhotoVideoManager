@@ -33,8 +33,8 @@
 | 3 | | |
 | 4 | | |
 | 5 | | |
-| 6 | KO | «mancata visibilità del PC» — in analisi; CIFS OK; S25 Ultra OK |
+| 6 | KO → ritest 0.16.89 | CIFS non distingue PC/NAS; fix etichetta MediaManager (URI opaco + share noto) |
 | 7 | | |
-| 8 | KO | collegato a #6 |
+| 8 | KO → ritest 0.16.89 | collegato a #6 |
 
-**Nota diagnosi (agente, 24/11 sera):** CIFS e modello telefono OK. La riga Catalogo **non stampa** kind «PC Windows». LOCK #6 = etichetta **Disco di rete / NAS** vs **PC Windows** (tipicamente Acquisisci/`deviceLabel`), non Avvio. Serve screenshot con etichetta sbagliata (scelta A/B/C).
+**Nota (25/11):** Screenshot CIFS MyCatalog coerenti col PC. CIFS = solo SMB. Fix `0.16.89`: MediaManager etichetta **PC Windows** per sede/fonte Catalogo anche con Shared URI UUID.
