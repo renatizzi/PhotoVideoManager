@@ -538,13 +538,7 @@ private fun AvvioProceduraStep(
         )
     }
 
-    QuestionText(
-        if (state.selectedKind == CatalogSeatKind.PC_NOTEBOOK) {
-            stringResource(R.string.hub_avvio_model_q_pc)
-        } else {
-            stringResource(R.string.hub_avvio_model_q)
-        },
-    )
+    QuestionText(stringResource(R.string.hub_avvio_model_q))
     OutlinedTextField(
         value = state.deviceModel,
         onValueChange = onDeviceModelChange,
@@ -553,15 +547,7 @@ private fun AvvioProceduraStep(
             .bringIntoViewRequester(modelBring)
             .onFocusEvent { if (it.isFocused) scope.launch { modelBring.bringIntoView() } },
         singleLine = true,
-        placeholder = {
-            Text(
-                if (state.selectedKind == CatalogSeatKind.PC_NOTEBOOK) {
-                    stringResource(R.string.hub_avvio_model_hint_pc)
-                } else {
-                    stringResource(R.string.hub_avvio_model_hint)
-                },
-            )
-        },
+        placeholder = { Text(stringResource(R.string.hub_avvio_model_hint)) },
     )
 
     Row(
