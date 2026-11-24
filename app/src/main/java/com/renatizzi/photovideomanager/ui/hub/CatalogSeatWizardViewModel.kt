@@ -493,12 +493,15 @@ class CatalogSeatWizardViewModel(
         val userName: String
         val folderPath: String
         if (kind == CatalogSeatKind.PC_NOTEBOOK) {
+            // Un solo nome: Catalogo = share = account Windows = Name/Folder CIFS.
             val shareErr = WindowsCatalogSetupScript.validateShareName(name)
-            if (shareErr != null) {
+            val userErr = WindowsCatalogSetupScript.validateUserName(name)
+            if (shareErr != null || userErr != null) {
                 _state.update {
                     it.copy(
                         errorMessage = "Nome Catalogo non valido per PC Windows: " +
-                            "usa lettere/numeri senza spazi (es. MyMedia, FotoCasa).",
+                            "3–20 caratteri, inizia con una lettera, senza spazi " +
+                            "(es. MyMedia, FotoCasa).",
                     )
                 }
                 return
@@ -513,8 +516,7 @@ class CatalogSeatWizardViewModel(
                 return
             }
             shareName = name
-            // Account SMB locale dedicato fisso; Name/Folder CIFS = nome Catalogo.
-            userName = WindowsCatalogSetupScript.DEFAULT_USER
+            userName = name
             folderPath = "$letter:\\$name"
             val pathErr = WindowsCatalogSetupScript.validateFolderPath(
                 folderPath,
@@ -1111,9 +1113,9 @@ class CatalogSeatWizardViewModel(
             CifsCopyField.PORT -> "445"
             CifsCopyField.USERNAME -> s.cifsUserQualified.trim()
             CifsCopyField.PASSWORD -> s.temporaryPassword
-            // Folder CIFS: pin sulla share (MyMedia), non path Windows e non vuoto.
+            // Folder CIFS: pin sullo share (= nome Catalogo), non path Windows.
             CifsCopyField.FOLDER -> WindowsCatalogSetupScript.cifsFolderPin(
-                s.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE },
+                s.shareName.ifBlank { s.catalogName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE } },
             )
         }
     }
@@ -1159,7 +1161,7 @@ class CatalogSeatWizardViewModel(
 
     /**
      * User CIFS editabile se il recupero automatico non arriva:
-     * incolla da «Tutto pronto» il valore `COMPUTERNAME\MyMedia`.
+     * incolla da «Tutto pronto» il valore `COMPUTERNAME\NomeCatalogo`.
      */
     fun setCifsUserQualified(value: String) {
         val trimmed = value.trim()
@@ -1176,9 +1178,12 @@ class CatalogSeatWizardViewModel(
 
     private fun applyLanPayload(payload: SetupLanAnnounce.Payload) {
         val ipv4 = payload.hostForCifs // solo IPv4, mai il solo nome PC
+        val account = payload.shareName.ifBlank {
+            _state.value.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER }
+        }
         val user = payload.userQualified.ifBlank {
             if (payload.computerName.isNotBlank()) {
-                "${payload.computerName}\\${WindowsCatalogSetupScript.DEFAULT_USER}"
+                "${payload.computerName}\\$account"
             } else {
                 ""
             }

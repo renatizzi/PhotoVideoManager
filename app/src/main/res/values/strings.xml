@@ -73,7 +73,7 @@
     <string name="hub_avvio_desc">Questa procedura ti consente di creare e configurare il tuo Catalogo, cioè il posto di “raccolta logica” delle foto e dei video personali. Le prime cose da stabilire sono come chiamarlo e dove tenerlo</string>
     <string name="hub_avvio_name_q">Come vuoi chiamare il Catalogo?</string>
     <string name="hub_avvio_name_default">MyMedia</string>
-    <string name="hub_avvio_name_pc_hint">Per PC Windows il nome vale anche in CIFS (lettere/numeri, senza spazi; es. MyMedia o FotoCasa).</string>
+    <string name="hub_avvio_name_pc_hint">Un solo nome ovunque: MediaManager, cartella/share sul PC, Name/Folder/User CIFS. 3–20 caratteri, inizia con lettera, senza spazi (es. MyMedia o FotoCasa).</string>
     <string name="hub_avvio_device_q">Su quale dispositivo lo vuoi tenere?</string>
     <string name="hub_avvio_pc_disk_q">Su quale disco del PC vuoi creare il Catalogo?</string>
     <string name="hub_avvio_pc_disk_internal">Disco interno (C:)</string>

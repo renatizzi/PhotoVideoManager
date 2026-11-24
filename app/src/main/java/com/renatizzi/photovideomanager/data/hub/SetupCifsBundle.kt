@@ -78,25 +78,25 @@ data class SetupCifsBundle(
             return t.contains("\"ipv4\"") && t.contains("\"status\"")
         }
 
-        fun fromPayload(p: SetupLanAnnounce.Payload): SetupCifsBundle = SetupCifsBundle(
-            token = p.token,
-            hostIp = p.hostForCifs,
-            userQualified = when {
-                p.userQualified.isNotBlank() -> p.userQualified
-                p.computerName.isNotBlank() ->
-                    WindowsCatalogSetupScript.cifsUserCopyText(
-                        WindowsCatalogSetupScript.DEFAULT_USER,
-                        p.computerName,
-                    )
-                else -> ""
-            },
-            password = p.password,
-            shareName = p.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE },
-            computerName = p.computerName,
-            port = p.port.ifBlank { DEFAULT_PORT },
-            folder = p.folder.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE },
-            connectionName = p.connectionName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE },
-        )
+        fun fromPayload(p: SetupLanAnnounce.Payload): SetupCifsBundle {
+            val share = p.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
+            return SetupCifsBundle(
+                token = p.token,
+                hostIp = p.hostForCifs,
+                userQualified = when {
+                    p.userQualified.isNotBlank() -> p.userQualified
+                    p.computerName.isNotBlank() ->
+                        WindowsCatalogSetupScript.cifsUserCopyText(share, p.computerName)
+                    else -> ""
+                },
+                password = p.password,
+                shareName = share,
+                computerName = p.computerName,
+                port = p.port.ifBlank { DEFAULT_PORT },
+                folder = p.folder.ifBlank { share },
+                connectionName = p.connectionName.ifBlank { share },
+            )
+        }
 
         /**
          * Parse JSON announce / file USB. Password obbligatoria per [isComplete].
