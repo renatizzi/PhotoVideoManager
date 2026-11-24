@@ -171,7 +171,7 @@ object PcSetupGuideContent {
     fun cifs62Title(): String = "Fase 7 – Configura CIFS e attiva Catalogo"
     fun cifs62Bullets(): List<String> = listOf(
         PHASE_MANAGED_MANUALLY,
-        "Apri CIFS > premi [+] > seleziona “Input”.",
+        "Aperto CIFS: premi [+] e seleziona “Input”.",
         "Torna a questa schermata di MediaManager.",
         "Per ogni campo: premi il relativo pulsante “Copia” in MediaManager, passa a CIFS e incolla il valore nel campo corrispondente.",
         "Ripeti l’operazione fino a completare tutti i campi richiesti.",

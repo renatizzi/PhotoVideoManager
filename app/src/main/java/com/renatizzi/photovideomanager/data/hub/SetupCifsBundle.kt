@@ -60,10 +60,13 @@ data class SetupCifsBundle(
 
         fun isBundleFileName(name: String): Boolean {
             val n = name.trim()
-            // Happy path: rifiuta DATI_CIFS (1).json e simili (BL-BT-02).
-            if (n.contains("(") && n.contains(")")) return false
             if (n.equals(BUNDLE_FILE_NAME, ignoreCase = true)) return true
+            // LOCK #2: MTP spesso crea DATI_CIFS (1).json; accettare se il token JSON coincide.
+            if (Regex("""^DATI_CIFS \(\d+\)\.json$""", RegexOption.IGNORE_CASE).matches(n)) {
+                return true
+            }
             if (n.equals(LEGACY_BUNDLE_FILE_NAME, ignoreCase = true)) return true
+            if (n.contains("(") && n.contains(")")) return false
             return n.startsWith(LEGACY_BUNDLE_FILE_PREFIX, ignoreCase = true) &&
                 n.endsWith(".json", ignoreCase = true)
         }

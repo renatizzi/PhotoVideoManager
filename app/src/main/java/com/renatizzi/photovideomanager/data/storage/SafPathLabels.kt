@@ -24,6 +24,24 @@ object SafPathLabels {
     private const val AUTH_EXTERNAL = "com.android.externalstorage.documents"
     private const val AUTH_DOWNLOADS = "com.android.providers.downloads.documents"
     private const val AUTH_DRIVE_PREFIX = "com.google.android.apps.docs"
+    private const val AUTH_CIFS_PROVIDER = "com.wa2c.android.cifsdocumentsprovider"
+
+    /**
+     * Share Catalogo su PC (nome digitato in Avvio + legacy MyMedia/MediaManagerCatalog).
+     * Usato per etichettare «PC Windows» invece di «Disco di rete / NAS».
+     */
+    private val pcCatalogShareNames: MutableSet<String> =
+        mutableSetOf("mymedia", "mediamanagercatalog")
+
+    /** Registra lo share della sede Catalogo PC (LOCK test telefono #5/#6/#8). */
+    fun rememberPcCatalogShare(shareName: String) {
+        val n = shareName.trim().lowercase()
+        if (n.isEmpty()) return
+        synchronized(pcCatalogShareNames) { pcCatalogShareNames.add(n) }
+    }
+
+    fun knownPcCatalogShares(): Set<String> =
+        synchronized(pcCatalogShareNames) { pcCatalogShareNames.toSet() }
 
     fun deviceLabel(context: Context): String {
         val fromSettings = runCatching {
@@ -72,17 +90,35 @@ object SafPathLabels {
         val blob = listOfNotNull(displayHint, path, uriString)
             .joinToString(" ")
             .lowercase()
+        val shares = knownPcCatalogShares()
+        val smbShare = extractSmbShareSegment(uriString)?.lowercase()
+        val isPcCatalogShare = shares.any { share ->
+            smbShare == share ||
+                Regex("""\b${Regex.escape(share)}\b""").containsMatchIn(blob) ||
+                blob.contains("%2f$share") ||
+                blob.contains("/$share")
+        }
         return when {
-            // Share Catalogo Windows dedicato (MyMedia o legacy MediaManagerCatalog) → PC.
-            blob.contains("mediamanagercatalog") ||
-                Regex("""\bmymedia\b""").containsMatchIn(blob) -> DEVICE_PC_NOTEBOOK
+            // Share Catalogo Windows (nome Avvio o legacy) → PC Windows.
+            isPcCatalogShare -> DEVICE_PC_NOTEBOOK
             // LOCK S25 #1: disco/share di rete (anche cartella «MediaManager(sda1)») = NAS, non PC.
             blob.contains("synology") ||
                 blob.contains("qnap") ||
                 blob.contains("truenas") ||
                 Regex("""\bnas\b""").containsMatchIn(blob) -> DEVICE_NETWORK_NAS
+            // Provider CIFS senza share Catalogo noto: NAS generico (non promuovere a PC).
+            blob.contains(AUTH_CIFS_PROVIDER) -> DEVICE_NETWORK_NAS
             else -> DEVICE_NETWORK_NAS
         }
+    }
+
+    /** Ultimo segmento path di `smb://host/share` (decodificato). */
+    fun extractSmbShareSegment(uriString: String): String? {
+        val decoded = decode(uriString)
+        val match = Regex("""smb://[^/]+/([^/?#]+)""", RegexOption.IGNORE_CASE)
+            .find(decoded)
+            ?: return null
+        return match.groupValues.getOrNull(1)?.trim()?.trim('/')?.takeIf { it.isNotEmpty() }
     }
 
     /**

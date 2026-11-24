@@ -89,6 +89,10 @@ data class CatalogSeatWizardUiState(
     val folderPath: String = WindowsCatalogSetupScript.DEFAULT_FOLDER,
     val shareName: String = WindowsCatalogSetupScript.DEFAULT_SHARE,
     val userName: String = WindowsCatalogSetupScript.DEFAULT_USER,
+    /** LOCK #7: disco PC interno (C:) o esterno (lettera scelta). */
+    val pcDiskInternal: Boolean = true,
+    /** Lettera disco esterno (D–Z), usata solo se [pcDiskInternal] = false. */
+    val pcExternalDriveLetter: String = "D",
     val temporaryPassword: String = "",
     val scriptPrepared: Boolean = false,
     val usbCopiedDeclared: Boolean = false,
@@ -215,6 +219,18 @@ class CatalogSeatWizardViewModel(
         } else {
             null
         }
+        if (seat.isConfigured && seat.kind == CatalogSeatKind.PC_NOTEBOOK) {
+            com.renatizzi.photovideomanager.data.storage.SafPathLabels
+                .rememberPcCatalogShare(seat.effectiveCatalogName)
+        }
+        val draftFolder = draft?.folderPath ?: WindowsCatalogSetupScript.DEFAULT_FOLDER
+        val draftShare = draft?.shareName ?: WindowsCatalogSetupScript.DEFAULT_SHARE
+        if (draftShare.isNotBlank()) {
+            com.renatizzi.photovideomanager.data.storage.SafPathLabels
+                .rememberPcCatalogShare(draftShare)
+        }
+        val letterFromPath = draftFolder.trim().take(1).uppercase()
+        val diskInternal = letterFromPath.isEmpty() || letterFromPath == "C"
         _state.update {
             it.copy(
                 step = WizardStep.S0_START,
@@ -238,9 +254,11 @@ class CatalogSeatWizardViewModel(
                 resumeStepLabel = resumeStep?.let { s -> humanStepLabel(s) }.orEmpty(),
                 selectedKind = if (seat.isConfigured) seat.kind else CatalogSeatKind.LOCAL_DEVICE,
                 setupMode = if (seat.isConfigured) SetupMode.MODIFY else SetupMode.CREATE,
-                folderPath = draft?.folderPath ?: WindowsCatalogSetupScript.DEFAULT_FOLDER,
-                shareName = draft?.shareName ?: WindowsCatalogSetupScript.DEFAULT_SHARE,
+                folderPath = draftFolder,
+                shareName = draftShare,
                 userName = draft?.userName ?: WindowsCatalogSetupScript.DEFAULT_USER,
+                pcDiskInternal = diskInternal,
+                pcExternalDriveLetter = if (diskInternal) "D" else letterFromPath.ifBlank { "D" },
                 scriptPrepared = draft?.scriptPrepared == true,
                 usbCopiedDeclared = draft?.usbCopiedDeclared == true,
                 scriptRanDeclared = draft?.scriptRanDeclared == true,
@@ -470,31 +488,47 @@ class CatalogSeatWizardViewModel(
         val model = current.deviceModel.trim().ifBlank {
             suggestedDeviceModel()
         }
-        // LOCK Setup PC: un percorso; path/share/user fissi MyMedia (non editabili).
-        val folderPath = if (kind == CatalogSeatKind.PC_NOTEBOOK) {
-            WindowsCatalogSetupScript.DEFAULT_FOLDER
-        } else {
-            current.folderPath
-        }
-        val shareName = if (kind == CatalogSeatKind.PC_NOTEBOOK) {
-            WindowsCatalogSetupScript.DEFAULT_SHARE
-        } else {
-            current.shareName
-        }
-        val userName = if (kind == CatalogSeatKind.PC_NOTEBOOK) {
-            WindowsCatalogSetupScript.DEFAULT_USER
-        } else {
-            current.userName
-        }
+        // LOCK test telefono #5/#7: nome Catalogo = share/CIFS; disco interno o esterno.
+        val shareName: String
+        val userName: String
+        val folderPath: String
         if (kind == CatalogSeatKind.PC_NOTEBOOK) {
+            val shareErr = WindowsCatalogSetupScript.validateShareName(name)
+            if (shareErr != null) {
+                _state.update {
+                    it.copy(
+                        errorMessage = "Nome Catalogo non valido per PC Windows: " +
+                            "usa lettere/numeri senza spazi (es. MyMedia, FotoCasa).",
+                    )
+                }
+                return
+            }
+            val letter = if (current.pcDiskInternal) {
+                "C"
+            } else {
+                current.pcExternalDriveLetter.trim().uppercase().take(1).ifBlank { "D" }
+            }
+            if (!letter.matches(Regex("[A-Z]"))) {
+                _state.update { it.copy(errorMessage = "Seleziona la lettera del disco esterno") }
+                return
+            }
+            shareName = name
+            // Account SMB locale dedicato fisso; Name/Folder CIFS = nome Catalogo.
+            userName = WindowsCatalogSetupScript.DEFAULT_USER
+            folderPath = "$letter:\\$name"
             val pathErr = WindowsCatalogSetupScript.validateFolderPath(
                 folderPath,
-                requireDriveC = true,
+                requireDriveC = false,
             )
             if (pathErr != null) {
                 _state.update { it.copy(errorMessage = pathErr) }
                 return
             }
+            com.renatizzi.photovideomanager.data.storage.SafPathLabels.rememberPcCatalogShare(shareName)
+        } else {
+            shareName = current.shareName
+            userName = current.userName
+            folderPath = current.folderPath
         }
         val step = when (kind) {
             CatalogSeatKind.LOCAL_DEVICE -> WizardStep.W1_CONFIRM
@@ -521,6 +555,27 @@ class CatalogSeatWizardViewModel(
             )
         }
         persistDraft()
+    }
+
+    fun updatePcDiskInternal(internal: Boolean) {
+        _state.update {
+            it.copy(
+                pcDiskInternal = internal,
+                errorMessage = null,
+                scriptPrepared = false,
+            )
+        }
+    }
+
+    fun updatePcExternalDriveLetter(letter: String) {
+        val L = letter.trim().uppercase().take(1)
+        _state.update {
+            it.copy(
+                pcExternalDriveLetter = L.ifBlank { it.pcExternalDriveLetter },
+                errorMessage = null,
+                scriptPrepared = false,
+            )
+        }
     }
 
     /** Compat: INTRO legacy (bozze) → stesso routing di Avvio. */
@@ -1540,8 +1595,7 @@ class CatalogSeatWizardViewModel(
                                     "TELEFONO: nel menu Condividi scegli Bluetooth e il PC. " +
                                         "Poi torna a MediaManager (non restare su Invio/Ricevi)."
                                 onGuide && savedOk ->
-                                    "Set pronto sul Telefono. Via USB: copia i 3 file sul Desktop " +
-                                        "(overwrite, niente (1)/(2)). Poi tocca Fatto sulla Fase 2."
+                                    "I file sono stati creati e sono pronti per essere copiati sul Desktop del PC"
                                 else -> null
                             },
                             step = when {
@@ -1647,11 +1701,16 @@ class CatalogSeatWizardViewModel(
                 )
             }
             val ui = _state.value
+            val catalogName = ui.catalogName.ifBlank { CatalogSeat.DEFAULT_CATALOG_NAME }
+            if (kind == CatalogSeatKind.PC_NOTEBOOK) {
+                com.renatizzi.photovideomanager.data.storage.SafPathLabels
+                    .rememberPcCatalogShare(ui.shareName.ifBlank { catalogName })
+            }
             val seat = CatalogSeat(
                 kind = kind,
                 treeUri = treeUri,
-                displayLabel = label,
-                catalogName = ui.catalogName.ifBlank { CatalogSeat.DEFAULT_CATALOG_NAME },
+                displayLabel = label.ifBlank { catalogName },
+                catalogName = catalogName,
                 deviceModel = ui.deviceModel.ifBlank { CatalogSeat.DEFAULT_DEVICE_MODEL },
                 memoryLabel = if (kind == CatalogSeatKind.LOCAL_DEVICE) {
                     ui.memoryLabel.ifBlank { CatalogSeat.MEMORY_PRIMARY }

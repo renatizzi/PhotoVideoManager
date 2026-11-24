@@ -118,6 +118,7 @@ class WindowsSetupScriptExporter(
                 val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
                 val patterns = listOf(
                     SetupCifsBundle.BUNDLE_FILE_NAME,
+                    "DATI_CIFS%",
                     "${SetupCifsBundle.LEGACY_BUNDLE_FILE_PREFIX}%",
                 )
                 for (pattern in patterns) {

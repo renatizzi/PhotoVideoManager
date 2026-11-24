@@ -28,7 +28,7 @@
   <h1>Setup del Catalogo personale — solo USB</h1>
   <p>Procedura di collegamento e trasferimento file tra Telefono Android e PC Windows tramite cavo USB.
   La procedura prepara il PC come sede del Catalogo e trasferisce a MediaManager i dati per configurare CIFS.</p>
-  <p class="muted">Versione guida: USB-only · specifica Cursor REV4 (7 fasi) · 23/11/2026 (Europe/Rome)</p>
+  <p class="muted">Versione guida: USB-only · specifica Cursor REV4 (7 fasi) · 24/11/2026 (Europe/Rome)</p>
 </header>
 
 <section>
@@ -52,6 +52,10 @@
     <li>PC/Notebook Windows 10 o superiore.</li>
     <li>Cavo USB che supporta il trasferimento dati (non solo ricarica).</li>
   </ul>
+  <div class="note">
+    <strong>Avvio in app:</strong> scegli il <em>nome del Catalogo</em> (stesso nome in MediaManager e in CIFS; lettere/numeri senza spazi, es. MyMedia o FotoCasa).
+    Con dispositivo «PC Windows» scegli anche il <em>disco</em>: interno (C:) oppure esterno (lettera D–Z). Percorso creato: <code>LETTER:\NomeCatalogo</code>.
+  </div>
 </section>
 
 <section>
@@ -112,7 +116,8 @@
   <h2>Fase 5 — Import dati CIFS</h2>
   <ul>
     <li>Fase gestita dall’app</li>
-    <li>Premi «Importa dati CIFS» e seleziona DATI_CIFS.json tramite il selettore file.</li>
+    <li>Premi «Importa dati CIFS» e seleziona DATI_CIFS.json dalla cartella <strong>Download del Telefono</strong> (non dal PC).</li>
+    <li>Se compare DATI_CIFS (1).json, scegli il file più recente della sessione corrente.</li>
     <li>MediaManager legge e interpreta il file. Dopo import OK, tocca <strong>Fatto</strong>.</li>
   </ul>
 </section>
@@ -121,7 +126,7 @@
   <h2>Fase 6 — Installa / Apri CIFS</h2>
   <ul>
     <li>Fase gestita manualmente</li>
-    <li>Installa o apri CIFS Documents Provider.</li>
+    <li>Il pulsante resta sempre attivo: installa CIFS se assente, altrimenti apre l’app.</li>
     <li>Al termine torna a MediaManager e conferma con <strong>OK</strong> (checkpoint: app presente).</li>
   </ul>
 </section>
@@ -130,7 +135,7 @@
   <h2>Fase 7 — Configura CIFS e attiva Catalogo</h2>
   <p>Fase gestita manualmente</p>
   <ol class="steps">
-    <li>Apri CIFS → premi [+] → seleziona «Input».</li>
+    <li>Aperto CIFS: premi [+] e seleziona «Input».</li>
     <li>Torna a MediaManager.</li>
     <li>Per ogni campo: «Copia» in MediaManager → incolla nel campo corrispondente in CIFS.</li>
     <li>Ripeti fino a completare tutti i campi richiesti.</li>

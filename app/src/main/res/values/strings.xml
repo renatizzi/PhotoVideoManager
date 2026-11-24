@@ -73,8 +73,15 @@
     <string name="hub_avvio_desc">Questa procedura ti consente di creare e configurare il tuo Catalogo, cioè il posto di “raccolta logica” delle foto e dei video personali. Le prime cose da stabilire sono come chiamarlo e dove tenerlo</string>
     <string name="hub_avvio_name_q">Come vuoi chiamare il Catalogo?</string>
     <string name="hub_avvio_name_default">MyMedia</string>
+    <string name="hub_avvio_name_pc_hint">Per PC Windows il nome vale anche in CIFS (lettere/numeri, senza spazi; es. MyMedia o FotoCasa).</string>
     <string name="hub_avvio_device_q">Su quale dispositivo lo vuoi tenere?</string>
+    <string name="hub_avvio_pc_disk_q">Su quale disco del PC vuoi creare il Catalogo?</string>
+    <string name="hub_avvio_pc_disk_internal">Disco interno (C:)</string>
+    <string name="hub_avvio_pc_disk_external">Disco esterno</string>
+    <string name="hub_avvio_pc_disk_letter">Lettera del disco esterno</string>
+    <string name="hub_avvio_pc_path_preview">Percorso sul PC: %1$s</string>
     <string name="hub_avvio_model_q">Qual è il modello del dispositivo?</string>
+    <string name="hub_pc_import_download_hint">Seleziona DATI_CIFS.json dalla cartella Download del Telefono (non dal PC). Se compare DATI_CIFS (1).json, scegli il file più recente della sessione.</string>
     <string name="hub_avvio_model_hint">MyDevice</string>
     <string name="hub_avvio_continua">Continua</string>
     <string name="hub_avvio_esc">Esc</string>

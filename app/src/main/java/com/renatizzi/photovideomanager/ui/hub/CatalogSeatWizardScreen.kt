@@ -85,6 +85,8 @@ fun CatalogSeatWizardScreen(
     onSelectKind: (CatalogSeatKind) -> Unit,
     onCatalogNameChange: (String) -> Unit = {},
     onDeviceModelChange: (String) -> Unit = {},
+    onPcDiskInternal: (Boolean) -> Unit = {},
+    onPcExternalDriveLetter: (String) -> Unit = {},
     onProcedureMode: (ProcedureMode) -> Unit = {},
     onAvanti: () -> Unit,
     onContinuaAvvio: () -> Unit = onAvanti,
@@ -234,6 +236,8 @@ fun CatalogSeatWizardScreen(
                 onCatalogNameChange = onCatalogNameChange,
                 onSelectKind = onSelectKind,
                 onDeviceModelChange = onDeviceModelChange,
+                onPcDiskInternal = onPcDiskInternal,
+                onPcExternalDriveLetter = onPcExternalDriveLetter,
                 onContinua = onContinuaAvvio,
                 onResumeDraft = onResumeDraft,
                 onDiscardDraft = onDiscardDraft,
@@ -444,6 +448,8 @@ private fun AvvioProceduraStep(
     onCatalogNameChange: (String) -> Unit,
     onSelectKind: (CatalogSeatKind) -> Unit,
     onDeviceModelChange: (String) -> Unit,
+    onPcDiskInternal: (Boolean) -> Unit,
+    onPcExternalDriveLetter: (String) -> Unit,
     onContinua: () -> Unit,
     onResumeDraft: () -> Unit,
     onDiscardDraft: () -> Unit,
@@ -492,6 +498,13 @@ private fun AvvioProceduraStep(
         singleLine = true,
         placeholder = { Text(stringResource(R.string.hub_avvio_name_default)) },
     )
+    if (state.selectedKind == CatalogSeatKind.PC_NOTEBOOK) {
+        Text(
+            stringResource(R.string.hub_avvio_name_pc_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+        )
+    }
 
     QuestionText(stringResource(R.string.hub_avvio_device_q))
     DeviceKindDropdown(
@@ -499,6 +512,31 @@ private fun AvvioProceduraStep(
         onSelectKind = onSelectKind,
         enabled = !state.busy,
     )
+
+    if (state.selectedKind == CatalogSeatKind.PC_NOTEBOOK) {
+        QuestionText(stringResource(R.string.hub_avvio_pc_disk_q))
+        PcDiskDropdown(
+            internal = state.pcDiskInternal,
+            onSelectInternal = onPcDiskInternal,
+            enabled = !state.busy,
+        )
+        if (!state.pcDiskInternal) {
+            PcDriveLetterDropdown(
+                letter = state.pcExternalDriveLetter,
+                onSelect = onPcExternalDriveLetter,
+                enabled = !state.busy,
+            )
+        }
+        val previewName = state.catalogName.trim().ifBlank {
+            stringResource(R.string.hub_avvio_name_default)
+        }
+        val previewLetter = if (state.pcDiskInternal) "C" else state.pcExternalDriveLetter
+        Text(
+            stringResource(R.string.hub_avvio_pc_path_preview, "$previewLetter:\\$previewName"),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+    }
 
     QuestionText(stringResource(R.string.hub_avvio_model_q))
     OutlinedTextField(
@@ -626,6 +664,97 @@ private fun IntroStep(
 }
 
 private enum class LocalVolume { PRIMARY, SECONDARY }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PcDiskDropdown(
+    internal: Boolean,
+    onSelectInternal: (Boolean) -> Unit,
+    enabled: Boolean,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val label = if (internal) {
+        stringResource(R.string.hub_avvio_pc_disk_internal)
+    } else {
+        stringResource(R.string.hub_avvio_pc_disk_external)
+    }
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { if (enabled) expanded = it },
+    ) {
+        OutlinedTextField(
+            value = label,
+            onValueChange = {},
+            readOnly = true,
+            enabled = enabled,
+            label = { Text(stringResource(R.string.hub_avvio_pc_disk_q)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = enabled)
+                .fillMaxWidth(),
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.hub_avvio_pc_disk_internal)) },
+                onClick = {
+                    onSelectInternal(true)
+                    expanded = false
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.hub_avvio_pc_disk_external)) },
+                onClick = {
+                    onSelectInternal(false)
+                    expanded = false
+                },
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PcDriveLetterDropdown(
+    letter: String,
+    onSelect: (String) -> Unit,
+    enabled: Boolean,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val letters = remember { ('D'..'Z').map { it.toString() } }
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { if (enabled) expanded = it },
+    ) {
+        OutlinedTextField(
+            value = letter.ifBlank { "D" },
+            onValueChange = {},
+            readOnly = true,
+            enabled = enabled,
+            label = { Text(stringResource(R.string.hub_avvio_pc_disk_letter)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = enabled)
+                .fillMaxWidth(),
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            letters.forEach { L ->
+                DropdownMenuItem(
+                    text = { Text("$L:") },
+                    onClick = {
+                        onSelect(L)
+                        expanded = false
+                    },
+                )
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -991,6 +1120,11 @@ private fun PcGuideStep(
     // Una sola fase per pagina (REV4): titolo già nel sottotitolo chrome.
     UsbSetupBulletList(lines = phase.bullets, enabled = unlocked)
     if (index == 4 && !done) {
+        Text(
+            stringResource(R.string.hub_pc_import_download_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+        )
         Button(
             onClick = onImportCifs,
             enabled = !busy && !state.setupResultImported,
@@ -1047,12 +1181,17 @@ private fun CifsInstallStep(
 ) {
     // Titolo fase già nel sottotitolo chrome — solo testi REV4.
     UsbSetupBulletList(lines = PcSetupGuideContent.cifs61Bullets())
+    // LOCK #3: pulsante sempre attivo — apre l’app se presente, altrimenti store.
     Button(
         onClick = onOpenCifs,
-        enabled = !state.busy && !state.cifsInstalled,
+        enabled = !state.busy,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Text(stringResource(R.string.hub_pc_cifs_install_open))
+        Text(
+            stringResource(
+                if (state.cifsInstalled) R.string.hub_cifs_open else R.string.hub_pc_cifs_install_open,
+            ),
+        )
     }
     Text(
         stringResource(R.string.hub_s0_when_ready),

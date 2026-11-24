@@ -160,6 +160,19 @@ class SafPathLabelsTest {
     }
 
     @Test
+    fun networkDeviceLabel_rememberedCatalogShareIsPcWindows() {
+        SafPathLabels.rememberPcCatalogShare("FotoCasa")
+        assertEquals(
+            SafPathLabels.DEVICE_PC_NOTEBOOK,
+            SafPathLabels.networkDeviceKindFromHints(
+                displayHint = "FotoCasa",
+                path = "FotoCasa",
+                uriString = "content://com.wa2c.android.cifsdocumentsprovider.documents/tree/smb%3A%2F%2F192.168.1.10%2FFotoCasa",
+            ),
+        )
+    }
+
+    @Test
     fun extractNetworkHostHint_fromSmbUri() {
         assertEquals(
             "192.168.1.20",

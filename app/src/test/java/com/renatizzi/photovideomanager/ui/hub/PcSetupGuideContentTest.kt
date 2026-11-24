@@ -109,6 +109,8 @@ class PcSetupGuideContentTest {
         assertFalse(corpus.contains("gestita dall’utente"))
         assertFalse(corpus.contains("manualmente dall’utente"))
         assertEquals("✔", PcSetupGuideContent.BULLET_MARK)
+        assertTrue(PcSetupGuideContent.cifs62Bullets()[1].startsWith("Aperto CIFS"))
+        assertFalse(PcSetupGuideContent.cifs62Body().contains("Apri CIFS >"))
     }
 
     @Test
