@@ -33,8 +33,8 @@
 | 3 | | |
 | 4 | | |
 | 5 | | |
-| 6 | KO (0.16.85) | «mancata visibilità del PC»; CIFS OK (User/Folder/URI MyCatalog) — fix etichetta/persistenza in 0.16.86 |
+| 6 | KO (0.16.86) | riepilogo `S25 Ultra \MyCatalog` con dispositivo PC Windows — modello telefono in Avvio; fix in 0.16.87 |
 | 7 | | |
-| 8 | KO (0.16.85) | collegato a #6; ritest su 0.16.86-preview vc127 |
+| 8 | KO (0.16.86) | collegato a #6; ritest su 0.16.87-preview vc128 |
 
-**Nota diagnosi (agente, 24/11):** screenshot CIFS corretti (`DELLRS\MyCatalog`, Folder `MyCatalog`, `smb://…:445/MyCatalog/`). Bug lato MediaManager: share custom non persistito → etichetta NAS.
+**Nota diagnosi (agente, 24/11):** CIFS OK (`DELLRS\MyCatalog`, Folder `MyCatalog`, path `C:\MyCatalog`). Causa UI: in Avvio con **PC Windows** il campo modello restava **S25 Ultra di RENATO** → riepilogo telefono invece di PC.

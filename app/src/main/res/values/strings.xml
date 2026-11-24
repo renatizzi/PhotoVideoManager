@@ -81,6 +81,8 @@
     <string name="hub_avvio_pc_disk_letter">Lettera del disco esterno</string>
     <string name="hub_avvio_pc_path_preview">Percorso sul PC: %1$s</string>
     <string name="hub_avvio_model_q">Qual è il modello del dispositivo?</string>
+    <string name="hub_avvio_model_q_pc">Come vuoi etichettare questo PC in MediaManager?</string>
+    <string name="hub_avvio_model_hint_pc">PC Windows</string>
     <string name="hub_pc_import_download_hint">Seleziona DATI_CIFS.json dalla cartella Download del Telefono (non dal PC). Se compare DATI_CIFS (1).json, scegli il file più recente della sessione.</string>
     <string name="hub_avvio_model_hint">MyDevice</string>
     <string name="hub_avvio_continua">Continua</string>

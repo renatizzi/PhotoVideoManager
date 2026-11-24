@@ -453,7 +453,39 @@ class CatalogSeatWizardViewModel(
     }
 
     fun selectKind(kind: CatalogSeatKind) {
-        _state.update { it.copy(selectedKind = kind, errorMessage = null) }
+        _state.update { current ->
+            val phone = suggestedDeviceModel()
+            val newModel = when (kind) {
+                CatalogSeatKind.PC_NOTEBOOK -> {
+                    val pc = current.pcComputerName.trim()
+                    val typed = current.deviceModel.trim()
+                    when {
+                        // Passaggio da «Questo dispositivo» → togli il modello telefono.
+                        current.selectedKind == CatalogSeatKind.LOCAL_DEVICE ||
+                            typed.isBlank() ||
+                            typed.equals(phone, ignoreCase = true) ->
+                            pc.ifBlank { CatalogSeatKindLabels.shortDevice(CatalogSeatKind.PC_NOTEBOOK) }
+                        else -> typed
+                    }
+                }
+                CatalogSeatKind.LOCAL_DEVICE -> {
+                    val typed = current.deviceModel.trim()
+                    val pcLabel = CatalogSeatKindLabels.shortDevice(CatalogSeatKind.PC_NOTEBOOK)
+                    when {
+                        current.selectedKind == CatalogSeatKind.PC_NOTEBOOK ||
+                            typed.isBlank() ||
+                            typed.equals(pcLabel, ignoreCase = true) ||
+                            typed.equals(current.pcComputerName.trim(), ignoreCase = true) ->
+                            phone
+                        else -> typed
+                    }
+                }
+                else -> current.deviceModel.ifBlank {
+                    CatalogSeatKindLabels.shortDevice(kind).ifBlank { phone }
+                }
+            }
+            current.copy(selectedKind = kind, deviceModel = newModel, errorMessage = null)
+        }
         persistDraft()
     }
 
@@ -485,8 +517,11 @@ class CatalogSeatWizardViewModel(
             _state.update { it.copy(errorMessage = "Seleziona un dispositivo") }
             return
         }
-        val model = current.deviceModel.trim().ifBlank {
-            suggestedDeviceModel()
+        // LOCK #6/#8: per PC non usare il modello del telefono (S25 Ultra…).
+        val model = if (kind == CatalogSeatKind.PC_NOTEBOOK) {
+            resolvePcDeviceModel(current)
+        } else {
+            current.deviceModel.trim().ifBlank { suggestedDeviceModel() }
         }
         // LOCK test telefono #5/#7: nome Catalogo = share/CIFS; disco interno o esterno.
         val shareName: String
@@ -1203,15 +1238,28 @@ class CatalogSeatWizardViewModel(
                 com.renatizzi.photovideomanager.data.storage.SafPathLabels
                     .rememberPcCatalogShare(shareOut)
             }
+            val pcName = payload.computerName.ifBlank { it.pcComputerName }.trim()
+            val phone = suggestedDeviceModel()
+            val modelOut = when {
+                pcName.isNotBlank() &&
+                    (it.deviceModel.isBlank() ||
+                        it.deviceModel.equals(phone, ignoreCase = true) ||
+                        it.deviceModel.equals(
+                            CatalogSeatKindLabels.shortDevice(CatalogSeatKind.PC_NOTEBOOK),
+                            ignoreCase = true,
+                        )) -> pcName
+                else -> it.deviceModel
+            }
             it.copy(
                 cifsUserQualified = userOut,
                 pcHostIp = host,
-                pcComputerName = payload.computerName.ifBlank { it.pcComputerName },
+                pcComputerName = pcName.ifBlank { it.pcComputerName },
                 temporaryPassword = passwordOut,
                 shareName = shareOut,
                 // LOCK #5: un solo nome anche dopo import DATI_CIFS (User/Folder/share).
                 userName = shareOut.ifBlank { it.userName },
                 catalogName = shareOut.ifBlank { it.catalogName },
+                deviceModel = modelOut,
                 setupResultImported = complete,
                 recoveringPcData = !complete,
                 errorMessage = null,
@@ -1725,7 +1773,11 @@ class CatalogSeatWizardViewModel(
                 treeUri = treeUri,
                 displayLabel = label.ifBlank { catalogName },
                 catalogName = catalogName,
-                deviceModel = ui.deviceModel.ifBlank { CatalogSeat.DEFAULT_DEVICE_MODEL },
+                deviceModel = if (kind == CatalogSeatKind.PC_NOTEBOOK) {
+                    resolvePcDeviceModel(ui)
+                } else {
+                    ui.deviceModel.ifBlank { CatalogSeat.DEFAULT_DEVICE_MODEL }
+                },
                 memoryLabel = if (kind == CatalogSeatKind.LOCAL_DEVICE) {
                     ui.memoryLabel.ifBlank { CatalogSeat.MEMORY_PRIMARY }
                 } else {
@@ -1825,6 +1877,17 @@ class CatalogSeatWizardViewModel(
     private fun suggestedDeviceModel(): String =
         SafPathLabels.deviceLabel(appContext).trim()
             .ifBlank { CatalogSeat.DEFAULT_DEVICE_MODEL }
+
+    /**
+     * LOCK #6/#8: etichetta sede PC = nome PC (DELLRS) o «PC Windows»,
+     * mai il modello del telefono precompilato in Avvio.
+     */
+    private fun resolvePcDeviceModel(ui: CatalogSeatWizardUiState): String =
+        com.renatizzi.photovideomanager.domain.hub.PcSeatDeviceModel.resolve(
+            typedModel = ui.deviceModel,
+            phoneSuggested = suggestedDeviceModel(),
+            pcComputerName = ui.pcComputerName,
+        )
 
     companion object {
         fun factory(catalogFacade: CatalogFacade, appContext: Context): ViewModelProvider.Factory =
