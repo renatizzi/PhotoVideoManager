@@ -33,8 +33,8 @@
 | 3 | | |
 | 4 | | |
 | 5 | | |
-| 6 | KO (0.16.85) | «mancata visibilità del PC»; CIFS OK (User/Folder/URI MyCatalog) — fix etichetta/persistenza in 0.16.86 |
+| 6 | KO | «mancata visibilità del PC» — in analisi; CIFS OK; S25 Ultra OK |
 | 7 | | |
-| 8 | KO (0.16.85) | collegato a #6; ritest su 0.16.86-preview vc127 |
+| 8 | KO | collegato a #6 |
 
-**Nota diagnosi (agente, 24/11):** screenshot CIFS corretti (`DELLRS\MyCatalog`, Folder `MyCatalog`, `smb://…:445/MyCatalog/`). Bug lato MediaManager: share custom non persistito → etichetta NAS.
+**Nota diagnosi (agente, 24/11 sera):** CIFS e modello telefono OK. La riga Catalogo **non stampa** kind «PC Windows». LOCK #6 = etichetta **Disco di rete / NAS** vs **PC Windows** (tipicamente Acquisisci/`deviceLabel`), non Avvio. Serve screenshot con etichetta sbagliata (scelta A/B/C).
