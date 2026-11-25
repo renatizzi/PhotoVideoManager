@@ -71,15 +71,20 @@ object CatalogSeatRowFormatter {
      * Seconda riga stile TO-BE (C1):
      * locale Principale: «device \path - 🛜 Online»
      * locale Secondaria: «device SD \path - 🛜 Online»
-     * remoto: «device \path - 🛜 Online»
+     * PC Windows: «PC Windows C:\Nome\MediaManager - 🛜 Online» (niente nome telefono)
+     * altro remoto: «kind \path - 🛜 Online»
      */
     fun detailLine(status: CatalogSeatStatus): String {
         val seat = status.seat
+        val state = reachabilityLabel(status.reachability)
+        if (seat.kind == CatalogSeatKind.PC_NOTEBOOK) {
+            val path = seat.seatPathForDisplay.ifBlank { "—" }
+            return "${CatalogSeatKindLabels.shortDevice(CatalogSeatKind.PC_NOTEBOOK)} $path - $state"
+        }
         val device = seat.deviceModel.ifBlank {
             CatalogSeatKindLabels.shortDevice(seat.kind).ifBlank { CatalogSeat.DEFAULT_DEVICE_MODEL }
         }
         val path = displayPath(seat.displayLabel.ifBlank { "—" })
-        val state = reachabilityLabel(status.reachability)
         val parts = mutableListOf(device)
         if (seat.kind == CatalogSeatKind.LOCAL_DEVICE &&
             seat.memoryLabel == CatalogSeat.MEMORY_SECONDARY

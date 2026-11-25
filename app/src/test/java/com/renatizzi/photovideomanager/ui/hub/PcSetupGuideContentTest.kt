@@ -78,7 +78,7 @@ class PcSetupGuideContentTest {
         assertFalse(PcSetupGuideContent.cifs61Title().contains("6/1"))
         assertFalse(PcSetupGuideContent.cifs62Title().contains("6/2"))
         assertEquals(3, PcSetupGuideContent.cifs61Bullets().size)
-        assertEquals(8, PcSetupGuideContent.cifs62Bullets().size)
+        assertEquals(9, PcSetupGuideContent.cifs62Bullets().size)
     }
 
     @Test

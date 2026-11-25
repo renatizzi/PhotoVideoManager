@@ -167,6 +167,21 @@ object PcSetupGuideContent {
     )
     fun cifs61Body(): String = cifs61Bullets().joinToString("\n")
 
+    /**
+     * Nota Avvio / guida: in CIFS si vede il nome Catalogo (share), non la lettera disco.
+     */
+    fun cifsShareVsDriveLetterNote(catalogName: String): String {
+        val name = catalogName.trim().ifBlank { "NomeCatalogo" }
+        return "NB — Per accedere alla cartella del Catalogo sul PC usa l’app CIFS " +
+            "dove vedrai «$name» e non la lettera del disco."
+    }
+
+    fun hubFolderOnPcNote(catalogName: String): String {
+        val name = catalogName.trim().ifBlank { "NomeCatalogo" }
+        return "Dentro C:\\$name MediaManager crea la sottocartella «MediaManager» " +
+            "(dati di servizio). In app la sede compare come: PC Windows C:\\$name\\MediaManager."
+    }
+
     /** REV4 PAGINA 11 — sequenza unica. */
     fun cifs62Title(): String = "Fase 7 – Configura CIFS e attiva Catalogo"
     fun cifs62Bullets(): List<String> = listOf(
@@ -175,6 +190,7 @@ object PcSetupGuideContent {
         "Torna a questa schermata di MediaManager.",
         "Per ogni campo: premi il relativo pulsante “Copia” in MediaManager, passa a CIFS e incolla il valore nel campo corrispondente.",
         "Ripeti l’operazione fino a completare tutti i campi richiesti.",
+        "NB — In CIFS vedi il nome del Catalogo (share), non la lettera del disco Windows (es. C:).",
         "Salva la configurazione in CIFS e verifica che la cartella condivisa sia presente nell’elenco di CIFS.",
         "Torna a MediaManager e conferma di aver salvato i dati.",
         "Premi “Attiva Catalogo”.",

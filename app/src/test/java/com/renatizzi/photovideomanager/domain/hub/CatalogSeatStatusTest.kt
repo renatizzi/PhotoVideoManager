@@ -31,16 +31,19 @@ class CatalogSeatStatusTest {
         val seat = CatalogSeat(
             kind = CatalogSeatKind.PC_NOTEBOOK,
             treeUri = "content://tree/abc",
-            displayLabel = "\\\\192.168.1.20\\MediaManagerCatalog",
-            catalogName = "MyMedia",
-            deviceModel = "PC-UFFICIO",
+            displayLabel = "C:\\MyCat\\MediaManager",
+            catalogName = "MyCat",
+            deviceModel = "S25 Ultra",
+            windowsFolderPath = "C:\\MyCat",
         )
         assertTrue(seat.isConfigured)
         val status = CatalogSeatStatus(seat, CatalogSeatReachability.REACHABLE)
         assertTrue(status.configured)
-        assertEquals("MyMedia", status.catalogName)
+        assertEquals("MyCat", status.catalogName)
+        assertEquals("C:\\MyCat\\MediaManager", seat.seatPathForDisplay)
+        // LOCK UX: sede PC = tipo + path Windows completo (con MediaManager), non nome telefono.
         assertEquals(
-            "PC-UFFICIO \\\\192.168.1.20\\MediaManagerCatalog - 🛜 Online",
+            "PC Windows C:\\MyCat\\MediaManager - 🛜 Online",
             CatalogSeatRowFormatter.detailLine(status),
         )
     }

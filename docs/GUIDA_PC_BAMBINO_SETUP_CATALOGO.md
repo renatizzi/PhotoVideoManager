@@ -14,6 +14,8 @@ Vuoi che il **telefono** veda una **cartella sul PC**, così MediaManager può t
 
 Il telefono **non** apre da solo il PC. Devi: (1) preparare una cartella sul PC, (2) farla “vedere in rete”, (3) insegnare al telefono come arrivarci con un’app gratis chiamata **CIFS**.
 
+**NB —** In CIFS vedi il **nome del Catalogo** (es. `MyCat`), **non** la lettera del disco (`C:`). Su Windows la cartella resta `C:\MyCat`; dentro, MediaManager crea la sottocartella di servizio `MediaManager` (in app: `PC Windows C:\MyCat\MediaManager`).
+
 ---
 
 ## 1. Cosa ti serve prima di iniziare

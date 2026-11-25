@@ -1720,10 +1720,22 @@ class CatalogSeatWizardViewModel(
                 com.renatizzi.photovideomanager.data.storage.SafPathLabels
                     .rememberPcCatalogShareFromTreeUri(treeUri)
             }
+            val windowsFolder = if (kind == CatalogSeatKind.PC_NOTEBOOK) {
+                ui.folderPath.trim().ifBlank { "C:\\$catalogName" }
+            } else {
+                ""
+            }
+            val displayForSeat = if (kind == CatalogSeatKind.PC_NOTEBOOK) {
+                val hub = com.renatizzi.photovideomanager.domain.hub.HubPackage.RELATIVE_DIR
+                val base = windowsFolder.trimEnd('\\')
+                "$base\\$hub"
+            } else {
+                label.ifBlank { catalogName }
+            }
             val seat = CatalogSeat(
                 kind = kind,
                 treeUri = treeUri,
-                displayLabel = label.ifBlank { catalogName },
+                displayLabel = displayForSeat,
                 catalogName = catalogName,
                 deviceModel = ui.deviceModel.ifBlank { CatalogSeat.DEFAULT_DEVICE_MODEL },
                 memoryLabel = if (kind == CatalogSeatKind.LOCAL_DEVICE) {
@@ -1731,6 +1743,7 @@ class CatalogSeatWizardViewModel(
                 } else {
                     ""
                 },
+                windowsFolderPath = windowsFolder,
             )
             val result = catalogFacade.configureCatalogSeat(seat)
             if (result.isSuccess) {
