@@ -413,7 +413,8 @@ function Record(${d}name, ${d}ok, ${d}detail) {
 }
 
 function Invoke-PvmMaggiordomo([string]${d}destDir) {
-  # Consolida i 3 file e rimuove duplicati (1)/(2) da Desktop / Download / File ricevuti / cartella script.
+  # I 3 file canonici (CONFIGURA.cmd, sup.ps1, QRCoder.dll) devono SOVRASCRIVERE
+  # le copie in Desktop/Download/File ricevuti; poi elimina ogni variante (1)/(2).
   ${d}desk = [Environment]::GetFolderPath('Desktop')
   ${d}dl = Join-Path ${d}env:USERPROFILE 'Downloads'
   ${d}recv1 = Join-Path ${d}env:USERPROFILE 'Documents\Bluetooth Exchange Folder'
@@ -425,24 +426,35 @@ function Invoke-PvmMaggiordomo([string]${d}destDir) {
     }
   }
   foreach (${d}need in @('CONFIGURA.cmd','sup.ps1','QRCoder.dll')) {
-    ${d}best = ${d}null
-    ${d}like = ${d}need + ' (*)'
-    foreach (${d}dir in ${d}dirs) {
-      ${d}hit = Get-ChildItem -LiteralPath ${d}dir -File -ErrorAction SilentlyContinue |
-        Where-Object { ${d}_.Name -ieq ${d}need -or ${d}_.Name -like ${d}like } |
-        Sort-Object LastWriteTime -Descending |
-        Select-Object -First 1
-      if (${d}hit -and (-not ${d}best -or ${d}hit.LastWriteTime -gt ${d}best.LastWriteTime)) {
-        ${d}best = ${d}hit
+    # Preferisci il file accanto allo script in esecuzione (set appena copiato/lanciato).
+    ${d}canonical = Join-Path ${d}PSScriptRoot ${d}need
+    if (-not (Test-Path -LiteralPath ${d}canonical)) {
+      ${d}like = ${d}need + ' (*)'
+      ${d}hit = ${d}null
+      foreach (${d}dir in ${d}dirs) {
+        ${d}candFile = Get-ChildItem -LiteralPath ${d}dir -File -ErrorAction SilentlyContinue |
+          Where-Object { ${d}_.Name -ieq ${d}need -or ${d}_.Name -like ${d}like } |
+          Sort-Object LastWriteTime -Descending |
+          Select-Object -First 1
+        if (${d}candFile -and (-not ${d}hit -or ${d}candFile.LastWriteTime -gt ${d}hit.LastWriteTime)) {
+          ${d}hit = ${d}candFile
+        }
       }
+      if (${d}hit) { ${d}canonical = ${d}hit.FullName }
     }
-    if (${d}best -and ${d}destDir -and (Test-Path -LiteralPath ${d}destDir)) {
-      Copy-Item -LiteralPath ${d}best.FullName -Destination (Join-Path ${d}destDir ${d}need) -Force -ErrorAction SilentlyContinue
+    if (-not ${d}canonical -or -not (Test-Path -LiteralPath ${d}canonical)) { continue }
+    foreach (${d}dir in ${d}dirs) {
+      try {
+        Copy-Item -LiteralPath ${d}canonical -Destination (Join-Path ${d}dir ${d}need) -Force -ErrorAction SilentlyContinue
+      } catch {}
     }
   }
   foreach (${d}dir in ${d}dirs) {
     Get-ChildItem -LiteralPath ${d}dir -File -ErrorAction SilentlyContinue |
-      Where-Object { ${d}_.Name -match '^(CONFIGURA|sup|QRCoder|DATI_CIFS|no_pw).*\([0-9]+\)' } |
+      Where-Object {
+        ${d}_.Name -match '^(CONFIGURA|sup|QRCoder|DATI_CIFS|no_pw).*\([0-9]+\)' -or
+        ${d}_.Name -match '^(CONFIGURA|sup|QRCoder).*\([0-9]+\)\.' 
+      } |
       ForEach-Object { Remove-Item -LiteralPath ${d}_.FullName -Force -ErrorAction SilentlyContinue }
   }
 }
@@ -559,13 +571,30 @@ try {
   } catch {
     Fail-Step 40 ("Permessi NTFS non riusciti: " + ${d}_.Exception.Message)
   }
-  Write-Step "Permessi lettura sul disco (navigazione cartelle foto in CIFS)"
+  Write-Step "Permessi lettura cartelle dati (niente ACL ricorsiva su Windows/Program Files)"
   try {
-    # /T /C: eredita RX sulle cartelle esistenti; ignora errori su file di sistema.
-    ${d}grant = ${d}UserName + ':(OI)(CI)RX'
-    & icacls.exe ${d}ShareRoot /grant ${d}grant /T /C /Q | Out-Null
-    Record 'ntfs_disk' ${d}true 'rx_disco'
-    Write-Step "ACL lettura disco applicati (alcune cartelle di sistema possono restare nascoste)."
+    try {
+      ${d}usersSid = New-Object System.Security.Principal.SecurityIdentifier('S-1-5-32-545')
+      ${d}usersGroup = ${d}usersSid.Translate([System.Security.Principal.NTAccount]).Value
+      ${d}usersShort = (${d}usersGroup -split '\\')[-1]
+      Add-LocalGroupMember -Group ${d}usersShort -Member ${d}UserName -ErrorAction SilentlyContinue
+    } catch {}
+    # Solo list/traverse sulla radice - MAI icacls /T su tutto il disco (si blocca su pagefile/Windows).
+    cmd.exe /c ("icacls \"" + ${d}ShareRoot + "\" /grant " + ${d}UserName + ":(RX) /C /Q >nul 2>&1") | Out-Null
+    ${d}skip = @(
+      'Windows', 'Program Files', 'Program Files (x86)', 'ProgramData',
+      'System Volume Information', '${'$'}Recycle.Bin', 'Recovery', 'System Repair',
+      'PerfLogs', 'Documents and Settings'
+    )
+    Get-ChildItem -LiteralPath ${d}ShareRoot -Force -ErrorAction SilentlyContinue |
+      Where-Object { ${d}_.PSIsContainer -and (${d}skip -notcontains ${d}_.Name) } |
+      ForEach-Object {
+        ${d}p = ${d}_.FullName
+        Write-Step ("  ACL dati: " + ${d}_.Name)
+        cmd.exe /c ("icacls \"" + ${d}p + "\" /grant " + ${d}UserName + ":(OI)(CI)RX /T /C /Q >nul 2>&1") | Out-Null
+      }
+    Record 'ntfs_disk' ${d}true 'rx_dati'
+    Write-Step "ACL lettura su cartelle dati ok (sistema escluso)."
   } catch {
     Write-Step "Avviso: permessi disco parziali; Catalogo ok, alcune cartelle foto potrebbero non comparire."
     Record 'ntfs_disk' ${d}false 'parziale'

@@ -123,7 +123,12 @@ class WindowsCatalogSetupScriptTest {
         assertTrue(ps1.contains("ShareRoot"))
         assertTrue(ps1.contains("creata_disco") || ps1.contains("ripruntata_disco"))
         assertTrue(ps1.contains("New-SmbShare") && ps1.contains("ShareRoot"))
-        assertTrue(ps1.contains("icacls.exe"))
+        assertTrue(ps1.contains("icacls"))
+        // Non deve più fare icacls /T sulla sola radice disco (blocco su pagefile/Windows).
+        assertFalse(
+            Regex("""icacls[^\\n]*ShareRoot[^\\n]*/T""").containsMatchIn(ps1),
+        )
+        assertTrue(ps1.contains("rx_dati") || ps1.contains("ACL dati"))
     }
 
     @Test

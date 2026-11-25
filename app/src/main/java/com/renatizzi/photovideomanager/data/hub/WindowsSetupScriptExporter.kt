@@ -299,7 +299,7 @@ class WindowsSetupScriptExporter(
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
         val resolver = context.contentResolver
         val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-        // Exact names and Samsung-renamed "*.cmd.txt" / "*.ps1 (n).txt" leftovers.
+        // Prefissi legacy + i 3 file set (anche CONFIGURA (1).cmd / sup (2).ps1).
         for (prefix in WindowsCatalogSetupScript.DOWNLOAD_SCRUB_PREFIXES) {
             resolver.delete(
                 collection,
@@ -307,18 +307,61 @@ class WindowsSetupScriptExporter(
                 arrayOf("$prefix%"),
             )
         }
+        for (exact in SETUP_SET_FILE_NAMES) {
+            deleteDownloadsMatching(exact)
+        }
+    }
+
+    /** Cancella nome esatto e varianti `name (n).ext` / `name.ext (n)` (non altri file). */
+    private fun deleteDownloadsMatching(fileName: String) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
+        val resolver = context.contentResolver
+        val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        val stem = fileName.substringBeforeLast('.', fileName)
+        val ext = fileName.substringAfterLast('.', missingDelimiterValue = "")
+        val patterns = buildList {
+            add(fileName)
+            if (ext.isNotEmpty()) {
+                add("$stem (%).$ext")
+                add("$stem.%.$ext") // raramente MediaStore altera il nome
+            }
+            add("$fileName (%)")
+        }.distinct()
+        for (pattern in patterns) {
+            runCatching {
+                resolver.delete(
+                    collection,
+                    "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
+                    arrayOf(pattern),
+                )
+            }
+        }
+        runCatching {
+            resolver.delete(
+                collection,
+                "${MediaStore.Downloads.DISPLAY_NAME} = ?",
+                arrayOf(fileName),
+            )
+        }
     }
 
     private fun purgeLegacyDownloadFiles(downloads: File) {
         downloads.listFiles()
             ?.filter { file ->
-                WindowsCatalogSetupScript.DOWNLOAD_SCRUB_PREFIXES.any { file.name.startsWith(it) }
+                WindowsCatalogSetupScript.DOWNLOAD_SCRUB_PREFIXES.any {
+                    file.name.startsWith(it, ignoreCase = true)
+                } || SETUP_SET_FILE_NAMES.any { canon ->
+                    file.name.equals(canon, ignoreCase = true) ||
+                        file.name.startsWith(canon.substringBeforeLast('.'), ignoreCase = true)
+                }
             }
             ?.forEach { it.delete() }
     }
 
     private fun writeMediaStore(file: File): Boolean {
         val resolver = context.contentResolver
+        // Sovrascrivi: elimina ogni copia omonima/(n) prima dell’insert (evita CONFIGURA (1).cmd).
+        deleteDownloadsMatching(file.name)
         val values = ContentValues().apply {
             put(MediaStore.Downloads.DISPLAY_NAME, file.name)
             put(MediaStore.Downloads.MIME_TYPE, mimeFor(file.name))
@@ -328,7 +371,7 @@ class WindowsSetupScriptExporter(
         val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
         val uri = resolver.insert(collection, values) ?: return false
         try {
-            resolver.openOutputStream(uri)?.use { out ->
+            resolver.openOutputStream(uri, "w")?.use { out ->
                 file.inputStream().use { input -> input.copyTo(out) }
             } ?: run {
                 resolver.delete(uri, null, null)
@@ -344,6 +387,14 @@ class WindowsSetupScriptExporter(
         }
     }
 
+    companion object {
+        private val SETUP_SET_FILE_NAMES = listOf(
+            WindowsCatalogSetupScript.CMD_FILE_NAME,
+            WindowsCatalogSetupScript.PS1_FILE_NAME,
+            WindowsCatalogSetupScript.QRCODER_DLL_FILE_NAME,
+        )
+    }
+
     private fun copyToRemovableUsb(ps1: File, cmd: File, qrDll: File?): String? {
         val sm = context.getSystemService(StorageManager::class.java) ?: return null
         for (volume in sm.storageVolumes) {
@@ -357,10 +408,21 @@ class WindowsSetupScriptExporter(
             if (!root.exists() || !root.canWrite()) continue
             return try {
                 val targetDir = File(root, "MediaManager").apply { mkdirs() }
-                FileOutputStream(File(targetDir, ps1.name)).use { ps1.inputStream().copyTo(it) }
-                FileOutputStream(File(targetDir, cmd.name)).use { cmd.inputStream().copyTo(it) }
-                if (qrDll != null) {
-                    FileOutputStream(File(targetDir, qrDll.name)).use { qrDll.inputStream().copyTo(it) }
+                // Sovrascrivi i 3 file canonici; elimina eventuali (1)/(2) residui sulla chiavetta.
+                listOfNotNull(ps1, cmd, qrDll).forEach { src ->
+                    targetDir.listFiles()
+                        ?.filter {
+                            it.name.equals(src.name, ignoreCase = true) ||
+                                it.name.matches(
+                                    Regex(
+                                        "^${Regex.escape(src.name.substringBeforeLast('.'))} \\(\\d+\\)\\." +
+                                            Regex.escape(src.name.substringAfterLast('.')),
+                                        RegexOption.IGNORE_CASE,
+                                    ),
+                                )
+                        }
+                        ?.forEach { it.delete() }
+                    FileOutputStream(File(targetDir, src.name)).use { src.inputStream().copyTo(it) }
                 }
                 volume.getDescription(context) ?: root.absolutePath
             } catch (_: Exception) {
