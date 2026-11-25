@@ -129,6 +129,9 @@ class WindowsCatalogSetupScriptTest {
             Regex("""icacls[^\\n]*ShareRoot[^\\n]*/T""").containsMatchIn(ps1),
         )
         assertTrue(ps1.contains("rx_dati") || ps1.contains("ACL dati"))
+        // ParseFile CI: niente escape \\\" non validi in PowerShell 5.1.
+        assertFalse(ps1.contains("icacls \\\""))
+        assertTrue(ps1.contains("cmd.exe /c ('icacls \"' + \$ShareRoot"))
     }
 
     @Test

@@ -580,7 +580,7 @@ try {
       Add-LocalGroupMember -Group ${d}usersShort -Member ${d}UserName -ErrorAction SilentlyContinue
     } catch {}
     # Solo list/traverse sulla radice - MAI icacls /T su tutto il disco (si blocca su pagefile/Windows).
-    cmd.exe /c ("icacls \"" + ${d}ShareRoot + "\" /grant " + ${d}UserName + ":(RX) /C /Q >nul 2>&1") | Out-Null
+    cmd.exe /c ('icacls "' + ${d}ShareRoot + '" /grant ' + ${d}UserName + ':(RX) /C /Q >nul 2>&1') | Out-Null
     ${d}skip = @(
       'Windows', 'Program Files', 'Program Files (x86)', 'ProgramData',
       'System Volume Information', '${'$'}Recycle.Bin', 'Recovery', 'System Repair',
@@ -591,7 +591,7 @@ try {
       ForEach-Object {
         ${d}p = ${d}_.FullName
         Write-Step ("  ACL dati: " + ${d}_.Name)
-        cmd.exe /c ("icacls \"" + ${d}p + "\" /grant " + ${d}UserName + ":(OI)(CI)RX /T /C /Q >nul 2>&1") | Out-Null
+        cmd.exe /c ('icacls "' + ${d}p + '" /grant ' + ${d}UserName + ':(OI)(CI)RX /T /C /Q >nul 2>&1') | Out-Null
       }
     Record 'ntfs_disk' ${d}true 'rx_dati'
     Write-Step "ACL lettura su cartelle dati ok (sistema escluso)."
