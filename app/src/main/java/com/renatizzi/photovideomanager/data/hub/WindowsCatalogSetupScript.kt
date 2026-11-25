@@ -30,10 +30,14 @@ object WindowsCatalogSetupScript {
     const val CMD_FILE_NAME = "CONFIGURA.cmd"
     /** Supporto interno (non aprire). Nome PPT: sup. */
     const val PS1_FILE_NAME = "sup.ps1"
-    /** Prefissi Download da ripulire (attuali + nomi legacy). */
+    /**
+     * Prefissi da ripulire **solo dopo** Setup OK ([WindowsSetupScriptExporter.scrubDownloadsScripts]).
+     * Non usare in export: cancellare `DATI_CIFS%` mentre il telefono e' aperto via MTP
+     * crea file fantasma 0 byte / data 1970 non eliminabili da Esplora file.
+     */
     val DOWNLOAD_SCRUB_PREFIXES: List<String> = listOf(
         "CONFIGURA",
-        "sup",
+        "sup.ps1", // non "sup" nudo (troppo ampio)
         "DATI_CIFS",
         "no_pw",
         "AVVIA_Configurazione_Catalogo",
@@ -54,6 +58,12 @@ object WindowsCatalogSetupScript {
     const val HANDOFF_QR_FILE_NAME = "MediaManager_setup_handoff.png"
     /** Encoder QR (MIT) esportato insieme a CONFIGURA/sup. */
     const val QRCODER_DLL_FILE_NAME = "QRCoder.dll"
+    /** Solo i 3 file dello script in export (mai DATI_CIFS / no_pw). */
+    val SETUP_SET_FILE_NAMES: List<String> = listOf(
+        CMD_FILE_NAME,
+        PS1_FILE_NAME,
+        QRCODER_DLL_FILE_NAME,
+    )
     const val LOG_FILE_NAME = "MediaManager_setup.log"
     /** Porte annuncio dopo Tutto pronto (allineate a [SetupLanAnnounce]). */
     const val SETUP_ANNOUNCE_UDP_PORT = SetupLanAnnounce.UDP_PORT
@@ -450,10 +460,10 @@ function Invoke-PvmMaggiordomo([string]${d}destDir) {
     }
   }
   foreach (${d}dir in ${d}dirs) {
+    # Solo duplicati dei 3 file script. NON toccare DATI_CIFS/no_pw (bundle).
     Get-ChildItem -LiteralPath ${d}dir -File -ErrorAction SilentlyContinue |
       Where-Object {
-        ${d}_.Name -match '^(CONFIGURA|sup|QRCoder|DATI_CIFS|no_pw).*\([0-9]+\)' -or
-        ${d}_.Name -match '^(CONFIGURA|sup|QRCoder).*\([0-9]+\)\.' 
+        ${d}_.Name -match '^(CONFIGURA|sup|QRCoder).*\([0-9]+\)'
       } |
       ForEach-Object { Remove-Item -LiteralPath ${d}_.FullName -Force -ErrorAction SilentlyContinue }
   }
@@ -523,25 +533,41 @@ try {
   Write-Host "Passo 4 di 6 - Condivisione SMB (disco)" -ForegroundColor Cyan
   Write-Step ("Condivisione SMB: ${d}ShareName -> disco " + ${d}ShareRoot + " (Catalogo in " + ${d}FolderPath + ")")
   try {
+    ${d}sharePath = ${d}ShareRoot
     ${d}shareObj = Get-SmbShare -Name ${d}ShareName -ErrorAction SilentlyContinue
-    ${d}wantedPath = ([string]${d}ShareRoot).TrimEnd([char]92)
+    ${d}wantedPath = ([string]${d}sharePath).TrimEnd([char]92)
     if (${d}null -eq ${d}shareObj) {
-      New-SmbShare -Name ${d}ShareName -Path ${d}ShareRoot -FullAccess ${d}UserName -FolderEnumerationMode AccessBased | Out-Null
-      Record 'share' ${d}true 'creata_disco'
-      Write-Step "Condivisione del disco creata."
+      try {
+        New-SmbShare -Name ${d}ShareName -Path ${d}sharePath -FullAccess ${d}UserName -FolderEnumerationMode AccessBased | Out-Null
+        Record 'share' ${d}true 'creata_disco'
+        Write-Step "Condivisione del disco creata."
+      } catch {
+        # Alcuni Windows rifiutano share sulla radice: fallback cartella Catalogo.
+        Write-Step ("Condivisione disco non riuscita (" + ${d}_.Exception.Message + "); uso cartella Catalogo.")
+        ${d}sharePath = ${d}FolderPath
+        New-SmbShare -Name ${d}ShareName -Path ${d}sharePath -FullAccess ${d}UserName -FolderEnumerationMode AccessBased | Out-Null
+        Record 'share' ${d}true 'creata_catalogo_fallback'
+        Write-Step "Condivisione cartella Catalogo creata (fallback)."
+      }
     } else {
-      # Stesso nome share: ripunta alla radice disco se serve (file Catalogo restano).
       ${d}existingPath = ([string]${d}shareObj.Path).TrimEnd([char]92)
       if (${d}existingPath -ieq ${d}wantedPath) {
         Grant-SmbShareAccess -Name ${d}ShareName -AccountName ${d}UserName -AccessRight Full -Force | Out-Null
         Record 'share' ${d}true 'aggiornata'
         Write-Step "Condivisione disco gia presente: permessi aggiornati."
       } else {
-        Write-Step ("Condivisione gia su '${d}existingPath': la ripunto al disco '${d}ShareRoot'.")
+        Write-Step ("Condivisione gia su '${d}existingPath': ripunto a '${d}sharePath'.")
         Remove-SmbShare -Name ${d}ShareName -Force
-        New-SmbShare -Name ${d}ShareName -Path ${d}ShareRoot -FullAccess ${d}UserName -FolderEnumerationMode AccessBased | Out-Null
-        Record 'share' ${d}true 'ripruntata_disco'
-        Write-Step "Condivisione ripuntata alla radice del disco."
+        try {
+          New-SmbShare -Name ${d}ShareName -Path ${d}sharePath -FullAccess ${d}UserName -FolderEnumerationMode AccessBased | Out-Null
+          Record 'share' ${d}true 'ripruntata_disco'
+          Write-Step "Condivisione ripuntata alla radice del disco."
+        } catch {
+          ${d}sharePath = ${d}FolderPath
+          New-SmbShare -Name ${d}ShareName -Path ${d}sharePath -FullAccess ${d}UserName -FolderEnumerationMode AccessBased | Out-Null
+          Record 'share' ${d}true 'ripruntata_catalogo_fallback'
+          Write-Step "Condivisione ripuntata alla cartella Catalogo (fallback)."
+        }
       }
     }
     Get-SmbShareAccess -Name ${d}ShareName | Where-Object { ${d}_.AccountName -match 'Everyone|Tutti' } | ForEach-Object {
@@ -586,15 +612,16 @@ try {
       'System Volume Information', '${'$'}Recycle.Bin', 'Recovery', 'System Repair',
       'PerfLogs', 'Documents and Settings'
     )
+    # Senza /T: veloce, non si blocca su alberi enormi; Users group + ereditarieta' (OI)(CI).
     Get-ChildItem -LiteralPath ${d}ShareRoot -Force -ErrorAction SilentlyContinue |
       Where-Object { ${d}_.PSIsContainer -and (${d}skip -notcontains ${d}_.Name) } |
       ForEach-Object {
         ${d}p = ${d}_.FullName
         Write-Step ("  ACL dati: " + ${d}_.Name)
-        cmd.exe /c ('icacls "' + ${d}p + '" /grant ' + ${d}UserName + ':(OI)(CI)RX /T /C /Q >nul 2>&1') | Out-Null
+        cmd.exe /c ('icacls "' + ${d}p + '" /grant ' + ${d}UserName + ':(OI)(CI)RX /C /Q >nul 2>&1') | Out-Null
       }
     Record 'ntfs_disk' ${d}true 'rx_dati'
-    Write-Step "ACL lettura su cartelle dati ok (sistema escluso)."
+    Write-Step "ACL lettura su cartelle dati ok (sistema escluso, senza /T)."
   } catch {
     Write-Step "Avviso: permessi disco parziali; Catalogo ok, alcune cartelle foto potrebbero non comparire."
     Record 'ntfs_disk' ${d}false 'parziale'
