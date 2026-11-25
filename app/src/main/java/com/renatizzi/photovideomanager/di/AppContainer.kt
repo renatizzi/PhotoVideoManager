@@ -83,6 +83,7 @@ class AppContainer(context: Context) {
                 com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind.PC_NOTEBOOK
         },
         catalogSeatCatalogName = { catalogSeatStore.seat().effectiveCatalogName },
+        catalogSeatPathForDisplay = { catalogSeatStore.seat().seatPathForDisplay },
     )
 
     val censusService: CensusService = CensusService(

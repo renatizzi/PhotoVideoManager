@@ -176,12 +176,6 @@ object PcSetupGuideContent {
             "dove vedrai «$name» e non la lettera del disco."
     }
 
-    fun hubFolderOnPcNote(catalogName: String): String {
-        val name = catalogName.trim().ifBlank { "NomeCatalogo" }
-        return "Dentro C:\\$name MediaManager crea la sottocartella «MediaManager» " +
-            "(dati di servizio). In app la sede compare come: PC Windows C:\\$name\\MediaManager."
-    }
-
     /** REV4 PAGINA 11 — sequenza unica. */
     fun cifs62Title(): String = "Fase 7 – Configura CIFS e attiva Catalogo"
     fun cifs62Bullets(): List<String> = listOf(

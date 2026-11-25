@@ -541,11 +541,6 @@ private fun AvvioProceduraStep(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
         )
-        Text(
-            stringResource(R.string.hub_avvio_pc_hub_folder_hint),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-        )
     }
 
     QuestionText(stringResource(R.string.hub_avvio_model_q))

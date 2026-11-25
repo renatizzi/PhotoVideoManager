@@ -44,6 +44,8 @@ class SourceRegistry(
     private val catalogSeatIsPc: () -> Boolean = { false },
     /** Nome Catalogo sede PC (es. MyCatalog): match su displayName se Shared URI è UUID opaco. */
     private val catalogSeatCatalogName: () -> String = { "" },
+    /** Path Windows sede PC (es. `C:\MyC\MediaManager`) per etichetta Acquisisci. */
+    private val catalogSeatPathForDisplay: () -> String = { "" },
 ) {
     suspend fun bootstrapPersonalArchiveIfNeeded() {
         require(permissionGate.canMutateCatalog(DomainScope.PERSONAL))
@@ -116,7 +118,12 @@ class SourceRegistry(
             if (displayName != location.displayName && looksIllegible(location.displayName)) {
                 catalogStore.upsertStorageLocation(location.copy(displayName = displayName))
             }
-            val pathLabel = SafPathLabels.pathUnderName(rawPath, displayName, deviceLabel)
+            // Sede PC: mostra path Windows (`C:\Nome\MediaManager`), non `\MediaManager` SAF.
+            val pathLabel = if (matchesCatalogSeatTree(location.opaqueLocator, location.displayName)) {
+                rawPath
+            } else {
+                SafPathLabels.pathUnderName(rawPath, displayName, deviceLabel)
+            }
             SourceSummary(
                 locationId = location.id,
                 archiveId = location.archiveId,
@@ -266,13 +273,22 @@ class SourceRegistry(
         catalogStore.upsertStorageLocation(saved)
 
         val device = deviceLabelFor(saved)
-        val rawPath = pathLabel ?: saved.displayName
+        val rawPath = if (matchesCatalogSeatTree(uriKey, saved.displayName)) {
+            catalogSeatPathForDisplay().ifBlank { pathLabel ?: saved.displayName }
+        } else {
+            pathLabel ?: saved.displayName
+        }
+        val shownPath = if (matchesCatalogSeatTree(uriKey, saved.displayName)) {
+            rawPath
+        } else {
+            SafPathLabels.pathUnderName(rawPath, saved.displayName, device)
+        }
         return SourceSummary(
             locationId = saved.id,
             archiveId = saved.archiveId,
             displayName = saved.displayName,
             deviceLabel = device,
-            pathLabel = SafPathLabels.pathUnderName(rawPath, saved.displayName, device),
+            pathLabel = shownPath,
             adapterKind = saved.adapterKind,
             availability = saved.availability,
             isSharedArchive = false,
@@ -422,16 +438,30 @@ class SourceRegistry(
     }
 
     /**
-     * Stessa sede Catalogo PC: URI uguale, stesso share SMB, oppure (URI CIFS opaco)
-     * displayName = nome Catalogo — CIFS non distingue PC/NAS; lo fa MediaManager.
+     * Stessa sede Catalogo PC: URI uguale/discendente, stesso share SMB, oppure
+     * (URI CIFS opaco) displayName = nome Catalogo **o** cartella hub `MediaManager`.
+     * Solo se la sede è PC — non promuovere NAS reali con cartella omonima.
      */
     private fun matchesCatalogSeatTree(
         locator: String?,
         displayName: String? = null,
     ): Boolean {
+        if (!catalogSeatIsPc()) return false
         if (locator.isNullOrBlank()) return false
         val seatUri = catalogSeatTreeUri()
-        if (!seatUri.isNullOrBlank() && locator == seatUri) return true
+        if (!seatUri.isNullOrBlank()) {
+            if (locator == seatUri || SafTreeIdentity.sameTree(locator, seatUri)) return true
+            val seatDoc = SafTreeIdentity.documentIdOfLocator(seatUri)
+            val locDoc = SafTreeIdentity.documentIdOfLocator(locator)
+            if (seatDoc != null && locDoc != null &&
+                (
+                    SafTreeIdentity.isSameOrDescendantDocId(locDoc, seatDoc) ||
+                        SafTreeIdentity.isSameOrDescendantDocId(seatDoc, locDoc)
+                    )
+            ) {
+                return true
+            }
+        }
         val seatShare = seatUri?.let { SafPathLabels.extractSmbShareSegment(it) }
         val locShare = SafPathLabels.extractSmbShareSegment(locator)
         if (seatShare != null && locShare != null &&
@@ -441,14 +471,21 @@ class SourceRegistry(
         }
         if (!SafPathLabels.isCifsDocumentsProviderUri(locator)) return false
         val catalog = catalogSeatCatalogName().trim()
-        if (catalog.isEmpty()) return false
         val name = displayName?.trim().orEmpty()
-        return name.equals(catalog, ignoreCase = true)
+        if (catalog.isNotEmpty() && name.equals(catalog, ignoreCase = true)) return true
+        // Attiva/selettore spesso apre la sottocartella hub, non la radice share.
+        if (name.equals(com.renatizzi.photovideomanager.domain.hub.HubPackage.RELATIVE_DIR, ignoreCase = true)) {
+            return true
+        }
+        // Share noto (MyC / MyMedia / …) anche se displayName ≠ catalogo.
+        return SafPathLabels.knownPcCatalogShares().any { share ->
+            name.equals(share, ignoreCase = true)
+        }
     }
 
     private fun deviceLabelFor(location: StorageLocation): String {
         val locator = location.opaqueLocator
-        if (catalogSeatIsPc() && matchesCatalogSeatTree(locator, location.displayName)) {
+        if (matchesCatalogSeatTree(locator, location.displayName)) {
             return SafPathLabels.DEVICE_PC_NOTEBOOK
         }
         return when (location.adapterKind) {
@@ -484,6 +521,10 @@ class SourceRegistry(
     private fun pathLabelFor(location: StorageLocation): String {
         if (location.adapterKind == StorageAdapterKind.LOCAL_FS) {
             return personalRoot.absolutePath
+        }
+        if (matchesCatalogSeatTree(location.opaqueLocator, location.displayName)) {
+            val seatPath = catalogSeatPathForDisplay().trim()
+            if (seatPath.isNotBlank()) return seatPath
         }
         if (location.opaqueLocator.isBlank()) return location.displayName
         return runCatching {
