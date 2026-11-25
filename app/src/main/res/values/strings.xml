@@ -46,7 +46,9 @@
     <string name="acquisisci_static_intro">Seleziona i dispositivi con le cartelle condivise ed importa i media (foto e video) che intendi gestire nel tuo Catalogo</string>
     <string name="acquisisci_static_subtitle">Acquisizione dei file da dispositivi e cartelle</string>
     <string name="acquisisci_static_help">Clicca sul bottone [+] per aggiungere una alla volta le cartelle del dispositivo dove conservi i tuoi file. Quando hai terminato clicca sul bottone [Conferma]</string>
-    <string name="acquisisci_hint_plus_confirm">Clicca sul bottone [+] per aggiungere una alla volta le cartelle del dispositivo dove conservi i tuoi file. Quando hai terminato clicca sul bottone [Conferma]</string>
+    <string name="acquisisci_hint_plus_confirm">Usa [+] per aggiungere le cartelle sorgente; poi [Conferma].</string>
+    <string name="acquisisci_add_pc_direct_title">Foto dal PC</string>
+    <string name="acquisisci_add_pc_direct_body">Il Catalogo è già sul PC: in CIFS apri la connessione «%1$s» (disco condiviso) e scegli la cartella foto (es. Users\\…\\Immagini). Non serve una nuova procedura CIFS.</string>
     <string name="acquisisci_n_cartelle">N. Cartelle collegate: %1$d</string>
     <string name="acquisisci_n_foto">N. Foto: %1$d</string>
     <string name="acquisisci_n_video">N. Video: %1$d</string>
@@ -120,7 +122,7 @@
     <string name="acquisisci_add_pc_ready_yes">Sì, è già pronta</string>
     <string name="acquisisci_add_pc_ready_no">No, va creata</string>
     <string name="acquisisci_add_pc_ready_tip">Apri CIFS, entra nella connessione del Catalogo (nome = condivisione del disco) e tocca «Scegli cartella» sulla cartella foto. Non serve una nuova procedura CIFS per ogni cartella.</string>
-    <string name="acquisisci_add_pc_need_setup_tip">Se non hai ancora fatto Setup Catalogo PC: completalo prima (condivide il disco). Se l’hai già fatto: in CIFS apri «%1$s» e scegli qualsiasi cartella foto sul disco — senza ripetere Host/User/Password.</string>
+    <string name="acquisisci_add_pc_need_setup_tip">Per le foto sul PC serve Setup Catalogo con sede PC (condivide il disco). Se l’hai già fatto: in CIFS apri «%1$s» e scegli la cartella foto — senza ripetere Host/User/Password.</string>
     <string name="acquisisci_add_open_cifs">Apri CIFS / Disco di rete</string>
     <string name="acquisisci_add_other_phone_title">Un altro telefono</string>
     <string name="acquisisci_add_other_phone_body">Su un altro telefono non si apre una cartella in rete come sul PC.\n\nMetti le foto che ti servono nella cartella condivisa (sul PC o sul disco di rete), oppure su Drive. Poi da questo telefono aggiungi quella cartella e acquisisci.</string>
@@ -130,7 +132,7 @@
     <string name="acquisisci_riepilogo_static">Elementi selezionati per l\'importazione: xxx · di cui foto xx · di cui video yy</string>
     <string name="acquisisci_riepilogo">Sorgenti selezionate: %1$d di %2$d · elementi in Catalogo: %3$d</string>
     <string name="acquisisci_riepilogo_full">Sorgenti %1$d/%2$d · Catalogo %3$d · di cui acquisite %4$d · spazio acquisite %5$s</string>
-    <string name="acquisisci_empty_sources">Clicca sul bottone [+] per aggiungere una alla volta le cartelle del dispositivo dove conservi i tuoi file. Quando hai terminato clicca sul bottone [Conferma]</string>
+    <string name="acquisisci_empty_sources">Nessuna cartella collegata.</string>
     <string name="acquisisci_needs_catalog_invite">Prima di utilizzare questa funzione devi creare il Catalogo personale</string>
     <string name="acquisisci_da_pc_rete">Da PC o rete</string>
     <string name="acquisisci_da_pc_title">Aggiungere foto dal PC</string>
@@ -319,6 +321,8 @@
     <string name="hub_b5b_label_host">Host</string>
     <string name="hub_b5b_label_port">Port</string>
     <string name="hub_b5b_label_domain">Domain</string>
+    <string name="hub_b5b_domain_blank_hint">Lascia vuoto (nessuna copia)</string>
+    <string name="hub_pc5_activate_done_hint">Cartella sede selezionata. Scorri in basso e premi Salva.</string>
     <string name="hub_b5b_label_user">User</string>
     <string name="hub_b5b_label_password">Password</string>
     <string name="hub_b5b_label_anonymous">Anonymous</string>

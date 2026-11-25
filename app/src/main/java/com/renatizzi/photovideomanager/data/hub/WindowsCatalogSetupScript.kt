@@ -612,7 +612,7 @@ try {
       'System Volume Information', '${'$'}Recycle.Bin', 'Recovery', 'System Repair',
       'PerfLogs', 'Documents and Settings'
     )
-    # Senza /T: veloce, non si blocca su alberi enormi; Users group + ereditarieta' (OI)(CI).
+    # Top-level (senza /T): rende visibili le cartelle in CIFS (AccessBased).
     Get-ChildItem -LiteralPath ${d}ShareRoot -Force -ErrorAction SilentlyContinue |
       Where-Object { ${d}_.PSIsContainer -and (${d}skip -notcontains ${d}_.Name) } |
       ForEach-Object {
@@ -620,8 +620,23 @@ try {
         Write-Step ("  ACL dati: " + ${d}_.Name)
         cmd.exe /c ('icacls "' + ${d}p + '" /grant ' + ${d}UserName + ':(OI)(CI)RX /C /Q >nul 2>&1') | Out-Null
       }
+    # Profili utente (Users/Utenti): senza RX il profilo non compare in CIFS (solo Default/Public).
+    # /T SOLO sul profilo (non su tutto C:\), cosi' si vedono Documenti/Immagini/Desktop.
+    ${d}usersRoots = @()
+    foreach (${d}cand in @((Join-Path ${d}ShareRoot 'Users'), (Join-Path ${d}ShareRoot 'Utenti'))) {
+      if (Test-Path -LiteralPath ${d}cand) { ${d}usersRoots += ${d}cand }
+    }
+    ${d}skipProfiles = @('Default','Public','Default User','All Users','Pubblica','Publico','defaultuser0')
+    foreach (${d}ur in ${d}usersRoots) {
+      Get-ChildItem -LiteralPath ${d}ur -Force -ErrorAction SilentlyContinue |
+        Where-Object { ${d}_.PSIsContainer -and (${d}skipProfiles -notcontains ${d}_.Name) } |
+        ForEach-Object {
+          Write-Step ("  ACL profilo utente: " + ${d}_.Name)
+          cmd.exe /c ('icacls "' + ${d}_.FullName + '" /grant ' + ${d}UserName + ':(OI)(CI)RX /T /C /Q >nul 2>&1') | Out-Null
+        }
+    }
     Record 'ntfs_disk' ${d}true 'rx_dati'
-    Write-Step "ACL lettura su cartelle dati ok (sistema escluso, senza /T)."
+    Write-Step "ACL lettura su cartelle dati + profili utente ok."
   } catch {
     Write-Step "Avviso: permessi disco parziali; Catalogo ok, alcune cartelle foto potrebbero non comparire."
     Record 'ntfs_disk' ${d}false 'parziale'

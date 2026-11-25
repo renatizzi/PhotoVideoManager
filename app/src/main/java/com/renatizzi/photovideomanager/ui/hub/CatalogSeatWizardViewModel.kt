@@ -732,6 +732,8 @@ class CatalogSeatWizardViewModel(
                 guidePhaseDone = next,
                 usbCopiedDeclared = next.getOrElse(1) { false },
                 scriptRanDeclared = next.getOrElse(2) { false },
+                // LOCK UX: non riportare lo status della fase precedente (es. Fase 2 in Fase 3).
+                statusMessage = null,
                 errorMessage = null,
             )
         }

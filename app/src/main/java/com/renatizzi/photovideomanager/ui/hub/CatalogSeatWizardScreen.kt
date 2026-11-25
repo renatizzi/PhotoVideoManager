@@ -414,8 +414,21 @@ fun CatalogSeatWizardScreen(
             )
         }
 
-        state.statusMessage?.let {
-            Text(it, color = MaterialTheme.colorScheme.primary)
+        state.statusMessage?.let { msg ->
+            // Fase 3+: non mostrare residui della copia USB (Fase 2 già eseguita).
+            val guideIdx = if (state.step == WizardStep.PC_GUIDE) {
+                PcSetupGuideContent.currentGuidePhaseIndex(state.guidePhaseDone)
+            } else {
+                -1
+            }
+            val staleCopyHint = guideIdx >= 2 && (
+                msg.contains("pronti per essere copiati", ignoreCase = true) ||
+                    msg.contains("Set inviato", ignoreCase = true) ||
+                    msg.contains("copia sul Desktop", ignoreCase = true)
+                )
+            if (!staleCopyHint) {
+                Text(msg, color = MaterialTheme.colorScheme.primary)
+            }
         }
         state.errorMessage?.let {
             Text(it, color = MaterialTheme.colorScheme.error)
@@ -1616,6 +1629,7 @@ private fun FolderChoiceStep(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CifsCardStep(
     state: CatalogSeatWizardUiState,
@@ -1632,11 +1646,12 @@ private fun CifsCardStep(
     onBack: () -> Unit,
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
-    // Template USB2.3: Name, Storage, Host, Port, Username, Password, Folder
+    // Template: Name, Storage, Host, Port, Username, Domain(vuoto), Password, Folder
     var rowFlags by remember { mutableStateOf(BooleanArray(7) { false }) }
     var cifsSavedConfirmed by remember { mutableStateOf(false) }
+    val salvaBring = remember { BringIntoViewRequester() }
     @Suppress("UNUSED_VARIABLE", "UNUSED_PARAMETER")
-    val unusedParams = listOf(onAccessYes, onAccessNo, onRetryRecoverPcData, onImportCifsBundle, onOpenCifs, onSalva)
+    val unusedParams = listOf(onAccessYes, onAccessNo, onRetryRecoverPcData, onImportCifsBundle, onOpenCifs)
     val share = state.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
     val user = state.cifsUserQualified.trim().ifBlank {
         WindowsCatalogSetupScript.cifsUserCopyText(state.userName)
@@ -1654,6 +1669,13 @@ private fun CifsCardStep(
             hasPassword &&
             hostReady &&
             cifsSavedConfirmed
+    val catalogPickDone = state.pendingTreeUri != null
+    LaunchedEffect(state.pendingTreeUri, state.verification) {
+        if (catalogPickDone) {
+            kotlinx.coroutines.delay(80)
+            salvaBring.bringIntoView()
+        }
+    }
 
     // Titolo fase già nel sottotitolo chrome (REV4 Fase 7).
     UsbSetupBulletList(lines = PcSetupGuideContent.cifs62Bullets())
@@ -1725,6 +1747,17 @@ private fun CifsCardStep(
             onAction = { onCopyField(CifsCopyField.USERNAME) },
             checked = rowFlags[4],
             onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[4] = !it[4] } },
+            enabled = !state.busy,
+        )
+        // Domain: obbligatorio in maschera CIFS, resta vuoto, senza Copia.
+        CifsFieldRow(
+            label = stringResource(R.string.hub_b5b_label_domain),
+            value = "",
+            actionLabel = null,
+            onAction = null,
+            checked = null,
+            onCheckedChange = null,
+            hint = stringResource(R.string.hub_b5b_domain_blank_hint),
             enabled = !state.busy,
         )
         Row(
@@ -1841,10 +1874,17 @@ private fun CifsCardStep(
     }
     Button(
         onClick = onChooseFolder,
-        enabled = !state.busy && readyForPick,
+        enabled = !state.busy && readyForPick && !catalogPickDone,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Text(stringResource(R.string.hub_pc5_activate_link))
+    }
+    if (catalogPickDone) {
+        Text(
+            stringResource(R.string.hub_pc5_activate_done_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+        )
     }
 
     val statusText = when (state.verification) {
@@ -1884,7 +1924,9 @@ private fun CifsCardStep(
         Button(
             onClick = onSalva,
             enabled = !state.busy,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .bringIntoViewRequester(salvaBring),
         ) {
             Text(stringResource(R.string.hub_salva))
         }

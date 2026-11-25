@@ -124,8 +124,13 @@ class WindowsCatalogSetupScriptTest {
         assertTrue(ps1.contains("creata_disco") || ps1.contains("ripruntata_disco"))
         assertTrue(ps1.contains("New-SmbShare") && ps1.contains("ShareRoot"))
         assertTrue(ps1.contains("icacls"))
-        // Niente /T su radice ne' sulle cartelle dati (blocco / lentezza).
-        assertFalse(Regex("""/grant[^\\n]*/T""").containsMatchIn(ps1))
+        // /T solo sui profili Users/Utenti (AccessBased nasconde i profili senza RX);
+        // mai /T sulla sola radice disco (pagefile/Windows).
+        assertTrue(ps1.contains("ACL profilo utente"))
+        assertTrue(ps1.contains("Join-Path \$ShareRoot 'Users'"))
+        assertTrue(ps1.contains("Join-Path \$ShareRoot 'Utenti'"))
+        assertTrue(Regex("""RX /T /C /Q""").containsMatchIn(ps1))
+        assertFalse(Regex("""ShareRoot[^\\n]*/T""").containsMatchIn(ps1))
         assertTrue(ps1.contains("rx_dati") || ps1.contains("ACL dati"))
         assertTrue(ps1.contains("creata_catalogo_fallback") || ps1.contains("fallback"))
         // ParseFile CI: niente escape \\\" non validi in PowerShell 5.1.

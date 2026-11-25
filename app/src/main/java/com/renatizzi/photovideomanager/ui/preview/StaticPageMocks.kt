@@ -106,7 +106,6 @@ fun AcquisisciStaticScreen(
     var pcGuideOpen by remember { mutableStateOf(false) }
     var pcHelpOpen by remember { mutableStateOf(false) }
     var addDeviceOpen by remember { mutableStateOf(false) }
-    var pcReadyOpen by remember { mutableStateOf(false) }
     var otherPhoneOpen by remember { mutableStateOf(false) }
     var addTip by remember { mutableStateOf<String?>(null) }
     var renameText by remember { mutableStateOf("") }
@@ -126,7 +125,6 @@ fun AcquisisciStaticScreen(
             onAddSource(uri, name)
             addDeviceOpen = false
             addTip = null
-            pcReadyOpen = false
             pcGuideOpen = false
             pcHelpOpen = false
         }
@@ -334,7 +332,11 @@ fun AcquisisciStaticScreen(
                     TextButton(
                         onClick = {
                             addDeviceOpen = false
-                            pcReadyOpen = true
+                            // Opzioni valide: sede PC → apri CIFS e scegli cartella.
+                            // Niente «Sì già pronta / No va creata» (setup condivide già il disco).
+                            val seatIsPc = state.catalogSeatStatus?.kind ==
+                                com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind.PC_NOTEBOOK
+                            addTip = if (seatIsPc) "pc_direct" else "pc_need_setup"
                         },
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text(stringResource(R.string.acquisisci_add_pc)) }
@@ -370,41 +372,6 @@ fun AcquisisciStaticScreen(
         )
     }
 
-    if (pcReadyOpen) {
-        AlertDialog(
-            onDismissRequest = { pcReadyOpen = false },
-            title = { Text(stringResource(R.string.acquisisci_add_pc_ready_title)) },
-            text = { Text(stringResource(R.string.acquisisci_add_pc_ready_body)) },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        pcReadyOpen = false
-                        addTip = "pc_ready"
-                    },
-                ) {
-                    Text(stringResource(R.string.acquisisci_add_pc_ready_yes))
-                }
-            },
-            dismissButton = {
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    TextButton(
-                        onClick = {
-                            pcReadyOpen = false
-                            // Dopo Setup (share = disco) non c’è una seconda procedura CIFS:
-                            // tip + scegli cartella nella connessione già presente.
-                            addTip = "pc_need_setup"
-                        },
-                    ) {
-                        Text(stringResource(R.string.acquisisci_add_pc_ready_no))
-                    }
-                    TextButton(onClick = { pcReadyOpen = false }) {
-                        Text(stringResource(R.string.importa_annulla))
-                    }
-                }
-            },
-        )
-    }
-
     if (otherPhoneOpen) {
         AlertDialog(
             onDismissRequest = { otherPhoneOpen = false },
@@ -430,6 +397,7 @@ fun AcquisisciStaticScreen(
         val tipText = when (tipKind) {
             "drive" -> stringResource(R.string.acquisisci_add_drive_tip)
             "pc_ready" -> stringResource(R.string.acquisisci_add_pc_ready_tip)
+            "pc_direct" -> stringResource(R.string.acquisisci_add_pc_direct_body, catalogHint)
             "pc_need_setup" -> stringResource(
                 R.string.acquisisci_add_pc_need_setup_tip,
                 catalogHint,
@@ -438,10 +406,12 @@ fun AcquisisciStaticScreen(
         }
         val tipTitle = when (tipKind) {
             "drive" -> stringResource(R.string.acquisisci_add_drive)
-            "pc_ready", "pc_need_setup" -> stringResource(R.string.acquisisci_add_pc)
+            "pc_ready", "pc_need_setup", "pc_direct" ->
+                stringResource(R.string.acquisisci_add_pc_direct_title)
             else -> stringResource(R.string.acquisisci_add_nas)
         }
-        val needsCifs = tipKind == "nas" || tipKind == "pc_ready" || tipKind == "pc_need_setup"
+        val needsCifs = tipKind == "nas" || tipKind == "pc_ready" ||
+            tipKind == "pc_need_setup" || tipKind == "pc_direct"
         AlertDialog(
             onDismissRequest = { addTip = null },
             title = { Text(tipTitle) },
