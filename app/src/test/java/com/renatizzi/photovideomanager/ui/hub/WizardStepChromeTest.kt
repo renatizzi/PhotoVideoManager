@@ -47,19 +47,27 @@ class WizardStepChromeTest {
     }
 
     @Test
-    fun pcPipeline_subtitlesMatchUsbOnly() {
+    fun pcPipeline_subtitlesMatchUsbOnlyRev4() {
         val kind = CatalogSeatKind.PC_NOTEBOOK
         val expected = WizardUiContract.PC_STEP_SUBTITLES
         assertEquals(expected[0], WizardStepChrome.subtitle(WizardStep.INTRO, kind).text)
         assertEquals(expected[1], WizardStepChrome.subtitle(WizardStep.PC_AVAILABILITY, kind).text)
         assertEquals(expected[2], WizardStepChrome.subtitle(WizardStep.PC_LINK_MODE, kind).text)
-        assertEquals(
-            expected[3],
-            WizardStepChrome.subtitle(WizardStep.PC_GUIDE, kind, PcLinkMode.USB).text,
+        // REV4: titolo fase sostituisce il sottotitolo generico sulla guida.
+        val guideSub = WizardStepChrome.subtitle(
+            WizardStep.PC_GUIDE,
+            kind,
+            PcLinkMode.USB,
+            List(5) { false },
         )
+        assertEquals("Fase 1 – Creazione file di configurazione", guideSub.text)
+        assertTrue(guideSub.isPhaseTitle)
         assertEquals(
             PcSetupGuideContent.cifs61Title(),
             WizardStepChrome.subtitle(WizardStep.W2_CIFS_INSTALL, kind).text,
+        )
+        assertTrue(
+            WizardStepChrome.subtitle(WizardStep.W2_CIFS_INSTALL, kind).isPhaseTitle,
         )
         assertEquals(
             PcSetupGuideContent.cifs62Title(),
@@ -74,10 +82,10 @@ class WizardStepChromeTest {
     }
 
     @Test
-    fun pcGuide_usbPhases_useProntoFatto() {
+    fun pcGuide_usbPhases_useOkFatto() {
         val phases = PcSetupGuideContent.phases(PcLinkMode.USB)
         assertEquals(5, phases.size)
-        assertEquals("Pronto", phases[0].actionLabel)
+        assertEquals("OK", phases[0].actionLabel)
         phases.drop(1).forEach { p ->
             assertEquals("Fatto", p.actionLabel)
         }

@@ -1,5 +1,6 @@
 package com.renatizzi.photovideomanager.data.hub
 
+import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -101,7 +102,6 @@ class WindowsSetupScriptExporter(
             }
         } catch (_: Exception) {
         }
-        // Preferisci il nome fisso DATI_CIFS.json, poi il più recente.
         files.sortedWith(
             compareByDescending<File> {
                 it.name.equals(SetupCifsBundle.BUNDLE_FILE_NAME, ignoreCase = true)
@@ -111,13 +111,13 @@ class WindowsSetupScriptExporter(
             val bundle = SetupCifsBundle.parse(text, expectedToken) ?: return@forEach
             if (bundle.isComplete) return bundle
         }
-        // MediaStore Download (API 29+): DATI_CIFS.json + legacy prefix, ordine data desc.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             runCatching {
                 val resolver = context.contentResolver
                 val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
                 val patterns = listOf(
                     SetupCifsBundle.BUNDLE_FILE_NAME,
+                    "DATI_CIFS%",
                     "${SetupCifsBundle.LEGACY_BUNDLE_FILE_PREFIX}%",
                 )
                 for (pattern in patterns) {
@@ -137,7 +137,7 @@ class WindowsSetupScriptExporter(
                             val display = cursor.getString(1).orEmpty()
                             if (!SetupCifsBundle.isBundleFileName(display)) continue
                             val id = cursor.getLong(0)
-                            val uri = android.content.ContentUris.withAppendedId(collection, id)
+                            val uri = ContentUris.withAppendedId(collection, id)
                             resolver.openInputStream(uri)?.use { input ->
                                 val text = input.bufferedReader(Charsets.UTF_8).readText()
                                 val bundle = SetupCifsBundle.parse(text, expectedToken)
@@ -151,9 +151,6 @@ class WindowsSetupScriptExporter(
         return null
     }
 
-    /**
-     * Cerca `no_pw.json` (o legacy `MediaManager_setup_result.json`) in Download.
-     */
     fun findSetupResultInDownloads(): WindowsSetupResult? {
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -195,7 +192,7 @@ class WindowsSetupScriptExporter(
             )?.use { cursor ->
                 if (!cursor.moveToFirst()) return@use
                 val id = cursor.getLong(0)
-                val uri = android.content.ContentUris.withAppendedId(collection, id)
+                val uri = ContentUris.withAppendedId(collection, id)
                 resolver.openInputStream(uri)?.use { input ->
                     val text = input.bufferedReader(Charsets.UTF_8).readText()
                     return WindowsSetupResultParser.parse(text)
@@ -229,55 +226,90 @@ class WindowsSetupScriptExporter(
                 )
                 downloads.listFiles()
                     ?.filter { file ->
-                        WindowsCatalogSetupScript.DOWNLOAD_SCRUB_PREFIXES.any { file.name.startsWith(it) }
+                        WindowsCatalogSetupScript.DOWNLOAD_SCRUB_PREFIXES.any {
+                            file.name.startsWith(it, ignoreCase = true)
+                        }
                     }
                     ?.forEach {
                         if (it.delete()) removed++
                     }
             }
         } catch (_: Exception) {
-            // best-effort
         }
-        // Also clear app cache copy.
-        try {
+        runCatching {
             File(context.cacheDir, "windows_setup").deleteRecursively()
-        } catch (_: Exception) {
+        }
+        return removed
+    }
+
+    /**
+     * Rimuove fantasma MTP `DATI_CIFS.json` a 0 byte / entry 1970 da MediaStore
+     * (non tocca bundle validi con contenuto).
+     */
+    fun scrubEmptyDatiCifsGhosts(): Int {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return 0
+        var removed = 0
+        runCatching {
+            val resolver = context.contentResolver
+            val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            resolver.query(
+                collection,
+                arrayOf(
+                    MediaStore.Downloads._ID,
+                    MediaStore.Downloads.DISPLAY_NAME,
+                    MediaStore.Downloads.SIZE,
+                ),
+                "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
+                arrayOf("DATI_CIFS%"),
+                null,
+            )?.use { cursor ->
+                val idCol = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID)
+                val nameCol = cursor.getColumnIndexOrThrow(MediaStore.Downloads.DISPLAY_NAME)
+                val sizeCol = cursor.getColumnIndexOrThrow(MediaStore.Downloads.SIZE)
+                while (cursor.moveToNext()) {
+                    val name = cursor.getString(nameCol).orEmpty()
+                    if (!SetupCifsBundle.isBundleFileName(name)) continue
+                    val size = cursor.getLong(sizeCol)
+                    if (size > 0L) continue
+                    val uri = ContentUris.withAppendedId(collection, cursor.getLong(idCol))
+                    removed += resolver.delete(uri, null, null)
+                }
+            }
         }
         return removed
     }
 
     fun shareIntent(export: WindowsSetupExportResult): Intent {
-        val intent = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
-            // Avoid text/plain: some receivers append ".txt" to .cmd/.ps1 names.
+        return Intent(Intent.ACTION_SEND_MULTIPLE).apply {
             type = "*/*"
             putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(export.shareUris))
-            putExtra(
-                Intent.EXTRA_SUBJECT,
-                "MediaManager — script configurazione Catalogo PC",
-            )
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             putExtra(
                 Intent.EXTRA_TEXT,
                 "Copia sul PC: CONFIGURA, sup e QRCoder.dll insieme. " +
                     "Doppio clic su CONFIGURA (non su sup). A «Tutto pronto» scansiona il QR in MediaManager.",
             )
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        return Intent.createChooser(intent, "Invia script al PC")
+        }.let { Intent.createChooser(it, "Invia script al PC") }
     }
 
     private fun saveToDownloads(ps1: File, cmd: File, qrDll: File?): Boolean {
         return try {
+            // Pulisci solo fantasmi DATI_CIFS vuoti; non cancellare bundle validi in export.
+            scrubEmptyDatiCifsGhosts()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                purgePreviousDownloads()
-                val dllOk = qrDll == null || writeMediaStore(qrDll)
-                writeMediaStore(ps1) && writeMediaStore(cmd) && dllOk
+                // Solo i 3 file set (+ varianti (1)/(2)), MAI DATI_CIFS/no_pw.
+                for (name in WindowsCatalogSetupScript.SETUP_SET_FILE_NAMES) {
+                    deleteSetupSetVariants(name)
+                }
+                val dllOk = qrDll == null || writeMediaStoreOverwrite(qrDll)
+                writeMediaStoreOverwrite(ps1) && writeMediaStoreOverwrite(cmd) && dllOk
             } else {
                 @Suppress("DEPRECATION")
                 val downloads = Environment.getExternalStoragePublicDirectory(
                     Environment.DIRECTORY_DOWNLOADS,
                 )
                 if (!downloads.exists()) downloads.mkdirs()
-                purgeLegacyDownloadFiles(downloads)
+                purgeLegacySetupSetOnly(downloads)
                 ps1.copyTo(File(downloads, ps1.name), overwrite = true)
                 cmd.copyTo(File(downloads, cmd.name), overwrite = true)
                 qrDll?.copyTo(File(downloads, qrDll.name), overwrite = true)
@@ -294,29 +326,84 @@ class WindowsSetupScriptExporter(
         else -> "application/octet-stream"
     }
 
-    private fun purgePreviousDownloads() {
+    /** Varianti (1)/(2) dei soli 3 file script — pattern precisi, niente prefisso "sup" nudo. */
+    private fun deleteSetupSetVariants(fileName: String) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
         val resolver = context.contentResolver
         val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-        // Exact names and Samsung-renamed "*.cmd.txt" / "*.ps1 (n).txt" leftovers.
-        for (prefix in WindowsCatalogSetupScript.DOWNLOAD_SCRUB_PREFIXES) {
-            resolver.delete(
-                collection,
-                "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
-                arrayOf("$prefix%"),
-            )
+        val stem = fileName.substringBeforeLast('.', fileName)
+        val ext = fileName.substringAfterLast('.', missingDelimiterValue = "")
+        val patterns = buildList {
+            if (ext.isNotEmpty()) {
+                add("$stem (%).$ext")
+                add("$fileName (%)")
+            }
+        }
+        for (pattern in patterns) {
+            runCatching {
+                resolver.delete(
+                    collection,
+                    "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
+                    arrayOf(pattern),
+                )
+            }
         }
     }
 
-    private fun purgeLegacyDownloadFiles(downloads: File) {
+    private fun purgeLegacySetupSetOnly(downloads: File) {
+        val allowed = WindowsCatalogSetupScript.SETUP_SET_FILE_NAMES.map { it.lowercase() }.toSet()
         downloads.listFiles()
             ?.filter { file ->
-                WindowsCatalogSetupScript.DOWNLOAD_SCRUB_PREFIXES.any { file.name.startsWith(it) }
+                val n = file.name
+                allowed.any { canon ->
+                    n.equals(canon, ignoreCase = true) ||
+                        n.matches(
+                            Regex(
+                                "^${Regex.escape(canon.substringBeforeLast('.'))} \\(\\d+\\)\\." +
+                                    Regex.escape(canon.substringAfterLast('.')),
+                                RegexOption.IGNORE_CASE,
+                            ),
+                        )
+                }
             }
             ?.forEach { it.delete() }
     }
 
-    private fun writeMediaStore(file: File): Boolean {
+    /**
+     * Sovrascrive in-place se esiste gia' lo stesso DISPLAY_NAME; altrimenti insert.
+     * Evita delete+insert che con MTP lascia fantasmi 0 byte / data 1970.
+     */
+    private fun writeMediaStoreOverwrite(file: File): Boolean {
+        val resolver = context.contentResolver
+        val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        deleteSetupSetVariants(file.name)
+        val existing = resolver.query(
+            collection,
+            arrayOf(MediaStore.Downloads._ID),
+            "${MediaStore.Downloads.DISPLAY_NAME} = ?",
+            arrayOf(file.name),
+            "${MediaStore.Downloads.DATE_MODIFIED} DESC",
+        )?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                ContentUris.withAppendedId(collection, cursor.getLong(0))
+            } else {
+                null
+            }
+        }
+        if (existing != null) {
+            return try {
+                resolver.openOutputStream(existing, "wt")?.use { out ->
+                    file.inputStream().use { input -> input.copyTo(out) }
+                } != null
+            } catch (_: Exception) {
+                runCatching { resolver.delete(existing, null, null) }
+                insertMediaStoreNew(file)
+            }
+        }
+        return insertMediaStoreNew(file)
+    }
+
+    private fun insertMediaStoreNew(file: File): Boolean {
         val resolver = context.contentResolver
         val values = ContentValues().apply {
             put(MediaStore.Downloads.DISPLAY_NAME, file.name)
@@ -326,7 +413,7 @@ class WindowsSetupScriptExporter(
         }
         val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
         val uri = resolver.insert(collection, values) ?: return false
-        try {
+        return try {
             resolver.openOutputStream(uri)?.use { out ->
                 file.inputStream().use { input -> input.copyTo(out) }
             } ?: run {
@@ -336,10 +423,10 @@ class WindowsSetupScriptExporter(
             values.clear()
             values.put(MediaStore.Downloads.IS_PENDING, 0)
             resolver.update(uri, values, null, null)
-            return true
+            true
         } catch (_: Exception) {
             resolver.delete(uri, null, null)
-            return false
+            false
         }
     }
 
@@ -356,10 +443,20 @@ class WindowsSetupScriptExporter(
             if (!root.exists() || !root.canWrite()) continue
             return try {
                 val targetDir = File(root, "MediaManager").apply { mkdirs() }
-                FileOutputStream(File(targetDir, ps1.name)).use { ps1.inputStream().copyTo(it) }
-                FileOutputStream(File(targetDir, cmd.name)).use { cmd.inputStream().copyTo(it) }
-                if (qrDll != null) {
-                    FileOutputStream(File(targetDir, qrDll.name)).use { qrDll.inputStream().copyTo(it) }
+                listOfNotNull(ps1, cmd, qrDll).forEach { src ->
+                    targetDir.listFiles()
+                        ?.filter {
+                            it.name.equals(src.name, ignoreCase = true) ||
+                                it.name.matches(
+                                    Regex(
+                                        "^${Regex.escape(src.name.substringBeforeLast('.'))} \\(\\d+\\)\\." +
+                                            Regex.escape(src.name.substringAfterLast('.')),
+                                        RegexOption.IGNORE_CASE,
+                                    ),
+                                )
+                        }
+                        ?.forEach { it.delete() }
+                    FileOutputStream(File(targetDir, src.name)).use { src.inputStream().copyTo(it) }
                 }
                 volume.getDescription(context) ?: root.absolutePath
             } catch (_: Exception) {

@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="utf-8"/>
-<title>MediaManager — Guida Setup Catalogo USB (integrale)</title>
+<title>MediaManager — Guida Setup Catalogo USB ONLY (REV4)</title>
 <style>
   :root{--ink:#1a1a1a;--muted:#555;--accent:#1565c0;--line:#d7d2c8;--ok:#e8f5e9}
   body{font-family:"Segoe UI",Calibri,sans-serif;margin:0;background:#f6f4ef;color:var(--ink);line-height:1.4}
@@ -12,7 +12,7 @@
   h2{font-size:1.05rem;color:var(--accent);border-bottom:2px solid var(--accent);padding-bottom:4px;margin-top:22px}
   p,li{font-size:.9rem}
   .muted{color:var(--muted);font-size:.84rem}
-  .flow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+  .flow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
   .flow div{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:.72rem;text-align:center}
   .flow strong{display:block;color:var(--accent);margin-bottom:4px}
   .box{background:var(--ok);border:1px solid #a5d6a7;border-radius:6px;padding:10px 12px;font-size:.84rem;margin:10px 0}
@@ -28,126 +28,135 @@
   <h1>Setup del Catalogo personale — solo USB</h1>
   <p>Procedura di collegamento e trasferimento file tra Telefono Android e PC Windows tramite cavo USB.
   La procedura prepara il PC come sede del Catalogo e trasferisce a MediaManager i dati per configurare CIFS.</p>
-  <p class="muted">Versione guida: USB-only · allineata a ripristino USB2.3 (6 fasi) · 21/11/2026</p>
+  <p class="muted">Versione guida: USB-only · specifica Cursor REV4 (7 fasi) · 24/11/2026 (Europe/Rome)</p>
 </header>
 
 <section>
-  <h2>Le 6 fasi della procedura</h2>
+  <h2>Le 7 fasi della procedura</h2>
   <div class="flow">
-    <div><strong>1. Creazione script</strong>sul Telefono</div>
-    <div><strong>2. Invio script</strong>al PC (USB)</div>
-    <div><strong>3. Esecuzione script</strong>sul PC</div>
-    <div><strong>4. Invio dati CIFS</strong>al Telefono (USB)</div>
-    <div><strong>5. Import dati CIFS</strong>sul Telefono</div>
-    <div><strong>6. Configurazione CIFS</strong>sul Telefono</div>
+    <div><strong>1</strong>Creazione file di configurazione</div>
+    <div><strong>2</strong>Invio script al PC</div>
+    <div><strong>3</strong>Esecuzione script sul PC</div>
+    <div><strong>4</strong>Invio dati CIFS al Telefono</div>
+    <div><strong>5</strong>Import dati CIFS</div>
+    <div><strong>6</strong>Installa / Apri CIFS</div>
+    <div><strong>7</strong>Configura CIFS e attiva Catalogo</div>
   </div>
-  <p>In app: una fase (o coppia coerente) alla volta; fase corrente evidenziata. Guida sempre disponibile dal link «qui» 🖨.</p>
+  <p>In app: una fase per pagina; avanzamento dal titolo della fase. Guida sempre dal link «L’intera guida può essere stampata qui» 🖨. Annulla riparte da Avvio (azzera i checkpoint).</p>
 </section>
 
 <section>
   <h2>Prima di iniziare</h2>
   <ul>
-    <li>Telefono con MediaManager già installato.</li>
+    <li>Dispositivo mobile con l’app MediaManager installata.</li>
     <li>PC/Notebook Windows 10 o superiore.</li>
     <li>Cavo USB che supporta il trasferimento dati (non solo ricarica).</li>
   </ul>
-  <p>I nomi dei menu possono variare leggermente; le cartelle indicate (Download, Desktop) sono quelle da usare.</p>
+  <div class="note">
+    <strong>Avvio in app:</strong> scegli <em>un solo nome</em> del Catalogo (vale in MediaManager, sulla cartella/share del PC e in CIFS Name/Folder/User).
+    Regole: 3–20 caratteri, inizia con lettera, senza spazi (es. MyMedia o FotoCasa).
+    Con dispositivo «PC Windows» scegli anche il <em>disco</em>: interno (C:) oppure esterno (lettera D–Z). Percorso creato: <code>LETTER:\NomeCatalogo</code>.
+  </div>
 </section>
 
 <section>
   <h2>Collegamento fisico USB</h2>
+  <p>Predisponi il collegamento con un cavo USB tra il Telefono e il PC.</p>
+  <p><strong>Cosa fare:</strong></p>
   <ol class="steps">
-    <li>Collega il Telefono al PC con il cavo dati e mantieni il Telefono sbloccato.</li>
-    <li>Nella notifica USB del Telefono passa da «Solo ricarica» a «Trasferimento file» / MTP e autorizza l’accesso ai dati.</li>
+    <li>Collega il Telefono al PC con un cavo USB che supporti il trasferimento dati. Mantieni entrambi i dispositivi accesi e sbloccati.</li>
+    <li>Sul Telefono, scorri dall’alto verso il basso per aprire il pannello delle notifiche. Apri la notifica relativa alle impostazioni USB.</li>
+    <li>Seleziona «Trasferimento di file» (o «Trasferimento file/MTP») al posto di «Solo ricarica» e autorizza l’accesso ai dati, se richiesto.</li>
   </ol>
 </section>
 
 <section>
-  <h2>Fase 1 — Creazione script sul Telefono</h2>
-  <p><em>Obiettivo:</em> far creare all’app i file necessari allo script Windows.</p>
+  <h2>Fase 1 — Creazione file di configurazione</h2>
   <ul>
-    <li>In MediaManager, Setup Catalogo → conferma prerequisiti → avvia la procedura USB.</li>
-    <li>Nella Fase 1 tocca <strong>Pronto</strong>: l’app crea in Download i file
-      <code>CONFIGURA.CMD</code>, <code>QRCoder.dll</code>, <code>sup.ps1</code>.</li>
-    <li>Se la creazione non riesce, segui il messaggio a video e riprova.</li>
+    <li>Fase gestita dall’app</li>
+    <li>Saranno creati nella cartella Download del Telefono i file (script) necessari per configurare la cartella del Catalogo personale.</li>
+    <li>In app tocca <strong>Pronto</strong>. Non passare alla Fase 2 se la generazione non ha esito positivo.</li>
   </ul>
-  <div class="box">Esito: i tre file sono nella cartella Download del Telefono (unica versione, senza (1)/(2)).</div>
+  <div class="box">Esito: in Download compaiono CONFIGURA.CMD, QRCoder.dll e sup.ps1.</div>
 </section>
 
 <section>
   <h2>Fase 2 — Invio script al PC</h2>
-  <p><em>Obiettivo:</em> portare i tre file sul Desktop del PC via USB.</p>
   <ul>
-    <li>Sul PC: Esplora file → Questo PC → nome del Telefono → Memoria interna → Download.</li>
-    <li>Seleziona e copia: <code>CONFIGURA.CMD</code>, <code>QRCoder.dll</code>, <code>sup.ps1</code>.</li>
-    <li>Incolla sul Desktop del PC (sostituisci eventuali copie precedenti).</li>
+    <li>Fase gestita manualmente</li>
+    <li>I file creati da inviare al PC sono tre: CONFIGURA.CMD, QRCoder.dll e sup.ps1.</li>
+    <li>Sul Telefono apri File/Archivio → Memoria interna → Download. Seleziona e copia i tre file.</li>
+    <li>Sul PC apri Esplora file → Questo PC → Nome del Telefono → Memoria interna → Download. Seleziona i tre file e copiali sul Desktop del PC.</li>
   </ul>
-  <div class="box">Esito: i tre file sono sul Desktop. Poi in app tocca <strong>Fatto</strong>.</div>
+  <div class="box">Esito: i tre file sono sul Desktop. In app tocca <strong>Fatto</strong>. Non eseguire ancora lo script.</div>
 </section>
 
 <section>
   <h2>Fase 3 — Esecuzione script sul PC</h2>
-  <p><em>Obiettivo:</em> predisporre la cartella condivisa e generare i dati CIFS.</p>
   <ul>
-    <li>Sul Desktop: doppio clic su <code>CONFIGURA.CMD</code> e conferma UAC se richiesto.</li>
-    <li>Non chiudere la finestra; attendi il messaggio «Tutto pronto».</li>
-    <li>Lo script crea <code>DATI_CIFS.json</code> (da usare) e <code>no_pw.json</code> (da ignorare).</li>
+    <li>Fase gestita manualmente</li>
+    <li>Sul PC apri Esplora file → Questo PC → Desktop. Seleziona CONFIGURA.CMD e avvialo con doppio clic.</li>
+    <li>Segui le istruzioni e attendi «Tutto pronto».</li>
+    <li>Lo script crea no_pw.json e DATI_CIFS.json. Solo DATI_CIFS.json andrà al Telefono.</li>
   </ul>
-  <div class="box">Esito: <code>DATI_CIFS.json</code> presente sul Desktop. In app tocca <strong>Fatto</strong>.</div>
+  <div class="box">Esito: DATI_CIFS.json sul Desktop. In app tocca <strong>Fatto</strong>.</div>
 </section>
 
 <section>
   <h2>Fase 4 — Invio dati CIFS al Telefono</h2>
-  <p><em>Obiettivo:</em> copiare sul Telefono solo il file generato dallo script. Bottone app: <strong>Fatto</strong>.</p>
   <ul>
-    <li>Con il cavo ancora in Trasferimento file / MTP:</li>
-    <li>Dal Desktop del PC copia <code>DATI_CIFS.json</code> nella cartella Download del Telefono.</li>
-    <li>Non usare <code>no_pw.json</code> né file con nome <code>DATI_CIFS (1).json</code>.</li>
+    <li>Fase gestita manualmente</li>
+    <li>Sul PC: Desktop → individua DATI_CIFS.json.</li>
+    <li>Copia DATI_CIFS.json nella memoria interna del Telefono → Download (via USB).</li>
+    <li>Non trasferire no_pw.json.</li>
   </ul>
-  <div class="box">Esito: <code>DATI_CIFS.json</code> in Download del Telefono.</div>
+  <div class="box">Esito: DATI_CIFS.json in Download del Telefono. In app tocca <strong>Fatto</strong>.</div>
 </section>
 
 <section>
-  <h2>Fase 5 — Import dati CIFS sul Telefono</h2>
-  <p><em>Obiettivo:</em> far leggere a MediaManager il JSON della sessione corrente. Bottone app: <strong>Fatto</strong> (dopo import OK).</p>
+  <h2>Fase 5 — Import dati CIFS</h2>
   <ul>
-    <li>L’app rileva il file in Download oppure usa Importa file… e seleziona <code>DATI_CIFS.json</code>.</li>
-    <li>I dati (Host, User, Password, Folder, …) sono quelli del JSON: <strong>non sono modificabili</strong> a mano.</li>
-    <li>Se l’import fallisce: messaggio con istruzioni e riprova (niente digitazione Host/User).</li>
+    <li>Fase gestita dall’app</li>
+    <li>Premi «Importa dati CIFS» e seleziona DATI_CIFS.json dalla cartella <strong>Download del Telefono</strong> (non dal PC).</li>
+    <li>Se compare DATI_CIFS (1).json, scegli il file più recente della sessione corrente.</li>
+    <li>MediaManager legge e interpreta il file. Dopo import OK, tocca <strong>Fatto</strong>.</li>
   </ul>
-  <div class="box">Esito: import riuscito; dati pronti solo per Copia.</div>
 </section>
 
 <section>
-  <h2>Fase 6 — Configurazione CIFS sul Telefono (due step)</h2>
-  <h3 style="font-size:.95rem;color:var(--accent)">Step 6/1 — Spiegazioni e apri/installa CIFS</h3>
+  <h2>Fase 6 — Installa / Apri CIFS</h2>
   <ul>
-    <li>Fase semiautomatica: i dati importati si copiano in CIFS Documents Provider (Play Store / da MediaManager).</li>
-    <li>Checkpoint locale: se CIFS non è installata, messaggio con istruzioni; altrimenti Installa/Apri.</li>
-    <li>Tocca <strong>Fatto</strong> per passare allo step di copia.</li>
+    <li>Fase gestita manualmente</li>
+    <li>Il pulsante resta sempre attivo: installa CIFS se assente, altrimenti apre l’app.</li>
+    <li>Al termine torna a MediaManager e conferma con <strong>OK</strong> (checkpoint: app presente).</li>
   </ul>
-  <h3 style="font-size:.95rem;color:var(--accent)">Step 6/2 — Copia campi e Attiva Catalogo</h3>
+</section>
+
+<section>
+  <h2>Fase 7 — Configura CIFS e attiva Catalogo</h2>
+  <p>Fase gestita manualmente</p>
   <ol class="steps">
-    <li>In CIFS: [+] → Input. Torna a MediaManager.</li>
-    <li>Per ogni campo (Name, Storage, Host, Port, Username, Password, Folder): solo <strong>Copia</strong> → Incolla in CIFS. Nessun campo editabile in MediaManager.</li>
-    <li>Salva in CIFS e verifica che la cartella/dispositivo compaia nell’elenco.</li>
-    <li>Conferma in MediaManager e tocca <strong>Attiva Catalogo</strong>; seleziona la connessione CIFS (Name = MyMedia) con «Usa questa cartella».</li>
+    <li>Aperto CIFS: premi [+] e seleziona «Input».</li>
+    <li>Torna a MediaManager.</li>
+    <li>Per ogni campo: «Copia» in MediaManager → incolla nel campo corrispondente in CIFS.</li>
+    <li>Ripeti fino a completare tutti i campi richiesti.</li>
+    <li>Salva in CIFS e verifica che la cartella condivisa sia nell’elenco.</li>
+    <li>Torna a MediaManager, conferma di aver salvato, poi premi «Attiva Catalogo».</li>
   </ol>
-  <div class="box">Esito atteso: cartella visibile in CIFS; Catalogo censito correttamente.</div>
+  <div class="box">Esito: cartella visibile in CIFS; in Riepilogo «Catalogo creato correttamente» solo se l’attivazione è reale.</div>
 </section>
 
 <section>
   <h2>Controllo finale</h2>
   <ul>
-    <li>Telefono e PC collegati via USB durante i trasferimenti file.</li>
-    <li>I tre file di script sono stati eseguiti dal Desktop senza errori.</li>
-    <li><code>DATI_CIFS.json</code> della sessione corrente è stato importato.</li>
-    <li>I dati sono stati copiati nei campi CIFS e la risorsa compare in elenco.</li>
-    <li>MediaManager ha attivato il Catalogo.</li>
+    <li>Trasferimenti solo via cavo USB (niente Bluetooth / Wi‑Fi / Phone Link nel setup).</li>
+    <li>Sette fasi separate completate con i relativi checkpoint.</li>
+    <li>DATI_CIFS.json della sessione corrente importato.</li>
+    <li>Catalogo attivato in MediaManager.</li>
   </ul>
-  <div class="note">Questa guida è la Parte stampabile/visualizzabile (icona 🖨). Online l’app mostra una fase alla volta con gli stessi contenuti sintetici.</div>
+  <div class="note">Questa guida è la Parte stampabile (icona 🖨). In app i testi delle fasi coincidono con la specifica REV4.</div>
 </section>
 
-<footer>MediaManager — Setup Catalogo personale · Guida USB-only · 21/11/2026</footer>
+<footer>MediaManager — Setup Catalogo personale · Guida USB-only REV4 · 23/11/2026</footer>
 </body>
 </html>

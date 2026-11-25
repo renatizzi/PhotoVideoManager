@@ -1,7 +1,7 @@
 package com.renatizzi.photovideomanager.ui.hub
 
 /**
- * Contratto UIX Setup Catalogo — USB-only (ripristino USB2.3).
+ * Contratto UIX Setup Catalogo — USB-only (specifica Cursor REV4).
  */
 object WizardUiContract {
     /**
@@ -17,8 +17,9 @@ object WizardUiContract {
 
     /**
      * Sottotitoli filiera PC (USB-only).
-     * Indice: 0 intro, 1 prerequisiti, 2 USB fisico, 3 guida fasi, 4 (legacy import),
-     * 5 CIFS 6/2 (copia).
+     * Indice: 0 intro, 1 prerequisiti, 2 USB fisico,
+     * 3 fallback guida (REV4: sulle fasi 1–5 il titolo fase sostituisce questo testo),
+     * 4 legacy import, 5 legacy CIFS.
      */
     val PC_STEP_SUBTITLES: List<String> = listOf(
         "Dove tenere il Catalogo",

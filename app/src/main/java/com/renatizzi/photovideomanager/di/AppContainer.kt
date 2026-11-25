@@ -39,6 +39,19 @@ class AppContainer(context: Context) {
     val catalogStore: CatalogStore = RoomCatalogStore(database)
     val catalogSeatStore: CatalogSeatStore = CatalogSeatStore(appContext)
     val hubPackageIo: HubPackageIo = HubPackageIo(appContext, catalogHubRoot)
+
+    init {
+        // LOCK #6/#8: ripristina share Catalogo PC così Acquisisci etichetta «PC Windows»
+        // anche dopo cold-start (es. MyCatalog, non solo MyMedia legacy).
+        com.renatizzi.photovideomanager.data.storage.SafPathLabels.bindPcCatalogShareStore(appContext)
+        val seat = catalogSeatStore.seat()
+        if (seat.kind == com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind.PC_NOTEBOOK) {
+            com.renatizzi.photovideomanager.data.storage.SafPathLabels
+                .rememberPcCatalogShare(seat.effectiveCatalogName)
+            com.renatizzi.photovideomanager.data.storage.SafPathLabels
+                .rememberPcCatalogShareFromTreeUri(seat.treeUri)
+        }
+    }
     val adapterFactory: StorageAdapterFactory = StorageAdapterFactory(
         context = appContext,
         personalRoot = personalRoot,
@@ -64,6 +77,13 @@ class AppContainer(context: Context) {
         labelStore = sourceLabelStore,
         catalogSeatLabel = { catalogSeatStore.seat().displayLabel },
         catalogSeatDeviceModel = { catalogSeatStore.seat().deviceModel },
+        catalogSeatTreeUri = { catalogSeatStore.seat().treeUri },
+        catalogSeatIsPc = {
+            catalogSeatStore.seat().kind ==
+                com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind.PC_NOTEBOOK
+        },
+        catalogSeatCatalogName = { catalogSeatStore.seat().effectiveCatalogName },
+        catalogSeatPathForDisplay = { catalogSeatStore.seat().seatPathForDisplay },
     )
 
     val censusService: CensusService = CensusService(

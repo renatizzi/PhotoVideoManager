@@ -14,9 +14,15 @@ class SetupCifsBundleNameTest {
     }
 
     @Test
-    fun rejectsNumberedDuplicates() {
-        assertFalse(SetupCifsBundle.isBundleFileName("DATI_CIFS (1).json"))
-        assertFalse(SetupCifsBundle.isBundleFileName("DATI_CIFS (2).json"))
+    fun acceptsNumberedDatiCifsCopies_forMtpOverwrite() {
+        // LOCK #2: MTP crea spesso DATI_CIFS (1).json; il token JSON decide la validità.
+        assertTrue(SetupCifsBundle.isBundleFileName("DATI_CIFS (1).json"))
+        assertTrue(SetupCifsBundle.isBundleFileName("DATI_CIFS (2).json"))
+    }
+
+    @Test
+    fun rejectsOtherNumberedDuplicates() {
         assertFalse(SetupCifsBundle.isBundleFileName("MediaManager_cifs_bundle (1).json"))
+        assertFalse(SetupCifsBundle.isBundleFileName("no_pw (1).json"))
     }
 }

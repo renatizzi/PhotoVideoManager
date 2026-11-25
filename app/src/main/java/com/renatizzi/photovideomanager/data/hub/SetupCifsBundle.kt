@@ -60,10 +60,13 @@ data class SetupCifsBundle(
 
         fun isBundleFileName(name: String): Boolean {
             val n = name.trim()
-            // Happy path: rifiuta DATI_CIFS (1).json e simili (BL-BT-02).
-            if (n.contains("(") && n.contains(")")) return false
             if (n.equals(BUNDLE_FILE_NAME, ignoreCase = true)) return true
+            // LOCK #2: MTP spesso crea DATI_CIFS (1).json; accettare se il token JSON coincide.
+            if (Regex("""^DATI_CIFS \(\d+\)\.json$""", RegexOption.IGNORE_CASE).matches(n)) {
+                return true
+            }
             if (n.equals(LEGACY_BUNDLE_FILE_NAME, ignoreCase = true)) return true
+            if (n.contains("(") && n.contains(")")) return false
             return n.startsWith(LEGACY_BUNDLE_FILE_PREFIX, ignoreCase = true) &&
                 n.endsWith(".json", ignoreCase = true)
         }
@@ -75,25 +78,25 @@ data class SetupCifsBundle(
             return t.contains("\"ipv4\"") && t.contains("\"status\"")
         }
 
-        fun fromPayload(p: SetupLanAnnounce.Payload): SetupCifsBundle = SetupCifsBundle(
-            token = p.token,
-            hostIp = p.hostForCifs,
-            userQualified = when {
-                p.userQualified.isNotBlank() -> p.userQualified
-                p.computerName.isNotBlank() ->
-                    WindowsCatalogSetupScript.cifsUserCopyText(
-                        WindowsCatalogSetupScript.DEFAULT_USER,
-                        p.computerName,
-                    )
-                else -> ""
-            },
-            password = p.password,
-            shareName = p.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE },
-            computerName = p.computerName,
-            port = p.port.ifBlank { DEFAULT_PORT },
-            folder = p.folder.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE },
-            connectionName = p.connectionName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE },
-        )
+        fun fromPayload(p: SetupLanAnnounce.Payload): SetupCifsBundle {
+            val share = p.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
+            return SetupCifsBundle(
+                token = p.token,
+                hostIp = p.hostForCifs,
+                userQualified = when {
+                    p.userQualified.isNotBlank() -> p.userQualified
+                    p.computerName.isNotBlank() ->
+                        WindowsCatalogSetupScript.cifsUserCopyText(share, p.computerName)
+                    else -> ""
+                },
+                password = p.password,
+                shareName = share,
+                computerName = p.computerName,
+                port = p.port.ifBlank { DEFAULT_PORT },
+                folder = p.folder.ifBlank { share },
+                connectionName = p.connectionName.ifBlank { share },
+            )
+        }
 
         /**
          * Parse JSON announce / file USB. Password obbligatoria per [isComplete].

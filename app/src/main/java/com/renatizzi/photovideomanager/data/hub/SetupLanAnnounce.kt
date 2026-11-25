@@ -90,18 +90,19 @@ object SetupLanAnnounce {
         val pc = field(text, "pc").orEmpty()
         val password = field(text, "password").orEmpty()
         if (!isIpv4(ip) && user.isBlank() && pc.isBlank() && password.isBlank()) return null
+        // LOCK #5/#6: Folder/Name devono seguire lo share (es. MyCatalog), non MyMedia fisso.
+        val share = field(text, "share").orEmpty()
+            .ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
         return Payload(
             token = token,
             hostIp = ip,
             userQualified = user,
-            shareName = field(text, "share").orEmpty(),
+            shareName = share,
             computerName = pc,
             password = password,
             port = field(text, "port").orEmpty().ifBlank { SetupCifsBundle.DEFAULT_PORT },
-            folder = field(text, "folder").orEmpty()
-                .ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE },
-            connectionName = field(text, "name").orEmpty()
-                .ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE },
+            folder = field(text, "folder").orEmpty().ifBlank { share },
+            connectionName = field(text, "name").orEmpty().ifBlank { share },
         )
     }
 

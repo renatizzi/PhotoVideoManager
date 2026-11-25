@@ -3,17 +3,30 @@ package com.renatizzi.photovideomanager.ui.hub
 import com.renatizzi.photovideomanager.domain.hub.CatalogSeatKind
 
 /**
- * Chrome UIX — Setup Catalogo USB-only (ripristino USB2.3).
+ * Chrome UIX — Setup Catalogo USB-only (specifica Cursor REV4).
+ * Nelle pagine di fase il titolo fase sostituisce il sottotitolo generico.
  */
 object WizardStepChrome {
-    data class Subtitle(val text: String)
+    data class Subtitle(
+        val text: String,
+        /** True = stile titolo fase (bold, corsivo, blu). */
+        val isPhaseTitle: Boolean = false,
+    )
 
     @Suppress("UNUSED_PARAMETER", "DEPRECATION")
-    fun subtitle(step: WizardStep, kind: CatalogSeatKind, linkMode: PcLinkMode? = null): Subtitle {
+    fun subtitle(
+        step: WizardStep,
+        kind: CatalogSeatKind,
+        linkMode: PcLinkMode? = null,
+        guidePhaseDone: List<Boolean> = emptyList(),
+    ): Subtitle {
         val pc = WizardUiContract.PC_STEP_SUBTITLES
         check(WizardUiContract.STEP0_SUBTITLE_HAS_NO_NUMBER)
         check(!pc[0].first().isDigit()) {
             "Passo 0: sottotitolo senza numero"
+        }
+        UsbSetupCheckpointMessages.phaseTitleForSubtitle(step, guidePhaseDone)?.let {
+            return Subtitle(it, isPhaseTitle = true)
         }
         return when (step) {
             WizardStep.S0_START -> Subtitle("Avvio procedura")
@@ -33,9 +46,9 @@ object WizardStepChrome {
             WizardStep.PC_USB_PREPARE,
             WizardStep.PC_COPY_FILES,
             WizardStep.PC_RUN_SCRIPT,
-            -> Subtitle(pc[3])
+            -> Subtitle(pc[3]) // fallback se guidePhaseDone assente
             WizardStep.PC_BT_DOWNLOAD_BUNDLE -> Subtitle(pc[3])
-            WizardStep.W2_CIFS_INSTALL -> Subtitle(PcSetupGuideContent.cifs61Title())
+            WizardStep.W2_CIFS_INSTALL -> Subtitle(PcSetupGuideContent.cifs61Title(), isPhaseTitle = true)
             WizardStep.W2_CIFS,
             WizardStep.W2_PICK,
             WizardStep.W2_SUMMARY,
@@ -44,7 +57,7 @@ object WizardStepChrome {
             WizardStep.W2_PREPARE,
             WizardStep.W2_HELP,
             WizardStep.W2_PASSWORD_HELP,
-            -> Subtitle(PcSetupGuideContent.cifs62Title())
+            -> Subtitle(PcSetupGuideContent.cifs62Title(), isPhaseTitle = true)
             WizardStep.W2_CHOICE,
             WizardStep.W2_ROUTINE_PARAMS,
             -> Subtitle(pc[1])
@@ -62,5 +75,5 @@ object WizardStepChrome {
 
     /** Compat test/legacy: senza linkMode. */
     fun subtitle(step: WizardStep, kind: CatalogSeatKind): Subtitle =
-        subtitle(step, kind, linkMode = null)
+        subtitle(step, kind, linkMode = null, guidePhaseDone = emptyList())
 }

@@ -89,6 +89,10 @@ data class CatalogSeatWizardUiState(
     val folderPath: String = WindowsCatalogSetupScript.DEFAULT_FOLDER,
     val shareName: String = WindowsCatalogSetupScript.DEFAULT_SHARE,
     val userName: String = WindowsCatalogSetupScript.DEFAULT_USER,
+    /** LOCK #7: disco PC interno (C:) o esterno (lettera scelta). */
+    val pcDiskInternal: Boolean = true,
+    /** Lettera disco esterno (D–Z), usata solo se [pcDiskInternal] = false. */
+    val pcExternalDriveLetter: String = "D",
     val temporaryPassword: String = "",
     val scriptPrepared: Boolean = false,
     val usbCopiedDeclared: Boolean = false,
@@ -215,6 +219,18 @@ class CatalogSeatWizardViewModel(
         } else {
             null
         }
+        if (seat.isConfigured && seat.kind == CatalogSeatKind.PC_NOTEBOOK) {
+            com.renatizzi.photovideomanager.data.storage.SafPathLabels
+                .rememberPcCatalogShare(seat.effectiveCatalogName)
+        }
+        val draftFolder = draft?.folderPath ?: WindowsCatalogSetupScript.DEFAULT_FOLDER
+        val draftShare = draft?.shareName ?: WindowsCatalogSetupScript.DEFAULT_SHARE
+        if (draftShare.isNotBlank()) {
+            com.renatizzi.photovideomanager.data.storage.SafPathLabels
+                .rememberPcCatalogShare(draftShare)
+        }
+        val letterFromPath = draftFolder.trim().take(1).uppercase()
+        val diskInternal = letterFromPath.isEmpty() || letterFromPath == "C"
         _state.update {
             it.copy(
                 step = WizardStep.S0_START,
@@ -238,9 +254,11 @@ class CatalogSeatWizardViewModel(
                 resumeStepLabel = resumeStep?.let { s -> humanStepLabel(s) }.orEmpty(),
                 selectedKind = if (seat.isConfigured) seat.kind else CatalogSeatKind.LOCAL_DEVICE,
                 setupMode = if (seat.isConfigured) SetupMode.MODIFY else SetupMode.CREATE,
-                folderPath = draft?.folderPath ?: WindowsCatalogSetupScript.DEFAULT_FOLDER,
-                shareName = draft?.shareName ?: WindowsCatalogSetupScript.DEFAULT_SHARE,
+                folderPath = draftFolder,
+                shareName = draftShare,
                 userName = draft?.userName ?: WindowsCatalogSetupScript.DEFAULT_USER,
+                pcDiskInternal = diskInternal,
+                pcExternalDriveLetter = if (diskInternal) "D" else letterFromPath.ifBlank { "D" },
                 scriptPrepared = draft?.scriptPrepared == true,
                 usbCopiedDeclared = draft?.usbCopiedDeclared == true,
                 scriptRanDeclared = draft?.scriptRanDeclared == true,
@@ -372,6 +390,66 @@ class CatalogSeatWizardViewModel(
         draftStore.clear()
         loadEntryState()
         _state.update { it.copy(canResumeDraft = false, errorMessage = null) }
+        resetProcedureTracking(keepIdentity = true)
+    }
+
+    /**
+     * Annulla procedura (opzione B): azzera checkpoint/tracciamento e torna ad Avvio.
+     * Non naviga a ritroso tra le fasi. I file già su Download/Desktop restano sul filesystem.
+     */
+    fun annullaProceduraToAvvio() {
+        stopBackgroundLanListen()
+        stopBundleWatch()
+        draftStore.clear()
+        resetProcedureTracking(keepIdentity = true)
+        _state.update {
+            it.copy(
+                step = WizardStep.S0_START,
+                canResumeDraft = false,
+                resumeStepLabel = "",
+                errorMessage = null,
+                statusMessage = null,
+                completedSeat = null,
+                busy = false,
+            )
+        }
+    }
+
+    /** Checkpoint e stato USB: solo monitoraggio/avanzamento, non Indietro. */
+    private fun resetProcedureTracking(keepIdentity: Boolean) {
+        val identity = _state.value
+        _state.update {
+            it.copy(
+                guidePhaseDone = List(PcSetupGuideContent.PHASE_COUNT) { false },
+                scriptPrepared = false,
+                usbCopiedDeclared = false,
+                scriptRanDeclared = false,
+                downloadsSaved = false,
+                usbCopiedTo = null,
+                setupResultImported = false,
+                temporaryPassword = "",
+                pcHostIp = "",
+                cifsUserQualified = "",
+                pcComputerName = "",
+                setupToken = "",
+                expectedBundleFileName = "",
+                recoveringPcData = false,
+                pendingShareScripts = false,
+                listeningForBundle = false,
+                bundleDetected = false,
+                verification = SeatVerificationUi.NONE,
+                awaitAccessOutcome = false,
+                pendingTreeUri = null,
+                pendingLabel = "",
+                folderPath = WindowsCatalogSetupScript.DEFAULT_FOLDER,
+                shareName = WindowsCatalogSetupScript.DEFAULT_SHARE,
+                userName = WindowsCatalogSetupScript.DEFAULT_USER,
+                pcLinkMode = PcLinkMode.USB,
+                catalogName = if (keepIdentity) identity.catalogName else CatalogSeat.DEFAULT_CATALOG_NAME,
+                selectedKind = if (keepIdentity) identity.selectedKind else CatalogSeatKind.LOCAL_DEVICE,
+                deviceModel = if (keepIdentity) identity.deviceModel else suggestedDeviceModel(),
+            )
+        }
     }
 
     fun selectKind(kind: CatalogSeatKind) {
@@ -410,31 +488,48 @@ class CatalogSeatWizardViewModel(
         val model = current.deviceModel.trim().ifBlank {
             suggestedDeviceModel()
         }
-        // LOCK Setup PC: un percorso; path/share/user fissi MyMedia (non editabili).
-        val folderPath = if (kind == CatalogSeatKind.PC_NOTEBOOK) {
-            WindowsCatalogSetupScript.DEFAULT_FOLDER
-        } else {
-            current.folderPath
-        }
-        val shareName = if (kind == CatalogSeatKind.PC_NOTEBOOK) {
-            WindowsCatalogSetupScript.DEFAULT_SHARE
-        } else {
-            current.shareName
-        }
-        val userName = if (kind == CatalogSeatKind.PC_NOTEBOOK) {
-            WindowsCatalogSetupScript.DEFAULT_USER
-        } else {
-            current.userName
-        }
+        // LOCK test telefono #5/#7: nome Catalogo = share/CIFS; disco interno o esterno.
+        val shareName: String
+        val userName: String
+        val folderPath: String
         if (kind == CatalogSeatKind.PC_NOTEBOOK) {
+            // Un solo nome: Catalogo = share = account Windows = Name/Folder CIFS.
+            val nameErr = WindowsCatalogSetupScript.validateCatalogNameForPc(name)
+            if (nameErr != null) {
+                _state.update {
+                    it.copy(
+                        errorMessage = "Nome Catalogo non valido per PC/CIFS: " +
+                            "3–20 caratteri, inizia con una lettera, solo lettere/numeri/_/- " +
+                            "(niente spazi, @, *, punti, accenti; es. MyMedia, FotoCasa).",
+                    )
+                }
+                return
+            }
+            val letter = if (current.pcDiskInternal) {
+                "C"
+            } else {
+                current.pcExternalDriveLetter.trim().uppercase().take(1).ifBlank { "D" }
+            }
+            if (!letter.matches(Regex("[A-Z]"))) {
+                _state.update { it.copy(errorMessage = "Seleziona la lettera del disco esterno") }
+                return
+            }
+            shareName = name
+            userName = name
+            folderPath = "$letter:\\$name"
             val pathErr = WindowsCatalogSetupScript.validateFolderPath(
                 folderPath,
-                requireDriveC = true,
+                requireDriveC = false,
             )
             if (pathErr != null) {
                 _state.update { it.copy(errorMessage = pathErr) }
                 return
             }
+            com.renatizzi.photovideomanager.data.storage.SafPathLabels.rememberPcCatalogShare(shareName)
+        } else {
+            shareName = current.shareName
+            userName = current.userName
+            folderPath = current.folderPath
         }
         val step = when (kind) {
             CatalogSeatKind.LOCAL_DEVICE -> WizardStep.W1_CONFIRM
@@ -461,6 +556,27 @@ class CatalogSeatWizardViewModel(
             )
         }
         persistDraft()
+    }
+
+    fun updatePcDiskInternal(internal: Boolean) {
+        _state.update {
+            it.copy(
+                pcDiskInternal = internal,
+                errorMessage = null,
+                scriptPrepared = false,
+            )
+        }
+    }
+
+    fun updatePcExternalDriveLetter(letter: String) {
+        val L = letter.trim().uppercase().take(1)
+        _state.update {
+            it.copy(
+                pcExternalDriveLetter = L.ifBlank { it.pcExternalDriveLetter },
+                errorMessage = null,
+                scriptPrepared = false,
+            )
+        }
     }
 
     /** Compat: INTRO legacy (bozze) → stesso routing di Avvio. */
@@ -616,6 +732,8 @@ class CatalogSeatWizardViewModel(
                 guidePhaseDone = next,
                 usbCopiedDeclared = next.getOrElse(1) { false },
                 scriptRanDeclared = next.getOrElse(2) { false },
+                // LOCK UX: non riportare lo status della fase precedente (es. Fase 2 in Fase 3).
+                statusMessage = null,
                 errorMessage = null,
             )
         }
@@ -996,9 +1114,9 @@ class CatalogSeatWizardViewModel(
             CifsCopyField.PORT -> "445"
             CifsCopyField.USERNAME -> s.cifsUserQualified.trim()
             CifsCopyField.PASSWORD -> s.temporaryPassword
-            // Folder CIFS: pin sulla share (MyMedia), non path Windows e non vuoto.
+            // Folder CIFS: pin sullo share (= nome Catalogo), non path Windows.
             CifsCopyField.FOLDER -> WindowsCatalogSetupScript.cifsFolderPin(
-                s.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE },
+                s.shareName.ifBlank { s.catalogName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE } },
             )
         }
     }
@@ -1044,7 +1162,7 @@ class CatalogSeatWizardViewModel(
 
     /**
      * User CIFS editabile se il recupero automatico non arriva:
-     * incolla da «Tutto pronto» il valore `COMPUTERNAME\MyMedia`.
+     * incolla da «Tutto pronto» il valore `COMPUTERNAME\NomeCatalogo`.
      */
     fun setCifsUserQualified(value: String) {
         val trimmed = value.trim()
@@ -1061,9 +1179,12 @@ class CatalogSeatWizardViewModel(
 
     private fun applyLanPayload(payload: SetupLanAnnounce.Payload) {
         val ipv4 = payload.hostForCifs // solo IPv4, mai il solo nome PC
+        val account = payload.shareName.ifBlank {
+            _state.value.userName.ifBlank { WindowsCatalogSetupScript.DEFAULT_USER }
+        }
         val user = payload.userQualified.ifBlank {
             if (payload.computerName.isNotBlank()) {
-                "${payload.computerName}\\${WindowsCatalogSetupScript.DEFAULT_USER}"
+                "${payload.computerName}\\$account"
             } else {
                 ""
             }
@@ -1079,12 +1200,20 @@ class CatalogSeatWizardViewModel(
             val complete = SetupLanAnnounce.isIpv4(host) &&
                 userOut.isNotBlank() &&
                 passwordOut.isNotBlank()
+            val shareOut = payload.shareName.ifBlank { it.shareName }
+            if (shareOut.isNotBlank()) {
+                com.renatizzi.photovideomanager.data.storage.SafPathLabels
+                    .rememberPcCatalogShare(shareOut)
+            }
             it.copy(
                 cifsUserQualified = userOut,
                 pcHostIp = host,
                 pcComputerName = payload.computerName.ifBlank { it.pcComputerName },
                 temporaryPassword = passwordOut,
-                shareName = payload.shareName.ifBlank { it.shareName },
+                shareName = shareOut,
+                // LOCK #5: un solo nome anche dopo import DATI_CIFS (User/Folder/share).
+                userName = shareOut.ifBlank { it.userName },
+                catalogName = shareOut.ifBlank { it.catalogName },
                 setupResultImported = complete,
                 recoveringPcData = !complete,
                 errorMessage = null,
@@ -1480,8 +1609,7 @@ class CatalogSeatWizardViewModel(
                                     "TELEFONO: nel menu Condividi scegli Bluetooth e il PC. " +
                                         "Poi torna a MediaManager (non restare su Invio/Ricevi)."
                                 onGuide && savedOk ->
-                                    "Set pronto sul Telefono. Via USB: copia i 3 file sul Desktop " +
-                                        "(overwrite, niente (1)/(2)). Poi tocca Fatto sulla Fase 2."
+                                    "I file sono stati creati e sono pronti per essere copiati sul Desktop del PC"
                                 else -> null
                             },
                             step = when {
@@ -1587,17 +1715,37 @@ class CatalogSeatWizardViewModel(
                 )
             }
             val ui = _state.value
+            val catalogName = ui.catalogName.ifBlank { CatalogSeat.DEFAULT_CATALOG_NAME }
+            if (kind == CatalogSeatKind.PC_NOTEBOOK) {
+                com.renatizzi.photovideomanager.data.storage.SafPathLabels
+                    .rememberPcCatalogShare(ui.shareName.ifBlank { catalogName })
+                com.renatizzi.photovideomanager.data.storage.SafPathLabels
+                    .rememberPcCatalogShareFromTreeUri(treeUri)
+            }
+            val windowsFolder = if (kind == CatalogSeatKind.PC_NOTEBOOK) {
+                ui.folderPath.trim().ifBlank { "C:\\$catalogName" }
+            } else {
+                ""
+            }
+            val displayForSeat = if (kind == CatalogSeatKind.PC_NOTEBOOK) {
+                val hub = com.renatizzi.photovideomanager.domain.hub.HubPackage.RELATIVE_DIR
+                val base = windowsFolder.trimEnd('\\')
+                "$base\\$hub"
+            } else {
+                label.ifBlank { catalogName }
+            }
             val seat = CatalogSeat(
                 kind = kind,
                 treeUri = treeUri,
-                displayLabel = label,
-                catalogName = ui.catalogName.ifBlank { CatalogSeat.DEFAULT_CATALOG_NAME },
+                displayLabel = displayForSeat,
+                catalogName = catalogName,
                 deviceModel = ui.deviceModel.ifBlank { CatalogSeat.DEFAULT_DEVICE_MODEL },
                 memoryLabel = if (kind == CatalogSeatKind.LOCAL_DEVICE) {
                     ui.memoryLabel.ifBlank { CatalogSeat.MEMORY_PRIMARY }
                 } else {
                     ""
                 },
+                windowsFolderPath = windowsFolder,
             )
             val result = catalogFacade.configureCatalogSeat(seat)
             if (result.isSuccess) {

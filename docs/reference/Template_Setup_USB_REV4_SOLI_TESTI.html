@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Template soli testi — Setup Catalogo ONLY USB (REV4)</title>
+<style>
+  body{font-family:Georgia,"Times New Roman",serif;margin:0;padding:16px;background:#fff;color:#111;line-height:1.45;max-width:720px;margin-left:auto;margin-right:auto}
+  h1{font-size:1.15rem;margin:0 0 6px}
+  .meta{font-size:.8rem;color:#444;margin-bottom:18px}
+  section{border-top:1px solid #999;padding:14px 0;margin:0}
+  .page{font-size:.75rem;color:#555;margin:0 0 4px}
+  .title{font-size:1.05rem;font-weight:700;margin:0 0 4px}
+  .sub{font-size:.98rem;font-style:italic;margin:0 0 6px}
+  .sub.phase{font-weight:700;font-style:italic;color:#1565c0}
+  .guide{font-weight:700;font-style:italic;margin:0 0 8px}
+  .desc{margin:0 0 8px}
+  .cosa{font-weight:700;margin:8px 0 4px}
+  ul{list-style:none;margin:4px 0 8px;padding:0 0 0 4px}
+  li{margin:4px 0;padding-left:1.4em;position:relative}
+  li::before{content:"✔";position:absolute;left:0}
+  .btnrow{margin-top:10px;font-size:.9rem}
+  .btnrow span{display:inline-block;border:1px solid #333;padding:4px 10px;margin-right:8px}
+  .btnrow .p{background:#1565c0;color:#fff;border-color:#1565c0}
+</style>
+</head>
+<body>
+<h1>Soli template — titoli, sottotitoli, descrizioni (REV4)</h1>
+<p class="meta">Fonte vincolante: specifica Cursor REV4. Bullet = ✔ (simbolo di spunta del template). Etichette fase solo: «Fase gestita dall’app» / «Fase gestita manualmente».</p>
+
+<section>
+  <p class="page">PAGINA 02</p>
+  <p class="title">Setup Catalogo personale</p>
+  <p class="sub">Avvio procedura</p>
+  <p class="guide">L’intera guida può essere stampata qui</p>
+  <p class="desc">Questa procedura ti consente di creare e configurare il tuo Catalogo, cioè il posto di “raccolta logica” delle foto e dei video personali. Le prime cose da stabilire sono come chiamarlo e dove tenerlo</p>
+  <p class="desc">Come vuoi chiamare il Catalogo?</p>
+  <p class="desc">Su quale dispositivo lo vuoi tenere?</p>
+  <p class="desc">Su quale disco del PC vuoi creare il Catalogo? (es. Disco interno C:)</p>
+  <p class="desc">Percorso sul PC: C:\&lt;NomeCatalogo&gt;</p>
+  <p class="desc"><strong>NB — In CIFS vedrai «&lt;NomeCatalogo&gt;» (condivisione dell’intero disco scelto). Dentro: cartella Catalogo e le altre cartelle del disco (foto incluse). Non compare la lettera C:.</strong></p>
+  <p class="desc">Qual è il modello del dispositivo?</p>
+  <p class="btnrow"><span>Annulla</span><span class="p">Continua</span></p>
+</section>
+
+<section>
+  <p class="page">PAGINA 03</p>
+  <p class="title">Setup Catalogo personale</p>
+  <p class="sub">Verifica della disponibilità di quanto necessario</p>
+  <p class="guide">L’intera guida può essere stampata qui</p>
+  <p class="desc">Prima di avviare la procedura verifica e conferma di avere a disposizione i seguenti strumenti:</p>
+  <ul>
+    <li>Dispositivo mobile (per il seguito «Telefono») con l’app già installata</li>
+    <li>PC/Notebook Windows v. 10 o superiore</li>
+    <li>Un cavo USB che supporti il trasferimento dati</li>
+  </ul>
+  <p class="desc">Quando pronto clicca su OK</p>
+  <p class="btnrow"><span>Annulla</span><span class="p">OK</span></p>
+</section>
+
+<section>
+  <p class="page">PAGINA 04</p>
+  <p class="title">Setup Catalogo personale</p>
+  <p class="sub">Collegamento fisico USB</p>
+  <p class="guide">L’intera guida può essere stampata qui</p>
+  <p class="desc">Predisponi il collegamento con un cavo USB tra il Telefono e il PC</p>
+  <p class="cosa">Cosa fare:</p>
+  <ul>
+    <li>Collega il Telefono al PC con un cavo USB che supporti il trasferimento dati. Mantieni entrambi i dispositivi accesi e sbloccati.</li>
+    <li>Sul Telefono, scorri dall’alto verso il basso per aprire il pannello delle notifiche. Apri la notifica relativa alle impostazioni USB.</li>
+    <li>Seleziona “Trasferimento di file” (o “Trasferimento file/MTP”) al posto di “Solo ricarica” e autorizza l’accesso ai dati, se richiesto.</li>
+  </ul>
+  <p class="desc">Quando pronto clicca su OK</p>
+  <p class="btnrow"><span>Annulla</span><span class="p">OK</span></p>
+</section>
+
+<section>
+  <p class="page">PAGINA 05</p>
+  <p class="title">Setup Catalogo personale</p>
+  <p class="sub phase">Fase 1 – Creazione file di configurazione</p>
+  <p class="guide">L’intera guida può essere stampata qui</p>
+  <ul>
+    <li>Fase gestita dall’app</li>
+    <li>Saranno creati nella cartella Download del Telefono i file (script) necessari per configurare la cartella del Catalogo personale.</li>
+  </ul>
+  <p class="desc">Quando pronto clicca su OK</p>
+  <p class="btnrow"><span>Annulla</span><span class="p">OK</span></p>
+</section>
+
+<section>
+  <p class="page">PAGINA 06</p>
+  <p class="title">Setup Catalogo personale</p>
+  <p class="sub phase">Fase 2 – Invio script al PC</p>
+  <p class="guide">L’intera guida può essere stampata qui</p>
+  <ul>
+    <li>Fase gestita manualmente</li>
+    <li>I file creati da inviare al PC sono tre: CONFIGURA.CMD, QRCoder.dll e sup.ps1.</li>
+    <li>Sul Telefono apri File/Archivio > Memoria interna > Download. Seleziona e copia i tre file.</li>
+    <li>Sul PC apri Esplora file > Questo PC > Nome del Telefono > Memoria interna > Download. Seleziona i tre file e copiali sul Desktop del PC.</li>
+  </ul>
+  <p class="btnrow"><span>Annulla</span><span class="p">Fatto</span></p>
+</section>
+
+<section>
+  <p class="page">PAGINA 07</p>
+  <p class="title">Setup Catalogo personale</p>
+  <p class="sub phase">Fase 3 – Esecuzione script sul PC</p>
+  <p class="guide">L’intera guida può essere stampata qui</p>
+  <ul>
+    <li>Fase gestita manualmente</li>
+    <li>Sul PC apri Esplora file > Questo PC > Desktop. Seleziona CONFIGURA.CMD e avvialo con doppio clic.</li>
+    <li>Segui le istruzioni visualizzate e attendi il messaggio “Tutto pronto”, che indica la conclusione dello script.</li>
+    <li>Lo script crea automaticamente i file no_pw.json e DATI_CIFS.json. Solo DATI_CIFS.json sarà trasferito al Telefono per la configurazione CIFS.</li>
+  </ul>
+  <p class="btnrow"><span>Annulla</span><span class="p">Fatto</span></p>
+</section>
+
+<section>
+  <p class="page">PAGINA 08</p>
+  <p class="title">Setup Catalogo personale</p>
+  <p class="sub phase">Fase 4 – Invio dati CIFS al Telefono</p>
+  <p class="guide">L’intera guida può essere stampata qui</p>
+  <ul>
+    <li>Fase gestita manualmente</li>
+    <li>Lo script ha creato automaticamente il file DATI_CIFS.json.</li>
+    <li>Sul PC apri Esplora file > Desktop e individua DATI_CIFS.json.</li>
+    <li>Collega il Telefono al PC con il cavo USB. Apri la memoria interna del Telefono > Download e copia qui DATI_CIFS.json.</li>
+  </ul>
+  <p class="btnrow"><span>Annulla</span><span class="p">Fatto</span></p>
+</section>
+
+<section>
+  <p class="page">PAGINA 09</p>
+  <p class="title">Setup Catalogo personale</p>
+  <p class="sub phase">Fase 5 – Import dati CIFS</p>
+  <p class="guide">L’intera guida può essere stampata qui</p>
+  <ul>
+    <li>Fase gestita dall’app</li>
+    <li>Il file DATI_CIFS.json si trova nella cartella Download del Telefono.</li>
+    <li>Premi “Importa dati CIFS” e seleziona DATI_CIFS.json tramite il selettore file.</li>
+    <li>MediaManager legge e interpreta il file e prepara i dati necessari per la configurazione CIFS.</li>
+  </ul>
+  <p class="btnrow"><span class="p">Importa dati CIFS</span></p>
+  <p class="btnrow"><span>Annulla</span><span class="p">Fatto</span></p>
+</section>
+
+<section>
+  <p class="page">PAGINA 10</p>
+  <p class="title">Setup Catalogo personale</p>
+  <p class="sub phase">Fase 6 – Installa / Apri CIFS</p>
+  <p class="guide">L’intera guida può essere stampata qui</p>
+  <ul>
+    <li>Fase gestita manualmente</li>
+    <li>Installa o apri CIFS Documents Provider, necessario per accedere dal Telefono alla cartella condivisa del Catalogo creata sul PC.</li>
+    <li>Al termine torna a MediaManager e conferma il completamento.</li>
+  </ul>
+  <p class="btnrow"><span class="p">Installa / Apri CIFS Documents Provider</span></p>
+  <p class="desc">Quando pronto clicca su OK</p>
+  <p class="btnrow"><span>Annulla</span><span class="p">OK</span></p>
+</section>
+
+<section>
+  <p class="page">PAGINA 11</p>
+  <p class="title">Setup Catalogo personale</p>
+  <p class="sub phase">Fase 7 – Configura CIFS e attiva Catalogo</p>
+  <p class="guide">L’intera guida può essere stampata qui</p>
+  <ul>
+    <li>Fase gestita manualmente</li>
+    <li>Aperto CIFS: premi [+] e seleziona “Input”.</li>
+    <li>Torna a questa schermata di MediaManager.</li>
+    <li>Per ogni campo: premi il relativo pulsante “Copia” in MediaManager, passa a CIFS e incolla il valore nel campo corrispondente.</li>
+    <li>Ripeti l’operazione fino a completare tutti i campi richiesti.</li>
+    <li>NB — In CIFS vedi il nome del Catalogo (condivisione dell’intero disco). Per Attiva apri NomeCatalogo\MediaManager; in Acquisisci scegli qualsiasi cartella foto sul disco.</li>
+    <li>Salva la configurazione in CIFS e verifica che la cartella condivisa sia presente nell’elenco di CIFS.</li>
+    <li>Torna a MediaManager e conferma di aver salvato i dati.</li>
+    <li>Premi “Attiva Catalogo”.</li>
+  </ul>
+  <p class="btnrow"><span class="p">Attiva Catalogo</span></p>
+</section>
+
+<section>
+  <p class="page">PAGINA 12</p>
+  <p class="title">Setup Catalogo personale</p>
+  <p class="sub">Riepilogo e conferma</p>
+  <p class="guide">L’intera guida può essere stampata qui</p>
+  <p class="desc">Catalogo: &lt;NomeCatalogo&gt;</p>
+  <p class="desc">PC Windows C:\&lt;NomeCatalogo&gt;\MediaManager — Online</p>
+  <p class="desc">Catalogo creato correttamente</p>
+  <p class="btnrow"><span class="p">Continua</span></p>
+</section>
+
+</body>
+</html>

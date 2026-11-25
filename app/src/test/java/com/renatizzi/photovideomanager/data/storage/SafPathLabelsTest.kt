@@ -160,11 +160,77 @@ class SafPathLabelsTest {
     }
 
     @Test
+    fun networkDeviceLabel_rememberedCatalogShareIsPcWindows() {
+        SafPathLabels.rememberPcCatalogShare("FotoCasa")
+        assertEquals(
+            SafPathLabels.DEVICE_PC_NOTEBOOK,
+            SafPathLabels.networkDeviceKindFromHints(
+                displayHint = "FotoCasa",
+                path = "FotoCasa",
+                uriString = "content://com.wa2c.android.cifsdocumentsprovider.documents/tree/smb%3A%2F%2F192.168.1.10%2FFotoCasa",
+            ),
+        )
+    }
+
+    @Test
+    fun networkDeviceLabel_opaqueCifsTreeUuid_withKnownShareNameIsPcWindows() {
+        // Screenshot Renato: Shared URI = tree/UUID opaco (niente smb:// nel content URI).
+        SafPathLabels.rememberPcCatalogShare("MyCatalog")
+        val opaque =
+            "content://com.wa2c.android.cifsdocumentsprovider.documents/tree/" +
+                "c8353c54-96f1-4896-a525-296d49ad9b15%3A"
+        assertEquals(
+            SafPathLabels.DEVICE_PC_NOTEBOOK,
+            SafPathLabels.networkDeviceKindFromHints(
+                displayHint = "MyCatalog",
+                path = "",
+                uriString = opaque,
+            ),
+        )
+        assertEquals(
+            SafPathLabels.DEVICE_NETWORK_NAS,
+            SafPathLabels.networkDeviceKindFromHints(
+                displayHint = "SSD_SHARED",
+                path = "",
+                uriString = opaque.replace("c8353c54", "aaaaaaaa"),
+            ),
+        )
+    }
+
+    @Test
+    fun networkDeviceLabel_myCatalogWithPortIsPcAfterRememberFromTreeUri() {
+        // CIFS Documents Provider: smb://192.168.68.72:445/MyCatalog/ (screenshot Renato).
+        val tree =
+            "content://com.wa2c.android.cifsdocumentsprovider.documents/tree/" +
+                "smb%3A%2F%2F192.168.68.72%3A445%2FMyCatalog"
+        assertEquals("MyCatalog", SafPathLabels.extractSmbShareSegment(tree))
+        SafPathLabels.rememberPcCatalogShareFromTreeUri(tree)
+        assertEquals(
+            SafPathLabels.DEVICE_PC_NOTEBOOK,
+            SafPathLabels.networkDeviceKindFromHints(
+                displayHint = "MyCatalog",
+                path = "MyCatalog",
+                uriString = tree,
+            ),
+        )
+    }
+
+    @Test
     fun extractNetworkHostHint_fromSmbUri() {
         assertEquals(
             "192.168.1.20",
             SafPathLabels.extractNetworkHostHint(
                 "content://x/tree/smb%3A%2F%2F192.168.1.20%2FFoto",
+            ),
+        )
+    }
+
+    @Test
+    fun extractNetworkHostHint_stripsSmbPort() {
+        assertEquals(
+            "192.168.68.72",
+            SafPathLabels.extractNetworkHostHint(
+                "content://x/tree/smb%3A%2F%2F192.168.68.72%3A445%2FMyCatalog",
             ),
         )
     }

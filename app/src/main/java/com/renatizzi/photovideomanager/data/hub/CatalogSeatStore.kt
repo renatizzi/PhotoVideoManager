@@ -37,6 +37,7 @@ class CatalogSeatStore(context: Context) {
             catalogName = catalogName,
             deviceModel = prefs.getString(KEY_DEVICE_MODEL, "").orEmpty(),
             memoryLabel = prefs.getString(KEY_MEMORY, "").orEmpty(),
+            windowsFolderPath = prefs.getString(KEY_WINDOWS_FOLDER, "").orEmpty(),
             configuredAtEpochMs = prefs.getLong(KEY_CONFIGURED_AT, 0L),
         )
     }
@@ -49,8 +50,17 @@ class CatalogSeatStore(context: Context) {
             .putString(KEY_CATALOG_NAME, seat.catalogName)
             .putString(KEY_DEVICE_MODEL, seat.deviceModel)
             .putString(KEY_MEMORY, seat.memoryLabel)
+            .putString(KEY_WINDOWS_FOLDER, seat.windowsFolderPath)
             .putLong(KEY_CONFIGURED_AT, seat.configuredAtEpochMs)
             .apply()
+        // LOCK #6/#8: subito dopo Attiva, Acquisisci deve etichettare «PC Windows»
+        // anche con nome custom (MyCatalog) e dopo cold-start.
+        if (seat.kind == CatalogSeatKind.PC_NOTEBOOK) {
+            com.renatizzi.photovideomanager.data.storage.SafPathLabels
+                .rememberPcCatalogShare(seat.effectiveCatalogName)
+            com.renatizzi.photovideomanager.data.storage.SafPathLabels
+                .rememberPcCatalogShareFromTreeUri(seat.treeUri)
+        }
     }
 
     fun clearSeat() {
@@ -99,6 +109,7 @@ class CatalogSeatStore(context: Context) {
         private const val KEY_CATALOG_NAME = "seat_catalog_name"
         private const val KEY_DEVICE_MODEL = "seat_device_model"
         private const val KEY_MEMORY = "seat_memory"
+        private const val KEY_WINDOWS_FOLDER = "seat_windows_folder"
         private const val KEY_CONFIGURED_AT = "seat_configured_at"
         private const val KEY_DEVICE_ID = "hub_device_id"
         private const val KEY_SYNC = "hub_last_synced"

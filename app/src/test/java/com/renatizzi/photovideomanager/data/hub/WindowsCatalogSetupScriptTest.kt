@@ -117,6 +117,30 @@ class WindowsCatalogSetupScriptTest {
     }
 
     @Test
+    fun build_smbSharePointsToDriveRootNotOnlyCatalogFolder() {
+        val ps1 = samplePkg().ps1Content
+        assertTrue(ps1.contains("GetPathRoot"))
+        assertTrue(ps1.contains("ShareRoot"))
+        assertTrue(ps1.contains("creata_disco") || ps1.contains("ripruntata_disco"))
+        assertTrue(ps1.contains("New-SmbShare") && ps1.contains("ShareRoot"))
+        assertTrue(ps1.contains("icacls"))
+        // /T solo sui profili Users/Utenti (AccessBased nasconde i profili senza RX);
+        // mai /T sulla sola radice disco (pagefile/Windows).
+        assertTrue(ps1.contains("ACL profilo utente"))
+        assertTrue(ps1.contains("Join-Path \$ShareRoot 'Users'"))
+        assertTrue(ps1.contains("Join-Path \$ShareRoot 'Utenti'"))
+        assertTrue(Regex("""RX /T /C /Q""").containsMatchIn(ps1))
+        assertFalse(Regex("""ShareRoot[^\\n]*/T""").containsMatchIn(ps1))
+        assertTrue(ps1.contains("rx_dati") || ps1.contains("ACL dati"))
+        assertTrue(ps1.contains("creata_catalogo_fallback") || ps1.contains("fallback"))
+        // ParseFile CI: niente escape \\\" non validi in PowerShell 5.1.
+        assertFalse(ps1.contains("icacls \\\""))
+        assertTrue(ps1.contains("cmd.exe /c ('icacls \"' + \$ShareRoot"))
+        assertTrue(ps1.contains("DATI_CIFS.json") && ps1.contains("Set-Content"))
+        assertTrue(ps1.contains("Tutto pronto"))
+    }
+
+    @Test
     fun build_cmdAutoElevates() {
         val cmd = samplePkg().cmdContent
         assertTrue(cmd.contains("net session"))
@@ -188,7 +212,9 @@ class WindowsCatalogSetupScriptTest {
         assertTrue(ps1.contains("PVMSETUP1"))
         assertTrue(ps1.contains("FromBase64String"))
         assertTrue(ps1.contains(pkg.bundleFileName))
-        assertTrue(ps1.contains("Bluetooth"))
+        assertTrue(ps1.contains("PROSSIMO PASSO (USB)"))
+        assertTrue(ps1.contains("cavo USB"))
+        assertFalse(ps1.contains("PROSSIMO PASSO (Bluetooth)"))
         assertFalse(ps1.contains("HOTSPOT"))
         assertTrue(ps1.contains("password = ${'$'}PlainPassword") || ps1.contains("password ="))
         assertTrue(ps1.contains("ConvertTo-Json -Compress"))
@@ -216,7 +242,8 @@ class WindowsCatalogSetupScriptTest {
             },
         )
         assertFalse(ps1.contains("Copia dal Desktop sul telefono"))
-        assertTrue(cmd.contains("Bluetooth") || cmd.contains(pkg.bundleFileName))
+        assertTrue(cmd.contains("PROSSIMO PASSO: USB") || cmd.contains(pkg.bundleFileName))
+        assertFalse(cmd.contains("PROSSIMO PASSO: Bluetooth"))
         assertFalse(cmd.contains("HOTSPOT"))
         assertTrue(cmd.contains("pause"))
         val ann = WindowsCatalogSetupScript.buildAnnouncerScript()
@@ -287,5 +314,43 @@ class WindowsCatalogSetupScriptTest {
             .writeBytes(WindowsCatalogSetupScript.asciiCrlfNoBomBytes(pkg.cmdContent))
         assertTrue(java.io.File(out, pkg.ps1FileName).exists())
         assertTrue(java.io.File(out, pkg.cmdFileName).exists())
+    }
+
+    @Test
+    fun catalogNameForPc_rejectsSpecialCharsThatBreakCifs() {
+        val rejected = listOf(
+            "Foto Casa", // spazio
+            "Foto@Casa",
+            "Foto*Casa",
+            "Foto/Casa",
+            "Foto\\Casa",
+            "Foto:Casa",
+            "Foto?Casa",
+            "Foto|Casa",
+            "Foto<Casa",
+            "Foto\"Casa",
+            "Foto.Casa", // punto: ok come share SMB, ma non come account Windows
+            "1Foto", // non inizia con lettera
+            "ab", // troppo corto
+            "x".repeat(21), // troppo lungo
+            "café",
+            "FotoCasa!",
+        )
+        rejected.forEach { name ->
+            assertNotNull(
+                "atteso rifiuto per «$name»",
+                WindowsCatalogSetupScript.validateCatalogNameForPc(name),
+            )
+        }
+    }
+
+    @Test
+    fun catalogNameForPc_acceptsSafeNames() {
+        listOf("MyMedia", "FotoCasa", "Foto_Casa", "Foto-Casa", "Abc", "Catalogo1").forEach { name ->
+            assertNull(
+                "atteso OK per «$name»",
+                WindowsCatalogSetupScript.validateCatalogNameForPc(name),
+            )
+        }
     }
 }

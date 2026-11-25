@@ -5,6 +5,10 @@ import java.security.SecureRandom
 /**
  * Generates an idempotent Windows setup package (PowerShell + CMD launcher)
  * for MediaManager catalog folder + dedicated local SMB user.
+ *
+ * LOCK share disco: la cartella Catalogo resta `X:\Nome`; la condivisione SMB
+ * punta alla **radice del disco** (`X:\`) con lo stesso nome share = Nome Catalogo,
+ * così in CIFS si navigano Catalogo e cartelle foto senza una procedura per cartella.
  */
 object WindowsCatalogSetupScript {
     /** Account locale dedicato + share + cartella: un solo vocabolo (LOCK Setup PC). */
@@ -26,10 +30,14 @@ object WindowsCatalogSetupScript {
     const val CMD_FILE_NAME = "CONFIGURA.cmd"
     /** Supporto interno (non aprire). Nome PPT: sup. */
     const val PS1_FILE_NAME = "sup.ps1"
-    /** Prefissi Download da ripulire (attuali + nomi legacy). */
+    /**
+     * Prefissi da ripulire **solo dopo** Setup OK ([WindowsSetupScriptExporter.scrubDownloadsScripts]).
+     * Non usare in export: cancellare `DATI_CIFS%` mentre il telefono e' aperto via MTP
+     * crea file fantasma 0 byte / data 1970 non eliminabili da Esplora file.
+     */
     val DOWNLOAD_SCRUB_PREFIXES: List<String> = listOf(
         "CONFIGURA",
-        "sup",
+        "sup.ps1", // non "sup" nudo (troppo ampio)
         "DATI_CIFS",
         "no_pw",
         "AVVIA_Configurazione_Catalogo",
@@ -50,6 +58,12 @@ object WindowsCatalogSetupScript {
     const val HANDOFF_QR_FILE_NAME = "MediaManager_setup_handoff.png"
     /** Encoder QR (MIT) esportato insieme a CONFIGURA/sup. */
     const val QRCODER_DLL_FILE_NAME = "QRCoder.dll"
+    /** Solo i 3 file dello script in export (mai DATI_CIFS / no_pw). */
+    val SETUP_SET_FILE_NAMES: List<String> = listOf(
+        CMD_FILE_NAME,
+        PS1_FILE_NAME,
+        QRCODER_DLL_FILE_NAME,
+    )
     const val LOG_FILE_NAME = "MediaManager_setup.log"
     /** Porte annuncio dopo Tutto pronto (allineate a [SetupLanAnnounce]). */
     const val SETUP_ANNOUNCE_UDP_PORT = SetupLanAnnounce.UDP_PORT
@@ -117,6 +131,19 @@ object WindowsCatalogSetupScript {
         if (!userRegex.matches(trimmed)) {
             return "Nome utente non valido"
         }
+        return null
+    }
+
+    /**
+     * Nome Catalogo usato anche come share + account Windows + Name/Folder CIFS.
+     * Più restrittivo dello share SMB: deve soddisfare anche [validateUserName]
+     * (niente spazi, @, *, punti, accenti, ecc.).
+     */
+    fun validateCatalogNameForPc(name: String): String? {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) return "Indica un nome per il Catalogo"
+        validateShareName(trimmed)?.let { return it }
+        validateUserName(trimmed)?.let { return it }
         return null
     }
 
@@ -298,9 +325,9 @@ object WindowsCatalogSetupScript {
           echo  Configurazione NON completata. Codice: %ERR%
           echo  10=cartella 20=utente 30=condivisione 40=NTFS 50=rete/firewall 60=verifica
         ) else (
-          echo  Tutto pronto. PROSSIMO PASSO: Bluetooth
+          echo  Tutto pronto. PROSSIMO PASSO: USB
           echo  1^) Sul Desktop trovi $bundleFileName
-          echo  2^) Invia SOLO quel file al telefono via Bluetooth ^(Invia file^)
+          echo  2^) Copia SOLO quel file nella cartella Download del Telefono via cavo USB
           echo  3^) Ignora no_pw.json ^(senza password^)
           echo  4^) Nell'app: Importa dati CIFS e seleziona $bundleFileName
         )
@@ -353,6 +380,12 @@ ${d}AnnounceHttp   = $announceHttp
 ${d}AnnounceMagic  = '$announceMagic'
 ${d}FirewallGroup  = '@FirewallAPI.dll,-28502'
 ${d}ExitCode       = 1
+# Radice disco da condividere (es. C:\): Catalogo resta in FolderPath sotto il disco.
+${d}ShareRoot      = [System.IO.Path]::GetPathRoot(${d}FolderPath)
+if ([string]::IsNullOrWhiteSpace(${d}ShareRoot)) {
+  Write-Error 'Radice disco non determinata dal percorso Catalogo.'
+  exit 10
+}
 
 ${d}ParentDir = Split-Path -Parent ${d}FolderPath
 if (-not ${d}ParentDir) { ${d}ParentDir = 'C:\MediaManager' }
@@ -390,7 +423,8 @@ function Record(${d}name, ${d}ok, ${d}detail) {
 }
 
 function Invoke-PvmMaggiordomo([string]${d}destDir) {
-  # Consolida i 3 file e rimuove duplicati (1)/(2) da Desktop / Download / File ricevuti / cartella script.
+  # I 3 file canonici (CONFIGURA.cmd, sup.ps1, QRCoder.dll) devono SOVRASCRIVERE
+  # le copie in Desktop/Download/File ricevuti; poi elimina ogni variante (1)/(2).
   ${d}desk = [Environment]::GetFolderPath('Desktop')
   ${d}dl = Join-Path ${d}env:USERPROFILE 'Downloads'
   ${d}recv1 = Join-Path ${d}env:USERPROFILE 'Documents\Bluetooth Exchange Folder'
@@ -402,24 +436,35 @@ function Invoke-PvmMaggiordomo([string]${d}destDir) {
     }
   }
   foreach (${d}need in @('CONFIGURA.cmd','sup.ps1','QRCoder.dll')) {
-    ${d}best = ${d}null
-    ${d}like = ${d}need + ' (*)'
-    foreach (${d}dir in ${d}dirs) {
-      ${d}hit = Get-ChildItem -LiteralPath ${d}dir -File -ErrorAction SilentlyContinue |
-        Where-Object { ${d}_.Name -ieq ${d}need -or ${d}_.Name -like ${d}like } |
-        Sort-Object LastWriteTime -Descending |
-        Select-Object -First 1
-      if (${d}hit -and (-not ${d}best -or ${d}hit.LastWriteTime -gt ${d}best.LastWriteTime)) {
-        ${d}best = ${d}hit
+    # Preferisci il file accanto allo script in esecuzione (set appena copiato/lanciato).
+    ${d}canonical = Join-Path ${d}PSScriptRoot ${d}need
+    if (-not (Test-Path -LiteralPath ${d}canonical)) {
+      ${d}like = ${d}need + ' (*)'
+      ${d}hit = ${d}null
+      foreach (${d}dir in ${d}dirs) {
+        ${d}candFile = Get-ChildItem -LiteralPath ${d}dir -File -ErrorAction SilentlyContinue |
+          Where-Object { ${d}_.Name -ieq ${d}need -or ${d}_.Name -like ${d}like } |
+          Sort-Object LastWriteTime -Descending |
+          Select-Object -First 1
+        if (${d}candFile -and (-not ${d}hit -or ${d}candFile.LastWriteTime -gt ${d}hit.LastWriteTime)) {
+          ${d}hit = ${d}candFile
+        }
       }
+      if (${d}hit) { ${d}canonical = ${d}hit.FullName }
     }
-    if (${d}best -and ${d}destDir -and (Test-Path -LiteralPath ${d}destDir)) {
-      Copy-Item -LiteralPath ${d}best.FullName -Destination (Join-Path ${d}destDir ${d}need) -Force -ErrorAction SilentlyContinue
+    if (-not ${d}canonical -or -not (Test-Path -LiteralPath ${d}canonical)) { continue }
+    foreach (${d}dir in ${d}dirs) {
+      try {
+        Copy-Item -LiteralPath ${d}canonical -Destination (Join-Path ${d}dir ${d}need) -Force -ErrorAction SilentlyContinue
+      } catch {}
     }
   }
   foreach (${d}dir in ${d}dirs) {
+    # Solo duplicati dei 3 file script. NON toccare DATI_CIFS/no_pw (bundle).
     Get-ChildItem -LiteralPath ${d}dir -File -ErrorAction SilentlyContinue |
-      Where-Object { ${d}_.Name -match '^(CONFIGURA|sup|QRCoder|DATI_CIFS|no_pw).*\([0-9]+\)' } |
+      Where-Object {
+        ${d}_.Name -match '^(CONFIGURA|sup|QRCoder).*\([0-9]+\)'
+      } |
       ForEach-Object { Remove-Item -LiteralPath ${d}_.FullName -Force -ErrorAction SilentlyContinue }
   }
 }
@@ -485,29 +530,44 @@ try {
     Fail-Step 20 ("Account dedicato non riuscito: " + ${d}_.Exception.Message)
   }
 
-  Write-Host "Passo 4 di 6 - Condivisione SMB" -ForegroundColor Cyan
-  Write-Step "Condivisione SMB: ${d}ShareName"
+  Write-Host "Passo 4 di 6 - Condivisione SMB (disco)" -ForegroundColor Cyan
+  Write-Step ("Condivisione SMB: ${d}ShareName -> disco " + ${d}ShareRoot + " (Catalogo in " + ${d}FolderPath + ")")
   try {
+    ${d}sharePath = ${d}ShareRoot
     ${d}shareObj = Get-SmbShare -Name ${d}ShareName -ErrorAction SilentlyContinue
+    ${d}wantedPath = ([string]${d}sharePath).TrimEnd([char]92)
     if (${d}null -eq ${d}shareObj) {
-      New-SmbShare -Name ${d}ShareName -Path ${d}FolderPath -FullAccess ${d}UserName -FolderEnumerationMode AccessBased | Out-Null
-      Record 'share' ${d}true 'creata'
-      Write-Step "Condivisione creata."
+      try {
+        New-SmbShare -Name ${d}ShareName -Path ${d}sharePath -FullAccess ${d}UserName -FolderEnumerationMode AccessBased | Out-Null
+        Record 'share' ${d}true 'creata_disco'
+        Write-Step "Condivisione del disco creata."
+      } catch {
+        # Alcuni Windows rifiutano share sulla radice: fallback cartella Catalogo.
+        Write-Step ("Condivisione disco non riuscita (" + ${d}_.Exception.Message + "); uso cartella Catalogo.")
+        ${d}sharePath = ${d}FolderPath
+        New-SmbShare -Name ${d}ShareName -Path ${d}sharePath -FullAccess ${d}UserName -FolderEnumerationMode AccessBased | Out-Null
+        Record 'share' ${d}true 'creata_catalogo_fallback'
+        Write-Step "Condivisione cartella Catalogo creata (fallback)."
+      }
     } else {
-      # Modifica percorso: stessa condivisione gia usata da un Catalogo precedente.
-      # Non fallire: rimuovi e ricrea sul nuovo FolderPath (i file vecchi restano al loro posto).
       ${d}existingPath = ([string]${d}shareObj.Path).TrimEnd([char]92)
-      ${d}wantedPath = ([string]${d}FolderPath).TrimEnd([char]92)
       if (${d}existingPath -ieq ${d}wantedPath) {
         Grant-SmbShareAccess -Name ${d}ShareName -AccountName ${d}UserName -AccessRight Full -Force | Out-Null
         Record 'share' ${d}true 'aggiornata'
-        Write-Step "Condivisione gia presente: permessi aggiornati."
+        Write-Step "Condivisione disco gia presente: permessi aggiornati."
       } else {
-        Write-Step ("Condivisione gia su '${d}existingPath': la ripunto a '${d}FolderPath'.")
+        Write-Step ("Condivisione gia su '${d}existingPath': ripunto a '${d}sharePath'.")
         Remove-SmbShare -Name ${d}ShareName -Force
-        New-SmbShare -Name ${d}ShareName -Path ${d}FolderPath -FullAccess ${d}UserName -FolderEnumerationMode AccessBased | Out-Null
-        Record 'share' ${d}true 'ripruntata'
-        Write-Step "Condivisione ripuntata al nuovo percorso."
+        try {
+          New-SmbShare -Name ${d}ShareName -Path ${d}sharePath -FullAccess ${d}UserName -FolderEnumerationMode AccessBased | Out-Null
+          Record 'share' ${d}true 'ripruntata_disco'
+          Write-Step "Condivisione ripuntata alla radice del disco."
+        } catch {
+          ${d}sharePath = ${d}FolderPath
+          New-SmbShare -Name ${d}ShareName -Path ${d}sharePath -FullAccess ${d}UserName -FolderEnumerationMode AccessBased | Out-Null
+          Record 'share' ${d}true 'ripruntata_catalogo_fallback'
+          Write-Step "Condivisione ripuntata alla cartella Catalogo (fallback)."
+        }
       }
     }
     Get-SmbShareAccess -Name ${d}ShareName | Where-Object { ${d}_.AccountName -match 'Everyone|Tutti' } | ForEach-Object {
@@ -518,7 +578,7 @@ try {
   }
 
   Write-Host "Passo 5 di 6 - Permessi NTFS" -ForegroundColor Cyan
-  Write-Step "Permessi NTFS sulla cartella"
+  Write-Step "Permessi NTFS sulla cartella Catalogo"
   try {
     ${d}acl = Get-Acl -LiteralPath ${d}FolderPath
     ${d}acl.SetAccessRuleProtection(${d}true, ${d}false)
@@ -533,9 +593,53 @@ try {
     foreach (${d}r in ${d}rules) { ${d}acl.AddAccessRule(${d}r) }
     Set-Acl -LiteralPath ${d}FolderPath -AclObject ${d}acl
     Record 'ntfs' ${d}true 'impostati'
-    Write-Step "ACL NTFS impostati."
+    Write-Step "ACL NTFS Catalogo impostati."
   } catch {
     Fail-Step 40 ("Permessi NTFS non riusciti: " + ${d}_.Exception.Message)
+  }
+  Write-Step "Permessi lettura cartelle dati (niente ACL ricorsiva su Windows/Program Files)"
+  try {
+    try {
+      ${d}usersSid = New-Object System.Security.Principal.SecurityIdentifier('S-1-5-32-545')
+      ${d}usersGroup = ${d}usersSid.Translate([System.Security.Principal.NTAccount]).Value
+      ${d}usersShort = (${d}usersGroup -split '\\')[-1]
+      Add-LocalGroupMember -Group ${d}usersShort -Member ${d}UserName -ErrorAction SilentlyContinue
+    } catch {}
+    # Solo list/traverse sulla radice - MAI icacls /T su tutto il disco (si blocca su pagefile/Windows).
+    cmd.exe /c ('icacls "' + ${d}ShareRoot + '" /grant ' + ${d}UserName + ':(RX) /C /Q >nul 2>&1') | Out-Null
+    ${d}skip = @(
+      'Windows', 'Program Files', 'Program Files (x86)', 'ProgramData',
+      'System Volume Information', '${'$'}Recycle.Bin', 'Recovery', 'System Repair',
+      'PerfLogs', 'Documents and Settings'
+    )
+    # Top-level (senza /T): rende visibili le cartelle in CIFS (AccessBased).
+    Get-ChildItem -LiteralPath ${d}ShareRoot -Force -ErrorAction SilentlyContinue |
+      Where-Object { ${d}_.PSIsContainer -and (${d}skip -notcontains ${d}_.Name) } |
+      ForEach-Object {
+        ${d}p = ${d}_.FullName
+        Write-Step ("  ACL dati: " + ${d}_.Name)
+        cmd.exe /c ('icacls "' + ${d}p + '" /grant ' + ${d}UserName + ':(OI)(CI)RX /C /Q >nul 2>&1') | Out-Null
+      }
+    # Profili utente (Users/Utenti): senza RX il profilo non compare in CIFS (solo Default/Public).
+    # /T SOLO sul profilo (non su tutto C:\), cosi' si vedono Documenti/Immagini/Desktop.
+    ${d}usersRoots = @()
+    foreach (${d}cand in @((Join-Path ${d}ShareRoot 'Users'), (Join-Path ${d}ShareRoot 'Utenti'))) {
+      if (Test-Path -LiteralPath ${d}cand) { ${d}usersRoots += ${d}cand }
+    }
+    ${d}skipProfiles = @('Default','Public','Default User','All Users','Pubblica','Publico','defaultuser0')
+    foreach (${d}ur in ${d}usersRoots) {
+      Get-ChildItem -LiteralPath ${d}ur -Force -ErrorAction SilentlyContinue |
+        Where-Object { ${d}_.PSIsContainer -and (${d}skipProfiles -notcontains ${d}_.Name) } |
+        ForEach-Object {
+          Write-Step ("  ACL profilo utente: " + ${d}_.Name)
+          cmd.exe /c ('icacls "' + ${d}_.FullName + '" /grant ' + ${d}UserName + ':(OI)(CI)RX /T /C /Q >nul 2>&1') | Out-Null
+        }
+    }
+    Record 'ntfs_disk' ${d}true 'rx_dati'
+    Write-Step "ACL lettura su cartelle dati + profili utente ok."
+  } catch {
+    Write-Step "Avviso: permessi disco parziali; Catalogo ok, alcune cartelle foto potrebbero non comparire."
+    Record 'ntfs_disk' ${d}false 'parziale'
   }
 
   Write-Host "Passo 6 di 6 - Rete, firewall e verifica" -ForegroundColor Cyan
@@ -647,9 +751,10 @@ try {
   Write-Host ""
   Write-Host "Tutto pronto" -ForegroundColor Green
   Write-Host ("PC:            {0}" -f ${d}pc)
-  Write-Host ("Cartella:      {0}" -f ${d}FolderPath)
+  Write-Host ("Cartella Catalogo: {0}" -f ${d}FolderPath)
+  Write-Host ("Disco condiviso:   {0}" -f ${d}ShareRoot)
   # Build UNC with [char]92 so backslashes are never doubled by escaping.
-  Write-Host ("Condivisione:  " + [string][char]92 + [char]92 + ${d}pc + [char]92 + ${d}ShareName)
+  Write-Host ("Condivisione:  " + [string][char]92 + [char]92 + ${d}pc + [char]92 + ${d}ShareName + " (= disco, non solo la cartella Catalogo)")
   if (${d}primaryIp) { Write-Host ("IP:            {0}" -f ${d}primaryIp) } else { Write-Host "IP:            (non rilevato; l'app usera il nome PC)" }
   Write-Host ("Utente:        {0}" -f ${d}userHint)
   Write-Host ("Password:      {0}" -f ${d}PlainPassword) -ForegroundColor Yellow
@@ -657,9 +762,9 @@ try {
   Write-Host "Password PROVVISORIA: cambiala in Windows e aggiorna Archivio sul tablet."
   Write-Host "AVVISO: se il PC va in sospensione, la cartella sparisce dalla rete."
   Write-Host ""
-  Write-Host "PROSSIMO PASSO (Bluetooth):" -ForegroundColor Cyan
+  Write-Host "PROSSIMO PASSO (USB):" -ForegroundColor Cyan
   Write-Host ("1) Sul Desktop trovi " + ${d}BundleFileName)
-  Write-Host "2) Invia SOLO quel file al telefono via Bluetooth (Invia file)"
+  Write-Host "2) Copia SOLO quel file nella cartella Download del Telefono via cavo USB"
   Write-Host ("3) Ignora " + ${d}ResultFileName + " (senza password)")
   Write-Host ("4) Nell'app: Importa dati CIFS e seleziona " + ${d}BundleFileName)
   Write-Host "Il Desktop tiene solo l'ultima versione (overwrite)."
@@ -729,10 +834,10 @@ try {
     if (${d}annProc) {
       Write-Step ('Servizio bundle rete (fallback) avviato. IP=' + ${d}ipText)
     } else {
-      Write-Step ('Servizio bundle rete non avviato: usa Bluetooth o chiavetta (' + ${d}BundleFileName + ').')
+      Write-Step ('Servizio bundle rete non avviato: copia ' + ${d}BundleFileName + ' via USB sul Telefono (Download).')
     }
   } catch {
-    Write-Step ('Servizio bundle rete non avviato: usa Bluetooth o chiavetta (' + ${d}BundleFileName + ').')
+    Write-Step ('Servizio bundle rete non avviato: copia ' + ${d}BundleFileName + ' via USB sul Telefono (Download).')
   }
 
   ${d}ExitCode = 0

@@ -2,238 +2,152 @@
 <html lang="it">
 <head>
 <meta charset="utf-8"/>
-<title>MediaManager — Template videate Setup Catalogo USB (come in app)</title>
+<title>Template videate — Setup Catalogo USB REV4</title>
 <style>
-  :root{--ink:#1a1a1a;--muted:#555;--line:#cfd4dc;--bg:#eef1f5;--bar:#1565c0;--ok:#e8f5e9;--okb:#81c784;--cur:#1565c0}
-  *{box-sizing:border-box}
-  body{margin:0;font-family:"Segoe UI",Calibri,sans-serif;background:#f3f1ec;color:var(--ink)}
-  header,footer{max-width:920px;margin:0 auto;padding:20px 22px}
-  h1{font-size:1.2rem;margin:0 0 6px;color:var(--bar)}
-  .muted{color:var(--muted);font-size:.84rem}
-  .note{background:#fff8e1;border:1px solid #f0c36d;padding:10px 12px;border-radius:6px;font-size:.84rem;max-width:920px;margin:0 auto 16px;padding-left:22px;padding-right:22px}
-  .page{page-break-after:always;max-width:920px;margin:0 auto 28px;padding:0 22px}
-  .page:last-of-type{page-break-after:auto}
-  h2{font-size:.98rem;border-bottom:2px solid var(--bar);padding-bottom:4px;color:var(--bar)}
-  .phone{width:340px;margin:12px auto;background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06)}
-  .top{background:var(--bar);color:#fff;padding:8px 10px;font-size:.72rem;font-weight:700}
-  .body{padding:12px;min-height:420px;background:var(--bg)}
-  .title{font-weight:700;font-size:.95rem;margin:0 0 4px}
-  .sub{font-style:italic;font-size:.78rem;color:#333;margin:0 0 10px}
-  .print{font-size:.78rem;margin:0 0 8px;background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px}
-  .print b{color:var(--bar);font-size:1.05rem}
-  .strip{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin:0 0 6px}
-  .cell{height:32px;border:1px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;background:#fff;font-size:.9rem}
-  .cell.on{border:2px solid var(--cur);background:#e3f2fd;color:var(--cur)}
-  .cell.done{background:var(--ok);border-color:var(--okb);color:#1b5e20}
-  .phase{font-size:.72rem;color:var(--muted);margin:0 0 10px}
-  .card{background:#fff;border:1px solid var(--line);border-radius:6px;padding:10px;margin:0 0 8px;font-size:.74rem}
-  .card h3{margin:0 0 6px;font-size:.8rem}
-  .card li{margin:0 0 4px}
-  .donebanner{background:var(--ok);color:#1b5e20;padding:8px;border-radius:4px;font-weight:600;font-size:.78rem}
-  .row{display:flex;gap:8px;margin-top:8px}
-  .btn{flex:1;text-align:center;padding:8px;border-radius:4px;font-size:.75rem;font-weight:700}
-  .btn.p{background:var(--bar);color:#fff}
-  .btn.o{background:#fff;border:1px solid var(--line)}
-  .btn.full{display:block;width:100%;margin-top:6px}
-  .field{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;padding:6px 0;font-size:.72rem}
-  .copy{background:var(--bar);color:#fff;border:0;border-radius:3px;padding:3px 8px;font-size:.68rem}
-  .err{background:#ffebee;color:#b71c1c;padding:8px;border-radius:4px;font-size:.72rem;margin:8px 0}
-  .okbox{background:var(--ok);color:#1b5e20;padding:8px;border-radius:4px;font-size:.72rem;margin:8px 0}
-  ul.bul{margin:6px 0;padding-left:16px}
-  @media print{.note{display:none} .page{page-break-inside:avoid}}
+  @page { size: A4; margin: 12mm; }
+  body{font-family:"Segoe UI",Calibri,sans-serif;margin:0;background:#f3f1ec;color:#1a1a1a;line-height:1.35}
+  header,section,footer{max-width:720px;margin:0 auto;padding:0 16px}
+  header{padding-top:18px}
+  h1{font-size:1.15rem;color:#1565c0;margin:0 0 4px}
+  h2{font-size:.95rem;margin:18px 0 8px;color:#0d47a1;border-bottom:1px solid #c5cae9;padding-bottom:3px}
+  .muted{color:#666;font-size:.8rem}
+  .phone{background:#fff;border:1px solid #cfc9bd;border-radius:10px;padding:12px 14px;margin:0 0 10px}
+  .title{font-size:1.05rem;font-weight:600;margin:0 0 4px}
+  .sub{font-size:.95rem;font-style:italic;color:rgba(0,0,0,.75);margin:0 0 6px}
+  .sub.phase{font-weight:700;font-style:italic;color:#1565c0;font-size:1.05rem}
+  .guide{font-weight:700;font-style:italic;font-size:.92rem;margin:0 0 8px;color:#222}
+  .guide .ico{color:#1565c0;font-style:normal}
+  .cosa{font-weight:700;font-size:.9rem;margin:8px 0 4px}
+  .bullet{font-size:.84rem;margin:2px 0}
+  .row{display:flex;gap:8px;margin-top:10px}
+  .btn{flex:1;text-align:center;padding:8px;border-radius:6px;font-size:.85rem;border:1px solid #90a4ae}
+  .btn.primary{background:#1565c0;color:#fff;border-color:#1565c0}
+  .btn.ghost{background:#fff}
+  .btn.disabled{opacity:.45}
+  .ok{color:#2e7d32;background:#e8f5e9;padding:6px 8px;border-radius:4px;font-size:.84rem;margin-top:8px}
+  footer{padding:16px;font-size:.75rem;color:#666}
 </style>
 </head>
 <body>
 <header>
-  <h1>Template videate — Setup Catalogo USB (allineati all’app)</h1>
-  <p class="muted">0.16.77-preview · chrome fisso: riga stampa guida + strip 1–6 su un’unica riga · fonte codice MediaManager</p>
+  <h1>Template videate — Setup Catalogo USB (REV4 / 0.16.78)</h1>
+  <p class="muted">7 fasi · una pagina ciascuna · niente strip numerica · titolo fase al posto del sottotitolo · guida stampabile fissa</p>
 </header>
-<div class="note">
-  Ogni pagina sotto replica la struttura in app: titolo → sottotitolo → <strong>guida stampabile (sempre qui)</strong> →
-  <strong>strip 1–6</strong> → contenuto fase. Scaricabile da tablet; non è uno screenshot Compose.
-</div>
 
-<section class="page">
-  <h2>1 — Verifica disponibilità</h2>
-  <div class="phone"><div class="top">MediaManager · Setup Catalogo personale</div><div class="body">
+<section>
+  <h2>1 — Avvio</h2>
+  <div class="phone">
+    <p class="title">Setup Catalogo personale</p>
+    <p class="sub">Avvio procedura</p>
+    <p class="guide">L’intera guida può essere stampata qui <span class="ico">🖨</span></p>
+    <p class="bullet">Campi: nome Catalogo · dispositivo/sede · modello</p>
+    <div class="row"><div class="btn ghost">Annulla</div><div class="btn primary">Continua</div></div>
+  </div>
+
+  <h2>2 — Verifica disponibilità</h2>
+  <div class="phone">
     <p class="title">Setup Catalogo personale</p>
     <p class="sub">Verifica della disponibilità di quanto necessario</p>
-    <div class="print">Segui la fase corrente. L’intera guida può essere stampata qui <b>🖨</b></div>
-    <div class="strip">
-      <div class="cell">1</div><div class="cell">2</div><div class="cell">3</div>
-      <div class="cell">4</div><div class="cell">5</div><div class="cell">6</div>
-    </div>
-    <p>Prima di avviare la procedura verifica e conferma di avere a disposizione:</p>
-    <ul class="bul">
-      <li>Telefono con l’app MediaManager installata</li>
-      <li>PC/Notebook Windows v. 10 o superiore</li>
-      <li>Cavo USB dati (Trasferimento file / MTP), non solo ricarica</li>
-    </ul>
-    <p>Percorso unico: cavo USB. Il setup del Catalogo non usa Bluetooth.</p>
-    <p>Quando pronto clicca su OK</p>
-    <div class="row"><div class="btn o">Indietro</div><div class="btn p">OK</div></div>
-  </div></div>
-</section>
+    <p class="guide">L’intera guida può essere stampata qui <span class="ico">🖨</span></p>
+    <p class="bullet">✓ Dispositivo mobile con l’app</p>
+    <p class="bullet">✓ PC/Notebook Windows 10+</p>
+    <p class="bullet">✓ Cavo USB dati</p>
+    <p class="bullet">Quando pronto clicca su OK</p>
+    <div class="row"><div class="btn ghost">Indietro</div><div class="btn primary">OK</div></div>
+  </div>
 
-<section class="page">
-  <h2>2 — Collegamento fisico USB</h2>
-  <div class="phone"><div class="top">MediaManager · Setup Catalogo personale</div><div class="body">
+  <h2>3 — Collegamento fisico USB</h2>
+  <div class="phone">
     <p class="title">Setup Catalogo personale</p>
     <p class="sub">Collegamento fisico USB</p>
-    <div class="print">Segui la fase corrente. L’intera guida può essere stampata qui <b>🖨</b></div>
-    <div class="strip">
-      <div class="cell">1</div><div class="cell">2</div><div class="cell">3</div>
-      <div class="cell">4</div><div class="cell">5</div><div class="cell">6</div>
-    </div>
-    <p><strong>Collegamento fisico USB</strong></p>
-    <p>Predisponi il collegamento con un cavo USB tra il Telefono e il PC.</p>
-    <ul class="bul" style="list-style:none;padding-left:0">
-      <li>✓ Collega il Telefono al PC con un cavo USB dati e mantieni il telefono sbloccato.</li>
-      <li>✓ Passa da «Solo ricarica» a «Trasferimento file» e autorizza l’accesso ai dati.</li>
-    </ul>
-    <div class="row"><div class="btn o">Annulla</div><div class="btn p">Fatto</div></div>
-  </div></div>
-</section>
+    <p class="guide">L’intera guida può essere stampata qui <span class="ico">🖨</span></p>
+    <p class="bullet">Predisponi il collegamento con un cavo USB tra Telefono e PC.</p>
+    <p class="cosa">Cosa fare:</p>
+    <p class="bullet">✓ Collega… dispositivi accesi e sbloccati</p>
+    <p class="bullet">✓ Pannello notifiche → impostazioni USB</p>
+    <p class="bullet">✓ Trasferimento di file / MTP</p>
+    <div class="row"><div class="btn ghost">Annulla</div><div class="btn primary">OK</div></div>
+  </div>
 
-<section class="page">
-  <h2>3 — Fase 1 (Pronto)</h2>
-  <div class="phone"><div class="top">MediaManager · Setup Catalogo personale</div><div class="body">
+  <h2>4 — Fase 1</h2>
+  <div class="phone">
     <p class="title">Setup Catalogo personale</p>
-    <p class="sub">Guida collegamento Telefono e PC (USB)</p>
-    <div class="print">Segui la fase corrente. L’intera guida può essere stampata qui <b>🖨</b></div>
-    <div class="strip">
-      <div class="cell on">1</div><div class="cell">2</div><div class="cell">3</div>
-      <div class="cell">4</div><div class="cell">5</div><div class="cell">6</div>
-    </div>
-    <p class="phase">Procedura USB · Fase 1 di 6</p>
-    <div class="card">
-      <h3>Fase 1 – Creazione script sul Telefono</h3>
-      <ul class="bul" style="list-style:none;padding-left:0">
-        <li>✓ Fase gestita dall’app dopo la tua conferma.</li>
-        <li>✓ Vengono creati alcuni file (script) necessari per la cartella del Catalogo.</li>
-        <li>✓ I file andranno al PC via USB nella fase successiva.</li>
-      </ul>
-      <div class="row"><div class="btn o">Annulla</div><div class="btn p">Pronto</div></div>
-    </div>
-    <div class="err"><strong>Checkpoint KO (esempio):</strong> Creazione script non riuscita in Download. Verifica lo spazio e i permessi, poi tocca di nuovo Pronto.</div>
-  </div></div>
-</section>
+    <p class="sub phase">Fase 1 – Creazione file di configurazione</p>
+    <p class="guide">L’intera guida può essere stampata qui <span class="ico">🖨</span></p>
+    <p class="bullet">✓ Fase gestita dall’app dopo la tua conferma.</p>
+    <p class="bullet">✓ File (script) in Download del Telefono.</p>
+    <div class="row"><div class="btn ghost">Annulla</div><div class="btn primary">Pronto</div></div>
+  </div>
 
-<section class="page">
-  <h2>4 — Fasi 2 e 3</h2>
-  <div class="phone"><div class="top">MediaManager · Setup Catalogo personale</div><div class="body">
+  <h2>5 — Fase 2</h2>
+  <div class="phone">
     <p class="title">Setup Catalogo personale</p>
-    <p class="sub">Guida collegamento Telefono e PC (USB)</p>
-    <div class="print">Segui la fase corrente. L’intera guida può essere stampata qui <b>🖨</b></div>
-    <div class="strip">
-      <div class="cell done">1</div><div class="cell on">2</div><div class="cell">3</div>
-      <div class="cell">4</div><div class="cell">5</div><div class="cell">6</div>
-    </div>
-    <p class="phase">Procedura USB · Fase 2 di 6</p>
-    <div class="card">
-      <h3>Fase 2 – Invio script al PC</h3>
-      <ul class="bul" style="list-style:none;padding-left:0">
-        <li>✓ Copia da Download del Telefono: CONFIGURA.CMD, QRCoder.dll, sup.ps1</li>
-        <li>✓ Incolla sul Desktop del PC</li>
-      </ul>
-      <div class="row"><div class="btn o">Annulla</div><div class="btn p">Fatto</div></div>
-    </div>
-    <div class="card">
-      <h3>Fase 3 – Esecuzione script sul PC</h3>
-      <ul class="bul" style="list-style:none;padding-left:0">
-        <li>✓ Doppio clic su CONFIGURA.CMD</li>
-        <li>✓ Attendi «Tutto pronto» → DATI_CIFS.json</li>
-      </ul>
-      <p class="muted" style="font-size:.7rem">Bottoni attivi dopo completamento Fase 2</p>
-    </div>
-  </div></div>
-</section>
+    <p class="sub phase">Fase 2 – Invio script al PC</p>
+    <p class="guide">L’intera guida può essere stampata qui <span class="ico">🖨</span></p>
+    <p class="bullet">✓ Copia CONFIGURA.CMD, QRCoder.dll, sup.ps1</p>
+    <p class="bullet">✓ Download TEL → Desktop PC</p>
+    <div class="row"><div class="btn ghost">Annulla</div><div class="btn primary">Fatto</div></div>
+  </div>
 
-<section class="page">
-  <h2>5 — Fasi 4 e 5</h2>
-  <div class="phone"><div class="top">MediaManager · Setup Catalogo personale</div><div class="body">
+  <h2>6 — Fase 3</h2>
+  <div class="phone">
     <p class="title">Setup Catalogo personale</p>
-    <p class="sub">Guida collegamento Telefono e PC (USB)</p>
-    <div class="print">Segui la fase corrente. L’intera guida può essere stampata qui <b>🖨</b></div>
-    <div class="strip">
-      <div class="cell done">1</div><div class="cell done">2</div><div class="cell done">3</div>
-      <div class="cell done">4</div><div class="cell on">5</div><div class="cell">6</div>
-    </div>
-    <p class="phase">Procedura USB · Fase 5 di 6</p>
-    <div class="card">
-      <h3>Fase 4 – Invio dati CIFS al TELEFONO</h3>
-      <div class="donebanner">✓ FASE 4 COMPLETATA</div>
-    </div>
-    <div class="card">
-      <h3>Fase 5 – Import dati CIFS</h3>
-      <ul class="bul" style="list-style:none;padding-left:0">
-        <li>✓ Il file in Download viene letto e importato</li>
-        <li>✓ Dati non modificabili a mano</li>
-      </ul>
-      <p>Importa i dati CIFS Documents Provider cliccando sull’omologo bottone</p>
-      <div class="btn p full">Importa Dati CIFS</div>
-      <div class="row"><div class="btn o">Annulla</div><div class="btn p">Fatto</div></div>
-    </div>
-    <div class="err"><strong>Checkpoint KO (esempio):</strong> Import non riuscito. Verifica che DATI_CIFS.json sia in Download e tocca Importa Dati CIFS, poi Fatto.</div>
-  </div></div>
-</section>
+    <p class="sub phase">Fase 3 – Esecuzione script sul PC</p>
+    <p class="guide">L’intera guida può essere stampata qui <span class="ico">🖨</span></p>
+    <p class="bullet">✓ Doppio clic CONFIGURA.CMD</p>
+    <p class="bullet">✓ Attendi «Tutto pronto» → DATI_CIFS.json</p>
+    <div class="row"><div class="btn ghost">Annulla</div><div class="btn primary">Fatto</div></div>
+  </div>
 
-<section class="page">
-  <h2>6 — Fase 6/1</h2>
-  <div class="phone"><div class="top">MediaManager · Setup Catalogo personale</div><div class="body">
+  <h2>7 — Fase 4</h2>
+  <div class="phone">
     <p class="title">Setup Catalogo personale</p>
-    <p class="sub">Fase 6/1 – Configurazione CIFS</p>
-    <div class="print">Segui la fase corrente. L’intera guida può essere stampata qui <b>🖨</b></div>
-    <div class="strip">
-      <div class="cell done">1</div><div class="cell done">2</div><div class="cell done">3</div>
-      <div class="cell done">4</div><div class="cell done">5</div><div class="cell on">6</div>
-    </div>
-    <p class="phase">Procedura USB · Fase 6 di 6</p>
-    <p><strong>Fase 6/1 – Configurazione CIFS</strong></p>
-    <ul class="bul" style="list-style:none;padding-left:0">
-      <li>✓ CIFS è necessaria per vedere la cartella condivisa</li>
-      <li>✓ Installa o apri l’app da questa pagina</li>
-      <li>✓ Il copia dei campi è nello step successivo</li>
-    </ul>
-    <p>Installa o Apri l’app CIFS Documents Provider cliccando sull’omologo bottone</p>
-    <div class="btn p full">Installa / Apri CIFS Documents Provider</div>
-    <div class="row"><div class="btn o">Annulla</div><div class="btn p">Fatto</div></div>
-    <div class="err"><strong>Checkpoint KO (esempio):</strong> CIFS Documents Provider non risulta installata. Tocca Installa / Apri CIFS, completa l’installazione, poi Fatto.</div>
-  </div></div>
-</section>
+    <p class="sub phase">Fase 4 – Invio dati CIFS al Telefono</p>
+    <p class="guide">L’intera guida può essere stampata qui <span class="ico">🖨</span></p>
+    <p class="bullet">✓ Solo DATI_CIFS.json: Desktop → Download TEL</p>
+    <div class="row"><div class="btn ghost">Annulla</div><div class="btn primary">Fatto</div></div>
+  </div>
 
-<section class="page">
-  <h2>7 — Fase 6/2</h2>
-  <div class="phone"><div class="top">MediaManager · Setup Catalogo personale</div><div class="body">
+  <h2>8 — Fase 5</h2>
+  <div class="phone">
     <p class="title">Setup Catalogo personale</p>
-    <p class="sub">Fase 6/2 – Copia dati CIFS</p>
-    <div class="print">Segui la fase corrente. L’intera guida può essere stampata qui <b>🖨</b></div>
-    <div class="strip">
-      <div class="cell done">1</div><div class="cell done">2</div><div class="cell done">3</div>
-      <div class="cell done">4</div><div class="cell done">5</div><div class="cell on">6</div>
-    </div>
-    <p class="phase">Procedura USB · Fase 6 di 6</p>
-    <p><strong>Fase 6/2 – Copia dati CIFS</strong></p>
-    <ul class="bul" style="list-style:none;padding-left:0">
-      <li>✓ CIFS → [+] → Input → Copia/Incolla per ogni campo</li>
-      <li>✓ Salva e verifica elenco CIFS</li>
-      <li>✓ Attiva Catalogo</li>
-    </ul>
-    <div class="card">
-      <div class="field"><span>Name</span><span>MyMedia <button class="copy">Copia</button></span></div>
-      <div class="field"><span>Storage</span><span>SMB2,3 (jCIFS NG) <button class="copy">Copia</button></span></div>
-      <div class="field"><span>Host</span><span>192.168.x.x <button class="copy">Copia</button></span></div>
-      <div class="field"><span>Port</span><span>445 <button class="copy">Copia</button></span></div>
-      <div class="field"><span>Username</span><span>PC\MyMedia <button class="copy">Copia</button></span></div>
-      <div class="field"><span>Password</span><span>•••••• <button class="copy">Copia</button></span></div>
-      <div class="field"><span>Folder</span><span>MyMedia <button class="copy">Copia</button></span></div>
-    </div>
-    <div class="okbox">Esito accesso: dispositivo/cartella visibile nella lista CIFS.</div>
-    <p style="font-size:.72rem">☐ Ho salvato la configurazione in CIFS e la risorsa compare in elenco</p>
-    <div class="btn p full">Attiva Catalogo</div>
-  </div></div>
-</section>
+    <p class="sub phase">Fase 5 – Import dati CIFS</p>
+    <p class="guide">L’intera guida può essere stampata qui <span class="ico">🖨</span></p>
+    <p class="bullet">✓ Importa dati CIFS → selettore file</p>
+    <div class="row"><div class="btn primary" style="flex:1">Importa dati CIFS</div></div>
+    <div class="row"><div class="btn ghost">Annulla</div><div class="btn primary">Fatto</div></div>
+    <div class="ok">Dopo import OK: Importa disabilitato; Fatto abilitato</div>
+  </div>
 
-<footer class="muted">MediaManager — Template videate Setup USB · allineati all’UI · 22/11/2026</footer>
+  <h2>9 — Fase 6</h2>
+  <div class="phone">
+    <p class="title">Setup Catalogo personale</p>
+    <p class="sub phase">Fase 6 – Installa / Apri CIFS</p>
+    <p class="guide">L’intera guida può essere stampata qui <span class="ico">🖨</span></p>
+    <p class="bullet">✓ Installa o apri CIFS Documents Provider</p>
+    <div class="row"><div class="btn primary" style="flex:1">Installa / Apri CIFS…</div></div>
+    <div class="row"><div class="btn ghost">Annulla</div><div class="btn primary">Fatto</div></div>
+  </div>
+
+  <h2>10 — Fase 7</h2>
+  <div class="phone">
+    <p class="title">Setup Catalogo personale</p>
+    <p class="sub phase">Fase 7 – Configura CIFS e attiva Catalogo</p>
+    <p class="guide">L’intera guida può essere stampata qui <span class="ico">🖨</span></p>
+    <p class="bullet">✓ Copia campi uno a uno → Salva in CIFS → Attiva Catalogo</p>
+    <div class="row"><div class="btn ghost">Indietro</div><div class="btn primary">Attiva Catalogo</div></div>
+  </div>
+
+  <h2>11 — Riepilogo</h2>
+  <div class="phone">
+    <p class="title">Setup Catalogo personale</p>
+    <p class="sub">Riepilogo e conferma</p>
+    <p class="guide">L’intera guida può essere stampata qui <span class="ico">🖨</span></p>
+    <p class="bullet">Nome Catalogo · dispositivo/sede</p>
+    <div class="ok">Catalogo creato correttamente (solo se attivazione reale)</div>
+    <div class="row"><div class="btn primary" style="flex:1">Continua</div></div>
+  </div>
+</section>
+<footer>MediaManager — Template videate REV4 · 23/11/2026 (Europe/Rome)</footer>
 </body>
 </html>

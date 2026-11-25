@@ -24,6 +24,57 @@ object SafPathLabels {
     private const val AUTH_EXTERNAL = "com.android.externalstorage.documents"
     private const val AUTH_DOWNLOADS = "com.android.providers.downloads.documents"
     private const val AUTH_DRIVE_PREFIX = "com.google.android.apps.docs"
+    private const val AUTH_CIFS_PROVIDER = "com.wa2c.android.cifsdocumentsprovider"
+
+    /**
+     * Share Catalogo su PC (nome digitato in Avvio + legacy MyMedia/MediaManagerCatalog).
+     * Usato per etichettare «PC Windows» invece di «Disco di rete / NAS».
+     * Persistito: altrimenti dopo cold-start MyCatalog torna NAS (LOCK #6/#8).
+     */
+    private val pcCatalogShareNames: MutableSet<String> =
+        mutableSetOf("mymedia", "mediamanagercatalog")
+    private var sharePrefs: android.content.SharedPreferences? = null
+
+    /** Collega persistenza + ripristina share noti (chiamare all’avvio app). */
+    fun bindPcCatalogShareStore(context: Context) {
+        val prefs = context.applicationContext
+            .getSharedPreferences(PC_SHARE_PREFS, Context.MODE_PRIVATE)
+        sharePrefs = prefs
+        val raw = prefs.getString(KEY_PC_SHARES, null).orEmpty()
+        if (raw.isBlank()) return
+        synchronized(pcCatalogShareNames) {
+            raw.split('\u001f').map { it.trim().lowercase() }.filter { it.isNotEmpty() }
+                .forEach { pcCatalogShareNames.add(it) }
+        }
+    }
+
+    /** Registra lo share della sede Catalogo PC (LOCK test telefono #5/#6/#8). */
+    fun rememberPcCatalogShare(shareName: String) {
+        val n = shareName.trim().lowercase()
+        if (n.isEmpty()) return
+        val changed = synchronized(pcCatalogShareNames) { pcCatalogShareNames.add(n) }
+        if (changed) persistPcCatalogShares()
+    }
+
+    /** Dalla tree SAF CIFS: memorizza lo share SMB (es. MyCatalog da smb://host:445/MyCatalog/). */
+    fun rememberPcCatalogShareFromTreeUri(treeUri: String?) {
+        if (treeUri.isNullOrBlank()) return
+        extractSmbShareSegment(treeUri)?.let { rememberPcCatalogShare(it) }
+    }
+
+    fun knownPcCatalogShares(): Set<String> =
+        synchronized(pcCatalogShareNames) { pcCatalogShareNames.toSet() }
+
+    private fun persistPcCatalogShares() {
+        val prefs = sharePrefs ?: return
+        val joined = synchronized(pcCatalogShareNames) {
+            pcCatalogShareNames.joinToString("\u001f")
+        }
+        prefs.edit().putString(KEY_PC_SHARES, joined).apply()
+    }
+
+    private const val PC_SHARE_PREFS = "pvm_pc_catalog_shares"
+    private const val KEY_PC_SHARES = "shares"
 
     fun deviceLabel(context: Context): String {
         val fromSettings = runCatching {
@@ -69,20 +120,53 @@ object SafPathLabels {
         path: String,
         uriString: String,
     ): String {
+        val hint = displayHint?.trim().orEmpty()
+        val pathTrim = path.trim()
         val blob = listOfNotNull(displayHint, path, uriString)
             .joinToString(" ")
             .lowercase()
+        val shares = knownPcCatalogShares()
+        val smbShare = extractSmbShareSegment(uriString)?.lowercase()
+        // CIFS Documents Provider espone spesso tree UUID opachi (niente smb:// nello Shared URI):
+        // il riconoscimento PC vs NAS è solo lato MediaManager (share noto / nome cartella).
+        val hintIsKnownShare = shares.any { share ->
+            hint.equals(share, ignoreCase = true) || pathTrim.equals(share, ignoreCase = true)
+        }
+        val isPcCatalogShare = hintIsKnownShare || shares.any { share ->
+            smbShare == share ||
+                Regex("""\b${Regex.escape(share)}\b""").containsMatchIn(blob) ||
+                blob.contains("%2f$share") ||
+                blob.contains("/$share")
+        }
         return when {
-            // Share Catalogo Windows dedicato (MyMedia o legacy MediaManagerCatalog) → PC.
-            blob.contains("mediamanagercatalog") ||
-                Regex("""\bmymedia\b""").containsMatchIn(blob) -> DEVICE_PC_NOTEBOOK
+            // Share Catalogo Windows (nome Avvio o legacy) → PC Windows.
+            isPcCatalogShare -> DEVICE_PC_NOTEBOOK
             // LOCK S25 #1: disco/share di rete (anche cartella «MediaManager(sda1)») = NAS, non PC.
             blob.contains("synology") ||
                 blob.contains("qnap") ||
                 blob.contains("truenas") ||
                 Regex("""\bnas\b""").containsMatchIn(blob) -> DEVICE_NETWORK_NAS
+            // Provider CIFS senza share Catalogo noto: NAS generico (non promuovere a PC).
+            blob.contains(AUTH_CIFS_PROVIDER) -> DEVICE_NETWORK_NAS
             else -> DEVICE_NETWORK_NAS
         }
+    }
+
+    fun isCifsDocumentsProviderUri(uriString: String?): Boolean {
+        if (uriString.isNullOrBlank()) return false
+        return runCatching {
+            providerOf(Uri.parse(uriString)) == SafProvider.NETWORK_NAS &&
+                uriString.contains(AUTH_CIFS_PROVIDER, ignoreCase = true)
+        }.getOrDefault(false)
+    }
+
+    /** Ultimo segmento path di `smb://host/share` (decodificato). */
+    fun extractSmbShareSegment(uriString: String): String? {
+        val decoded = decode(uriString)
+        val match = Regex("""smb://[^/]+/([^/?#]+)""", RegexOption.IGNORE_CASE)
+            .find(decoded)
+            ?: return null
+        return match.groupValues.getOrNull(1)?.trim()?.trim('/')?.takeIf { it.isNotEmpty() }
     }
 
     /**
@@ -101,7 +185,8 @@ object SafPathLabels {
             ?.trim()
             ?.trim('/')
         if (!smbHost.isNullOrBlank() && !looksIllegible(smbHost)) {
-            return smbHost
+            // smb://192.168.68.72:445 → host senza porta (CIFS Documents Provider).
+            return smbHost.substringBefore(':').ifBlank { smbHost }
         }
         // Fallback: primo segmento path tipo HOST/share
         val candidate = path.ifBlank { displayHint.orEmpty() }

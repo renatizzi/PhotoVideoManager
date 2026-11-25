@@ -318,6 +318,8 @@ fun PvmApp(
                         onSelectKind = wizardVm::selectKind,
                         onCatalogNameChange = wizardVm::updateCatalogName,
                         onDeviceModelChange = wizardVm::updateDeviceModel,
+                        onPcDiskInternal = wizardVm::updatePcDiskInternal,
+                        onPcExternalDriveLetter = wizardVm::updatePcExternalDriveLetter,
                         onProcedureMode = wizardVm::selectProcedureMode,
                         onAvanti = wizardVm::avantiFromIntro,
                         onContinuaAvvio = wizardVm::continuaFromAvvio,
@@ -366,6 +368,7 @@ fun PvmApp(
                             }
                         },
                         onCancel = { navController.popBackStack() },
+                        onAnnullaProcedura = wizardVm::annullaProceduraToAvvio,
                     )
                 }
                 composable(PvmDestination.CatalogUpdate.route) {
