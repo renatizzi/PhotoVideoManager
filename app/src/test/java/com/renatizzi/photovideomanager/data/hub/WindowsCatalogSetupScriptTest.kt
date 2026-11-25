@@ -117,6 +117,16 @@ class WindowsCatalogSetupScriptTest {
     }
 
     @Test
+    fun build_smbSharePointsToDriveRootNotOnlyCatalogFolder() {
+        val ps1 = samplePkg().ps1Content
+        assertTrue(ps1.contains("GetPathRoot"))
+        assertTrue(ps1.contains("ShareRoot"))
+        assertTrue(ps1.contains("creata_disco") || ps1.contains("ripruntata_disco"))
+        assertTrue(ps1.contains("New-SmbShare") && ps1.contains("ShareRoot"))
+        assertTrue(ps1.contains("icacls.exe"))
+    }
+
+    @Test
     fun build_cmdAutoElevates() {
         val cmd = samplePkg().cmdContent
         assertTrue(cmd.contains("net session"))

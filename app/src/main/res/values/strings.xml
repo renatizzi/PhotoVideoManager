@@ -80,7 +80,7 @@
     <string name="hub_avvio_pc_disk_external">Disco esterno</string>
     <string name="hub_avvio_pc_disk_letter">Lettera del disco esterno</string>
     <string name="hub_avvio_pc_path_preview">Percorso sul PC: %1$s</string>
-    <string name="hub_avvio_pc_cifs_nb">NB — Per accedere alla cartella del Catalogo sul PC usa l’app CIFS dove vedrai «%1$s» e non la lettera del disco.</string>
+    <string name="hub_avvio_pc_cifs_nb">NB — In CIFS vedrai «%1$s» (condivisione dell’intero disco scelto). Dentro: cartella Catalogo e le altre cartelle del disco (foto incluse). Non compare la lettera C:.</string>
     <string name="hub_avvio_model_q">Qual è il modello del dispositivo?</string>
     <string name="hub_pc_import_download_hint">Seleziona DATI_CIFS.json dalla cartella Download del Telefono (non dal PC). Se compare DATI_CIFS (1).json, scegli il file più recente della sessione.</string>
     <string name="hub_avvio_model_hint">MyDevice</string>
@@ -119,7 +119,8 @@
     <string name="acquisisci_add_pc_ready_body">La cartella condivisa sul PC è già pronta e la vedi da questo telefono?</string>
     <string name="acquisisci_add_pc_ready_yes">Sì, è già pronta</string>
     <string name="acquisisci_add_pc_ready_no">No, va creata</string>
-    <string name="acquisisci_add_pc_ready_tip">Se il PC non compare ancora, apri CIFS / Disco di rete e collegala. Poi tocca «Scegli cartella» e scegli la cartella Foto sul PC.</string>
+    <string name="acquisisci_add_pc_ready_tip">Apri CIFS, entra nella connessione del Catalogo (nome = condivisione del disco) e tocca «Scegli cartella» sulla cartella foto. Non serve una nuova procedura CIFS per ogni cartella.</string>
+    <string name="acquisisci_add_pc_need_setup_tip">Se non hai ancora fatto Setup Catalogo PC: completalo prima (condivide il disco). Se l’hai già fatto: in CIFS apri «%1$s» e scegli qualsiasi cartella foto sul disco — senza ripetere Host/User/Password.</string>
     <string name="acquisisci_add_open_cifs">Apri CIFS / Disco di rete</string>
     <string name="acquisisci_add_other_phone_title">Un altro telefono</string>
     <string name="acquisisci_add_other_phone_body">Su un altro telefono non si apre una cartella in rete come sul PC.\n\nMetti le foto che ti servono nella cartella condivisa (sul PC o sul disco di rete), oppure su Drive. Poi da questo telefono aggiungi quella cartella e acquisisci.</string>
@@ -133,10 +134,10 @@
     <string name="acquisisci_needs_catalog_invite">Prima di utilizzare questa funzione devi creare il Catalogo personale</string>
     <string name="acquisisci_da_pc_rete">Da PC o rete</string>
     <string name="acquisisci_da_pc_title">Aggiungere foto dal PC</string>
-    <string name="acquisisci_da_pc_step1">1. Sul PC: condividi la cartella delle foto. Tasto destro sulla cartella → Proprietà → Condivisione → Condividi. Usa un nome semplice, es. Foto.</string>
-    <string name="acquisisci_da_pc_step2">2. Tablet e PC sulla stessa Wi‑Fi. Il PC resta acceso.</string>
-    <string name="acquisisci_da_pc_step3">3. Tocca «Scegli cartella». Nel selettore apri «Disco di rete» (dove già vedi il NAS) e cerca il PC o la cartella Foto. Conferma con Usa questa cartella.</string>
-    <string name="acquisisci_da_pc_note">MediaManager non elenca da solo i PC: mostra solo ciò che il tablet ha già in Disco di rete. Non serve il cloud.</string>
+    <string name="acquisisci_da_pc_step1">1. Setup Catalogo PC (già fatto): lo script condivide l’intero disco scelto; in CIFS compare col nome del Catalogo.</string>
+    <string name="acquisisci_da_pc_step2">2. Telefono e PC sulla stessa Wi‑Fi. Il PC resta acceso.</string>
+    <string name="acquisisci_da_pc_step3">3. Tocca «Scegli cartella». In CIFS / Disco di rete apri la connessione del Catalogo e scegli la cartella foto (qualsiasi sottocartella del disco). Conferma con Usa questa cartella.</string>
+    <string name="acquisisci_da_pc_note">Non serve una nuova maschera CIFS per ogni cartella foto: una connessione = disco intero. La sede Catalogo resta Nome\MediaManager.</string>
     <string name="acquisisci_da_pc_choose">Scegli cartella</string>
     <string name="hub_wizard_title">Setup Catalogo personale</string>
     <string name="hub_wizard_entry">Setup Catalogo personale</string>

@@ -390,7 +390,9 @@ fun AcquisisciStaticScreen(
                     TextButton(
                         onClick = {
                             pcReadyOpen = false
-                            pcGuideOpen = true
+                            // Dopo Setup (share = disco) non c’è una seconda procedura CIFS:
+                            // tip + scegli cartella nella connessione già presente.
+                            addTip = "pc_need_setup"
                         },
                     ) {
                         Text(stringResource(R.string.acquisisci_add_pc_ready_no))
@@ -423,17 +425,23 @@ fun AcquisisciStaticScreen(
 
     if (addTip != null) {
         val tipKind = addTip
+        val catalogHint = state.catalogSeatStatus?.catalogName?.ifBlank { null }
+            ?: stringResource(R.string.hub_avvio_name_default)
         val tipText = when (tipKind) {
             "drive" -> stringResource(R.string.acquisisci_add_drive_tip)
             "pc_ready" -> stringResource(R.string.acquisisci_add_pc_ready_tip)
+            "pc_need_setup" -> stringResource(
+                R.string.acquisisci_add_pc_need_setup_tip,
+                catalogHint,
+            )
             else -> stringResource(R.string.acquisisci_add_nas_tip)
         }
         val tipTitle = when (tipKind) {
             "drive" -> stringResource(R.string.acquisisci_add_drive)
-            "pc_ready" -> stringResource(R.string.acquisisci_add_pc)
+            "pc_ready", "pc_need_setup" -> stringResource(R.string.acquisisci_add_pc)
             else -> stringResource(R.string.acquisisci_add_nas)
         }
-        val needsCifs = tipKind == "nas" || tipKind == "pc_ready"
+        val needsCifs = tipKind == "nas" || tipKind == "pc_ready" || tipKind == "pc_need_setup"
         AlertDialog(
             onDismissRequest = { addTip = null },
             title = { Text(tipTitle) },

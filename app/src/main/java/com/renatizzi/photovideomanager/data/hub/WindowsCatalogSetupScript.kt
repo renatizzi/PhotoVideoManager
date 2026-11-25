@@ -5,6 +5,10 @@ import java.security.SecureRandom
 /**
  * Generates an idempotent Windows setup package (PowerShell + CMD launcher)
  * for MediaManager catalog folder + dedicated local SMB user.
+ *
+ * LOCK share disco: la cartella Catalogo resta `X:\Nome`; la condivisione SMB
+ * punta alla **radice del disco** (`X:\`) con lo stesso nome share = Nome Catalogo,
+ * così in CIFS si navigano Catalogo e cartelle foto senza una procedura per cartella.
  */
 object WindowsCatalogSetupScript {
     /** Account locale dedicato + share + cartella: un solo vocabolo (LOCK Setup PC). */
@@ -366,6 +370,12 @@ ${d}AnnounceHttp   = $announceHttp
 ${d}AnnounceMagic  = '$announceMagic'
 ${d}FirewallGroup  = '@FirewallAPI.dll,-28502'
 ${d}ExitCode       = 1
+# Radice disco da condividere (es. C:\): Catalogo resta in FolderPath sotto il disco.
+${d}ShareRoot      = [System.IO.Path]::GetPathRoot(${d}FolderPath)
+if ([string]::IsNullOrWhiteSpace(${d}ShareRoot)) {
+  Write-Error 'Radice disco non determinata dal percorso Catalogo.'
+  exit 10
+}
 
 ${d}ParentDir = Split-Path -Parent ${d}FolderPath
 if (-not ${d}ParentDir) { ${d}ParentDir = 'C:\MediaManager' }
@@ -498,29 +508,28 @@ try {
     Fail-Step 20 ("Account dedicato non riuscito: " + ${d}_.Exception.Message)
   }
 
-  Write-Host "Passo 4 di 6 - Condivisione SMB" -ForegroundColor Cyan
-  Write-Step "Condivisione SMB: ${d}ShareName"
+  Write-Host "Passo 4 di 6 - Condivisione SMB (disco)" -ForegroundColor Cyan
+  Write-Step ("Condivisione SMB: ${d}ShareName -> disco " + ${d}ShareRoot + " (Catalogo in " + ${d}FolderPath + ")")
   try {
     ${d}shareObj = Get-SmbShare -Name ${d}ShareName -ErrorAction SilentlyContinue
+    ${d}wantedPath = ([string]${d}ShareRoot).TrimEnd([char]92)
     if (${d}null -eq ${d}shareObj) {
-      New-SmbShare -Name ${d}ShareName -Path ${d}FolderPath -FullAccess ${d}UserName -FolderEnumerationMode AccessBased | Out-Null
-      Record 'share' ${d}true 'creata'
-      Write-Step "Condivisione creata."
+      New-SmbShare -Name ${d}ShareName -Path ${d}ShareRoot -FullAccess ${d}UserName -FolderEnumerationMode AccessBased | Out-Null
+      Record 'share' ${d}true 'creata_disco'
+      Write-Step "Condivisione del disco creata."
     } else {
-      # Modifica percorso: stessa condivisione gia usata da un Catalogo precedente.
-      # Non fallire: rimuovi e ricrea sul nuovo FolderPath (i file vecchi restano al loro posto).
+      # Stesso nome share: ripunta alla radice disco se serve (file Catalogo restano).
       ${d}existingPath = ([string]${d}shareObj.Path).TrimEnd([char]92)
-      ${d}wantedPath = ([string]${d}FolderPath).TrimEnd([char]92)
       if (${d}existingPath -ieq ${d}wantedPath) {
         Grant-SmbShareAccess -Name ${d}ShareName -AccountName ${d}UserName -AccessRight Full -Force | Out-Null
         Record 'share' ${d}true 'aggiornata'
-        Write-Step "Condivisione gia presente: permessi aggiornati."
+        Write-Step "Condivisione disco gia presente: permessi aggiornati."
       } else {
-        Write-Step ("Condivisione gia su '${d}existingPath': la ripunto a '${d}FolderPath'.")
+        Write-Step ("Condivisione gia su '${d}existingPath': la ripunto al disco '${d}ShareRoot'.")
         Remove-SmbShare -Name ${d}ShareName -Force
-        New-SmbShare -Name ${d}ShareName -Path ${d}FolderPath -FullAccess ${d}UserName -FolderEnumerationMode AccessBased | Out-Null
-        Record 'share' ${d}true 'ripruntata'
-        Write-Step "Condivisione ripuntata al nuovo percorso."
+        New-SmbShare -Name ${d}ShareName -Path ${d}ShareRoot -FullAccess ${d}UserName -FolderEnumerationMode AccessBased | Out-Null
+        Record 'share' ${d}true 'ripruntata_disco'
+        Write-Step "Condivisione ripuntata alla radice del disco."
       }
     }
     Get-SmbShareAccess -Name ${d}ShareName | Where-Object { ${d}_.AccountName -match 'Everyone|Tutti' } | ForEach-Object {
@@ -531,7 +540,7 @@ try {
   }
 
   Write-Host "Passo 5 di 6 - Permessi NTFS" -ForegroundColor Cyan
-  Write-Step "Permessi NTFS sulla cartella"
+  Write-Step "Permessi NTFS sulla cartella Catalogo"
   try {
     ${d}acl = Get-Acl -LiteralPath ${d}FolderPath
     ${d}acl.SetAccessRuleProtection(${d}true, ${d}false)
@@ -546,9 +555,20 @@ try {
     foreach (${d}r in ${d}rules) { ${d}acl.AddAccessRule(${d}r) }
     Set-Acl -LiteralPath ${d}FolderPath -AclObject ${d}acl
     Record 'ntfs' ${d}true 'impostati'
-    Write-Step "ACL NTFS impostati."
+    Write-Step "ACL NTFS Catalogo impostati."
   } catch {
     Fail-Step 40 ("Permessi NTFS non riusciti: " + ${d}_.Exception.Message)
+  }
+  Write-Step "Permessi lettura sul disco (navigazione cartelle foto in CIFS)"
+  try {
+    # /T /C: eredita RX sulle cartelle esistenti; ignora errori su file di sistema.
+    ${d}grant = ${d}UserName + ':(OI)(CI)RX'
+    & icacls.exe ${d}ShareRoot /grant ${d}grant /T /C /Q | Out-Null
+    Record 'ntfs_disk' ${d}true 'rx_disco'
+    Write-Step "ACL lettura disco applicati (alcune cartelle di sistema possono restare nascoste)."
+  } catch {
+    Write-Step "Avviso: permessi disco parziali; Catalogo ok, alcune cartelle foto potrebbero non comparire."
+    Record 'ntfs_disk' ${d}false 'parziale'
   }
 
   Write-Host "Passo 6 di 6 - Rete, firewall e verifica" -ForegroundColor Cyan
@@ -660,9 +680,10 @@ try {
   Write-Host ""
   Write-Host "Tutto pronto" -ForegroundColor Green
   Write-Host ("PC:            {0}" -f ${d}pc)
-  Write-Host ("Cartella:      {0}" -f ${d}FolderPath)
+  Write-Host ("Cartella Catalogo: {0}" -f ${d}FolderPath)
+  Write-Host ("Disco condiviso:   {0}" -f ${d}ShareRoot)
   # Build UNC with [char]92 so backslashes are never doubled by escaping.
-  Write-Host ("Condivisione:  " + [string][char]92 + [char]92 + ${d}pc + [char]92 + ${d}ShareName)
+  Write-Host ("Condivisione:  " + [string][char]92 + [char]92 + ${d}pc + [char]92 + ${d}ShareName + " (= disco, non solo la cartella Catalogo)")
   if (${d}primaryIp) { Write-Host ("IP:            {0}" -f ${d}primaryIp) } else { Write-Host "IP:            (non rilevato; l'app usera il nome PC)" }
   Write-Host ("Utente:        {0}" -f ${d}userHint)
   Write-Host ("Password:      {0}" -f ${d}PlainPassword) -ForegroundColor Yellow

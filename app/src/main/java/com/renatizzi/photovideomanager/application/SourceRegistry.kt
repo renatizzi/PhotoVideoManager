@@ -483,9 +483,33 @@ class SourceRegistry(
         }
     }
 
+    /**
+     * Stesso albero CIFS della sede PC (share = disco): qualsiasi sottocartella
+     * scelta in Acquisisci resta etichettata PC Windows, non NAS.
+     */
+    private fun matchesPcDiskCifsConnection(locator: String?): Boolean {
+        if (!catalogSeatIsPc() || locator.isNullOrBlank()) return false
+        if (matchesCatalogSeatTree(locator, null)) return true
+        val seatUri = catalogSeatTreeUri() ?: return false
+        if (!SafPathLabels.isCifsDocumentsProviderUri(locator)) return false
+        if (!SafPathLabels.isCifsDocumentsProviderUri(seatUri)) return false
+        val seatAuth = SafTreeIdentity.authorityOfLocator(seatUri) ?: return false
+        val locAuth = SafTreeIdentity.authorityOfLocator(locator) ?: return false
+        if (seatAuth != locAuth) return false
+        val seatTree = SafTreeIdentity.documentIdOfLocator(seatUri) ?: return false
+        val locTree = SafTreeIdentity.documentIdOfLocator(locator) ?: return false
+        val seatRoot = seatTree.substringBefore(':').ifBlank { seatTree }
+        val locRoot = locTree.substringBefore(':').ifBlank { locTree }
+        if (seatRoot.isNotBlank() && seatRoot.equals(locRoot, ignoreCase = true)) return true
+        return SafTreeIdentity.isSameOrDescendantDocId(locTree, seatTree) ||
+            SafTreeIdentity.isSameOrDescendantDocId(seatTree, locTree)
+    }
+
     private fun deviceLabelFor(location: StorageLocation): String {
         val locator = location.opaqueLocator
-        if (matchesCatalogSeatTree(locator, location.displayName)) {
+        if (matchesCatalogSeatTree(locator, location.displayName) ||
+            matchesPcDiskCifsConnection(locator)
+        ) {
             return SafPathLabels.DEVICE_PC_NOTEBOOK
         }
         return when (location.adapterKind) {

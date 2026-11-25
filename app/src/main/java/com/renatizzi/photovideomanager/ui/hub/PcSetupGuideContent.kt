@@ -172,8 +172,8 @@ object PcSetupGuideContent {
      */
     fun cifsShareVsDriveLetterNote(catalogName: String): String {
         val name = catalogName.trim().ifBlank { "NomeCatalogo" }
-        return "NB — Per accedere alla cartella del Catalogo sul PC usa l’app CIFS " +
-            "dove vedrai «$name» e non la lettera del disco."
+        return "NB — In CIFS vedrai «$name» (condivisione dell’intero disco scelto). " +
+            "Dentro: cartella Catalogo e le altre cartelle del disco. Non compare la lettera C:."
     }
 
     /** REV4 PAGINA 11 — sequenza unica. */
@@ -184,7 +184,7 @@ object PcSetupGuideContent {
         "Torna a questa schermata di MediaManager.",
         "Per ogni campo: premi il relativo pulsante “Copia” in MediaManager, passa a CIFS e incolla il valore nel campo corrispondente.",
         "Ripeti l’operazione fino a completare tutti i campi richiesti.",
-        "NB — In CIFS vedi il nome del Catalogo (share), non la lettera del disco Windows (es. C:).",
+        "NB — In CIFS vedi il nome del Catalogo (condivisione dell’intero disco). Dentro apri NomeCatalogo\\MediaManager per Attiva; per le foto in Acquisisci scegli qualsiasi altra cartella del disco.",
         "Salva la configurazione in CIFS e verifica che la cartella condivisa sia presente nell’elenco di CIFS.",
         "Torna a MediaManager e conferma di aver salvato i dati.",
         "Premi “Attiva Catalogo”.",
