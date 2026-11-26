@@ -1723,7 +1723,7 @@ private fun CifsCardStep(
             onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[1] = !it[1] } },
             enabled = !state.busy,
         )
-        // Domain: come in CIFS (dopo Storage, prima di Host) — vuoto, senza Copia.
+        // Ordine Settings CIFS Connection: Domain → Host → Port → DFS → User → Password → Folder.
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_domain),
             value = "",
@@ -1731,7 +1731,6 @@ private fun CifsCardStep(
             onAction = null,
             checked = null,
             onCheckedChange = null,
-            hint = stringResource(R.string.hub_b5b_domain_blank_hint),
             enabled = !state.busy,
         )
         CifsFieldRow(
@@ -1756,7 +1755,6 @@ private fun CifsCardStep(
             onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[3] = !it[3] } },
             enabled = !state.busy,
         )
-        // Enable DFS: come in CIFS (dopo Port, prima di User) — deselezionato, senza Copia.
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -1767,17 +1765,11 @@ private fun CifsCardStep(
                 onCheckedChange = null,
                 enabled = false,
             )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    stringResource(R.string.hub_b5b_label_dfs),
-                    style = MaterialTheme.typography.labelMedium,
-                )
-                Text(
-                    stringResource(R.string.hub_b5b_dfs_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                )
-            }
+            Text(
+                stringResource(R.string.hub_b5b_label_dfs),
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.weight(1f),
+            )
         }
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_user),
@@ -1849,6 +1841,11 @@ private fun CifsCardStep(
             checked = rowFlags[6],
             onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[6] = !it[6] } },
             enabled = !state.busy,
+        )
+        Text(
+            stringResource(R.string.hub_b5b_optional_fields_note),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
         )
     }
 

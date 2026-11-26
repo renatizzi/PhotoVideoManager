@@ -297,12 +297,13 @@ class WindowsSetupScriptExporter(
             // Pulisci solo fantasmi DATI_CIFS vuoti; non cancellare bundle validi in export.
             scrubEmptyDatiCifsGhosts()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                // Solo i 3 file set (+ varianti (1)/(2)), MAI DATI_CIFS/no_pw.
-                for (name in WindowsCatalogSetupScript.SETUP_SET_FILE_NAMES) {
-                    deleteSetupSetVariants(name)
+                // 1) Cancella TUTTI i canonici + (1)/(2) del set. 2) Insert unico.
+                // Mai insert se resta un omonimo: MediaStore rinomina in "name (1).ext".
+                for (name in SetupSetFileNames.CANONICAL) {
+                    purgeAllSetupSetEntries(name)
                 }
-                val dllOk = qrDll == null || writeMediaStoreOverwrite(qrDll)
-                writeMediaStoreOverwrite(ps1) && writeMediaStoreOverwrite(cmd) && dllOk
+                val dllOk = qrDll == null || insertMediaStoreNew(qrDll)
+                insertMediaStoreNew(ps1) && insertMediaStoreNew(cmd) && dllOk
             } else {
                 @Suppress("DEPRECATION")
                 val downloads = Environment.getExternalStoragePublicDirectory(
@@ -326,84 +327,63 @@ class WindowsSetupScriptExporter(
         else -> "application/octet-stream"
     }
 
-    /** Varianti (1)/(2) dei soli 3 file script — pattern precisi, niente prefisso "sup" nudo. */
-    private fun deleteSetupSetVariants(fileName: String) {
+    /**
+     * Elimina canonic + ogni `stem (n).ext` del file set in MediaStore Downloads.
+     * Query ampia + filtro Kotlin: LIKE SQL da solo non basta (case/spazi/pending).
+     */
+    private fun purgeAllSetupSetEntries(canonical: String) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
         val resolver = context.contentResolver
         val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-        val stem = fileName.substringBeforeLast('.', fileName)
-        val ext = fileName.substringAfterLast('.', missingDelimiterValue = "")
-        val patterns = buildList {
-            if (ext.isNotEmpty()) {
-                add("$stem (%).$ext")
-                add("$fileName (%)")
+        val ids = mutableListOf<Long>()
+        runCatching {
+            resolver.query(
+                collection,
+                arrayOf(MediaStore.Downloads._ID, MediaStore.Downloads.DISPLAY_NAME),
+                "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
+                arrayOf(SetupSetFileNames.mediaStoreLikePrefix(canonical)),
+                null,
+            )?.use { cursor ->
+                val idIdx = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID)
+                val nameIdx = cursor.getColumnIndexOrThrow(MediaStore.Downloads.DISPLAY_NAME)
+                while (cursor.moveToNext()) {
+                    val name = cursor.getString(nameIdx).orEmpty()
+                    if (SetupSetFileNames.isCanonicalOrVariant(name, canonical)) {
+                        ids += cursor.getLong(idIdx)
+                    }
+                }
             }
         }
-        for (pattern in patterns) {
+        // Anche match esatto (alcuni OEM non espongono bene il LIKE).
+        runCatching {
+            resolver.query(
+                collection,
+                arrayOf(MediaStore.Downloads._ID),
+                "${MediaStore.Downloads.DISPLAY_NAME} = ?",
+                arrayOf(canonical),
+                null,
+            )?.use { cursor ->
+                while (cursor.moveToNext()) {
+                    ids += cursor.getLong(0)
+                }
+            }
+        }
+        for (id in ids.distinct()) {
             runCatching {
-                resolver.delete(
-                    collection,
-                    "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
-                    arrayOf(pattern),
-                )
+                resolver.delete(ContentUris.withAppendedId(collection, id), null, null)
             }
         }
     }
 
     private fun purgeLegacySetupSetOnly(downloads: File) {
-        val allowed = WindowsCatalogSetupScript.SETUP_SET_FILE_NAMES.map { it.lowercase() }.toSet()
         downloads.listFiles()
-            ?.filter { file ->
-                val n = file.name
-                allowed.any { canon ->
-                    n.equals(canon, ignoreCase = true) ||
-                        n.matches(
-                            Regex(
-                                "^${Regex.escape(canon.substringBeforeLast('.'))} \\(\\d+\\)\\." +
-                                    Regex.escape(canon.substringAfterLast('.')),
-                                RegexOption.IGNORE_CASE,
-                            ),
-                        )
-                }
-            }
+            ?.filter { SetupSetFileNames.isAnySetupSetFile(it.name) }
             ?.forEach { it.delete() }
     }
 
-    /**
-     * Sovrascrive in-place se esiste gia' lo stesso DISPLAY_NAME; altrimenti insert.
-     * Evita delete+insert che con MTP lascia fantasmi 0 byte / data 1970.
-     */
-    private fun writeMediaStoreOverwrite(file: File): Boolean {
-        val resolver = context.contentResolver
-        val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-        deleteSetupSetVariants(file.name)
-        val existing = resolver.query(
-            collection,
-            arrayOf(MediaStore.Downloads._ID),
-            "${MediaStore.Downloads.DISPLAY_NAME} = ?",
-            arrayOf(file.name),
-            "${MediaStore.Downloads.DATE_MODIFIED} DESC",
-        )?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                ContentUris.withAppendedId(collection, cursor.getLong(0))
-            } else {
-                null
-            }
-        }
-        if (existing != null) {
-            return try {
-                resolver.openOutputStream(existing, "wt")?.use { out ->
-                    file.inputStream().use { input -> input.copyTo(out) }
-                } != null
-            } catch (_: Exception) {
-                runCatching { resolver.delete(existing, null, null) }
-                insertMediaStoreNew(file)
-            }
-        }
-        return insertMediaStoreNew(file)
-    }
-
     private fun insertMediaStoreNew(file: File): Boolean {
+        // Difesa: ripulisci di nuovo subito prima dell'insert (race / OEM).
+        purgeAllSetupSetEntries(file.name)
         val resolver = context.contentResolver
         val values = ContentValues().apply {
             put(MediaStore.Downloads.DISPLAY_NAME, file.name)
@@ -423,10 +403,42 @@ class WindowsSetupScriptExporter(
             values.clear()
             values.put(MediaStore.Downloads.IS_PENDING, 0)
             resolver.update(uri, values, null, null)
+            // Se l'OEM ha comunque creato un (1), ripulisci i non-canonici lasciando il canonic.
+            purgeNumberedVariantsOnly(file.name)
             true
         } catch (_: Exception) {
             resolver.delete(uri, null, null)
             false
+        }
+    }
+
+    /** Dopo insert: elimina solo `stem (n).ext`, non il canonic. */
+    private fun purgeNumberedVariantsOnly(canonical: String) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
+        val resolver = context.contentResolver
+        val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        runCatching {
+            resolver.query(
+                collection,
+                arrayOf(MediaStore.Downloads._ID, MediaStore.Downloads.DISPLAY_NAME),
+                "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
+                arrayOf(SetupSetFileNames.mediaStoreLikePrefix(canonical)),
+                null,
+            )?.use { cursor ->
+                val idIdx = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID)
+                val nameIdx = cursor.getColumnIndexOrThrow(MediaStore.Downloads.DISPLAY_NAME)
+                while (cursor.moveToNext()) {
+                    val name = cursor.getString(nameIdx).orEmpty()
+                    if (name.equals(canonical, ignoreCase = true)) continue
+                    if (SetupSetFileNames.isCanonicalOrVariant(name, canonical)) {
+                        resolver.delete(
+                            ContentUris.withAppendedId(collection, cursor.getLong(idIdx)),
+                            null,
+                            null,
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -445,16 +457,7 @@ class WindowsSetupScriptExporter(
                 val targetDir = File(root, "MediaManager").apply { mkdirs() }
                 listOfNotNull(ps1, cmd, qrDll).forEach { src ->
                     targetDir.listFiles()
-                        ?.filter {
-                            it.name.equals(src.name, ignoreCase = true) ||
-                                it.name.matches(
-                                    Regex(
-                                        "^${Regex.escape(src.name.substringBeforeLast('.'))} \\(\\d+\\)\\." +
-                                            Regex.escape(src.name.substringAfterLast('.')),
-                                        RegexOption.IGNORE_CASE,
-                                    ),
-                                )
-                        }
+                        ?.filter { SetupSetFileNames.isCanonicalOrVariant(it.name, src.name) }
                         ?.forEach { it.delete() }
                     FileOutputStream(File(targetDir, src.name)).use { src.inputStream().copyTo(it) }
                 }

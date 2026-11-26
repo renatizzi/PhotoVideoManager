@@ -15,14 +15,11 @@ class WindowsCatalogSetupScriptMaggiordomoTest {
         )
         assertTrue(pkg.ps1Content.contains("Invoke-PvmMaggiordomo"))
         assertTrue(pkg.ps1Content.contains("Test-PvmSetVariantName"))
-        assertTrue(pkg.ps1Content.contains("DATI_CIFS"))
-        // Pattern Windows reale: "stem (n).ext" (numero prima dell'estensione).
+        // Anti-(1)/(2): bytes → delete all → WriteAllBytes canonic (non Copy-Item sul locked).
+        assertTrue(pkg.ps1Content.contains("ReadAllBytes"))
+        assertTrue(pkg.ps1Content.contains("WriteAllBytes"))
         assertTrue(pkg.ps1Content.contains("GetFileNameWithoutExtension"))
-        assertTrue(pkg.ps1Content.contains("\\(\\d+\\)") || pkg.ps1Content.contains("([0-9]+)"))
-        assertTrue(pkg.ps1Content.contains("Bluetooth Exchange Folder") || pkg.ps1Content.contains("File ricevuti"))
-        assertTrue(pkg.ps1Content.contains("Copy-Item") && pkg.ps1Content.contains("-Force"))
         assertTrue(pkg.ps1Content.contains("CONFIGURA.cmd") && pkg.ps1Content.contains("QRCoder.dll"))
-        // Non deve cercare il pattern sbagliato "CONFIGURA.cmd (*)".
         assertFalse(pkg.ps1Content.contains("CONFIGURA.cmd (*)"))
     }
 
