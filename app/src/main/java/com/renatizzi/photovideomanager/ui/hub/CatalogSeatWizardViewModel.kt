@@ -1704,6 +1704,7 @@ class CatalogSeatWizardViewModel(
     fun retryPendingFolderVerification() = confirmPendingSeat()
 
     private fun confirmSeat(kind: CatalogSeatKind, treeUri: String?, label: String) {
+        // DocumentFile/CIFS listFiles+write fuori dal main: evita ANR su Salva.
         viewModelScope.launch {
             _state.update {
                 it.copy(
@@ -1747,7 +1748,9 @@ class CatalogSeatWizardViewModel(
                 },
                 windowsFolderPath = windowsFolder,
             )
-            val result = catalogFacade.configureCatalogSeat(seat)
+            val result = withContext(Dispatchers.IO) {
+                catalogFacade.configureCatalogSeat(seat)
+            }
             if (result.isSuccess) {
                 draftStore.clear()
                 _state.update {
@@ -1766,9 +1769,12 @@ class CatalogSeatWizardViewModel(
             } else {
                 val raw = result.exceptionOrNull()?.message.orEmpty()
                 val unreachable = isUnreachableSeatError(raw)
+                // Ripristina Attiva Catalogo: azzera la scelta fallita così si può ritentare.
                 _state.update {
                     it.copy(
                         busy = false,
+                        pendingTreeUri = null,
+                        pendingLabel = "",
                         verification = if (unreachable) {
                             SeatVerificationUi.UNREACHABLE
                         } else {
@@ -1776,6 +1782,7 @@ class CatalogSeatWizardViewModel(
                         },
                         awaitAccessOutcome = false,
                         errorMessage = friendlySeatError(raw, unreachable),
+                        statusMessage = "Attiva Catalogo di nuovo e scegli la cartella del Catalogo.",
                         step = when (kind) {
                             CatalogSeatKind.LOCAL_DEVICE -> WizardStep.W1_CONFIRM
                             CatalogSeatKind.CLOUD_DRIVE -> WizardStep.W3_GUIDE
@@ -1820,19 +1827,35 @@ class CatalogSeatWizardViewModel(
             m.contains("enoent") ||
             m.contains("not found") ||
             m.contains("elenco delle share") ||
-            m.contains("folder=") ||
+            m.contains("admin$") ||
             m.contains("read only") ||
-            m.contains("non scrivibile")
+            m.contains("non scrivibile") ||
+            m.contains("posizione del catalogo non scrivibile")
     }
 
     private fun friendlySeatError(raw: String, unreachable: Boolean): String {
         val share = _state.value.shareName.ifBlank { WindowsCatalogSetupScript.DEFAULT_SHARE }
         return when {
+            // Messaggio specifico (elenco share / istruzioni): non sostituire.
             raw.contains("elenco delle share", ignoreCase = true) -> raw
+            raw.contains("ADMIN$", ignoreCase = true) -> raw
             unreachable -> PcCatalogSeatGate.writableProbeFailureHint(share)
             else -> raw.ifBlank {
                 "Verifica della Posizione del Catalogo non riuscita. Riprova o torna a CIFS."
             }
+        }
+    }
+
+    /** Dopo Salva fallito: consente un nuovo Attiva Catalogo senza residui. */
+    fun clearPendingFolderForRetry() {
+        _state.update {
+            it.copy(
+                pendingTreeUri = null,
+                pendingLabel = "",
+                verification = SeatVerificationUi.NONE,
+                errorMessage = null,
+                statusMessage = null,
+            )
         }
     }
 

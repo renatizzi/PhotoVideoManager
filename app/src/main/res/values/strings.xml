@@ -323,6 +323,7 @@
     <string name="hub_b5b_label_domain">Domain</string>
     <string name="hub_b5b_domain_blank_hint">Lascia vuoto (nessuna copia)</string>
     <string name="hub_pc5_activate_done_hint">Cartella sede selezionata. Scorri in basso e premi Salva.</string>
+    <string name="hub_pc5_activate_retry_hint">Salva non riuscito: premi di nuovo Attiva Catalogo e scegli la cartella del Catalogo (es. MyTEST o MyTEST\\MediaManager), non l’elenco share del PC.</string>
     <string name="hub_b5b_label_user">User</string>
     <string name="hub_b5b_label_password">Password</string>
     <string name="hub_b5b_label_anonymous">Anonymous</string>
