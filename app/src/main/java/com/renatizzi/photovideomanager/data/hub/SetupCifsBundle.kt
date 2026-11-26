@@ -61,8 +61,11 @@ data class SetupCifsBundle(
         fun isBundleFileName(name: String): Boolean {
             val n = name.trim()
             if (n.equals(BUNDLE_FILE_NAME, ignoreCase = true)) return true
-            // LOCK #2: MTP spesso crea DATI_CIFS (1).json; accettare se il token JSON coincide.
+            // MTP: "DATI_CIFS (1).json" oppure "DATI_CIFS.json (1)" (Windows Esplora).
             if (Regex("""^DATI_CIFS \(\d+\)\.json$""", RegexOption.IGNORE_CASE).matches(n)) {
+                return true
+            }
+            if (Regex("""^DATI_CIFS\.json \(\d+\)$""", RegexOption.IGNORE_CASE).matches(n)) {
                 return true
             }
             if (n.equals(LEGACY_BUNDLE_FILE_NAME, ignoreCase = true)) return true

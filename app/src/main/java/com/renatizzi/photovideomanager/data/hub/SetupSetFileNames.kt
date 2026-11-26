@@ -1,10 +1,13 @@
 package com.renatizzi.photovideomanager.data.hub
 
 /**
- * Nomi dei 3 file dello script Setup e riconoscimento varianti Windows/MTP
- * `stem (n).ext` (numero **prima** dell'estensione).
+ * Nomi dei 3 file dello script Setup e riconoscimento varianti MTP/Windows.
  *
- * Usato da export MediaStore e da test: se qui non matcha, sul telefono restano `(1)/(2)`.
+ * Due naming reali osservati:
+ * - `CONFIGURA (1).cmd` — numero **prima** dell'estensione (Android MediaStore tipico)
+ * - `CONFIGURA.cmd (1)` — numero **dopo** il nome completo (Esplora file / MTP Windows)
+ *
+ * Se manca uno dei due pattern, sul telefono restano i duplicati.
  */
 object SetupSetFileNames {
 
@@ -17,17 +20,27 @@ object SetupSetFileNames {
         val stem = canonical.substringBeforeLast('.', canonical)
         val ext = canonical.substringAfterLast('.', missingDelimiterValue = "")
         if (ext.isEmpty()) return false
-        val pat = Regex(
+        // stem (n).ext
+        val beforeExt = Regex(
             "^${Regex.escape(stem)}\\s*\\(\\d+\\)\\.${Regex.escape(ext)}$",
             RegexOption.IGNORE_CASE,
         )
-        return pat.matches(n)
+        if (beforeExt.matches(n)) return true
+        // name.ext (n)  — pattern Windows MTP sul Download del telefono
+        val afterFull = Regex(
+            "^${Regex.escape(canonical)}\\s*\\(\\d+\\)$",
+            RegexOption.IGNORE_CASE,
+        )
+        return afterFull.matches(n)
     }
 
     fun isAnySetupSetFile(displayName: String): Boolean =
         CANONICAL.any { isCanonicalOrVariant(displayName, it) }
 
-    /** Prefisso LIKE sicuro per query MediaStore (stem + eventuale spazio/`(`). */
+    /**
+     * Prefisso LIKE MediaStore: copre canonic, `stem (n).ext` e `stem.ext (n)`.
+     * Es. CONFIGURA% matcha CONFIGURA.cmd, CONFIGURA (1).cmd, CONFIGURA.cmd (1).
+     */
     fun mediaStoreLikePrefix(canonical: String): String {
         val stem = canonical.substringBeforeLast('.', canonical)
         return "$stem%"

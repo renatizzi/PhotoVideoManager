@@ -1329,6 +1329,11 @@ class CatalogSeatWizardViewModel(
                     stopBackgroundLanListen()
                     stopBundleWatch()
                     detectedBundle = bundle
+                    // Dopo import OK: elimina CONFIGURA/sup/QRCoder/DATI_CIFS e varianti (1)/(2)
+                    // (sia "stem (n).ext" sia "name.ext (n)" da MTP Windows).
+                    withContext(Dispatchers.IO) {
+                        runCatching { exporter.scrubAfterSuccessfulImport() }
+                    }
                     _state.update {
                         it.copy(
                             busy = false,
@@ -1481,7 +1486,19 @@ class CatalogSeatWizardViewModel(
             cachedLan.set(SetupLanAnnounce.mergePayloads(cachedLan.get(), bundle.toLanPayload()))
             applyLanPayload(bundle.toLanPayload())
             stopBackgroundLanListen()
-            _state.update { it.copy(busy = false, recoveringPcData = false) }
+            withContext(Dispatchers.IO) {
+                runCatching { exporter.scrubAfterSuccessfulImport() }
+            }
+            _state.update {
+                it.copy(
+                    busy = false,
+                    recoveringPcData = false,
+                    setupResultImported = true,
+                    bundleDetected = true,
+                    statusMessage = "Import riuscito — tocca Fatto per continuare",
+                    errorMessage = null,
+                )
+            }
             persistDraft()
         }
     }

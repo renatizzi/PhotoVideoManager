@@ -15,9 +15,11 @@ class SetupCifsBundleNameTest {
 
     @Test
     fun acceptsNumberedDatiCifsCopies_forMtpOverwrite() {
-        // LOCK #2: MTP crea spesso DATI_CIFS (1).json; il token JSON decide la validità.
+        // MediaStore: DATI_CIFS (n).json — Esplora/MTP Windows: DATI_CIFS.json (n).
         assertTrue(SetupCifsBundle.isBundleFileName("DATI_CIFS (1).json"))
         assertTrue(SetupCifsBundle.isBundleFileName("DATI_CIFS (2).json"))
+        assertTrue(SetupCifsBundle.isBundleFileName("DATI_CIFS.json (1)"))
+        assertTrue(SetupCifsBundle.isBundleFileName("DATI_CIFS.json (2)"))
     }
 
     @Test

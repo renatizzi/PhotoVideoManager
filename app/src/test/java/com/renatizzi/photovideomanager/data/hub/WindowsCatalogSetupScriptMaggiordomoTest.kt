@@ -19,6 +19,9 @@ class WindowsCatalogSetupScriptMaggiordomoTest {
         assertTrue(pkg.ps1Content.contains("ReadAllBytes"))
         assertTrue(pkg.ps1Content.contains("WriteAllBytes"))
         assertTrue(pkg.ps1Content.contains("GetFileNameWithoutExtension"))
+        // Entrambi i pattern MTP: stem (n).ext E name.ext (n).
+        assertTrue(pkg.ps1Content.contains("patBefore"))
+        assertTrue(pkg.ps1Content.contains("patAfter"))
         assertTrue(pkg.ps1Content.contains("CONFIGURA.cmd") && pkg.ps1Content.contains("QRCoder.dll"))
         assertFalse(pkg.ps1Content.contains("CONFIGURA.cmd (*)"))
     }
