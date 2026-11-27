@@ -55,6 +55,10 @@ class WindowsCatalogSetupScriptMaggiordomoTest {
         assertTrue(out.length() > 1000)
         assertTrue(pkg.ps1Content.contains("PSCommandPath"))
         assertTrue(pkg.ps1Content.contains("Invoke-PvmIcaclsGrant"))
+        // LOCK CIFS locale: junction Immagini/Documenti come in Esplora.
+        assertTrue(pkg.ps1Content.contains("Invoke-PvmLocalizedFolderAliases"))
+        assertTrue(pkg.ps1Content.contains("Get-PvmShellDisplayName"))
+        assertTrue(pkg.ps1Content.contains("mklink /J"))
         // Nessun /T diretto sul FullName del profilo (hang Renato 25/11).
         assertFalse(
             Regex("""ACL profilo utente:[\s\S]{0,120}/T""").containsMatchIn(pkg.ps1Content),

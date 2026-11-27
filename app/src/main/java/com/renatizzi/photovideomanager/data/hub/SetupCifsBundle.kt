@@ -74,6 +74,19 @@ data class SetupCifsBundle(
                 n.endsWith(".json", ignoreCase = true)
         }
 
+        /**
+         * Per scrub Download: qualsiasi residuo di sessione DATI_CIFS / legacy bundle,
+         * anche con estensione strana (Samsung: File BIN, senza .json, ecc.).
+         * Più ampio di [isBundleFileName] (usato solo per import).
+         */
+        fun isScrubbableDatiCifsName(name: String): Boolean {
+            val n = name.trim()
+            if (n.isEmpty()) return false
+            if (n.startsWith("DATI_CIFS", ignoreCase = true)) return true
+            if (n.startsWith(LEGACY_BUNDLE_FILE_PREFIX, ignoreCase = true)) return true
+            return false
+        }
+
         /** True se il JSON è il result senza password (non importabile come bundle). */
         fun looksLikeSetupResultNotBundle(raw: String): Boolean {
             val t = raw.trim()
