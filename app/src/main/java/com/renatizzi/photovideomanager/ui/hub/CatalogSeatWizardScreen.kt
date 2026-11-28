@@ -255,19 +255,13 @@ fun CatalogSeatWizardScreen(
                 onCancel = onBackS0,
                 busy = state.busy,
             )
-            WizardStep.W1_CONFIRM -> AnalogGuideStep(
-                phases = AnalogSetupGuideContent.localPhases(
-                    state.deviceModel.ifBlank {
-                        com.renatizzi.photovideomanager.domain.hub.CatalogSeat.DEFAULT_DEVICE_MODEL
-                    },
-                ),
-                pendingLabel = state.pendingLabel,
+            WizardStep.W1_CONFIRM -> LocalActivateStep(
+                catalogName = state.catalogName.ifBlank {
+                    com.renatizzi.photovideomanager.domain.hub.CatalogSeat.DEFAULT_CATALOG_NAME
+                },
                 busy = state.busy,
-                showCifsButton = false,
-                cifsInstalled = state.cifsInstalled,
-                onOpenCifs = {},
-                onChooseFolder = { if (!state.busy) openTree.launch(null) },
-                onSalva = onConfirmLocal,
+                errorMessage = state.errorMessage,
+                onActivate = onConfirmLocal,
                 onBack = onBackS0,
             )
             WizardStep.PC_SHARE_READY -> PcShareReadyStep(
@@ -899,6 +893,59 @@ private fun AvailabilityChecklistStep(
         Button(onClick = onOk, enabled = !busy, modifier = Modifier.weight(1f)) {
             Text(stringResource(R.string.hub_checklist_ok))
         }
+    }
+}
+
+/** LOCK #1: Questo dispositivo — attiva senza selezione cartella. */
+@Composable
+private fun LocalActivateStep(
+    catalogName: String,
+    busy: Boolean,
+    errorMessage: String?,
+    onActivate: () -> Unit,
+    onBack: () -> Unit,
+) {
+    Text(
+        stringResource(R.string.hub_w1_question),
+        fontWeight = FontWeight.SemiBold,
+    )
+    Text(
+        stringResource(R.string.hub_w1_body, catalogName),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+    )
+    Text(
+        text = catalogName,
+        fontFamily = FontFamily.Monospace,
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(4.dp))
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+    )
+    if (!errorMessage.isNullOrBlank()) {
+        Text(
+            errorMessage,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+        )
+    }
+    Button(
+        onClick = onActivate,
+        enabled = !busy,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        if (busy) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(18.dp),
+                strokeWidth = 2.dp,
+                color = MaterialTheme.colorScheme.onPrimary,
+            )
+        } else {
+            Text(stringResource(R.string.hub_w1_confirm))
+        }
+    }
+    OutlinedButton(onClick = onBack, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.hub_indietro))
     }
 }
 
@@ -1723,8 +1770,7 @@ private fun CifsCardStep(
             onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[1] = !it[1] } },
             enabled = !state.busy,
         )
-        // Ordine Settings CIFS Connection: Domain → Host → Port → DFS → User → Password → Folder.
-        // Domain: riquadro vuoto, slot checkbox riservato, niente Copia.
+        // LOCK #3: Domain/DFS — solo titolo + valore, niente quadrati selezione né istruzioni.
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_domain),
             value = "",
@@ -1733,6 +1779,7 @@ private fun CifsCardStep(
             checked = null,
             onCheckedChange = null,
             enabled = !state.busy,
+            reserveCheckboxSlot = false,
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_host),
@@ -1756,15 +1803,15 @@ private fun CifsCardStep(
             onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[3] = !it[3] } },
             enabled = !state.busy,
         )
-        // Enable DFS: stesso CifsFieldRow (checkbox OFF nel riquadro valore), niente Copia.
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_dfs),
             value = stringResource(R.string.hub_b5b_dfs_value),
             actionLabel = null,
             onAction = null,
-            checked = false,
-            onCheckedChange = {},
-            enabled = false,
+            checked = null,
+            onCheckedChange = null,
+            enabled = !state.busy,
+            reserveCheckboxSlot = false,
         )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_user),

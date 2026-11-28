@@ -58,6 +58,8 @@ class WindowsCatalogSetupScriptMaggiordomoTest {
         // LOCK CIFS locale: junction Immagini/Documenti come in Esplora.
         assertTrue(pkg.ps1Content.contains("Invoke-PvmLocalizedFolderAliases"))
         assertTrue(pkg.ps1Content.contains("Get-PvmShellDisplayName"))
+        // LOCK #4: alias su tutte le cartelle profilo (non solo lista fissa Pictures/…).
+        assertTrue(pkg.ps1Content.contains("Get-ChildItem -LiteralPath \$profilePath"))
         assertTrue(pkg.ps1Content.contains("mklink /J"))
         // Nessun /T diretto sul FullName del profilo (hang Renato 25/11).
         assertFalse(

@@ -534,28 +534,37 @@ function Get-PvmShellDisplayName([string]${d}path) {
 }
 
 function Invoke-PvmLocalizedFolderAliases([string]${d}profilePath, [string]${d}user) {
-  # Junction localizzati (Immagini -> Pictures, ecc.) cosi' CIFS mostra gli stessi nomi di Windows.
+  # LOCK #4: per OGNI cartella del profilo con titolo shell diverso dal nome FS,
+  # crea junction localizzato (Immagini -> Pictures, Documenti -> Documents, ecc.).
   if (-not (Test-Path -LiteralPath ${d}profilePath)) { return }
-  ${d}knownFs = @('Pictures','Documents','Videos','Music','Downloads','Desktop')
   ${d}invalid = [IO.Path]::GetInvalidFileNameChars()
-  foreach (${d}fs in ${d}knownFs) {
-    ${d}target = Join-Path ${d}profilePath ${d}fs
-    if (-not (Test-Path -LiteralPath ${d}target)) { continue }
-    ${d}display = Get-PvmShellDisplayName -path ${d}target
-    if (-not ${d}display) { continue }
-    if (${d}display -ieq ${d}fs) { continue }
-    if (${d}display.IndexOfAny(${d}invalid) -ge 0) { continue }
-    ${d}alias = Join-Path ${d}profilePath ${d}display
-    if (Test-Path -LiteralPath ${d}alias) { continue }
-    try {
-      ${d}linkArg = '/c mklink /J "' + ${d}alias + '" "' + ${d}target + '"'
-      ${d}lp = Start-Process -FilePath 'cmd.exe' -ArgumentList ${d}linkArg -PassThru -WindowStyle Hidden -Wait
-      if (${d}lp -and ${d}lp.ExitCode -eq 0 -and (Test-Path -LiteralPath ${d}alias)) {
-        Write-Step ('  Alias locale CIFS: ' + ${d}display + ' -> ' + ${d}fs)
-        [void](Invoke-PvmIcaclsGrant -path ${d}alias -user ${d}user -TimeoutSec 10)
-      }
-    } catch {}
-  }
+  ${d}skip = @(
+    'AppData','Application Data','Cookies','Local Settings','NetHood','PrintHood',
+    'Recent','SendTo','Start Menu','Templates','My Documents','Nethood','Printhood'
+  )
+  Get-ChildItem -LiteralPath ${d}profilePath -Force -Directory -ErrorAction SilentlyContinue |
+    Where-Object {
+      ${d}n = ${d}_.Name
+      -not (${d}n.StartsWith('.')) -and (${d}skip -notcontains ${d}n)
+    } |
+    ForEach-Object {
+      ${d}target = ${d}_.FullName
+      ${d}fs = ${d}_.Name
+      ${d}display = Get-PvmShellDisplayName -path ${d}target
+      if (-not ${d}display) { return }
+      if (${d}display -ieq ${d}fs) { return }
+      if (${d}display.IndexOfAny(${d}invalid) -ge 0) { return }
+      ${d}alias = Join-Path ${d}profilePath ${d}display
+      if (Test-Path -LiteralPath ${d}alias) { return }
+      try {
+        ${d}linkArg = '/c mklink /J "' + ${d}alias + '" "' + ${d}target + '"'
+        ${d}lp = Start-Process -FilePath 'cmd.exe' -ArgumentList ${d}linkArg -PassThru -WindowStyle Hidden -Wait
+        if (${d}lp -and ${d}lp.ExitCode -eq 0 -and (Test-Path -LiteralPath ${d}alias)) {
+          Write-Step ('  Alias locale CIFS: ' + ${d}display + ' -> ' + ${d}fs)
+          [void](Invoke-PvmIcaclsGrant -path ${d}alias -user ${d}user -TimeoutSec 10)
+        }
+      } catch {}
+    }
 }
 
 try {

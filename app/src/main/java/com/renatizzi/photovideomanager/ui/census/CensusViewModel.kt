@@ -14,6 +14,7 @@ import com.renatizzi.photovideomanager.domain.model.SourceCensusSelection
 import com.renatizzi.photovideomanager.domain.model.SourceSortMode
 import com.renatizzi.photovideomanager.domain.model.SourceSummary
 import com.renatizzi.photovideomanager.domain.model.cycleNext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -268,12 +269,22 @@ class CensusViewModel(
 
     fun addSafSource(uri: Uri, displayName: String) {
         viewModelScope.launch {
-            _state.update { it.copy(loading = true, message = null) }
+            _state.update {
+                it.copy(
+                    loading = true,
+                    message = "Aggiornamento elenco in corso…",
+                )
+            }
             runCatching { catalogFacade.registerSafFolder(uri, displayName) }
                 .onSuccess { result ->
                     val addedAll = result.allSources
-                    // Bug 2: forza refresh elenco subito dopo «+».
-                    val sources = catalogFacade.listSources(refresh = true)
+                    // Drive/SAF: a volte l’elenco non è pronto al primo colpo — secondo refresh.
+                    var sources = catalogFacade.listSources(refresh = true)
+                    val targetId = result.source.locationId
+                    if (sources.none { it.locationId == targetId }) {
+                        delay(800)
+                        sources = catalogFacade.listSources(refresh = true)
+                    }
                     val snap = runCatching { catalogFacade.dashboardSnapshot() }.getOrNull()
                     _state.update { current ->
                         val selection = current.selection.toMutableMap()
@@ -290,6 +301,8 @@ class CensusViewModel(
                             loading = false,
                             message = when {
                                 result.alreadyPresent -> "Sorgente già presente in elenco"
+                                sources.none { it.locationId == targetId } ->
+                                    "Cartella collegata. Se non la vedi ancora, attendi e scorri l’elenco."
                                 addedAll.size > 1 ->
                                     "Aggiunte ${addedAll.size} cartelle con media"
                                 else -> "Sorgente aggiunta: ${result.source.displayName}"

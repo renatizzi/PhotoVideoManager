@@ -114,8 +114,8 @@
     <string name="acquisisci_add_pc">Su un PC o notebook</string>
     <string name="acquisisci_add_drive">Su Google Drive (o cloud)</string>
     <string name="acquisisci_add_nas">Su un disco di rete o NAS</string>
-    <string name="acquisisci_add_other_phone">Su un altro telefono</string>
-    <string name="acquisisci_add_drive_tip">Nel selettore cartelle apri Google Drive e scegli la cartella delle foto.</string>
+    <string name="acquisisci_add_drive_tip">Nel selettore cartelle apri Google Drive e scegli la cartella delle foto. Dopo la conferma può servire qualche secondo: resta in Acquisisci finché compare in elenco.</string>
+    <string name="acquisisci_add_source_wait">Aggiornamento elenco in corso…</string>
     <string name="acquisisci_add_nas_tip">Sul NAS la cartella in rete c’è già. Se non la vedi ancora su questo telefono, apri prima CIFS / Disco di rete e collegalo. Poi tocca «Scegli cartella» e seleziona la cartella delle foto.</string>
     <string name="acquisisci_add_pc_ready_title">PC o notebook</string>
     <string name="acquisisci_add_pc_ready_body">La cartella condivisa sul PC è già pronta e la vedi da questo telefono?</string>
@@ -124,9 +124,6 @@
     <string name="acquisisci_add_pc_ready_tip">Apri CIFS, entra nella connessione del Catalogo (nome = condivisione del disco) e tocca «Scegli cartella» sulla cartella foto. Non serve una nuova procedura CIFS per ogni cartella.</string>
     <string name="acquisisci_add_pc_need_setup_tip">Per le foto sul PC serve Setup Catalogo con sede PC (condivide il disco). Se l’hai già fatto: in CIFS apri «%1$s» e scegli la cartella foto — senza ripetere Host/User/Password.</string>
     <string name="acquisisci_add_open_cifs">Apri CIFS / Disco di rete</string>
-    <string name="acquisisci_add_other_phone_title">Un altro telefono</string>
-    <string name="acquisisci_add_other_phone_body">Su un altro telefono non si apre una cartella in rete come sul PC.\n\nMetti le foto che ti servono nella cartella condivisa (sul PC o sul disco di rete), oppure su Drive. Poi da questo telefono aggiungi quella cartella e acquisisci.</string>
-    <string name="acquisisci_add_other_phone_ok">Ho capito</string>
     <string name="acquisisci_device_header_available">%1$d disponibili</string>
     <string name="acquisisci_open_catalog_seat">Prepara Posizione del Catalogo (PC)</string>
     <string name="acquisisci_riepilogo_static">Elementi selezionati per l\'importazione: xxx · di cui foto xx · di cui video yy</string>
@@ -303,9 +300,11 @@
     <string name="hub_pc5_options_hint">Option CIFS: attiva Safe data transfer; lascia Read only disattivato (obbligatorio per scrivere il Catalogo); Add extension e Thumbnail restano disattivati.</string>
 
     <!-- W1 locale — Scelta della cartella -->
-    <string name="hub_w1_question">Scelta della cartella</string>
-    <string name="hub_w1_body">Seleziona e poi salva la cartella del Catalogo su %1$s</string>
-    <string name="hub_w1_confirm">Seleziona Cartella</string>
+    <string name="hub_w1_question">Attivazione Catalogo</string>
+    <string name="hub_w1_body">Il Catalogo «%1$s» verrà creato su questo dispositivo. Non serve scegliere una cartella. Per cambiare il nome usa Setup in Configura.</string>
+    <string name="hub_w1_confirm">Attiva Catalogo</string>
+    <string name="hub_w1_folder_created">Cartella creata: %1$s</string>
+    <string name="hub_w1_folder_failed">Impossibile creare la cartella del Catalogo. Riprova o controlla lo spazio di archiviazione.</string>
 
     <!-- Path PC (passo 0) -->
     <string name="hub_s2_pc_path_hint">Percorso Windows assoluto (disco interno o esterno collegato al PC). Esempio: C:\\MediaManager\\Catalogo oppure E:\\MediaManager\\Catalogo</string>

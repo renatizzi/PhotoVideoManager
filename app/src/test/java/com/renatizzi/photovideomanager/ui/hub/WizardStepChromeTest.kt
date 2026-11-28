@@ -29,7 +29,7 @@ class WizardStepChromeTest {
             WizardStepChrome.subtitle(WizardStep.S0_START, CatalogSeatKind.LOCAL_DEVICE).text,
         )
         assertEquals(
-            "Scelta della cartella sul dispositivo",
+            "Attivazione Catalogo su questo dispositivo",
             WizardStepChrome.subtitle(WizardStep.W1_CONFIRM, CatalogSeatKind.LOCAL_DEVICE).text,
         )
         assertEquals(
