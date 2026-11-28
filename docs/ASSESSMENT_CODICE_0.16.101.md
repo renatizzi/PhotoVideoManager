@@ -63,13 +63,14 @@ Percorso ufficiale corrente: **USB-only** (BT deprecato come primario). Bundle: 
 
 Ordine pensato per **non spezzare** il test multi-dispositivo in corso e per restare dentro requisiti già in Nota/backlog.
 
-### Fase A — Chiudere il filo sede PC (ora)
+### Fase A — Chiudere il filo sede (28/11: LOCK test 101)
 
-1. Esito Renato su **0.16.101** (LOCK `LOCK_CIFS_LOCALE_DATI_SCRUB`) su tutti i dispositivi.  
-2. Eventuali fix LOCK-only; **chiudere** LOCK USB REV4 / MTP / CIFS locale.  
-3. Checklist H1 §7.24 su **Aggiorna Catalogo** (pubblica / recepisci / conflitti) con sede su PC già setup.
+1. Esito Renato su **0.16.101** multi-dispositivo → congelato in `docs/LOCK_SETUP_TEST_101_SEI_DISPOSITIVI.md`.  
+2. **Stop piano B–D** finché LOCK approvato + chiuso in prova (REGOLE §11).  
+3. FIX solo `#1`–`#5` del LOCK (W1 redesign; messaggio Altro dispositivo; Domain/DFS CIFS; alias cartelle tutte; refresh Cloud).  
+4. Poi checklist H1 Aggiorna Catalogo.
 
-**Esito atteso:** W2 dichiarato «verificato in campo» nella Nota.
+**Esito atteso dopo chiusura LOCK:** W1 locale corretto; W2/Disco rete/Cloud stabili; solo allora Fase B.
 
 ### Fase B — Completare BL-17 v1 (W3/W4 + honesty)
 

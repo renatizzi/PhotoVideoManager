@@ -337,13 +337,13 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 ## 7.1 FASE CORRENTE: BL-17 / H1 Catalogo personale unico + Wizard sede
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)** + **BL-17 / H1**.
 STATO ATTUALE (28/11/2026): **0.16.101-preview** (versionCode 142).  
-- **W2 Setup PC:** percorso **USB-only** (BT non primario); script `CONFIGURA`/`sup`/`QRCoder.dll`; bundle `DATI_CIFS.json`; share = radice disco + pin Folder; Maggiordomo anti-`(1)/(2)`; scrub Download post-import; alias cartelle localizzate CIFS (Immagini→Pictures) in 0.16.101.  
-- **In prova Renato:** LOCK `LOCK_CIFS_LOCALE_DATI_SCRUB` + verifica multi-dispositivo.  
-- **H1:** fascicolo `catalog_hub.json` + schermata Aggiorna Catalogo (diff/conflitti) presenti in codice; stress multi-dispositivo ancora da chiudere.  
+- **W2 Setup PC:** percorso **USB-only**; PC C:/E:/Disco rete **OK funzionali** in prova 28/11 (con residuali UI/alias).  
+- **Prova multi-dispositivo 28/11:** LOCK attivo `docs/LOCK_SETUP_TEST_101_SEI_DISPOSITIVI.md` — W1 locale **KO** (redesign); Altro dispositivo **KO** (messaggio); Cloud **OK** (refresh); CIFS Domain/DFS + nomi cartelle da uniformare.  
+- **Blocco:** niente Fase B del piano finché quel LOCK non è approvato e chiuso in prova.  
 - Assessment: `docs/ASSESSMENT_CODICE_0.16.101.md`.
 Ordine operativo:
-1. **P0** — chiudere prova 0.16.101 (tutti i dispositivi) e LOCK CIFS locale / USB REV4 residuali.
-2. **P1** — stress **Aggiorna Catalogo** H1; poi W3/W4 o honesty UI; help contestuale wizard.
+1. **P0** — OK Renato su LOCK test 101 → FIX solo `#1`–`#5` → nuova prova.
+2. **P1** — solo dopo chiusura LOCK: stress **Aggiorna Catalogo** H1; W3/W4 o honesty; help wizard.
 3. **P2** — BL-02/BL-11 non ora; **Componi** solo dopo specifica M11 vs landing congelata.
 
 ### 7.1quater Decisioni Renato 11/10/2026 (questionario)
