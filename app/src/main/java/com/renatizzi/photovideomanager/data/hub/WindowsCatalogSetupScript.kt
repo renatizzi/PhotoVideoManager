@@ -441,12 +441,13 @@ function Record(${d}name, ${d}ok, ${d}detail) {
 }
 
 function Test-PvmSetVariantName([string]${d}fileName, [string]${d}need) {
-  # Windows/MTP: "CONFIGURA (1).cmd" (numero PRIMA dell'estensione), non "CONFIGURA.cmd (1)".
+  # Due pattern reali: "CONFIGURA (1).cmd" E "CONFIGURA.cmd (1)" (MTP Windows).
   if (${d}fileName -ieq ${d}need) { return ${d}true }
   ${d}stem = [IO.Path]::GetFileNameWithoutExtension(${d}need)
   ${d}ext = [IO.Path]::GetExtension(${d}need)
-  ${d}pat = '^' + [regex]::Escape(${d}stem) + '\s*\(\d+\)' + [regex]::Escape(${d}ext) + '${'$'}'
-  return [bool](${d}fileName -match ${d}pat)
+  ${d}patBefore = '^' + [regex]::Escape(${d}stem) + '\s*\(\d+\)' + [regex]::Escape(${d}ext) + '${'$'}'
+  ${d}patAfter = '^' + [regex]::Escape(${d}need) + '\s*\(\d+\)${'$'}'
+  return [bool]((${d}fileName -match ${d}patBefore) -or (${d}fileName -match ${d}patAfter))
 }
 
 function Invoke-PvmMaggiordomo([string]${d}destDir) {

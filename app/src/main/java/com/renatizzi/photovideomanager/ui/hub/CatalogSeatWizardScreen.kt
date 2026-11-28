@@ -1724,6 +1724,7 @@ private fun CifsCardStep(
             enabled = !state.busy,
         )
         // Ordine Settings CIFS Connection: Domain → Host → Port → DFS → User → Password → Folder.
+        // Domain: riquadro vuoto, slot checkbox riservato, niente Copia.
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_domain),
             value = "",
@@ -1755,22 +1756,16 @@ private fun CifsCardStep(
             onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[3] = !it[3] } },
             enabled = !state.busy,
         )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Checkbox(
-                checked = false,
-                onCheckedChange = null,
-                enabled = false,
-            )
-            Text(
-                stringResource(R.string.hub_b5b_label_dfs),
-                style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.weight(1f),
-            )
-        }
+        // Enable DFS: stesso CifsFieldRow (checkbox OFF nel riquadro valore), niente Copia.
+        CifsFieldRow(
+            label = stringResource(R.string.hub_b5b_label_dfs),
+            value = stringResource(R.string.hub_b5b_dfs_value),
+            actionLabel = null,
+            onAction = null,
+            checked = false,
+            onCheckedChange = {},
+            enabled = false,
+        )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_user),
             value = user,
@@ -1785,15 +1780,20 @@ private fun CifsCardStep(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Checkbox(
-                checked = rowFlags[5],
-                onCheckedChange = {
-                    if (!state.busy) {
-                        rowFlags = rowFlags.copyOf().also { it[5] = !it[5] }
-                    }
-                },
-                enabled = !state.busy,
-            )
+            Box(
+                modifier = Modifier.size(48.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Checkbox(
+                    checked = rowFlags[5],
+                    onCheckedChange = {
+                        if (!state.busy) {
+                            rowFlags = rowFlags.copyOf().also { it[5] = !it[5] }
+                        }
+                    },
+                    enabled = !state.busy,
+                )
+            }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     stringResource(R.string.hub_b5b_label_password),
@@ -1808,6 +1808,10 @@ private fun CifsCardStep(
                     fontFamily = FontFamily.Monospace,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(4.dp))
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
                 )
             }
             if (hasPassword) {
@@ -1990,22 +1994,39 @@ private fun CifsFieldRow(
     onCheckedChange: (() -> Unit)?,
     hint: String? = null,
     enabled: Boolean = true,
+    /** Riserva sempre lo slot checkbox (allineamento Domain/DFS con le altre righe). */
+    reserveCheckboxSlot: Boolean = true,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        if (checked != null && onCheckedChange != null) {
-            Checkbox(
-                checked = checked,
-                onCheckedChange = { if (enabled) onCheckedChange() },
-                enabled = enabled,
-            )
+        if (reserveCheckboxSlot) {
+            Box(
+                modifier = Modifier.size(48.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (checked != null && onCheckedChange != null) {
+                    Checkbox(
+                        checked = checked,
+                        onCheckedChange = { if (enabled) onCheckedChange() },
+                        enabled = enabled,
+                    )
+                }
+            }
         }
         Column(modifier = Modifier.weight(1f)) {
             Text(label, style = MaterialTheme.typography.labelMedium)
-            Text(value, fontFamily = FontFamily.Monospace)
+            // Valore sempre presente (anche vuoto) cosi' Domain ha un "riquadro" come gli altri.
+            Text(
+                text = value.ifEmpty { " " },
+                fontFamily = FontFamily.Monospace,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(4.dp))
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
+            )
             if (hint != null) {
                 Text(
                     hint,
@@ -2021,6 +2042,9 @@ private fun CifsFieldRow(
             ) {
                 Text(actionLabel)
             }
+        } else {
+            // Stesso spazio del bottone Copia: allinea i riquadri a sinistra.
+            Spacer(modifier = Modifier.size(width = 64.dp, height = 1.dp))
         }
     }
 }

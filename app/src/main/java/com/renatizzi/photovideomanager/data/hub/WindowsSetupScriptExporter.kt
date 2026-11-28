@@ -75,15 +75,22 @@ class WindowsSetupScriptExporter(
 
     /**
      * Piano B: bundle completo (con password) su chiavetta / Download.
-     * Preferisce `DATI_CIFS.json`, poi legacy `MediaManager_cifs_bundle*.json` (più recente).
+     * Preferisce il file **più recente** (MTP spesso lascia DATI_CIFS.json stale
+     * e scrive DATI_CIFS.json (1) / DATI_CIFS (1).json con il contenuto nuovo).
      */
     fun findCifsBundle(expectedToken: String): SetupCifsBundle? {
-        val files = mutableListOf<File>()
+        data class Candidate(val modifiedMs: Long, val read: () -> String?)
+
+        val candidates = mutableListOf<Candidate>()
         fun collectFromDir(dir: File?) {
             if (dir == null || !dir.isDirectory) return
             dir.listFiles()
                 ?.filter { it.isFile && SetupCifsBundle.isBundleFileName(it.name) }
-                ?.let { files += it }
+                ?.forEach { file ->
+                    candidates += Candidate(file.lastModified()) {
+                        runCatching { file.readText(Charsets.UTF_8) }.getOrNull()
+                    }
+                }
         }
         try {
             @Suppress("DEPRECATION")
@@ -102,51 +109,49 @@ class WindowsSetupScriptExporter(
             }
         } catch (_: Exception) {
         }
-        files.sortedWith(
-            compareByDescending<File> {
-                it.name.equals(SetupCifsBundle.BUNDLE_FILE_NAME, ignoreCase = true)
-            }.thenByDescending { it.lastModified() },
-        ).forEach { file ->
-            val text = runCatching { file.readText(Charsets.UTF_8) }.getOrNull() ?: return@forEach
-            val bundle = SetupCifsBundle.parse(text, expectedToken) ?: return@forEach
-            if (bundle.isComplete) return bundle
-        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             runCatching {
                 val resolver = context.contentResolver
                 val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-                val patterns = listOf(
-                    SetupCifsBundle.BUNDLE_FILE_NAME,
-                    "DATI_CIFS%",
-                    "${SetupCifsBundle.LEGACY_BUNDLE_FILE_PREFIX}%",
-                )
-                for (pattern in patterns) {
-                    val selection = if (pattern.contains('%')) {
-                        "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?"
-                    } else {
-                        "${MediaStore.Downloads.DISPLAY_NAME} = ?"
-                    }
-                    resolver.query(
-                        collection,
-                        arrayOf(MediaStore.Downloads._ID, MediaStore.Downloads.DISPLAY_NAME),
-                        selection,
-                        arrayOf(pattern),
-                        "${MediaStore.Downloads.DATE_MODIFIED} DESC",
-                    )?.use { cursor ->
-                        while (cursor.moveToNext()) {
-                            val display = cursor.getString(1).orEmpty()
-                            if (!SetupCifsBundle.isBundleFileName(display)) continue
-                            val id = cursor.getLong(0)
-                            val uri = ContentUris.withAppendedId(collection, id)
-                            resolver.openInputStream(uri)?.use { input ->
-                                val text = input.bufferedReader(Charsets.UTF_8).readText()
-                                val bundle = SetupCifsBundle.parse(text, expectedToken)
-                                if (bundle != null && bundle.isComplete) return bundle
-                            }
+                resolver.query(
+                    collection,
+                    arrayOf(
+                        MediaStore.Downloads._ID,
+                        MediaStore.Downloads.DISPLAY_NAME,
+                        MediaStore.Downloads.DATE_MODIFIED,
+                    ),
+                    "${MediaStore.Downloads.DISPLAY_NAME} LIKE ? OR " +
+                        "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
+                    arrayOf(
+                        "DATI_CIFS%",
+                        "${SetupCifsBundle.LEGACY_BUNDLE_FILE_PREFIX}%",
+                    ),
+                    "${MediaStore.Downloads.DATE_MODIFIED} DESC",
+                )?.use { cursor ->
+                    val idCol = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID)
+                    val nameCol = cursor.getColumnIndexOrThrow(MediaStore.Downloads.DISPLAY_NAME)
+                    val modCol = cursor.getColumnIndexOrThrow(MediaStore.Downloads.DATE_MODIFIED)
+                    while (cursor.moveToNext()) {
+                        val display = cursor.getString(nameCol).orEmpty()
+                        if (!SetupCifsBundle.isBundleFileName(display)) continue
+                        val id = cursor.getLong(idCol)
+                        val modifiedMs = cursor.getLong(modCol) * 1000L
+                        val uri = ContentUris.withAppendedId(collection, id)
+                        candidates += Candidate(modifiedMs) {
+                            runCatching {
+                                resolver.openInputStream(uri)?.use { input ->
+                                    input.bufferedReader(Charsets.UTF_8).readText()
+                                }
+                            }.getOrNull()
                         }
                     }
                 }
             }
+        }
+        candidates.sortedByDescending { it.modifiedMs }.forEach { cand ->
+            val text = cand.read() ?: return@forEach
+            val bundle = SetupCifsBundle.parse(text, expectedToken) ?: return@forEach
+            if (bundle.isComplete) return bundle
         }
         return null
     }
@@ -219,6 +224,11 @@ class WindowsSetupScriptExporter(
                         arrayOf("$prefix%"),
                     )
                 }
+                // Anche "name.ext (n)" se il LIKE sul prefisso non li ha presi tutti.
+                for (name in SetupSetFileNames.CANONICAL) {
+                    purgeAllSetupSetEntries(name)
+                }
+                removed += scrubAllDatiCifsVariants()
             } else {
                 @Suppress("DEPRECATION")
                 val downloads = Environment.getExternalStoragePublicDirectory(
@@ -226,9 +236,11 @@ class WindowsSetupScriptExporter(
                 )
                 downloads.listFiles()
                     ?.filter { file ->
-                        WindowsCatalogSetupScript.DOWNLOAD_SCRUB_PREFIXES.any {
-                            file.name.startsWith(it, ignoreCase = true)
-                        }
+                        SetupSetFileNames.isAnySetupSetFile(file.name) ||
+                            SetupCifsBundle.isBundleFileName(file.name) ||
+                            WindowsCatalogSetupScript.DOWNLOAD_SCRUB_PREFIXES.any {
+                                file.name.startsWith(it, ignoreCase = true)
+                            }
                     }
                     ?.forEach {
                         if (it.delete()) removed++
@@ -238,6 +250,46 @@ class WindowsSetupScriptExporter(
         }
         runCatching {
             File(context.cacheDir, "windows_setup").deleteRecursively()
+        }
+        return removed
+    }
+
+    /**
+     * Dopo import DATI_CIFS riuscito: cancella set script + tutte le varianti bundle
+     * (canonic, `stem (n).ext`, `name.ext (n)`), cosi' MTP non lascia fantasmi.
+     */
+    fun scrubAfterSuccessfulImport(): Int {
+        var removed = scrubDownloadsScripts()
+        removed += scrubEmptyDatiCifsGhosts()
+        return removed
+    }
+
+    /** Elimina ogni DATI_CIFS / DATI_CIFS (n).json / DATI_CIFS.json (n) da MediaStore. */
+    fun scrubAllDatiCifsVariants(): Int {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return 0
+        var removed = 0
+        runCatching {
+            val resolver = context.contentResolver
+            val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            resolver.query(
+                collection,
+                arrayOf(MediaStore.Downloads._ID, MediaStore.Downloads.DISPLAY_NAME),
+                "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
+                arrayOf("DATI_CIFS%"),
+                null,
+            )?.use { cursor ->
+                val idCol = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID)
+                val nameCol = cursor.getColumnIndexOrThrow(MediaStore.Downloads.DISPLAY_NAME)
+                while (cursor.moveToNext()) {
+                    val name = cursor.getString(nameCol).orEmpty()
+                    if (!SetupCifsBundle.isBundleFileName(name)) continue
+                    removed += resolver.delete(
+                        ContentUris.withAppendedId(collection, cursor.getLong(idCol)),
+                        null,
+                        null,
+                    )
+                }
+            }
         }
         return removed
     }
