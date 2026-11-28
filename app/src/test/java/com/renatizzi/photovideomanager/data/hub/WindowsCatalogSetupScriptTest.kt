@@ -124,12 +124,15 @@ class WindowsCatalogSetupScriptTest {
         assertTrue(ps1.contains("creata_disco") || ps1.contains("ripruntata_disco"))
         assertTrue(ps1.contains("New-SmbShare") && ps1.contains("ShareRoot"))
         assertTrue(ps1.contains("icacls"))
-        // /T solo sui profili Users/Utenti (AccessBased nasconde i profili senza RX);
-        // mai /T sulla sola radice disco (pagefile/Windows).
-        assertTrue(ps1.contains("ACL profilo utente"))
+        // Profilo: RX senza /T (hang AppData); /T solo su cartelle media con timeout.
+        assertTrue(ps1.contains("ACL profilo (radice, no /T)"))
+        assertTrue(ps1.contains("Invoke-PvmIcaclsGrant"))
+        assertTrue(ps1.contains("WaitForExit") && ps1.contains("TimeoutSec"))
+        assertTrue(ps1.contains("ACL media:"))
         assertTrue(ps1.contains("Join-Path \$ShareRoot 'Users'"))
         assertTrue(ps1.contains("Join-Path \$ShareRoot 'Utenti'"))
-        assertTrue(Regex("""RX /T /C /Q""").containsMatchIn(ps1))
+        // Nessun /T cieco sull'intero profilo utente (pattern precedente che bloccava).
+        assertFalse(ps1.contains("ACL profilo utente:"))
         assertFalse(Regex("""ShareRoot[^\\n]*/T""").containsMatchIn(ps1))
         assertTrue(ps1.contains("rx_dati") || ps1.contains("ACL dati"))
         assertTrue(ps1.contains("creata_catalogo_fallback") || ps1.contains("fallback"))

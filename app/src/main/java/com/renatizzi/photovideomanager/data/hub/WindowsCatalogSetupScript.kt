@@ -318,7 +318,23 @@ object WindowsCatalogSetupScript {
         echo  MediaManager: prepara cartella Catalogo e accesso SMB
         echo  (account dedicato, senza privilegi di amministratore permanenti)
         echo.
-        powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0$PS1_FILE_NAME"
+        rem Windows / MTP crea spesso "sup (1).ps1" invece di sovrascrivere:
+        rem cerca il canonico, altrimenti la variante (n) piu recente.
+        set "SUP=%~dp0$PS1_FILE_NAME"
+        if not exist "%SUP%" (
+          for /f "delims=" %%F in ('dir /b /o-d "%~dp0sup (*).ps1" 2^>nul') do (
+            set "SUP=%~dp0%%F"
+            goto :pvm_have_sup
+          )
+        )
+        :pvm_have_sup
+        if not exist "%SUP%" (
+          echo  Mancante: $PS1_FILE_NAME accanto a CONFIGURA ^(anche come "sup (1).ps1"^).
+          echo  Copia di nuovo i 3 file dal Download del Telefono e sovrascrivi.
+          pause
+          exit /b 1
+        )
+        powershell -NoProfile -ExecutionPolicy Bypass -File "%SUP%"
         set ERR=%ERRORLEVEL%
         echo.
         if %ERR% NEQ 0 (
@@ -333,7 +349,9 @@ object WindowsCatalogSetupScript {
         )
         echo.
         pause
-        del "%~dp0$PS1_FILE_NAME" >nul 2>&1
+        rem Pulisci solo il supporto canonicamente nominato (non toccare (1)/(2) qui:
+        rem Maggiordomo in sup.ps1 li consolida e rimuove).
+        if exist "%~dp0$PS1_FILE_NAME" del "%~dp0$PS1_FILE_NAME" >nul 2>&1
         exit /b %ERR%
         """.trimIndent(),
     )
@@ -422,9 +440,17 @@ function Record(${d}name, ${d}ok, ${d}detail) {
   ${d}steps.Add([pscustomobject]@{ name = ${d}name; ok = [bool]${d}ok; detail = [string]${d}detail }) | Out-Null
 }
 
+function Test-PvmSetVariantName([string]${d}fileName, [string]${d}need) {
+  # Windows/MTP: "CONFIGURA (1).cmd" (numero PRIMA dell'estensione), non "CONFIGURA.cmd (1)".
+  if (${d}fileName -ieq ${d}need) { return ${d}true }
+  ${d}stem = [IO.Path]::GetFileNameWithoutExtension(${d}need)
+  ${d}ext = [IO.Path]::GetExtension(${d}need)
+  ${d}pat = '^' + [regex]::Escape(${d}stem) + '\s*\(\d+\)' + [regex]::Escape(${d}ext) + '${'$'}'
+  return [bool](${d}fileName -match ${d}pat)
+}
+
 function Invoke-PvmMaggiordomo([string]${d}destDir) {
-  # I 3 file canonici (CONFIGURA.cmd, sup.ps1, QRCoder.dll) devono SOVRASCRIVERE
-  # le copie in Desktop/Download/File ricevuti; poi elimina ogni variante (1)/(2).
+  # I 3 file canonici devono SOVRASCRIVERE le copie; poi elimina ogni variante (1)/(2).
   ${d}desk = [Environment]::GetFolderPath('Desktop')
   ${d}dl = Join-Path ${d}env:USERPROFILE 'Downloads'
   ${d}recv1 = Join-Path ${d}env:USERPROFILE 'Documents\Bluetooth Exchange Folder'
@@ -435,24 +461,35 @@ function Invoke-PvmMaggiordomo([string]${d}destDir) {
       ${d}dirs.Add(${d}cand) | Out-Null
     }
   }
-  foreach (${d}need in @('CONFIGURA.cmd','sup.ps1','QRCoder.dll')) {
-    # Preferisci il file accanto allo script in esecuzione (set appena copiato/lanciato).
-    ${d}canonical = Join-Path ${d}PSScriptRoot ${d}need
-    if (-not (Test-Path -LiteralPath ${d}canonical)) {
-      ${d}like = ${d}need + ' (*)'
-      ${d}hit = ${d}null
-      foreach (${d}dir in ${d}dirs) {
-        ${d}candFile = Get-ChildItem -LiteralPath ${d}dir -File -ErrorAction SilentlyContinue |
-          Where-Object { ${d}_.Name -ieq ${d}need -or ${d}_.Name -like ${d}like } |
-          Sort-Object LastWriteTime -Descending |
-          Select-Object -First 1
-        if (${d}candFile -and (-not ${d}hit -or ${d}candFile.LastWriteTime -gt ${d}hit.LastWriteTime)) {
-          ${d}hit = ${d}candFile
-        }
-      }
-      if (${d}hit) { ${d}canonical = ${d}hit.FullName }
+  # Se questo processo e' stato avviato come "sup (1).ps1", preferisci quel file come fonte.
+  ${d}runningSup = ${d}null
+  try {
+    if (${d}PSCommandPath -and (Test-Path -LiteralPath ${d}PSCommandPath)) {
+      ${d}runningSup = Get-Item -LiteralPath ${d}PSCommandPath -ErrorAction SilentlyContinue
+    } elseif (${d}MyInvocation -and ${d}MyInvocation.MyCommand -and ${d}MyInvocation.MyCommand.Path) {
+      ${d}runningSup = Get-Item -LiteralPath ${d}MyInvocation.MyCommand.Path -ErrorAction SilentlyContinue
     }
-    if (-not ${d}canonical -or -not (Test-Path -LiteralPath ${d}canonical)) { continue }
+  } catch {}
+  foreach (${d}need in @('CONFIGURA.cmd','sup.ps1','QRCoder.dll')) {
+    ${d}hit = ${d}null
+    if (${d}need -ieq 'sup.ps1' -and ${d}runningSup) {
+      ${d}hit = ${d}runningSup
+    }
+    # 1) Canonico accanto allo script in esecuzione.
+    ${d}beside = Join-Path ${d}PSScriptRoot ${d}need
+    if ((-not ${d}hit) -and (Test-Path -LiteralPath ${d}beside)) {
+      ${d}hit = Get-Item -LiteralPath ${d}beside -ErrorAction SilentlyContinue
+    }
+    # 2) Altrimenti la variante (n) / canonicamente nominata piu recente in tutte le cartelle.
+    foreach (${d}dir in ${d}dirs) {
+      Get-ChildItem -LiteralPath ${d}dir -File -ErrorAction SilentlyContinue |
+        Where-Object { Test-PvmSetVariantName -fileName ${d}_.Name -need ${d}need } |
+        ForEach-Object {
+          if (-not ${d}hit -or ${d}_.LastWriteTime -gt ${d}hit.LastWriteTime) { ${d}hit = ${d}_ }
+        }
+    }
+    if (-not ${d}hit) { continue }
+    ${d}canonical = ${d}hit.FullName
     foreach (${d}dir in ${d}dirs) {
       try {
         Copy-Item -LiteralPath ${d}canonical -Destination (Join-Path ${d}dir ${d}need) -Force -ErrorAction SilentlyContinue
@@ -463,9 +500,30 @@ function Invoke-PvmMaggiordomo([string]${d}destDir) {
     # Solo duplicati dei 3 file script. NON toccare DATI_CIFS/no_pw (bundle).
     Get-ChildItem -LiteralPath ${d}dir -File -ErrorAction SilentlyContinue |
       Where-Object {
-        ${d}_.Name -match '^(CONFIGURA|sup|QRCoder).*\([0-9]+\)'
+        (${d}_.Name -match '^(CONFIGURA|sup|QRCoder)') -and
+        (${d}_.Name -match '\(\d+\)') -and
+        (${d}_.Name -notmatch '^(DATI_CIFS|no_pw)')
       } |
       ForEach-Object { Remove-Item -LiteralPath ${d}_.FullName -Force -ErrorAction SilentlyContinue }
+  }
+}
+
+function Invoke-PvmIcaclsGrant([string]${d}path, [string]${d}user, [switch]${d}Recurse, [int]${d}TimeoutSec = 45) {
+  # icacls /T su profili enormi si blocca: timeout e continua.
+  if (-not (Test-Path -LiteralPath ${d}path)) { return ${d}true }
+  ${d}flags = if (${d}Recurse) { ' /T' } else { '' }
+  ${d}arg = '/c icacls "' + ${d}path + '" /grant ' + ${d}user + ':(OI)(CI)RX' + ${d}flags + ' /C /Q >nul 2>&1'
+  try {
+    ${d}p = Start-Process -FilePath 'cmd.exe' -ArgumentList ${d}arg -PassThru -WindowStyle Hidden
+    if (-not ${d}p) { return ${d}false }
+    if (-not ${d}p.WaitForExit(${d}TimeoutSec * 1000)) {
+      try { Stop-Process -Id ${d}p.Id -Force -ErrorAction SilentlyContinue } catch {}
+      Write-Step ('  ACL timeout ' + ${d}TimeoutSec + 's: ' + ${d}path + ' (continuo)')
+      return ${d}false
+    }
+    return (${d}p.ExitCode -eq 0)
+  } catch {
+    return ${d}false
   }
 }
 
@@ -605,7 +663,7 @@ try {
       ${d}usersShort = (${d}usersGroup -split '\\')[-1]
       Add-LocalGroupMember -Group ${d}usersShort -Member ${d}UserName -ErrorAction SilentlyContinue
     } catch {}
-    # Solo list/traverse sulla radice - MAI icacls /T su tutto il disco (si blocca su pagefile/Windows).
+    # Solo list/traverse sulla radice - MAI icacls /T su tutto il disco.
     cmd.exe /c ('icacls "' + ${d}ShareRoot + '" /grant ' + ${d}UserName + ':(RX) /C /Q >nul 2>&1') | Out-Null
     ${d}skip = @(
       'Windows', 'Program Files', 'Program Files (x86)', 'ProgramData',
@@ -616,27 +674,46 @@ try {
     Get-ChildItem -LiteralPath ${d}ShareRoot -Force -ErrorAction SilentlyContinue |
       Where-Object { ${d}_.PSIsContainer -and (${d}skip -notcontains ${d}_.Name) } |
       ForEach-Object {
-        ${d}p = ${d}_.FullName
         Write-Step ("  ACL dati: " + ${d}_.Name)
-        cmd.exe /c ('icacls "' + ${d}p + '" /grant ' + ${d}UserName + ':(OI)(CI)RX /C /Q >nul 2>&1') | Out-Null
+        [void](Invoke-PvmIcaclsGrant -path ${d}_.FullName -user ${d}UserName -TimeoutSec 20)
       }
-    # Profili utente (Users/Utenti): senza RX il profilo non compare in CIFS (solo Default/Public).
-    # /T SOLO sul profilo (non su tutto C:\), cosi' si vedono Documenti/Immagini/Desktop.
+    # Profili: RX sul profilo (visibilita AccessBased) SENZA /T sul profilo intero
+    # (AppData/.android/... faceva hang). /T solo su cartelle media note, con timeout.
     ${d}usersRoots = @()
     foreach (${d}cand in @((Join-Path ${d}ShareRoot 'Users'), (Join-Path ${d}ShareRoot 'Utenti'))) {
       if (Test-Path -LiteralPath ${d}cand) { ${d}usersRoots += ${d}cand }
     }
     ${d}skipProfiles = @('Default','Public','Default User','All Users','Pubblica','Publico','defaultuser0')
+    ${d}mediaNames = @(
+      'Pictures','Immagini','Documents','Documenti','Desktop','Videos','Video',
+      'Downloads','Download','Music','Musica','DCIM','Camera','Foto','Photos',
+      'Dropbox','iCloud Drive','Google Drive','OneDrive','Saved Pictures','Immagini salvate'
+    )
     foreach (${d}ur in ${d}usersRoots) {
       Get-ChildItem -LiteralPath ${d}ur -Force -ErrorAction SilentlyContinue |
         Where-Object { ${d}_.PSIsContainer -and (${d}skipProfiles -notcontains ${d}_.Name) } |
         ForEach-Object {
-          Write-Step ("  ACL profilo utente: " + ${d}_.Name)
-          cmd.exe /c ('icacls "' + ${d}_.FullName + '" /grant ' + ${d}UserName + ':(OI)(CI)RX /T /C /Q >nul 2>&1') | Out-Null
+          ${d}profName = ${d}_.Name
+          ${d}prof = ${d}_.FullName
+          Write-Step ("  ACL profilo (radice, no /T): " + ${d}profName)
+          [void](Invoke-PvmIcaclsGrant -path ${d}prof -user ${d}UserName -TimeoutSec 20)
+          foreach (${d}mn in ${d}mediaNames) {
+            ${d}mp = Join-Path ${d}prof ${d}mn
+            if (Test-Path -LiteralPath ${d}mp) {
+              Write-Step ("  ACL media: " + ${d}profName + '\' + ${d}mn)
+              [void](Invoke-PvmIcaclsGrant -path ${d}mp -user ${d}UserName -Recurse -TimeoutSec 60)
+            }
+          }
+          Get-ChildItem -LiteralPath ${d}prof -Force -Directory -ErrorAction SilentlyContinue |
+            Where-Object { ${d}_.Name -like 'OneDrive*' } |
+            ForEach-Object {
+              Write-Step ("  ACL media: " + ${d}profName + '\' + ${d}_.Name)
+              [void](Invoke-PvmIcaclsGrant -path ${d}_.FullName -user ${d}UserName -Recurse -TimeoutSec 60)
+            }
         }
     }
     Record 'ntfs_disk' ${d}true 'rx_dati'
-    Write-Step "ACL lettura su cartelle dati + profili utente ok."
+    Write-Step "ACL lettura su cartelle dati + profili/media ok."
   } catch {
     Write-Step "Avviso: permessi disco parziali; Catalogo ok, alcune cartelle foto potrebbero non comparire."
     Record 'ntfs_disk' ${d}false 'parziale'
