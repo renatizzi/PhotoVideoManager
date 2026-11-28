@@ -1703,18 +1703,69 @@ class CatalogSeatWizardViewModel(
     }
 
     /**
-     * Locale senza URI: non più usato come conferma diretta.
-     * La UI apre il selettore cartelle; resta come fallback etichetta.
+     * LOCK #1: Questo dispositivo — crea cartella = nome Catalogo e attiva
+     * senza selettore SAF (allinea Nota W1).
      */
     fun confirmLocalSeat() {
-        confirmPendingSeat()
+        viewModelScope.launch {
+            val name = _state.value.catalogName.trim()
+                .ifBlank { CatalogSeat.DEFAULT_CATALOG_NAME }
+            _state.update {
+                it.copy(busy = true, errorMessage = null, statusMessage = null)
+            }
+            val created = withContext(Dispatchers.IO) {
+                createLocalCatalogFolder(name)
+            }
+            if (created == null) {
+                _state.update {
+                    it.copy(
+                        busy = false,
+                        errorMessage =
+                            "Impossibile creare la cartella del Catalogo. " +
+                                "Riprova o controlla lo spazio di archiviazione.",
+                    )
+                }
+                return@launch
+            }
+            confirmSeat(
+                kind = CatalogSeatKind.LOCAL_DEVICE,
+                treeUri = null,
+                label = created,
+            )
+        }
     }
 
-    /** TO-BE: Salva — conferma la cartella in pending (locale / cloud / CIFS). */
+    /**
+     * Crea `Documenti/<nome>` (o fallback app) e restituisce l’etichetta percorso.
+     */
+    private fun createLocalCatalogFolder(catalogName: String): String? {
+        val safe = catalogName.trim().ifBlank { CatalogSeat.DEFAULT_CATALOG_NAME }
+        @Suppress("DEPRECATION")
+        val publicDocs = android.os.Environment.getExternalStoragePublicDirectory(
+            android.os.Environment.DIRECTORY_DOCUMENTS,
+        )
+        runCatching {
+            if (!publicDocs.exists()) publicDocs.mkdirs()
+            val dir = java.io.File(publicDocs, safe)
+            if (dir.exists() || dir.mkdirs()) {
+                return "Documenti/$safe"
+            }
+        }
+        val appDocs = appContext.getExternalFilesDir(android.os.Environment.DIRECTORY_DOCUMENTS)
+            ?: appContext.filesDir
+        val dir = java.io.File(appDocs, safe)
+        if (!dir.exists() && !dir.mkdirs()) return null
+        return dir.absolutePath
+    }
+
+    /** TO-BE: Salva — conferma la cartella in pending (cloud / CIFS / NAS). */
     fun confirmPendingSeat() {
         val s = _state.value
+        if (s.selectedKind == CatalogSeatKind.LOCAL_DEVICE) {
+            confirmLocalSeat()
+            return
+        }
         val uri = s.pendingTreeUri
-        // Filiera locale inclusa: serve sempre una cartella scelta (es. Documenti/Catalogo).
         if (uri.isNullOrBlank()) {
             _state.update { it.copy(errorMessage = "Scegli prima la cartella del Catalogo") }
             return
@@ -1810,7 +1861,12 @@ class CatalogSeatWizardViewModel(
                         },
                         awaitAccessOutcome = false,
                         errorMessage = friendlySeatError(raw, unreachable),
-                        statusMessage = "Attiva Catalogo di nuovo e scegli la cartella del Catalogo.",
+                        statusMessage = when (kind) {
+                            CatalogSeatKind.LOCAL_DEVICE ->
+                                "Attiva Catalogo di nuovo (la cartella si crea in automatico)."
+                            else ->
+                                "Attiva Catalogo di nuovo e scegli la cartella del Catalogo."
+                        },
                         step = when (kind) {
                             CatalogSeatKind.LOCAL_DEVICE -> WizardStep.W1_CONFIRM
                             CatalogSeatKind.CLOUD_DRIVE -> WizardStep.W3_GUIDE

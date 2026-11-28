@@ -1,9 +1,10 @@
 # LOCK — Test 0.16.101 Setup su sei percorsi
 
-**Stato:** in attesa OK Renato (tabella aggiornata dopo verifica sostenibilità 28/11)  
+**Stato:** in prova (`0.16.102-preview`)  
 **Data:** 2026-11-28  
 **Richiesta / test di riferimento:** esito Renato 28/11/2026 — app `0.16.101-preview`; Catalogo **MyMedia**; **S25 Ultra di RENATO**  
-**Approvazione Renato:** in attesa
+**Approvazione Renato:** 28/11/2026 — OK; `#2` = eliminare voce «Altro telefono» (caso in guida)  
+**Build FIX:** `0.16.102-preview` — guida `docs/GUIDA_TEST_0.16.102_LOCK_101.md`
 
 **Blocco piano:** niente Fase B finché LOCK **approvato** e poi **chiuso in prova**. Solo fix `#N`.
 
@@ -53,7 +54,7 @@
 | # | Osservazione (Renato) | Risultato atteso (misurabile) | Fuori scope |
 |---|----------------------|-------------------------------|-------------|
 | 1 | **Questo dispositivo — KO.** Cartella non creata; scelta cartella finta OK; Attiva ripropone Seleziona cartella. Proposta: cartella automatica = nome prima pagina; saltare selezione; stessa videata conferma attivazione; modifica nome da Configura. | (a) Dopo conferma, cartella con **nome Catalogo** creata e sede attiva. (b) **Niente** selezione cartella in W1. (c) Stessa videata: conferma attivazione. (d) Cambio nome solo Configura. (e) Nessun falso «fase terminata». | Redesign PC/NAS/Cloud; pick SAF obbligatorio su W1 |
-| 2 | **Altro dispositivo — KO** (messaggio non chiaro). Renato: menu «Altro dispositivo»; messaggio solo se non raggiungibile, altrimenti eliminare se mai visibile. | **Decisione proposta:** peer **mai** raggiungibile da MediaManager in v1 → **niente** opzione sede Setup; in Acquisisci voce **«Altro dispositivo»** = solo guida (testo chiaro) **oppure** rimossa e gestita in guida (scelta Renato all’OK). **Niente** check di raggiungibilità. | Discovery peer; sede su secondo telefono; Wi‑Fi diretto |
+| 2 | **Altro dispositivo — KO** (messaggio non chiaro). Renato: eliminare la voce se mai visibile. | **Decisione OK Renato:** eliminare «Su un altro telefono» da Acquisisci → +. Il caso resta documentato in guida (foto da altro mobile → cartella condivisa PC/NAS/Drive, poi + su questo telefono). | Discovery peer; sede su secondo telefono |
 | 3 | PC C:/E:/Disco rete OK, ma Domain/DFS formato diverso (quadrati + istruzioni) | Domain e DFS: **solo titolo** (+ riquadro valore se serve), senza checkbox/quadrati e senza istruzioni extra | Altri campi CIFS; CX File Explorer |
 | 4 | Cartelle CIFS quasi tutte in inglese | Tutte le cartelle note del profilo con nomi come in Windows | Cancellare nomi FS inglesi; UI app CIFS |
 | 5 | Cloud OK ma Drive in elenco dopo più tentativi | Drive compare senza tentativi a caso; se lento, indicazione di attesa | Account Google |

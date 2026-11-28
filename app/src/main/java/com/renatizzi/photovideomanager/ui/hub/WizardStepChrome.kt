@@ -31,7 +31,7 @@ object WizardStepChrome {
         return when (step) {
             WizardStep.S0_START -> Subtitle("Avvio procedura")
             WizardStep.INTRO -> Subtitle(pc[0])
-            WizardStep.W1_CONFIRM -> Subtitle("Scelta della cartella sul dispositivo")
+            WizardStep.W1_CONFIRM -> Subtitle("Attivazione Catalogo su questo dispositivo")
             WizardStep.PC_SHARE_READY -> Subtitle(
                 when (kind) {
                     CatalogSeatKind.NETWORK_NAS ->

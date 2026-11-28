@@ -106,7 +106,6 @@ fun AcquisisciStaticScreen(
     var pcGuideOpen by remember { mutableStateOf(false) }
     var pcHelpOpen by remember { mutableStateOf(false) }
     var addDeviceOpen by remember { mutableStateOf(false) }
-    var otherPhoneOpen by remember { mutableStateOf(false) }
     var addTip by remember { mutableStateOf<String?>(null) }
     var renameText by remember { mutableStateOf("") }
     fun openCifsHelper() {
@@ -272,16 +271,23 @@ fun AcquisisciStaticScreen(
                 .weight(1f)
                 .verticalScroll(rememberScrollState()),
         ) {
-            if (state.loading && sources.isEmpty()) {
-                Box(
+            if (state.loading) {
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(24.dp),
-                    contentAlignment = Alignment.Center,
+                        .padding(vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.dp)
+                    Text(
+                        text = state.message?.takeIf { it.isNotBlank() }
+                            ?: stringResource(R.string.acquisisci_add_source_wait),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
                 }
-            } else if (sources.isEmpty()) {
+            }
+            if (!state.loading && sources.isEmpty()) {
                 Text(
                     text = stringResource(R.string.acquisisci_empty_sources),
                     style = MaterialTheme.typography.bodyMedium,
@@ -354,37 +360,12 @@ fun AcquisisciStaticScreen(
                         },
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text(stringResource(R.string.acquisisci_add_drive)) }
-                    TextButton(
-                        onClick = {
-                            addDeviceOpen = false
-                            otherPhoneOpen = true
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) { Text(stringResource(R.string.acquisisci_add_other_phone)) }
                 }
             },
             confirmButton = {},
             dismissButton = {
                 TextButton(onClick = { addDeviceOpen = false }) {
                     Text(stringResource(R.string.importa_annulla))
-                }
-            },
-        )
-    }
-
-    if (otherPhoneOpen) {
-        AlertDialog(
-            onDismissRequest = { otherPhoneOpen = false },
-            title = { Text(stringResource(R.string.acquisisci_add_other_phone_title)) },
-            text = {
-                Text(
-                    text = stringResource(R.string.acquisisci_add_other_phone_body),
-                    modifier = Modifier.verticalScroll(rememberScrollState()),
-                )
-            },
-            confirmButton = {
-                Button(onClick = { otherPhoneOpen = false }) {
-                    Text(stringResource(R.string.acquisisci_add_other_phone_ok))
                 }
             },
         )
