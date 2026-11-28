@@ -1,9 +1,10 @@
 # Prompt di continuità — un solo agente (Photo&VideoManager)
 
-**Data:** 10/10/2026 (aggiornato: build correttiva 0.16.3-preview in verifica telefono)  
+**Data:** 10/10/2026  
+**Aggiornato:** 28/11/2026 — fase corrente **0.16.101-preview** (USB Setup + H1); vedi Nota **v5.4** §7.1 / §7.1novies e `docs/ASSESSMENT_CODICE_0.16.101.md`.  
 **Autore del handoff:** sessione Cursor + interlocuzione Renato Stefanizzi  
 **Uso:** incolla questo intero documento come primo messaggio a un **unico** agente Cursor Cloud / Composer. Non spezzare in più agenti.  
-**Nota avanzamento:** BL-03 portato in codice su branch `cursor/bl03-acquisisci-tre-stati-c499` (da `m02-…-e02a`); **non chiudere** senza OK Renato sul telefono.
+**Nota avanzamento (storico):** BL-03 chiuso in prova 0.16.15. **Oggi:** non aprire nuove macro finché Renato chiude la prova 0.16.101 multi-dispositivo (Fase A).
 
 ---
 
@@ -11,7 +12,7 @@
 
 Sei l’agente unico di sviluppo su **Photo&VideoManager** (app Android, nome prodotto in UI: **MediaManager**).  
 Riprendi dal branch corrente, **non inventare requisiti**, allinea Codice + Nota Integrata + prove sul telefono.  
-La verifica di **0.16.2 è KO**: priorità assoluta correggere i criteri non recepiti (in particolare **BL-03**) e aggiornare roadmap/piano prima di nuove funzioni di dominio.
+**Priorità corrente (28/11/2026):** supportare la prova 0.16.101; poi Fase B (H1 stress, W3/W4, help). Piano in Nota §7.1novies.
 
 ---
 
@@ -32,7 +33,9 @@ Adottate 23/10/2026; aggiornate 3/11/2026 con **§11 Protocollo LOCK** (elenco b
 | Documento | Percorso | Perché |
 |---|---|---|
 | **Regole collaborazione** | `docs/REGOLE_COLLABORAZIONE_MEDIAMANAGER.md` + `AGENTS.md` | Metodo di lavoro permanente (23/10/2026) |
-| **Nota Integrata (documento unico)** | `docs/PVM_Nota_Integrata.md` (v5.3) | Requisiti, UI congelata §5.6, roadmap §7, backlog §7.3 |
+| **Nota Integrata (documento unico)** | `docs/PVM_Nota_Integrata.md` (**v5.4**) | Requisiti, UI congelata §5.6, roadmap §7, backlog §7.3, assessment §7.1novies |
+| **Assessment codice** | `docs/ASSESSMENT_CODICE_0.16.101.md` | Cosa è in codice vs Nota; piano fasi A–D |
+| **Backlog Wizard UX** | `docs/BACKLOG_WIZARD_UX.md` | Setup PC USB / residuali UI |
 | **Terminologia UI** | `docs/TERMINOLOGIA_UI.md` | Catalogo / File del dispositivo; conferme SÌ/NO stile BoxManager |
 | **Shell parity** | `docs/SHELL_PARITY.md` | Coerenza shell con BoxManager |
 | **Assessment BoxManager** | `docs/BOXMANAGER_REUSE_ASSESSMENT.md` | Pattern dialog/conferme, shell |

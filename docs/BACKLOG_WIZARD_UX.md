@@ -1,11 +1,23 @@
 # Backlog UX — Wizard Setup Catalogo (PC)
 
-**Aggiornato:** 16/11/2026 — template BT v3 da Ultime modifiche (3 rami, 4 fasi).  
+**Aggiornato:** 28/11/2026 — assessment 0.16.101 + piano fasi A–D (`docs/ASSESSMENT_CODICE_0.16.101.md`, Nota v5.4 §7.1novies).  
 **Specifica UI:** `docs/reference/videate-utente-setup-catalogo-pc.md`  
 **PPT V2:** `docs/reference/revisione_guida_V2.pptx`  
 **Non usare come specifica:** `docs/reference/template-videate-wizard-pc.md`  
 **Proposta blocco P0 Acquisisci (convalidata → 0.16.51):** `docs/PROPOSTA_VISIBILITA_FONTI_ACQUISISCI.md` · prova: `docs/GUIDA_TEST_0.16.51_ACQUISISCI.md`  
-**Lock BT:** `docs/LOCK_SETUP_BT_BUNDLE_CIFS.md`
+**Percorso ufficiale Setup PC:** **USB-only** (BT non primario). LOCK attivi/recenti: `LOCK_SETUP_USB_REV4*` · `LOCK_SETUP_MTP_SCRUB_DOMAIN` (chiuso) · `LOCK_CIFS_LOCALE_DATI_SCRUB` (in prova 0.16.101).
+
+---
+
+## Stato corrente Setup PC (28/11/2026)
+
+| Build | Esito sintetico |
+|---|---|
+| 0.16.96–99 | UX CIFS/ACL/purge set; stress OK su disco esterno |
+| 0.16.100 | Scrub post-import + Domain/DFS; Renato: «sembra funzionare» |
+| **0.16.101** | Alias CIFS localizzati + scrub DATI_CIFS* sessione — **in prova multi-dispositivo** |
+
+**Prossimo (Fase A Nota):** chiudere LOCK CIFS locale; poi stress Aggiorna Catalogo H1.
 
 ---
 
@@ -17,7 +29,7 @@
 
 **Obiettivo:** prevedere un **censimento dei dispositivi** con cui si può interagire **prima** di parlare di Catalogo (oppure un meccanismo equivalente con lo stesso risultato). Quando si apre Acquisisci devono essere visibili **tutti i dispositivi** (ambito Nota W1–W4) e quindi le **cartelle disponibili** utilizzabili come fonti.
 
-**Stato:** proposta convalidata 23/10 → implementata in **0.16.51** (raggruppamento dispositivi, Aggiungi W1–W4, stati disponibilità). In verifica telefono.  
+**Stato:** proposta convalidata 23/10 → implementata in **0.16.51** (raggruppamento dispositivi, Aggiungi W1–W4, stati disponibilità). Da riconfermare nella prova multi-dispositivo 0.16.101+.  
 **Fuori blocco:** recupero automatico IP CIFS (parcheggio; IP manuale ok).
 
 ---
@@ -60,11 +72,12 @@
 10. **Istruzione avvio** — ✅ doppio clic + UAC.  
 11. **Chrome titolo/sottotitolo** — ✅ passi PPT 0–5 (non «Passo N di 10»).
 
-### P1 — Setup PC Bluetooth (annotato Renato 08/11/2026; template convalidato 09/11)
+### P1 — Setup PC (storico BT → USB-only)
 
-16. **Nomi file comprensibili (come fatto per CONFIGURA/sup)** — JSON post «Tutto pronto» → TO-BE `DATI_CIFS.json` (da inviare/importare) e `no_pw.json` (ignorare). Allineare testi app + messaggi script.  
-17. **Una sola versione sul Desktop (overwrite)** — A ogni nuovo tentativo i file sul Desktop devono **sostituire** quelli precedenti (bundle/result + 3 file CONFIGURA). **Nota Renato 19/11:** in pratica i file **non** vengono sostituiti: il sistema crea `nome (1)`, `nome (2)`, … e **blocca** il processo (sessione ambigua). Da risolvere in script/export/BT ricezione + istruzioni guida.  
-18. **UX Ottimizzazione BT** — Template **v7** (`PVM_Proposta_Setup_BT_REV9_v7.pdf`): Parte 1 PDF REV9; Parte 2 online una fase; porte/CTA; lampade; ascolto DATI_CIFS; maggiordomo overwrite. *Stato:* **in sviluppo 0.16.74** (OK Renato 19/11).
+16. **Nomi file comprensibili** — ✅ `DATI_CIFS.json` / `no_pw.json` (e set CONFIGURA/sup/QRCoder).  
+17. **Una sola versione / anti-(1)/(2)** — Maggiordomo dual-pattern + purge export + **scrub post-import** (0.16.100–101). In prova campo.  
+18. **UX BT** — storico 0.16.74; **superato come primario** da USB-only (decisione Renato). Non riprendere BT salvo nuova richiesta.  
+19. **Alias cartelle CIFS localizzate** — ✅ script 0.16.101 (`Immagini`→`Pictures`, …); richiede nuovo CONFIGURA. In prova.
 
 ### P2 — Fuori Wizard PC immediato
 12. Pagina **Configura** «stile Utility» (slide 2 PPT).  
@@ -75,10 +88,8 @@
 ---
 
 
-### Decisione 20/11/2026 — USB-only (in attesa convalida proposta)
-- **21/11 ripristino USB:** template esaminato — incongruenze numerazione fasi (pag.6≠7≠11); **nessuno sviluppo** finché Renato chiude i 4 punti in `PVM_Osservazioni_Ripristino_USB_v1.pdf`. Guida integrale USB: `Guida_Setup_Catalogo_USB_ONLY.pdf`.
-
-Renato rinuncia al BT per il setup Catalogo. Proposta: `docs/reference/PVM_Proposta_Setup_USB_ONLY_v1.pdf`. **Nessun codice** finché non convalida.
+### Decisione USB-only (convalidata in sviluppo 21–28/11/2026)
+Renato ha scelto **USB** come percorso Setup Catalogo (BT non primario). Tranche **0.16.75–0.16.101** (REV4 + fix CIFS/MTP). Guida test corrente: `docs/GUIDA_TEST_0.16.101_CIFS_LOCALE_SCRUB.md`.
 
 ## Decisioni già congelate (invariate)
 
@@ -118,8 +129,10 @@ Aperti:
 - **BL-UI-10** Setup Sorgenti «cartella da censire» (landing dedicata)
 - **BL-UI-11** Uniformare stile bottoni / microfono ricerca non su tutti i motori
 - **BL-UI-12** Funzione di **pulizia dati app** (prefs Catalogo, bozze wizard, indici/censimenti, cache MediaManager) — richiesta Renato 01/11 con Tranche A 0.16.57; non cancellare i file utente nelle cartelle SAF
-- **BL-BT-01** Nomi file post-script comprensibili (bundle/result) — come CONFIGURA/sup (Renato 08/11)
-- **BL-BT-02** Desktop: overwrite unica versione (bundle/result + 3 file CONFIGURA) (Renato 08/11)
-- **BL-BT-03** Bypass ricerca Desktop/Download: esegui-dove-arriva + script maggiordomo + ascolto MediaStore/LAN — in 0.16.74 (Renato 19/11)
-- **BL-BT-04** Indicatori fase onesti + modello a porte (no Continua/Puoi passare) — in 0.16.74 (Renato 19/11)
+- **BL-BT-01** Nomi file post-script — ✅ DATI_CIFS / no_pw
+- **BL-BT-02** Overwrite / anti-(1)/(2) — ✅ Maggiordomo + scrub 0.16.100–101 (in prova)
+- **BL-BT-03** Maggiordomo + ascolto MediaStore — ✅ assorbito in USB path
+- **BL-BT-04** Indicatori fase / porte — assorbiti in guida USB REV4
+- **Help contestuale wizard** — ancora aperto (P0 metodo)
+- **W3/W4 completezza** — aperti (Fase B Nota §7.1novies)
 - Font/stile carattere — correzione UI differita (accordo 30/10)
