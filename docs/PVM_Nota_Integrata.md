@@ -2,13 +2,14 @@
 
 Documento tecnico, architetturale e funzionale di riferimento (**documento unico**).
 
-- **File:** PVM_Nota_Integrata_v5.3 (fonte operativa: `docs/PVM_Nota_Integrata.md`)
-- **Versione:** 5.3
-- **Data ultima modifica:** 10/10/2026
+- **File:** PVM_Nota_Integrata_v5.4 (fonte operativa: `docs/PVM_Nota_Integrata.md`)
+- **Versione:** 5.4
+- **Data ultima modifica:** 28/11/2026
 - **Responsabile:** Renato Stefanizzi
 - **Delta v5.1 → v5.2:** recepita la revisione di navigazione (proposta Navigazione11 + interlocuzione 08/10/2026). Aggiornati §5 e chiarimenti di collocazione in §6. Nessun nuovo requisito di dominio inventato.
 - **Delta v5.2 → v5.3:** **congelamento layout UI** anteprima `0.14.6-preview` (Dashboard densità BoxManager; Accesso rapido Home fissato; albero §5 confermato). Nessun nuovo requisito di dominio. Affinamenti estetici minori (es. spessore ombre) ammessi in seguito senza riaprire la struttura.
 - **HOLD 0.15.4–0.15.12 chiuso (09–10/10/2026):** Renato ha convalidato KPI/Importa/navigazione; ripresa sviluppo dietro UI congelata da **0.16.0**.
+- **Delta v5.3 → v5.4 (28/11/2026):** assessment codice `0.16.101-preview` + aggiornamento fase corrente / piano (§7.1, §7.1novies, BL-17). **Nessun nuovo requisito di dominio.** Analisi di supporto: `docs/ASSESSMENT_CODICE_0.16.101.md`.
 
 # 1. Scopo del progetto e regole operative
 ## 1.1 Scopo
@@ -335,11 +336,15 @@ I nomi di navigazione UI seguono il §5 v5.2 (Utility, Accessi all’Archivio, P
 - Stati: DA AVVIARE; ANALISI; SPECIFICA CONSOLIDATA; SVILUPPO; VERIFICA; CHIUSA.
 ## 7.1 FASE CORRENTE: BL-17 / H1 Catalogo personale unico + Wizard sede
 MACRO-ATTIVITÀ DI RIFERIMENTO: M02 + vertical slice M03–M07 / M09 / M16 (v1) + **M18 layout congelato (v5.3)** + **BL-17 / H1**.
-STATO ATTUALE (15/10/2026): **0.16.26-preview** (versionCode 67). Wizard sede: (1) scelta dispositivo (2) PC→script+CIFS Documents Provider+SAF (3) ripresa Catalogo. Stesso modello BoxManager `NetworkDriveAssistant`.
+STATO ATTUALE (28/11/2026): **0.16.101-preview** (versionCode 142).  
+- **W2 Setup PC:** percorso **USB-only** (BT non primario); script `CONFIGURA`/`sup`/`QRCoder.dll`; bundle `DATI_CIFS.json`; share = radice disco + pin Folder; Maggiordomo anti-`(1)/(2)`; scrub Download post-import; alias cartelle localizzate CIFS (Immagini→Pictures) in 0.16.101.  
+- **In prova Renato:** LOCK `LOCK_CIFS_LOCALE_DATI_SCRUB` + verifica multi-dispositivo.  
+- **H1:** fascicolo `catalog_hub.json` + schermata Aggiorna Catalogo (diff/conflitti) presenti in codice; stress multi-dispositivo ancora da chiudere.  
+- Assessment: `docs/ASSESSMENT_CODICE_0.16.101.md`.
 Ordine operativo:
-1. **P1** — verifica Renato su telefono/tablet (Wizard + Aggiorna Catalogo multi-dispositivo).
-2. **P2** — BL-09 assorbito in W2; BL-02/BL-11 non ora.
-3. **Componi** — non riprendere finché non chiusa specifica M11 vs landing congelata.
+1. **P0** — chiudere prova 0.16.101 (tutti i dispositivi) e LOCK CIFS locale / USB REV4 residuali.
+2. **P1** — stress **Aggiorna Catalogo** H1; poi W3/W4 o honesty UI; help contestuale wizard.
+3. **P2** — BL-02/BL-11 non ora; **Componi** solo dopo specifica M11 vs landing congelata.
 
 ### 7.1quater Decisioni Renato 11/10/2026 (questionario)
 
@@ -391,7 +396,24 @@ Ordine operativo:
 
 **Criteri di accettazione v1:** checklist interlocuzione §7.24 §6 (10+1 punti, incl. portata W2 memorie di massa).
 
-**Stato roadmap:** SPECIFICA FUNZIONALE CONSOLIDATA → approfondimento tecnico implementativo Cursor → SVILUPPO.
+**Stato roadmap (28/11/2026):** SPECIFICA FUNZIONALE CONSOLIDATA → **SVILUPPO / VERIFICA** sul ramo W2 (0.16.74–0.16.101); W3/W4 e chiusura H1 multi-dispositivo ancora aperti.
+
+### 7.1novies Assessment codice + piano (28/11/2026)
+
+**Scopo:** aggiornare lo stato reale rispetto alla Nota, senza inventare requisiti. Dettaglio: `docs/ASSESSMENT_CODICE_0.16.101.md`.
+
+**Vertical slice già in codice (maturità sintetica)**  
+M02 struttura **alta** · M03 Catalogo locale **media–alta** · M04 storage (SAF/CIFS esterno) **media** · M05–M06 Acquisisci **media–alta** · M07 dedup esatti **media** · M09 ricerca base **bassa–media** · M16 Cestino Catalogo **media** · M18 shell UI **alta** struttura · BL-17 W2 **in verifica campo** · W3/W4 **incompleti** · M08/M10–M15/M13/M14 **non aperti o stub**.
+
+**Piano proposto (dopo esito 0.16.101)**  
+| Fase | Contenuto | Dipende da |
+|---|---|---|
+| **A** | Chiudere LOCK/prova Setup PC USB+CIFS (0.16.101+) | Renato, tutti i dispositivi |
+| **B** | Stress H1 Aggiorna Catalogo; W3/W4 completi o honesty; help contestuale | Fase A OK |
+| **C** | Stabilizzare Organizza (Acquisisci/Pulisci/Cestino) su tabella 5 dispositivi | A–B |
+| **D** | M11 Componi → M08/M09 → M15/M16 Archivio Condiviso → M13/M14 → M12 → M19/M20 | Specifica ChatGPT/Renato per ciascuna macro |
+
+**Regola:** nuove funzioni di dominio solo da backlog/Nota già consolidati o da nuova decisione Renato/ChatGPT; niente scope creep fuori LOCK.
 
 ### 7.1septies Bozza wizard «Dove tengo il Catalogo» (BL-17) — 12/10/2026 *(storico; sostituita da §7.1octies / interlocuzione §7.24)*
 
@@ -545,7 +567,23 @@ Nota: Le dipendenze riportate per ciascuna macro-attività della Roadmap devono 
 Regola di aggiornamento della roadmap
 La tabella costituisce l'unico riferimento operativo per lo stato di avanzamento. Non viene creato un file Excel parallelo come fonte di riferimento. Ogni decisione consolidata, criticità emersa, modifica dello stato o chiusura di una macro-attività deve essere recepita nella Nota Integrata.
 Una macro-attività può passare a SVILUPPO solo dopo che ChatGPT ha consolidato requisiti e criteri di accettazione e che Cursor ha completato l'approfondimento tecnico preliminare. Le criticità che richiedono una decisione progettuale vengono riportate nella Nota e risolte prima dell'avvio dello sviluppo interessato
-## 7.2 Roadmap aggiornata al 01/10/2026
+## 7.2 Roadmap aggiornata al 28/11/2026
+
+La TABLE 1 (fine documento) resta l’elenco M01–M20. **Stato implementativo sintetico (assessment 0.16.101, senza cambiare i requisiti consolidati delle macro):**
+
+| Macro | Stato operativo 28/11/2026 | Nota breve |
+|---|---|---|
+| M01–M02 | CHIUSA specifica · struttura in uso | Architettura package stabile |
+| M03–M07 | SVILUPPO / VERIFICA (slice v1) | Catalogo + Acquisisci + dedup esatti |
+| M08 | DA AVVIARE (implementazione) | Organizzazione relazioni |
+| M09 | SVILUPPO iniziale | Ricerca base presente |
+| M10–M15 | DA AVVIARE / stub | Fuori filo H1 corrente |
+| M16 | SVILUPPO v1 Catalogo | Non ancora M16 pieno Archivio Condiviso |
+| M17 | Parziale trasversale | Conferme distruttive; niente threat model completo |
+| M18 | VERIFICA (layout congelato v5.3) | Completare help / Configura |
+| M19–M20 | DA AVVIARE | Dopo chiusura vertical slice + H1 |
+
+Piano fasi A–D: §7.1novies.
 
 ## 7.3 Backlog — future implementazioni (non consolidato)
 
@@ -562,7 +600,7 @@ Elenco di idee/esigenze emerse in interlocuzione, **non ancora requisiti consoli
 | BL-07 | **Aggiorna — «Sposta» nel menu contestuale** | **CHIUSA (decisione A 11/10/2026):** non aggiungere Sposta. | Renato 09–11/10/2026 |
 | BL-08 | **Copia da Catalogo → dispositivo** | ~~Export esplicito SAF CreateDocument~~ — *fatto 0.16.0* (menu Aggiorna «Copia su dispositivo»; preferisce copia spazio app). Sposta resta BL-07. | Renato 09/10/2026 |
 | BL-09 | **PC / NAS in rete** | Guida «Da PC o rete» in 0.16.18–19. **Assorbita in BL-17 W2** (sede PC, anche memorie di massa sul PC). | Renato 10–12/10/2026 |
-| BL-17 | **Wizard sede Catalogo personale (H1)** | **SVILUPPO 0.16.20–0.16.21:** Wizard W1–W4, fascicolo `catalog_hub.json`, Aggiorna Catalogo; W2 routine PC Windows (script T1 + utente `MediaManager` + S6-A). §7.1octies; interlocuzione §7.26–§7.27. | Renato 12–14/10/2026 |
+| BL-17 | **Wizard sede Catalogo personale (H1)** | **SVILUPPO→VERIFICA (28/11/2026):** W1–W4 in app; W2 USB-only fino a **0.16.101** (DATI_CIFS, share disco, Maggiordomo, scrub, alias CIFS locali); H1 fascicolo + Aggiorna Catalogo in codice. W3/W4 e stress multi-dispositivo aperti. Vedi §7.1novies. | Renato 12/10–28/11/2026 |
 | BL-10 | **Fonti apparire senza scelta utente** | **OK** (diagnosi + dedupe SAF 0.16.10; prove 0.16.15). Fonti solo da «+»; residui togliibili con X. | Renato 10–11/10/2026 |
 | BL-11 | **Pulisci — criteri duplicati avanzati (tipo Krokiet)** | **Decisione A 11/10/2026:** restano solo duplicati esatti. Simili = versione successiva. | Renato 11/10/2026 |
 | BL-12 | **Pulisci — doppia funzione (selezionati + duplicati)** | Convalidato 11/10/2026. **0.16.6–0.16.7**: (1) ✓ da Aggiorna → Pulisci; (2) Analizza duplicati. Fix navigazione ✓ in 0.16.7. Prova Renato OK su selezione. | Renato 11/10/2026 |
