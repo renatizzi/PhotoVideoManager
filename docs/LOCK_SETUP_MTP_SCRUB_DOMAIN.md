@@ -1,9 +1,9 @@
 # LOCK — Setup MTP scrub + Domain/DFS
 
-**Stato:** in attesa OK Renato  
+**Stato:** chiuso  
 **Data:** 2026-11-26  
 **Richiesta / test di riferimento:** esito telefono 0.16.99-preview (26/11/2026, S25 Ultra + disco esterno)  
-**Approvazione Renato:** in attesa
+**Approvazione Renato:** OK 27/11/2026 («Questa versione sembra funzionare»)
 
 | # | Osservazione (Renato) | Risultato atteso (misurabile) | Fuori scope |
 |---|----------------------|-------------------------------|-------------|
@@ -12,16 +12,11 @@
 | 3 | Manca riquadro Domain; Enable DFS non allineato | Domain e DFS: riquadri allineati alle altre righe; **nessun** bottone Copia su Domain e DFS | Altri campi CIFS |
 | 4 | Test CIFS su disco esterno OK | Nessuna regressione CIFS disco esterno | — |
 
-## Note operative (agente)
-
-- FIX in `0.16.100-preview` (versionCode 141): scrub post-import, prefer newest bundle, Domain/DFS UI.
-- PROVA: `docs/GUIDA_TEST_0.16.100_MTP_SCRUB_DOMAIN.md` con gli stessi `#N`.
-
 ## Esito test (dopo prova)
 
 | # | OK / KO | Nota breve di Renato |
 |---|---------|----------------------|
-| 1 | | |
-| 2 | | |
-| 3 | | |
-| 4 | | |
+| 1 | OK | versione funziona (27/11) |
+| 2 | OK | versione funziona (27/11) |
+| 3 | OK | versione funziona (27/11) |
+| 4 | OK | già OK in test 26/11 |

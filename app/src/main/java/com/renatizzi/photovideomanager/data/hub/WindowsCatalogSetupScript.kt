@@ -521,6 +521,43 @@ function Invoke-PvmIcaclsGrant([string]${d}path, [string]${d}user, [switch]${d}R
   }
 }
 
+function Get-PvmShellDisplayName([string]${d}path) {
+  # Esplora: Immagini; SMB: Pictures. Titolo shell = nome locale.
+  try {
+    ${d}shell = New-Object -ComObject Shell.Application
+    ${d}ns = ${d}shell.NameSpace(${d}path)
+    if (${d}null -eq ${d}ns) { return ${d}null }
+    ${d}title = [string]${d}ns.Title
+    if (${d}title) { return ${d}title.Trim() }
+  } catch {}
+  return ${d}null
+}
+
+function Invoke-PvmLocalizedFolderAliases([string]${d}profilePath, [string]${d}user) {
+  # Junction localizzati (Immagini -> Pictures, ecc.) cosi' CIFS mostra gli stessi nomi di Windows.
+  if (-not (Test-Path -LiteralPath ${d}profilePath)) { return }
+  ${d}knownFs = @('Pictures','Documents','Videos','Music','Downloads','Desktop')
+  ${d}invalid = [IO.Path]::GetInvalidFileNameChars()
+  foreach (${d}fs in ${d}knownFs) {
+    ${d}target = Join-Path ${d}profilePath ${d}fs
+    if (-not (Test-Path -LiteralPath ${d}target)) { continue }
+    ${d}display = Get-PvmShellDisplayName -path ${d}target
+    if (-not ${d}display) { continue }
+    if (${d}display -ieq ${d}fs) { continue }
+    if (${d}display.IndexOfAny(${d}invalid) -ge 0) { continue }
+    ${d}alias = Join-Path ${d}profilePath ${d}display
+    if (Test-Path -LiteralPath ${d}alias) { continue }
+    try {
+      ${d}linkArg = '/c mklink /J "' + ${d}alias + '" "' + ${d}target + '"'
+      ${d}lp = Start-Process -FilePath 'cmd.exe' -ArgumentList ${d}linkArg -PassThru -WindowStyle Hidden -Wait
+      if (${d}lp -and ${d}lp.ExitCode -eq 0 -and (Test-Path -LiteralPath ${d}alias)) {
+        Write-Step ('  Alias locale CIFS: ' + ${d}display + ' -> ' + ${d}fs)
+        [void](Invoke-PvmIcaclsGrant -path ${d}alias -user ${d}user -TimeoutSec 10)
+      }
+    } catch {}
+  }
+}
+
 try {
   Write-Host ""
   Write-Host "=== MediaManager: configurazione Catalogo ===" -ForegroundColor Cyan
@@ -705,6 +742,8 @@ try {
               Write-Step ("  ACL media: " + ${d}profName + '\' + ${d}_.Name)
               [void](Invoke-PvmIcaclsGrant -path ${d}_.FullName -user ${d}UserName -TimeoutSec 15)
             }
+          # Nomi come in Esplora (Immagini/Documenti) anche via CIFS/SMB.
+          Invoke-PvmLocalizedFolderAliases -profilePath ${d}prof -user ${d}UserName
         }
     }
     Record 'ntfs_disk' ${d}true 'rx_dati'

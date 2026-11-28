@@ -770,6 +770,10 @@ class CatalogSeatWizardViewModel(
         }
         markGuidePhaseDone(4)
         stopBundleWatch()
+        // Sessione: DATI_CIFS non serve più — secondo scrub (MTP a volte tiene pending).
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching { exporter.scrubSessionDatiCifsNow() }
+        }
         _state.update {
             it.copy(
                 step = WizardStep.W2_CIFS_INSTALL,
@@ -790,6 +794,10 @@ class CatalogSeatWizardViewModel(
                 it.copy(errorMessage = UsbSetupCheckpointMessages.CIFS_APP_KO)
             }
             return
+        }
+        // Terzo scrub: a questo punto la sessione non riapre DATI_CIFS.
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching { exporter.scrubSessionDatiCifsNow() }
         }
         _state.update {
             it.copy(
@@ -830,6 +838,9 @@ class CatalogSeatWizardViewModel(
         applyLanPayload(bundle.toLanPayload())
         stopBackgroundLanListen()
         stopBundleWatch()
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching { exporter.scrubAfterSuccessfulImport() }
+        }
         // Fase 5 resta attiva: Fatto (checkpoint) porta a 6/1.
         _state.update {
             it.copy(

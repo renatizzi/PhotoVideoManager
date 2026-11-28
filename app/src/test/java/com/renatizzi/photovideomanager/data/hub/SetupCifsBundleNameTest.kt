@@ -27,4 +27,17 @@ class SetupCifsBundleNameTest {
         assertFalse(SetupCifsBundle.isBundleFileName("MediaManager_cifs_bundle (1).json"))
         assertFalse(SetupCifsBundle.isBundleFileName("no_pw (1).json"))
     }
+
+    @Test
+    fun scrubMatchesOddExtensionsAndBareNames() {
+        // Samsung / MTP: a volte senza .json o con tipo BIN.
+        assertTrue(SetupCifsBundle.isScrubbableDatiCifsName("DATI_CIFS"))
+        assertTrue(SetupCifsBundle.isScrubbableDatiCifsName("DATI_CIFS.json"))
+        assertTrue(SetupCifsBundle.isScrubbableDatiCifsName("DATI_CIFS.json (1)"))
+        assertTrue(SetupCifsBundle.isScrubbableDatiCifsName("DATI_CIFS (1).json"))
+        assertTrue(SetupCifsBundle.isScrubbableDatiCifsName("DATI_CIFS.bin"))
+        assertTrue(SetupCifsBundle.isScrubbableDatiCifsName("MediaManager_cifs_bundle_x.json"))
+        assertFalse(SetupCifsBundle.isScrubbableDatiCifsName("no_pw.json"))
+        assertFalse(SetupCifsBundle.isScrubbableDatiCifsName("CONFIGURA.cmd"))
+    }
 }

@@ -237,7 +237,7 @@ class WindowsSetupScriptExporter(
                 downloads.listFiles()
                     ?.filter { file ->
                         SetupSetFileNames.isAnySetupSetFile(file.name) ||
-                            SetupCifsBundle.isBundleFileName(file.name) ||
+                            SetupCifsBundle.isScrubbableDatiCifsName(file.name) ||
                             WindowsCatalogSetupScript.DOWNLOAD_SCRUB_PREFIXES.any {
                                 file.name.startsWith(it, ignoreCase = true)
                             }
@@ -255,41 +255,76 @@ class WindowsSetupScriptExporter(
     }
 
     /**
-     * Dopo import DATI_CIFS riuscito: cancella set script + tutte le varianti bundle
-     * (canonic, `stem (n).ext`, `name.ext (n)`), cosi' MTP non lascia fantasmi.
+     * Dopo import DATI_CIFS riuscito (e di nuovo a fine sessione guida):
+     * cancella set script + ogni residuo DATI_CIFS* / legacy bundle da Download.
      */
     fun scrubAfterSuccessfulImport(): Int {
         var removed = scrubDownloadsScripts()
+        removed += scrubAllDatiCifsVariants()
         removed += scrubEmptyDatiCifsGhosts()
         return removed
     }
 
-    /** Elimina ogni DATI_CIFS / DATI_CIFS (n).json / DATI_CIFS.json (n) da MediaStore. */
+    /**
+     * Secondo passaggio: la sessione non usa più DATI_CIFS (dopo Fatto / Attiva).
+     * Ritentare perché MTP/MediaStore a volte tiene il file pending al primo scrub.
+     */
+    fun scrubSessionDatiCifsNow(): Int = scrubAllDatiCifsVariants()
+
+    /**
+     * Elimina ogni DATI_CIFS* (qualsiasi estensione / (n)) e legacy bundle:
+     * MediaStore + File API su Download (Samsung spesso espone estensioni strane).
+     */
     fun scrubAllDatiCifsVariants(): Int {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return 0
         var removed = 0
-        runCatching {
-            val resolver = context.contentResolver
-            val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-            resolver.query(
-                collection,
-                arrayOf(MediaStore.Downloads._ID, MediaStore.Downloads.DISPLAY_NAME),
-                "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
-                arrayOf("DATI_CIFS%"),
-                null,
-            )?.use { cursor ->
-                val idCol = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID)
-                val nameCol = cursor.getColumnIndexOrThrow(MediaStore.Downloads.DISPLAY_NAME)
-                while (cursor.moveToNext()) {
-                    val name = cursor.getString(nameCol).orEmpty()
-                    if (!SetupCifsBundle.isBundleFileName(name)) continue
-                    removed += resolver.delete(
-                        ContentUris.withAppendedId(collection, cursor.getLong(idCol)),
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            runCatching {
+                val resolver = context.contentResolver
+                val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+                val patterns = listOf(
+                    "DATI_CIFS%",
+                    "${SetupCifsBundle.LEGACY_BUNDLE_FILE_PREFIX}%",
+                )
+                for (pattern in patterns) {
+                    resolver.query(
+                        collection,
+                        arrayOf(MediaStore.Downloads._ID, MediaStore.Downloads.DISPLAY_NAME),
+                        "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
+                        arrayOf(pattern),
                         null,
-                        null,
-                    )
+                    )?.use { cursor ->
+                        val idCol = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID)
+                        val nameCol = cursor.getColumnIndexOrThrow(MediaStore.Downloads.DISPLAY_NAME)
+                        while (cursor.moveToNext()) {
+                            val name = cursor.getString(nameCol).orEmpty()
+                            if (!SetupCifsBundle.isScrubbableDatiCifsName(name)) continue
+                            removed += resolver.delete(
+                                ContentUris.withAppendedId(collection, cursor.getLong(idCol)),
+                                null,
+                                null,
+                            )
+                        }
+                    }
                 }
             }
+        }
+        runCatching {
+            @Suppress("DEPRECATION")
+            val downloads = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS,
+            )
+            downloads.listFiles()
+                ?.filter { SetupCifsBundle.isScrubbableDatiCifsName(it.name) }
+                ?.forEach { file ->
+                    if (file.delete()) removed++
+                    else if (file.isFile) {
+                        // Pending / read-only: prova clear + delete.
+                        runCatching {
+                            file.setWritable(true)
+                            if (file.delete()) removed++
+                        }
+                    }
+                }
         }
         return removed
     }
@@ -320,7 +355,7 @@ class WindowsSetupScriptExporter(
                 val sizeCol = cursor.getColumnIndexOrThrow(MediaStore.Downloads.SIZE)
                 while (cursor.moveToNext()) {
                     val name = cursor.getString(nameCol).orEmpty()
-                    if (!SetupCifsBundle.isBundleFileName(name)) continue
+                    if (!SetupCifsBundle.isScrubbableDatiCifsName(name)) continue
                     val size = cursor.getLong(sizeCol)
                     if (size > 0L) continue
                     val uri = ContentUris.withAppendedId(collection, cursor.getLong(idCol))
