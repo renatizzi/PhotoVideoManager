@@ -410,8 +410,9 @@ fun AcquisisciStaticScreen(
                 stringResource(R.string.acquisisci_add_pc_direct_title)
             else -> stringResource(R.string.acquisisci_add_nas)
         }
-        val needsCifs = tipKind == "nas" || tipKind == "pc_ready" ||
-            tipKind == "pc_need_setup" || tipKind == "pc_direct"
+        // Apri CIFS ha senso solo se la connessione esiste già (PC sede / NAS).
+        // Per pc_need_setup (Setup non fatto) non mandare in CIFS a vuoto.
+        val needsCifs = tipKind == "nas" || tipKind == "pc_ready" || tipKind == "pc_direct"
         AlertDialog(
             onDismissRequest = { addTip = null },
             title = { Text(tipTitle) },

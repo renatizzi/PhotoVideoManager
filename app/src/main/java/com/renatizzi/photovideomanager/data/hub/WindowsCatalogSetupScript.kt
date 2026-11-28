@@ -450,7 +450,8 @@ function Test-PvmSetVariantName([string]${d}fileName, [string]${d}need) {
 }
 
 function Invoke-PvmMaggiordomo([string]${d}destDir) {
-  # I 3 file canonici devono SOVRASCRIVERE le copie; poi elimina ogni variante (1)/(2).
+  # Strategia anti-(1)/(2): leggi bytes, elimina TUTTI i match, scrivi solo il canonic.
+  # Copy-Item -Force sul file in uso fallisce; ReadAllBytes+WriteAllBytes no.
   ${d}desk = [Environment]::GetFolderPath('Desktop')
   ${d}dl = Join-Path ${d}env:USERPROFILE 'Downloads'
   ${d}recv1 = Join-Path ${d}env:USERPROFILE 'Documents\Bluetooth Exchange Folder'
@@ -461,7 +462,6 @@ function Invoke-PvmMaggiordomo([string]${d}destDir) {
       ${d}dirs.Add(${d}cand) | Out-Null
     }
   }
-  # Se questo processo e' stato avviato come "sup (1).ps1", preferisci quel file come fonte.
   ${d}runningSup = ${d}null
   try {
     if (${d}PSCommandPath -and (Test-Path -LiteralPath ${d}PSCommandPath)) {
@@ -472,15 +472,11 @@ function Invoke-PvmMaggiordomo([string]${d}destDir) {
   } catch {}
   foreach (${d}need in @('CONFIGURA.cmd','sup.ps1','QRCoder.dll')) {
     ${d}hit = ${d}null
-    if (${d}need -ieq 'sup.ps1' -and ${d}runningSup) {
-      ${d}hit = ${d}runningSup
-    }
-    # 1) Canonico accanto allo script in esecuzione.
+    if (${d}need -ieq 'sup.ps1' -and ${d}runningSup) { ${d}hit = ${d}runningSup }
     ${d}beside = Join-Path ${d}PSScriptRoot ${d}need
     if ((-not ${d}hit) -and (Test-Path -LiteralPath ${d}beside)) {
       ${d}hit = Get-Item -LiteralPath ${d}beside -ErrorAction SilentlyContinue
     }
-    # 2) Altrimenti la variante (n) / canonicamente nominata piu recente in tutte le cartelle.
     foreach (${d}dir in ${d}dirs) {
       Get-ChildItem -LiteralPath ${d}dir -File -ErrorAction SilentlyContinue |
         Where-Object { Test-PvmSetVariantName -fileName ${d}_.Name -need ${d}need } |
@@ -489,22 +485,19 @@ function Invoke-PvmMaggiordomo([string]${d}destDir) {
         }
     }
     if (-not ${d}hit) { continue }
-    ${d}canonical = ${d}hit.FullName
+    try {
+      ${d}bytes = [IO.File]::ReadAllBytes(${d}hit.FullName)
+    } catch { continue }
     foreach (${d}dir in ${d}dirs) {
+      Get-ChildItem -LiteralPath ${d}dir -File -ErrorAction SilentlyContinue |
+        Where-Object { Test-PvmSetVariantName -fileName ${d}_.Name -need ${d}need } |
+        ForEach-Object {
+          try { Remove-Item -LiteralPath ${d}_.FullName -Force -ErrorAction SilentlyContinue } catch {}
+        }
       try {
-        Copy-Item -LiteralPath ${d}canonical -Destination (Join-Path ${d}dir ${d}need) -Force -ErrorAction SilentlyContinue
+        [IO.File]::WriteAllBytes((Join-Path ${d}dir ${d}need), ${d}bytes)
       } catch {}
     }
-  }
-  foreach (${d}dir in ${d}dirs) {
-    # Solo duplicati dei 3 file script. NON toccare DATI_CIFS/no_pw (bundle).
-    Get-ChildItem -LiteralPath ${d}dir -File -ErrorAction SilentlyContinue |
-      Where-Object {
-        (${d}_.Name -match '^(CONFIGURA|sup|QRCoder)') -and
-        (${d}_.Name -match '\(\d+\)') -and
-        (${d}_.Name -notmatch '^(DATI_CIFS|no_pw)')
-      } |
-      ForEach-Object { Remove-Item -LiteralPath ${d}_.FullName -Force -ErrorAction SilentlyContinue }
   }
 }
 
@@ -697,18 +690,19 @@ try {
           ${d}prof = ${d}_.FullName
           Write-Step ("  ACL profilo (radice, no /T): " + ${d}profName)
           [void](Invoke-PvmIcaclsGrant -path ${d}prof -user ${d}UserName -TimeoutSec 20)
+          # Senza /T: veloce (v. tempi lunghi 0.16.96-97). RX+(OI)(CI) basta a elencare/aprire.
           foreach (${d}mn in ${d}mediaNames) {
             ${d}mp = Join-Path ${d}prof ${d}mn
             if (Test-Path -LiteralPath ${d}mp) {
               Write-Step ("  ACL media: " + ${d}profName + '\' + ${d}mn)
-              [void](Invoke-PvmIcaclsGrant -path ${d}mp -user ${d}UserName -Recurse -TimeoutSec 60)
+              [void](Invoke-PvmIcaclsGrant -path ${d}mp -user ${d}UserName -TimeoutSec 15)
             }
           }
           Get-ChildItem -LiteralPath ${d}prof -Force -Directory -ErrorAction SilentlyContinue |
             Where-Object { ${d}_.Name -like 'OneDrive*' } |
             ForEach-Object {
               Write-Step ("  ACL media: " + ${d}profName + '\' + ${d}_.Name)
-              [void](Invoke-PvmIcaclsGrant -path ${d}_.FullName -user ${d}UserName -Recurse -TimeoutSec 60)
+              [void](Invoke-PvmIcaclsGrant -path ${d}_.FullName -user ${d}UserName -TimeoutSec 15)
             }
         }
     }

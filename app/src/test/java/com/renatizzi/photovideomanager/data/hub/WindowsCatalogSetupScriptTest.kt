@@ -124,16 +124,16 @@ class WindowsCatalogSetupScriptTest {
         assertTrue(ps1.contains("creata_disco") || ps1.contains("ripruntata_disco"))
         assertTrue(ps1.contains("New-SmbShare") && ps1.contains("ShareRoot"))
         assertTrue(ps1.contains("icacls"))
-        // Profilo: RX senza /T (hang AppData); /T solo su cartelle media con timeout.
+        // Profilo/media: RX senza /T (tempi lunghi 0.16.96–97).
         assertTrue(ps1.contains("ACL profilo (radice, no /T)"))
         assertTrue(ps1.contains("Invoke-PvmIcaclsGrant"))
-        assertTrue(ps1.contains("WaitForExit") && ps1.contains("TimeoutSec"))
         assertTrue(ps1.contains("ACL media:"))
         assertTrue(ps1.contains("Join-Path \$ShareRoot 'Users'"))
         assertTrue(ps1.contains("Join-Path \$ShareRoot 'Utenti'"))
-        // Nessun /T cieco sull'intero profilo utente (pattern precedente che bloccava).
         assertFalse(ps1.contains("ACL profilo utente:"))
         assertFalse(Regex("""ShareRoot[^\\n]*/T""").containsMatchIn(ps1))
+        // Nessun -Recurse / /T sulle cartelle media (solo TimeoutSec corto).
+        assertFalse(Regex("""ACL media:[\s\S]{0,80}-Recurse""").containsMatchIn(ps1))
         assertTrue(ps1.contains("rx_dati") || ps1.contains("ACL dati"))
         assertTrue(ps1.contains("creata_catalogo_fallback") || ps1.contains("fallback"))
         // ParseFile CI: niente escape \\\" non validi in PowerShell 5.1.
