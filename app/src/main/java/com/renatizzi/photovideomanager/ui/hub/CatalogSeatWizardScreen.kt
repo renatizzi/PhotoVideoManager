@@ -1646,7 +1646,7 @@ private fun CifsCardStep(
     onBack: () -> Unit,
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
-    // Template: Name, Storage, Host, Port, Username, Domain(vuoto), Password, Folder
+    // Ordine = maschera CIFS Connection: Name, Storage, Domain, Host, Port, DFS, User, Password, Folder.
     var rowFlags by remember { mutableStateOf(BooleanArray(7) { false }) }
     var cifsSavedConfirmed by remember { mutableStateOf(false) }
     val salvaBring = remember { BringIntoViewRequester() }
@@ -1670,8 +1670,13 @@ private fun CifsCardStep(
             hostReady &&
             cifsSavedConfirmed
     val catalogPickDone = state.pendingTreeUri != null
+    val pickFailed =
+        state.verification == SeatVerificationUi.FAILED ||
+            state.verification == SeatVerificationUi.UNREACHABLE
+    // Dopo Salva fallito pending viene azzerato: Attiva torna usabile per un nuovo tentativo.
+    val attivaEnabled = !state.busy && readyForPick && (!catalogPickDone || pickFailed)
     LaunchedEffect(state.pendingTreeUri, state.verification) {
-        if (catalogPickDone) {
+        if (catalogPickDone && !pickFailed) {
             kotlinx.coroutines.delay(80)
             salvaBring.bringIntoView()
         }
@@ -1718,6 +1723,17 @@ private fun CifsCardStep(
             onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[1] = !it[1] } },
             enabled = !state.busy,
         )
+        // Domain: come in CIFS (dopo Storage, prima di Host) — vuoto, senza Copia.
+        CifsFieldRow(
+            label = stringResource(R.string.hub_b5b_label_domain),
+            value = "",
+            actionLabel = null,
+            onAction = null,
+            checked = null,
+            onCheckedChange = null,
+            hint = stringResource(R.string.hub_b5b_domain_blank_hint),
+            enabled = !state.busy,
+        )
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_host),
             value = hostValue,
@@ -1740,6 +1756,29 @@ private fun CifsCardStep(
             onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[3] = !it[3] } },
             enabled = !state.busy,
         )
+        // Enable DFS: come in CIFS (dopo Port, prima di User) — deselezionato, senza Copia.
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Checkbox(
+                checked = false,
+                onCheckedChange = null,
+                enabled = false,
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    stringResource(R.string.hub_b5b_label_dfs),
+                    style = MaterialTheme.typography.labelMedium,
+                )
+                Text(
+                    stringResource(R.string.hub_b5b_dfs_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                )
+            }
+        }
         CifsFieldRow(
             label = stringResource(R.string.hub_b5b_label_user),
             value = user,
@@ -1747,17 +1786,6 @@ private fun CifsCardStep(
             onAction = { onCopyField(CifsCopyField.USERNAME) },
             checked = rowFlags[4],
             onCheckedChange = { rowFlags = rowFlags.copyOf().also { it[4] = !it[4] } },
-            enabled = !state.busy,
-        )
-        // Domain: obbligatorio in maschera CIFS, resta vuoto, senza Copia.
-        CifsFieldRow(
-            label = stringResource(R.string.hub_b5b_label_domain),
-            value = "",
-            actionLabel = null,
-            onAction = null,
-            checked = null,
-            onCheckedChange = null,
-            hint = stringResource(R.string.hub_b5b_domain_blank_hint),
             enabled = !state.busy,
         )
         Row(
@@ -1874,12 +1902,18 @@ private fun CifsCardStep(
     }
     Button(
         onClick = onChooseFolder,
-        enabled = !state.busy && readyForPick && !catalogPickDone,
+        enabled = attivaEnabled,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Text(stringResource(R.string.hub_pc5_activate_link))
     }
-    if (catalogPickDone) {
+    if (pickFailed) {
+        Text(
+            stringResource(R.string.hub_pc5_activate_retry_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+        )
+    } else if (catalogPickDone) {
         Text(
             stringResource(R.string.hub_pc5_activate_done_hint),
             style = MaterialTheme.typography.bodySmall,

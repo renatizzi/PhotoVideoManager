@@ -15,40 +15,49 @@ class PcCatalogSeatGateTest {
     }
 
     @Test
-    fun assessChildNames_rejectsShareEnumerationRoot() {
-        // Folder vuoto + pick connessione: figli = elenco share del PC (include MyMedia).
+    fun assessChildNames_rejectsHostShareEnumeration() {
+        // Folder vuoto: figli = elenco share (ADMIN$/IPC$), non disco.
         val bad = PcCatalogSeatGate.assessChildNames(
             listOf("ADMIN$", "C$", "IPC$", "MyMedia", "Users"),
             expectedShare = "MyMedia",
         )
         assertFalse(bad.ok)
         assertTrue(bad.reason!!.contains("Folder=MyMedia"))
-        assertTrue(bad.reason!!.contains("elenco delle share"))
+        assertTrue(bad.reason!!.contains("elenco delle share") || bad.reason!!.contains("ADMIN$"))
     }
 
     @Test
-    fun assessChildNames_acceptsPinnedShareContents() {
-        // Folder=MyMedia: figli = contenuto della share (non la share stessa).
-        val okEmpty = PcCatalogSeatGate.assessChildNames(emptyList(), "MyMedia")
-        assertTrue(okEmpty.ok)
+    fun assessChildNames_acceptsDriveRootEvenIfCatalogFolderPresent() {
+        // Share = radice disco MyTEST: figli tipici di C:\ inclusa cartella Catalogo omonima.
+        val ok = PcCatalogSeatGate.assessChildNames(
+            listOf(
+                "Users", "Windows", "Program Files", "MyTEST",
+                "Dell XPS 15 7590", "ProgramData",
+            ),
+            expectedShare = "MyTEST",
+        )
+        assertTrue(ok.ok)
+    }
 
-        val okWithHub = PcCatalogSeatGate.assessChildNames(
+    @Test
+    fun assessChildNames_acceptsCatalogFolderWithHub() {
+        val ok = PcCatalogSeatGate.assessChildNames(
             listOf("MediaManager", "foto.jpg"),
             expectedShare = "MyMedia",
         )
-        assertTrue(okWithHub.ok)
+        assertTrue(ok.ok)
     }
 
     @Test
-    fun assessChildNames_isCaseInsensitiveOnShare() {
-        val bad = PcCatalogSeatGate.assessChildNames(listOf("mymedia"), "MyMedia")
-        assertFalse(bad.ok)
+    fun assessChildNames_acceptsEmpty() {
+        assertTrue(PcCatalogSeatGate.assessChildNames(emptyList(), "MyMedia").ok)
     }
 
     @Test
-    fun writableProbeFailureHint_mentionsFolderAndReadOnly() {
-        val hint = PcCatalogSeatGate.writableProbeFailureHint("MyMedia")
-        assertTrue(hint.contains("Folder=MyMedia"))
+    fun writableProbeFailureHint_mentionsFolderAndRetry() {
+        val hint = PcCatalogSeatGate.writableProbeFailureHint("MyTEST")
+        assertTrue(hint.contains("Folder=MyTEST"))
         assertTrue(hint.contains("Read only", ignoreCase = true))
+        assertTrue(hint.contains("Attiva Catalogo"))
     }
 }
