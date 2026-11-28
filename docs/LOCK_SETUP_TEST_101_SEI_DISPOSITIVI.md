@@ -1,10 +1,11 @@
 # LOCK — Test 0.16.101 Setup su sei percorsi
 
-**Stato:** in prova (`0.16.102-preview`)  
+**Stato:** prova 0.16.102 — **residuale** (nuovo LOCK `docs/LOCK_TEST_0.16.102_W1_ACQUISISCI.md`)  
 **Data:** 2026-11-28  
 **Richiesta / test di riferimento:** esito Renato 28/11/2026 — app `0.16.101-preview`; Catalogo **MyMedia**; **S25 Ultra di RENATO**  
 **Approvazione Renato:** 28/11/2026 — OK; `#2` = eliminare voce «Altro telefono» (caso in guida)  
-**Build FIX:** `0.16.102-preview` — guida `docs/GUIDA_TEST_0.16.102_LOCK_101.md`
+**Build FIX:** `0.16.102-preview` — guida `docs/GUIDA_TEST_0.16.102_LOCK_101.md`  
+**Prova Renato 28/11 ~15:38:** fermata dopo W1 + Acquisisci (v. LOCK 102)
 
 **Blocco piano:** niente Fase B finché LOCK **approvato** e poi **chiuso in prova**. Solo fix `#N`.
 
@@ -68,8 +69,8 @@
 
 | # | OK / KO | Nota breve di Renato |
 |---|---------|----------------------|
-| 1 | | |
-| 2 | | |
-| 3 | | |
-| 4 | | |
-| 5 | | |
+| 1 | **KO** | Messaggio non convincente; nome editabile; path Documenti inventato → LOCK 102 #1–#2 |
+| 2 | (non contestato in prova) | Voce «altro telefono» rimossa |
+| 3 | non provato | Test fermato prima |
+| 4 | non provato | Test fermato prima |
+| 5 | **KO** | Cloud «già presente» ma non in elenco; CIFS Offline → LOCK 102 #3 |
